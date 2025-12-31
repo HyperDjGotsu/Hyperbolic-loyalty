@@ -9,7 +9,7 @@ const supabase = createClient(
 // Characters for HYP ID (no ambiguous 0/O/1/I/L)
 const ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-function generateHypId(): string {
+function generatePlayerId(): string {
   let id = 'HYP-';
   for (let i = 0; i < 6; i++) {
     id += ID_CHARS.charAt(Math.floor(Math.random() * ID_CHARS.length));
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique HYP ID
-    let hypId = generateHypId();
+    let playerId = generatePlayerId();
     let attempts = 0;
     
     // Check for uniqueness (retry up to 10 times)
@@ -35,11 +35,11 @@ export async function POST(request: NextRequest) {
       const { data: existing } = await supabase
         .from('players')
         .select('id')
-        .eq('player_id', hypId)
+        .eq('player_id', playerId)
         .single();
       
       if (!existing) break;
-      hypId = generateHypId();
+      playerId = generatePlayerId();
       attempts++;
     }
 
@@ -51,9 +51,10 @@ export async function POST(request: NextRequest) {
     const { data: player, error } = await supabase
       .from('players')
       .insert({
-        player_id: hypId,
+        player_id: playerId,
         display_name: displayName.trim(),
-        avatar_emoji: avatar?.base || '😎',
+        avatar_type: avatar?.type || 'emoji',
+        avatar_base: avatar?.base || '😎',
         avatar_background: avatar?.background || '#3b82f6',
         avatar_frame: avatar?.frame || 'none',
         avatar_badge: avatar?.badge || null,
@@ -68,15 +69,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create player' }, { status: 500 });
     }
 
-    // If games were selected, we can track those for personalization later
-    // For now, we just return the new player
-
     return NextResponse.json({
       id: player.id,
       hyp_id: player.player_id,
       displayName: player.display_name,
       avatar: {
-        emoji: player.avatar_emoji,
+        type: player.avatar_type,
+        base: player.avatar_base,
         background: player.avatar_background,
         frame: player.avatar_frame,
         badge: player.avatar_badge,

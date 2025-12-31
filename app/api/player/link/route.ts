@@ -8,7 +8,7 @@ const supabase = createClient(
 );
 
 // Generate random HYP-ID
-function generateHypId(): string {
+function generatePlayerId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let result = 'HYP-';
   for (let i = 0; i < 6; i++) {
@@ -31,14 +31,14 @@ export async function POST(request: Request) {
     // Check if user already has a linked player
     const { data: existingLink } = await supabase
       .from('players')
-      .select('id, hyp_id')
+      .select('id, player_id')
       .eq('clerk_user_id', userId)
       .single();
 
     if (existingLink) {
       return NextResponse.json({ 
         error: 'Account already linked to a player',
-        hyp_id: existingLink.hyp_id 
+        player_id: existingLink.player_id 
       }, { status: 400 });
     }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       const { data: player, error: findError } = await supabase
         .from('players')
         .select('*')
-        .eq('hyp_id', hypId.toUpperCase())
+        .eq('player_id', hypId.toUpperCase())
         .single();
 
       if (findError || !player) {
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ 
         success: true, 
-        hyp_id: player.hyp_id,
+        player_id: player.player_id,
         displayName: player.display_name 
       });
 
@@ -92,19 +92,19 @@ export async function POST(request: Request) {
       // Get Clerk user info for additional data
       const user = await currentUser();
       
-      // Generate unique HYP-ID
-      let newHypId = generateHypId();
+      // Generate unique player_id
+      let newPlayerId = generatePlayerId();
       let attempts = 0;
       
       while (attempts < 10) {
         const { data: existing } = await supabase
           .from('players')
           .select('id')
-          .eq('hyp_id', newHypId)
+          .eq('player_id', newPlayerId)
           .single();
         
         if (!existing) break;
-        newHypId = generateHypId();
+        newPlayerId = generatePlayerId();
         attempts++;
       }
 
@@ -112,12 +112,10 @@ export async function POST(request: Request) {
       const { data: newPlayer, error: createError } = await supabase
         .from('players')
         .insert({
-          hyp_id: newHypId,
+          player_id: newPlayerId,
           display_name: displayName,
           clerk_user_id: userId,
-          primary_game: primaryGame || null,
-          avatar: { emoji: '😎', background: '#3b82f6', frame: 'none', badge: null },
-          card_status: 'active',
+          primary_game_id: primaryGame ? parseInt(primaryGame) : null,
         })
         .select()
         .single();
@@ -129,7 +127,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ 
         success: true, 
-        hyp_id: newPlayer.hyp_id,
+        player_id: newPlayer.player_id,
         displayName: newPlayer.display_name 
       });
 

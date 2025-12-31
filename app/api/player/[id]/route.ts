@@ -28,18 +28,13 @@ export async function GET(
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Get total XP directly from xp_ledger (more reliable than materialized views)
-    console.log('Querying xp_ledger for player.id:', player.id);
+    // Get total XP directly from xp_ledger
     const { data: xpData, error: xpError } = await supabase
       .from('xp_ledger')
       .select('final_xp')
       .eq('player_id', player.id);
     
-    console.log('xpData result:', xpData);
-    console.log('xpError:', xpError);
-    
     const totalXP = xpData?.reduce((sum, row) => sum + (row.final_xp || 0), 0) || 0;
-    console.log('totalXP calculated:', totalXP);
 
     // Get game XP breakdown directly from xp_ledger
     const { data: gameXPRaw } = await supabase
@@ -83,7 +78,9 @@ export async function GET(
       realName: player.real_name,
       discord: player.discord_username,
       avatar: {
-        emoji: player.avatar_emoji,
+        type: player.avatar_type,
+        base: player.avatar_base,
+        photoUrl: player.avatar_photo_url,
         background: player.avatar_background,
         frame: player.avatar_frame,
         badge: player.avatar_badge,
