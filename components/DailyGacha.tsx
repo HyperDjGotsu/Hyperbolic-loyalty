@@ -19,8 +19,9 @@ interface DailyGachaProps {
 }
 
 export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
-  const [phase, setPhase] = useState<'ready' | 'spinning' | 'result'>('ready');
+  const [phase, setPhase] = useState<'ready' | 'spinning' | 'result' | 'saving' | 'error'>('ready');
   const [result, setResult] = useState<GachaReward | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const pullGacha = (): GachaReward => {
     const r = Math.random();
@@ -37,6 +38,40 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
     setResult(pulled);
     setPhase('spinning');
     setTimeout(() => setPhase('result'), 2000);
+  };
+
+  const claimReward = async () => {
+    if (!result) return;
+    
+    setPhase('saving');
+    
+    try {
+      const response = await fetch('/api/xp/daily-spin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          xp: result.xp,
+          rewardName: result.name,
+          rarity: result.rarity,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        onComplete(result);
+      } else if (data.hasSpunToday) {
+        setErrorMessage('You already spun today!');
+        setPhase('error');
+      } else {
+        setErrorMessage(data.error || 'Failed to save reward');
+        setPhase('error');
+      }
+    } catch (error) {
+      console.error('Daily spin error:', error);
+      setErrorMessage('Network error. Please try again.');
+      setPhase('error');
+    }
   };
 
   const rarityColor = result ? rarityColors[result.rarity] : rarityColors.common;
@@ -59,6 +94,8 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
           <div className="text-3xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
             {phase === 'ready' && 'DAILY SPIN'}
             {phase === 'spinning' && 'SPINNING...'}
+            {phase === 'saving' && 'SAVING...'}
+            {phase === 'error' && 'ERROR'}
             {phase === 'result' && `${rarityColor.name.toUpperCase()}!`}
           </div>
         </div>
@@ -71,6 +108,23 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
             style={{ animation: 'spin 0.5s linear infinite' }}
           >
             ⏳
+          </div>
+        )}
+
+        {phase === 'saving' && (
+          <div className="text-8xl mb-8 animate-pulse">💾</div>
+        )}
+
+        {phase === 'error' && (
+          <div>
+            <div className="text-8xl mb-8">❌</div>
+            <p className="text-red-400 mb-4">{errorMessage}</p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-slate-800 text-white rounded-xl"
+            >
+              Close
+            </button>
           </div>
         )}
 
@@ -99,7 +153,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
             <div className="mt-8">
               <GlowButton
                 color={result.rarity === 'legendary' ? 'orange' : 'cyan'}
-                onClick={() => onComplete(result)}
+                onClick={claimReward}
                 className="w-full py-4 text-lg"
               >
                 ⏳ CLAIM REWARD ⏳

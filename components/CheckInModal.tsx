@@ -9,7 +9,7 @@ interface CheckInModalProps {
   onClose: () => void;
 }
 
-type NfcStatus = 'idle' | 'scanning' | 'found' | 'success' | 'already-checked';
+type NfcStatus = 'idle' | 'scanning' | 'found' | 'success' | 'already-checked' | 'error';
 
 export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModalProps) => {
   const [nfcStatus, setNfcStatus] = useState<NfcStatus>('idle');
@@ -18,8 +18,9 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
     xpEarned: number;
     message: string;
   } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const simulateNfcCheckIn = () => {
+  const performCheckIn = async () => {
     if (hasCheckedIn) {
       setCheckInResult({ success: false, xpEarned: 0, message: 'Already checked in!' });
       setNfcStatus('already-checked');
@@ -28,26 +29,53 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
 
     setNfcStatus('scanning');
 
-    // Simulate NFC scan delay
-    setTimeout(() => {
-      setNfcStatus('found');
-      setTimeout(() => {
-        setCheckInResult({ success: true, xpEarned: 20, message: 'Welcome back!' });
+    // Simulate NFC scan delay for UX
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setNfcStatus('found');
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Call the real API
+    try {
+      const response = await fetch('/api/xp/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setCheckInResult({ 
+          success: true, 
+          xpEarned: data.xpEarned, 
+          message: data.message || 'Welcome back!' 
+        });
         setNfcStatus('success');
-      }, 500);
-    }, 1500);
+      } else if (data.hasCheckedInToday) {
+        setCheckInResult({ success: false, xpEarned: 0, message: 'Already checked in!' });
+        setNfcStatus('already-checked');
+      } else {
+        setErrorMessage(data.error || 'Check-in failed');
+        setNfcStatus('error');
+      }
+    } catch (error) {
+      console.error('Check-in error:', error);
+      setErrorMessage('Network error. Please try again.');
+      setNfcStatus('error');
+    }
   };
 
   const handleClose = () => {
-    setNfcStatus('idle');
-    setCheckInResult(null);
-    
     // If check-in was successful, trigger the onComplete callback
     if (nfcStatus === 'success' && checkInResult?.xpEarned) {
       onComplete(checkInResult.xpEarned);
     } else {
       onClose();
     }
+    
+    // Reset state
+    setNfcStatus('idle');
+    setCheckInResult(null);
+    setErrorMessage('');
   };
 
   return (
@@ -66,7 +94,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
               <div className="w-32 h-32 mx-auto mb-6 bg-slate-800 rounded-full flex items-center justify-center border-2 border-cyan-500/30 border-dashed">
                 <span className="text-5xl">📍</span>
               </div>
-              <GlowButton color="cyan" onClick={simulateNfcCheckIn} className="w-full py-4 text-lg">
+              <GlowButton color="cyan" onClick={performCheckIn} className="w-full py-4 text-lg">
                 Tap to Scan
               </GlowButton>
             </>
@@ -97,6 +125,16 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
               </div>
               <h3 className="text-2xl font-bold text-yellow-400 mb-2">Already Checked In!</h3>
               <p className="text-slate-400">Come back tomorrow</p>
+            </>
+          )}
+
+          {nfcStatus === 'error' && (
+            <>
+              <div className="w-32 h-32 mx-auto mb-6 bg-red-500/20 rounded-full flex items-center justify-center">
+                <span className="text-5xl">❌</span>
+              </div>
+              <h3 className="text-2xl font-bold text-red-400 mb-2">Check-in Failed</h3>
+              <p className="text-slate-400">{errorMessage}</p>
             </>
           )}
 

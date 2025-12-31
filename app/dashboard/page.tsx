@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useUser, UserButton } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import {
   FloatingParticles,
@@ -91,6 +91,16 @@ export default function DashboardHome() {
             localStorage.setItem('hyperbolic_player_id', data.hyp_id);
             localStorage.setItem('hyperbolic_player_uuid', data.id);
             setPlayerData(data);
+            
+            // Check check-in and spin status
+            const [checkinStatus, spinStatus] = await Promise.all([
+              fetch('/api/xp/checkin').then(r => r.json()).catch(() => ({ hasCheckedInToday: false })),
+              fetch('/api/xp/daily-spin').then(r => r.json()).catch(() => ({ hasSpunToday: false }))
+            ]);
+            
+            setHasCheckedInToday(checkinStatus.hasCheckedInToday || false);
+            setHasSpunToday(spinStatus.hasSpunToday || false);
+            
             setLoading(false);
             return;
           } else {
@@ -228,17 +238,12 @@ export default function DashboardHome() {
       <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 pt-4 pb-6">
         <FloatingParticles />
         
-        {/* Logo + User Button */}
-        <div className="relative mb-4">
-          <div className="absolute top-0 right-4">
-            <UserButton afterSignOutUrl="/" />
+        {/* Logo */}
+        <div className="text-center mb-4">
+          <div className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
+            HYPERBOLIC
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
-              HYPERBOLIC
-            </div>
-            <div className="text-orange-400 text-xs font-bold tracking-widest">— GAMES —</div>
-          </div>
+          <div className="text-orange-400 text-xs font-bold tracking-widest">— GAMES —</div>
         </div>
 
         {/* Player Card */}
