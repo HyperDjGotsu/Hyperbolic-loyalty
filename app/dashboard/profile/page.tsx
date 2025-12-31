@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// import { useUser, useClerk } from '@clerk/nextjs'; // Disabled for testing
+import { useClerk } from '@clerk/nextjs';
 import { FloatingParticles, Avatar, avatarOptions } from '@/components/ui';
 import type { Player } from '@/lib/types';
 
@@ -62,13 +62,13 @@ const mockPlayer: Player = {
 
 export default function ProfilePage() {
   const router = useRouter();
-  // const { user } = useUser(); // Disabled for testing
-  // const { signOut } = useClerk(); // Disabled for testing
+  const { signOut } = useClerk();
   
-  // Test sign out - clears localStorage and redirects
-  const handleSignOut = () => {
+  // Sign out - clears localStorage and Clerk session
+  const handleSignOut = async () => {
     localStorage.removeItem('hyperbolic_player_id');
     localStorage.removeItem('hyperbolic_player_uuid');
+    await signOut();
     router.push('/');
   };
   
