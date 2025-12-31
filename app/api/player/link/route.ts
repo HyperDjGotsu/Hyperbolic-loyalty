@@ -115,7 +115,7 @@ export async function POST(request: Request) {
           player_id: newPlayerId,
           display_name: displayName,
           clerk_user_id: userId,
-          primary_game_id: primaryGame ? parseInt(primaryGame) : null,
+          primary_game_id: primaryGame || null,
         })
         .select()
         .single();
