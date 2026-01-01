@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, hypId, displayName, primaryGame } = body;
+    const { action, hypId, displayName, discordUsername, phone, primaryGame } = body;
 
     // Check if user already has a linked player
     const { data: existingLink } = await supabaseAdmin
@@ -61,10 +61,18 @@ export async function POST(request: Request) {
         }, { status: 400 });
       }
 
-      // Link the player to this Clerk user
+      // Get Clerk user info to update missing fields
+      const user = await currentUser();
+      const clerkEmail = user?.emailAddresses?.[0]?.emailAddress || null;
+
+      // Link the player to this Clerk user and update email if missing
       const { error: updateError } = await supabaseAdmin
         .from('players')
-        .update({ clerk_user_id: userId })
+        .update({ 
+          clerk_user_id: userId,
+          // Only update email if it's missing in Supabase
+          ...(clerkEmail && !player.email ? { email: clerkEmail } : {}),
+        })
         .eq('id', player.id);
 
       if (updateError) {
@@ -84,8 +92,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Display name required' }, { status: 400 });
       }
 
-      // Get Clerk user info for additional data
+      // Get Clerk user info for email and real name
       const user = await currentUser();
+      const clerkEmail = user?.emailAddresses?.[0]?.emailAddress || null;
+      const clerkRealName = [user?.firstName, user?.lastName]
+        .filter(Boolean)
+        .join(' ') || null;
       
       // Generate unique player_id
       let newPlayerId = generatePlayerId();
@@ -103,14 +115,34 @@ export async function POST(request: Request) {
         attempts++;
       }
 
-      // Create the player
+      // Create the player with all fields
       const { data: newPlayer, error: createError } = await supabaseAdmin
         .from('players')
         .insert({
           player_id: newPlayerId,
           display_name: displayName,
           clerk_user_id: userId,
-          primary_game_id: primaryGame ? parseInt(primaryGame) : null,
+          // Auto-pulled from Clerk
+          email: clerkEmail,
+          real_name: clerkRealName,
+          // User-provided
+          discord_username: discordUsername || null,
+          phone: phone || null,
+          primary_game_id: primaryGame || null,
+          // Defaults
+          avatar_type: 'emoji',
+          avatar_base: '😎',
+          avatar_background: '#3b82f6',
+          avatar_frame: 'none',
+          profile_visibility: 'public',
+          show_activity: true,
+          show_games: true,
+          show_stats: true,
+          show_on_leaderboard: true,
+          allow_friend_requests: true,
+          allow_messages: 'friends',
+          pass_tier: 'none',
+          pass_status: 'inactive',
         })
         .select()
         .single();

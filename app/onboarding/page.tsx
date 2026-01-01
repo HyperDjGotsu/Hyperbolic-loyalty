@@ -22,6 +22,8 @@ export default function OnboardingPage() {
   const [mode, setMode] = useState<'choice' | 'link' | 'create'>('choice');
   const [hypId, setHypId] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [discordUsername, setDiscordUsername] = useState('');
+  const [phone, setPhone] = useState('');
   const [primaryGame, setPrimaryGame] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -86,7 +88,7 @@ export default function OnboardingPage() {
       }
 
       // Success! Store locally and redirect
-      localStorage.setItem('hyperbolic_player_id', data.hyp_id);
+      localStorage.setItem('hyperbolic_player_id', data.player_id);
       router.push('/dashboard');
     } catch (err) {
       setError('Connection error. Please try again.');
@@ -111,6 +113,8 @@ export default function OnboardingPage() {
         body: JSON.stringify({ 
           action: 'create_new',
           displayName: displayName.trim(),
+          discordUsername: discordUsername.trim() || null,
+          phone: phone.trim() || null,
           primaryGame: primaryGame || null,
         }),
       });
@@ -123,7 +127,7 @@ export default function OnboardingPage() {
       }
 
       // Success! Store locally and redirect
-      localStorage.setItem('hyperbolic_player_id', data.hyp_id);
+      localStorage.setItem('hyperbolic_player_id', data.player_id);
       router.push('/dashboard');
     } catch (err) {
       setError('Connection error. Please try again.');
@@ -260,6 +264,7 @@ export default function OnboardingPage() {
               Set up your player profile to start earning XP.
             </p>
 
+            {/* Display Name */}
             <div className="mb-4">
               <label className="block text-slate-400 text-sm mb-2">Display Name *</label>
               <input
@@ -272,6 +277,43 @@ export default function OnboardingPage() {
               />
             </div>
 
+            {/* Discord Username */}
+            <div className="mb-4">
+              <label className="block text-slate-400 text-sm mb-2">
+                Discord Username
+                <span className="text-slate-600 ml-2">(recommended)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">@</span>
+                <input
+                  type="text"
+                  value={discordUsername}
+                  onChange={(e) => setDiscordUsername(e.target.value.replace('@', ''))}
+                  placeholder="username"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 pl-9 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  maxLength={32}
+                />
+              </div>
+              <p className="text-slate-600 text-xs mt-1">For tournament announcements & community</p>
+            </div>
+
+            {/* Phone Number */}
+            <div className="mb-4">
+              <label className="block text-slate-400 text-sm mb-2">
+                Phone Number
+                <span className="text-slate-600 ml-2">(optional)</span>
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              />
+              <p className="text-slate-600 text-xs mt-1">For event reminders (we won't spam you)</p>
+            </div>
+
+            {/* Primary Game */}
             <div className="mb-6">
               <label className="block text-slate-400 text-sm mb-2">Primary Game (optional)</label>
               <div className="grid grid-cols-3 gap-2">
