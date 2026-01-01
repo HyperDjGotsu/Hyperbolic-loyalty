@@ -37,7 +37,7 @@ export type Event = Database['public']['Tables']['events']['Row'];
 export type PlayerInsert = Database['public']['Tables']['players']['Insert'];
 export type XpLedgerInsert = Database['public']['Tables']['xp_ledger']['Insert'];
 export type EventInsert = Database['public']['Tables']['events']['Insert'];
-export type EventRegistrationInsert = Database['public']['Tables']['event_registrations']['Insert'];
+// export type EventRegistrationInsert = Database['public']['Tables']['event_registrations']['Insert'];
 
 // Update types (what you UPDATE)
 export type PlayerUpdate = Database['public']['Tables']['players']['Update'];
@@ -51,8 +51,8 @@ export type GameLeaderboard = Database['public']['Views']['game_leaderboards']['
 export type OnePieceMonthlyBounty = Database['public']['Views']['one_piece_monthly_bounties']['Row'];
 
 // Enum types
-export type PassTier = Database['public']['Enums']['pass_tier'];
-export type PassStatus = Database['public']['Enums']['pass_status'];
+// export type PassTier = Database['public']['Enums']['pass_tier'];
+// export type PassStatus = Database['public']['Enums']['pass_status'];
 export type XpSource = Database['public']['Enums']['xp_source'];
 export type EventStatus = Database['public']['Enums']['event_status'];
 export type ProfileVisibility = Database['public']['Enums']['profile_visibility'];
@@ -75,9 +75,10 @@ export const XP_SOURCES: XpSource[] = [
   'daily_checkin', 'manual_adjustment', 'pass_bonus', 'achievement'
 ];
 
-export const PASS_TIERS: PassTier[] = [
-  'none', 'access', 'player', 'all_access', 'shadow_vip'
-];
+// Commented out - PassTier type doesn't exist yet
+// export const PASS_TIERS: PassTier[] = [
+//   'none', 'access', 'player', 'all_access', 'shadow_vip'
+// ];
 
 // ============================================
 // PLAYER FUNCTIONS
@@ -87,7 +88,7 @@ export async function getPlayerByHypId(hypId: string): Promise<Player | null> {
   const { data, error } = await supabase
     .from('players')
     .select('*')
-    .eq('player_id', hypId.toUpperCase())  // Correct column name!
+    .eq('player_id', hypId.toUpperCase())
     .single();
 
   if (error || !data) return null;
