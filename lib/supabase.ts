@@ -70,10 +70,10 @@ export const GAME_IDS = [
   'weiss', 'sw_legion', 'union_arena', 'warhammer', 'yugioh', 'digimon'
 ] as const;
 
-export const XP_SOURCES: XpSource[] = [
-  'event_attendance', 'match_win', 'purchase', 'referral',
-  'daily_checkin', 'manual_adjustment', 'pass_bonus', 'achievement'
-];
+// export const XP_SOURCES: XpSource[] = [
+//   'event_attendance', 'match_win', 'purchase', 'referral',
+//   'daily_checkin', 'manual_adjustment', 'pass_bonus', 'achievement'
+// ];
 
 // Commented out - PassTier type doesn't exist yet
 // export const PASS_TIERS: PassTier[] = [
