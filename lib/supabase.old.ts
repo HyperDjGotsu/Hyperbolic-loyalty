@@ -1,83 +1,61 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database.types';
-
-// ============================================
-// TYPED SUPABASE CLIENTS
-// ============================================
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Client-side Supabase (uses anon key, respects RLS)
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-
-// Server-side Supabase (uses service role, bypasses RLS)
-// Only use in API routes, never expose to client
-export const supabaseAdmin = createClient<Database>(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ============================================
-// RE-EXPORT TYPES FROM DATABASE
+// TYPES
 // ============================================
 
-// Table row types (what you SELECT)
-export type Player = Database['public']['Tables']['players']['Row'];
-export type Game = Database['public']['Tables']['games']['Row'];
-export type XpLedger = Database['public']['Tables']['xp_ledger']['Row'];
-export type Emperor = Database['public']['Tables']['emperors']['Row'];
-export type Event = Database['public']['Tables']['events']['Row'];
-export type EventRegistration = Database['public']['Tables']['event_registrations']['Row'];
-export type Pass = Database['public']['Tables']['passes']['Row'];
-export type Friendship = Database['public']['Tables']['friendships']['Row'];
+export interface Player {
+  id: string;
+  hyp_id: string;
+  display_name: string;
+  real_name?: string;
+  discord_username?: string;
+  email?: string;
+  avatar_emoji: string;
+  avatar_background: string;
+  avatar_frame: string;
+  avatar_badge?: string;
+  pass_tier: 'none' | 'access' | 'player' | 'all_access' | 'shadow_vip';
+  profile_visibility: 'public' | 'friends' | 'private';
+  created_at: string;
+}
 
-// Insert types (what you INSERT)
-export type PlayerInsert = Database['public']['Tables']['players']['Insert'];
-export type XpLedgerInsert = Database['public']['Tables']['xp_ledger']['Insert'];
-export type EventInsert = Database['public']['Tables']['events']['Insert'];
-export type EventRegistrationInsert = Database['public']['Tables']['event_registrations']['Insert'];
+export interface Game {
+  id: string;
+  slug: string;
+  name: string;
+  icon: string;
+  color: string;
+  currency_name: string;
+  frequency: 'standard' | 'high';
+  is_active: boolean;
+}
 
-// Update types (what you UPDATE)
-export type PlayerUpdate = Database['public']['Tables']['players']['Update'];
-export type EventUpdate = Database['public']['Tables']['events']['Update'];
+export interface PlayerGameXP {
+  player_id: string;
+  game_id: string;
+  game_slug: string;
+  game_name: string;
+  total_xp: number;
+}
 
-// View types
-export type PlayerXpTotal = Database['public']['Views']['player_xp_totals']['Row'];
-export type PlayerGameXp = Database['public']['Views']['player_game_xp']['Row'];
-export type PlayerMonthlyXp = Database['public']['Views']['player_monthly_xp']['Row'];
-export type GameLeaderboard = Database['public']['Views']['game_leaderboards']['Row'];
-export type OnePieceMonthlyBounty = Database['public']['Views']['one_piece_monthly_bounties']['Row'];
-
-// Enum types
-export type PassTier = Database['public']['Enums']['pass_tier'];
-export type PassStatus = Database['public']['Enums']['pass_status'];
-export type XpSource = Database['public']['Enums']['xp_source'];
-export type EventStatus = Database['public']['Enums']['event_status'];
-export type ProfileVisibility = Database['public']['Enums']['profile_visibility'];
-export type FriendshipStatus = Database['public']['Enums']['friendship_status'];
-export type AvatarType = Database['public']['Enums']['avatar_type'];
-export type AvatarFrame = Database['public']['Enums']['avatar_frame'];
-
-// ============================================
-// HELPER CONSTANTS
-// ============================================
-
-export const GAME_IDS = [
-  'one_piece', 'gundam', 'pokemon', 'mtg', 'star_wars_unlimited',
-  'vanguard', 'uvs', 'hololive', 'riftbound', 'lorcana',
-  'weiss', 'sw_legion', 'union_arena', 'warhammer', 'yugioh', 'digimon'
-] as const;
-
-export const XP_SOURCES: XpSource[] = [
-  'event_attendance', 'match_win', 'purchase', 'referral',
-  'daily_checkin', 'manual_adjustment', 'pass_bonus', 'achievement'
-];
-
-export const PASS_TIERS: PassTier[] = [
-  'none', 'access', 'player', 'all_access', 'shadow_vip'
-];
+export interface XPLedgerEntry {
+  id: string;
+  player_id: string;
+  game_id?: string;
+  base_xp: number;
+  multiplier: number;
+  final_xp: number;
+  source: string;
+  description?: string;
+  created_at: string;
+  game?: Game;
+}
 
 // ============================================
 // PLAYER FUNCTIONS
@@ -87,18 +65,18 @@ export async function getPlayerByHypId(hypId: string): Promise<Player | null> {
   const { data, error } = await supabase
     .from('players')
     .select('*')
-    .eq('player_id', hypId.toUpperCase())  // Correct column name!
+    .eq('hyp_id', hypId.toUpperCase())
     .single();
 
   if (error || !data) return null;
   return data;
 }
 
-export async function getPlayerById(id: string): Promise<Player | null> {
+export async function getPlayerById(playerId: string): Promise<Player | null> {
   const { data, error } = await supabase
     .from('players')
     .select('*')
-    .eq('id', id)
+    .eq('id', playerId)
     .single();
 
   if (error || !data) return null;
@@ -120,7 +98,7 @@ export async function getPlayerTotalXP(playerId: string): Promise<number> {
   return data.total_xp || 0;
 }
 
-export async function getPlayerGameXP(playerId: string): Promise<PlayerGameXp[]> {
+export async function getPlayerGameXP(playerId: string): Promise<PlayerGameXP[]> {
   const { data, error } = await supabase
     .from('player_game_xp')
     .select('*')
@@ -130,13 +108,25 @@ export async function getPlayerGameXP(playerId: string): Promise<PlayerGameXp[]>
   return data;
 }
 
-export async function getPlayerMonthlyXP(playerId: string): Promise<PlayerMonthlyXp[]> {
+export async function getPlayerMonthlyXP(playerId: string): Promise<PlayerGameXP[]> {
   const { data, error } = await supabase
     .from('player_monthly_xp')
     .select('*')
     .eq('player_id', playerId);
 
   if (error || !data) return [];
+  return data;
+}
+
+// ============================================
+// RANK FUNCTIONS
+// ============================================
+
+export async function getPlayerRank(playerId: string, gameSlug: string): Promise<string> {
+  const { data, error } = await supabase
+    .rpc('get_player_rank', { p_player_id: playerId, p_game_slug: gameSlug });
+
+  if (error || !data) return 'Newcomer';
   return data;
 }
 
@@ -170,10 +160,13 @@ export async function getGameBySlug(slug: string): Promise<Game | null> {
 // ACTIVITY FUNCTIONS
 // ============================================
 
-export async function getPlayerRecentActivity(playerId: string, limit = 10): Promise<XpLedger[]> {
+export async function getPlayerRecentActivity(playerId: string, limit = 10): Promise<XPLedgerEntry[]> {
   const { data, error } = await supabase
     .from('xp_ledger')
-    .select('*')
+    .select(`
+      *,
+      game:games(name, slug, icon)
+    `)
     .eq('player_id', playerId)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -186,15 +179,34 @@ export async function getPlayerRecentActivity(playerId: string, limit = 10): Pro
 // LEADERBOARD FUNCTIONS
 // ============================================
 
-export async function getLeaderboard(limit = 50): Promise<PlayerXpTotal[]> {
+export async function getLeaderboard(limit = 50): Promise<Array<{
+  player_id: string;
+  hyp_id: string;
+  display_name: string;
+  avatar_emoji: string;
+  avatar_background: string;
+  total_xp: number;
+}>> {
   const { data, error } = await supabase
     .from('player_xp_totals')
-    .select('*')
+    .select(`
+      player_id,
+      total_xp,
+      player:players(hyp_id, display_name, avatar_emoji, avatar_background)
+    `)
     .order('total_xp', { ascending: false })
     .limit(limit);
 
   if (error || !data) return [];
-  return data;
+  
+  return data.map((row: any) => ({
+    player_id: row.player_id,
+    hyp_id: row.player?.hyp_id || '',
+    display_name: row.player?.display_name || 'Unknown',
+    avatar_emoji: row.player?.avatar_emoji || '😎',
+    avatar_background: row.player?.avatar_background || '#3b82f6',
+    total_xp: row.total_xp || 0,
+  }));
 }
 
 // ============================================
@@ -207,6 +219,7 @@ export async function getPlayerStats(playerId: string): Promise<{
   eventCount: number;
   winCount: number;
 }> {
+  // Get total XP
   const totalXP = await getPlayerTotalXP(playerId);
 
   // Get rank position
@@ -240,7 +253,7 @@ export async function getPlayerStats(playerId: string): Promise<{
 }
 
 // ============================================
-// FULL PROFILE
+// FULL PROFILE (for dashboard)
 // ============================================
 
 export async function getFullPlayerProfile(playerId: string) {
@@ -255,10 +268,18 @@ export async function getFullPlayerProfile(playerId: string) {
 
   if (!player) return null;
 
+  // Get ranks for each game the player has XP in
+  const gameRanks = await Promise.all(
+    gameXP.map(async (gxp) => ({
+      ...gxp,
+      rank: await getPlayerRank(playerId, gxp.game_slug),
+    }))
+  );
+
   return {
     player,
     stats,
-    gameXP,
+    gameXP: gameRanks,
     monthlyXP,
     recentActivity,
     games,
