@@ -33,10 +33,12 @@ export async function GET() {
     }
 
     // Get XP breakdown by game - FIXED: use game_id not game
-    const { data: xpByGame } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('game_id, base_xp, final_xp, source')
-      .eq('player_id', player.id);
+    const { data: xpByGame, error: xpError } = await supabaseAdmin
+  .from('xp_ledger')
+  .select('game_id, base_xp, final_xp, source')
+  .eq('player_id', player.id);
+
+console.log('XP Query - player.id:', player.id, 'results:', xpByGame?.length, 'error:', xpError);
 
     // Aggregate XP by game
     const gameXpMap: Record<string, { xp: number; wins: number; events: number }> = {};
