@@ -36,18 +36,6 @@ export async function GET() {
       .select('game_id, base_xp, final_xp, source')
       .eq('player_id', player.id);
 
-    // TEMP DEBUG - remove after fixing
-    if (xpError || !xpByGame || xpByGame.length === 0) {
-      return NextResponse.json({
-        debug: true,
-        playerId: player.id,
-        playerPlayerId: player.player_id,
-        xpError: xpError,
-        xpByGameLength: xpByGame?.length,
-        xpByGameRaw: xpByGame,
-      });
-    }
-
     // Aggregate XP by game
     const gameXpMap: Record<string, { xp: number; wins: number; events: number }> = {};
     let totalXp = 0;
@@ -104,6 +92,14 @@ export async function GET() {
       linked: true,
       id: player.id,
       hyp_id: player.player_id,
+      _debug: {
+        xpByGameCount: xpByGame?.length || 0,
+        xpError: xpError,
+        totalXpCalc: totalXp,
+        gameXPCount: gameXP.length,
+        activityCount: activity?.length || 0,
+        playerIdUsed: player.id,
+      },
       displayName: player.display_name,
       realName: player.real_name,
       discord: player.discord_username,
