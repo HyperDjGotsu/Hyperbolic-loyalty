@@ -19,26 +19,34 @@ export async function GET() {
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      // PGRST116 = no rows returned, which is fine (user hasn't linked yet)
       console.error('Supabase error:', error);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
     if (!player) {
-      // User exists in Clerk but hasn't linked to a player yet
       return NextResponse.json({ 
         linked: false, 
         message: 'No player linked to this account' 
       });
     }
 
-    // Get XP breakdown by game - FIXED: use game_id not game
+    // Get XP breakdown by game
     const { data: xpByGame, error: xpError } = await supabaseAdmin
-  .from('xp_ledger')
-  .select('game_id, base_xp, final_xp, source')
-  .eq('player_id', player.id);
+      .from('xp_ledger')
+      .select('game_id, base_xp, final_xp, source')
+      .eq('player_id', player.id);
 
-console.log('XP Query - player.id:', player.id, 'results:', xpByGame?.length, 'error:', xpError);
+    // TEMP DEBUG - remove after fixing
+    if (xpError || !xpByGame || xpByGame.length === 0) {
+      return NextResponse.json({
+        debug: true,
+        playerId: player.id,
+        playerPlayerId: player.player_id,
+        xpError: xpError,
+        xpByGameLength: xpByGame?.length,
+        xpByGameRaw: xpByGame,
+      });
+    }
 
     // Aggregate XP by game
     const gameXpMap: Record<string, { xp: number; wins: number; events: number }> = {};
@@ -56,7 +64,6 @@ console.log('XP Query - player.id:', player.id, 'results:', xpByGame?.length, 'e
         gameXpMap[game].xp += xp;
         totalXp += xp;
         
-        // Count wins and events
         if (entry.source === 'match_win') {
           gameXpMap[game].wins += 1;
         }
@@ -82,7 +89,7 @@ console.log('XP Query - player.id:', player.id, 'results:', xpByGame?.length, 'e
       .order('created_at', { ascending: false })
       .limit(10);
 
-    // Build avatar object from separate columns - FIXED: not a JSON field
+    // Build avatar object from separate columns
     const avatar = {
       emoji: player.avatar_base || '😎',
       base: player.avatar_base || '😎',
@@ -96,10 +103,10 @@ console.log('XP Query - player.id:', player.id, 'results:', xpByGame?.length, 'e
     return NextResponse.json({
       linked: true,
       id: player.id,
-      hyp_id: player.player_id,  // FIXED: column is player_id, return as hyp_id for frontend
+      hyp_id: player.player_id,
       displayName: player.display_name,
       realName: player.real_name,
-      discord: player.discord_username,  // FIXED: column is discord_username
+      discord: player.discord_username,
       email: player.email,
       phone: player.phone,
       avatar,
@@ -108,7 +115,6 @@ console.log('XP Query - player.id:', player.id, 'results:', xpByGame?.length, 'e
       xp: totalXp,
       gameXP,
       recentActivity: activity || [],
-      // Additional profile fields
       primaryGameId: player.primary_game_id,
       isFoundingMember: player.is_founding_member,
       isShadowVip: player.is_shadow_vip,
