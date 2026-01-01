@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Generate random HYP-ID
 function generatePlayerId(): string {
@@ -29,7 +24,7 @@ export async function POST(request: Request) {
     const { action, hypId, displayName, primaryGame } = body;
 
     // Check if user already has a linked player
-    const { data: existingLink } = await supabase
+    const { data: existingLink } = await supabaseAdmin
       .from('players')
       .select('id, player_id')
       .eq('clerk_user_id', userId)
@@ -49,7 +44,7 @@ export async function POST(request: Request) {
       }
 
       // Find the player
-      const { data: player, error: findError } = await supabase
+      const { data: player, error: findError } = await supabaseAdmin
         .from('players')
         .select('*')
         .eq('player_id', hypId.toUpperCase())
@@ -67,7 +62,7 @@ export async function POST(request: Request) {
       }
 
       // Link the player to this Clerk user
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseAdmin
         .from('players')
         .update({ clerk_user_id: userId })
         .eq('id', player.id);
@@ -97,7 +92,7 @@ export async function POST(request: Request) {
       let attempts = 0;
       
       while (attempts < 10) {
-        const { data: existing } = await supabase
+        const { data: existing } = await supabaseAdmin
           .from('players')
           .select('id')
           .eq('player_id', newPlayerId)
@@ -109,13 +104,13 @@ export async function POST(request: Request) {
       }
 
       // Create the player
-      const { data: newPlayer, error: createError } = await supabase
+      const { data: newPlayer, error: createError } = await supabaseAdmin
         .from('players')
         .insert({
           player_id: newPlayerId,
           display_name: displayName,
           clerk_user_id: userId,
-          primary_game_id: primaryGame || null,
+          primary_game_id: primaryGame ? parseInt(primaryGame) : null,
         })
         .select()
         .single();

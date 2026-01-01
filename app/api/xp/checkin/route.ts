@@ -1,24 +1,18 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-const CHECKIN_XP = 20;
-
+// GET - Check if user has checked in today
 export async function GET() {
-  // Check if user has already checked in today
   try {
     const { userId } = await auth();
+    
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Get player
-    const { data: player, error: playerError } = await supabase
+    // Get player by clerk_user_id
+    const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
       .select('id')
       .eq('clerk_user_id', userId)
@@ -31,8 +25,8 @@ export async function GET() {
     // Check for check-in today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const { data: todayCheckin } = await supabase
+
+    const { data: checkinToday } = await supabaseAdmin
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
@@ -41,25 +35,27 @@ export async function GET() {
       .limit(1);
 
     return NextResponse.json({
-      hasCheckedInToday: todayCheckin && todayCheckin.length > 0
+      hasCheckedInToday: checkinToday && checkinToday.length > 0
     });
   } catch (error) {
-    console.error('Check-in status error:', error);
+    console.error('Error checking check-in status:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
+// POST - Perform check-in and award XP
 export async function POST() {
   try {
     const { userId } = await auth();
+    
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Get player
-    const { data: player, error: playerError } = await supabase
+    // Get player by clerk_user_id
+    const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id')
+      .select('id')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -67,11 +63,11 @@ export async function POST() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Check if already checked in today
+    // Check for existing check-in today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const { data: todayCheckin } = await supabase
+
+    const { data: existingCheckin } = await supabaseAdmin
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
@@ -79,41 +75,39 @@ export async function POST() {
       .gte('created_at', today.toISOString())
       .limit(1);
 
-    if (todayCheckin && todayCheckin.length > 0) {
+    if (existingCheckin && existingCheckin.length > 0) {
       return NextResponse.json({ 
         error: 'Already checked in today',
-        hasCheckedInToday: true 
+        alreadyCheckedIn: true 
       }, { status: 400 });
     }
 
     // Award check-in XP
-    const { data: xpEntry, error: xpError } = await supabase
+    const CHECK_IN_XP = 20;
+    
+    const { error: insertError } = await supabaseAdmin
       .from('xp_ledger')
       .insert({
         player_id: player.id,
+        base_xp: CHECK_IN_XP,
+        multiplier: 1,
+        final_xp: CHECK_IN_XP,
         source: 'check_in',
-        base_xp: CHECKIN_XP,
-        multiplier: 1.0,
-        final_xp: CHECKIN_XP,
-        description: 'Daily store check-in',
-        game_id: 'general',
-      })
-      .select()
-      .single();
+        description: 'Daily check-in',
+      });
 
-    if (xpError) {
-      console.error('XP insert error:', xpError);
+    if (insertError) {
+      console.error('Error inserting check-in XP:', insertError);
       return NextResponse.json({ error: 'Failed to award XP' }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
-      xpEarned: CHECKIN_XP,
-      message: 'Welcome back!',
-      entry: xpEntry
+      xpAwarded: CHECK_IN_XP,
+      message: 'Check-in successful!'
     });
   } catch (error) {
-    console.error('Check-in error:', error);
+    console.error('Error processing check-in:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

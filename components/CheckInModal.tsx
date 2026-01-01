@@ -18,7 +18,6 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
     xpEarned: number;
     message: string;
   } | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const performCheckIn = async () => {
     if (hasCheckedIn) {
@@ -29,39 +28,39 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
 
     setNfcStatus('scanning');
 
-    // Simulate NFC scan delay for UX
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setNfcStatus('found');
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Call the real API
-    try {
-      const response = await fetch('/api/xp/checkin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setCheckInResult({ 
-          success: true, 
-          xpEarned: data.xpEarned, 
-          message: data.message || 'Welcome back!' 
+    // Simulate NFC scan delay
+    setTimeout(async () => {
+      setNfcStatus('found');
+      
+      // Actually call the API
+      try {
+        const response = await fetch('/api/xp/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
         });
-        setNfcStatus('success');
-      } else if (data.hasCheckedInToday) {
-        setCheckInResult({ success: false, xpEarned: 0, message: 'Already checked in!' });
-        setNfcStatus('already-checked');
-      } else {
-        setErrorMessage(data.error || 'Check-in failed');
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          setCheckInResult({ 
+            success: true, 
+            xpEarned: data.xpAwarded || 20, 
+            message: 'Welcome back!' 
+          });
+          setNfcStatus('success');
+        } else if (data.alreadyCheckedIn) {
+          setCheckInResult({ success: false, xpEarned: 0, message: 'Already checked in!' });
+          setNfcStatus('already-checked');
+        } else {
+          setCheckInResult({ success: false, xpEarned: 0, message: data.error || 'Check-in failed' });
+          setNfcStatus('error');
+        }
+      } catch (error) {
+        console.error('Check-in error:', error);
+        setCheckInResult({ success: false, xpEarned: 0, message: 'Network error' });
         setNfcStatus('error');
       }
-    } catch (error) {
-      console.error('Check-in error:', error);
-      setErrorMessage('Network error. Please try again.');
-      setNfcStatus('error');
-    }
+    }, 1500);
   };
 
   const handleClose = () => {
@@ -72,10 +71,8 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
       onClose();
     }
     
-    // Reset state
     setNfcStatus('idle');
     setCheckInResult(null);
-    setErrorMessage('');
   };
 
   return (
@@ -134,7 +131,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
                 <span className="text-5xl">❌</span>
               </div>
               <h3 className="text-2xl font-bold text-red-400 mb-2">Check-in Failed</h3>
-              <p className="text-slate-400">{errorMessage}</p>
+              <p className="text-slate-400">{checkInResult?.message || 'Please try again'}</p>
             </>
           )}
 

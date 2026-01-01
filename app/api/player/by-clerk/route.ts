@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET() {
   try {
@@ -17,7 +12,7 @@ export async function GET() {
     }
 
     // Look up player by clerk_user_id
-    const { data: player, error } = await supabase
+    const { data: player, error } = await supabaseAdmin
       .from('players')
       .select('*')
       .eq('clerk_user_id', userId)
@@ -37,40 +32,39 @@ export async function GET() {
       });
     }
 
-    // Get game XP breakdown from xp_ledger
-    const { data: xpByGame } = await supabase
+    // Fetch full player data using the existing endpoint logic
+    const hypId = player.hyp_id;
+    
+    // Get game XP breakdown
+    const { data: xpByGame } = await supabaseAdmin
       .from('xp_ledger')
-      .select('game_id, base_xp, final_xp, source')
+      .select('game, base_xp')
       .eq('player_id', player.id);
 
     // Aggregate XP by game
-    const gameXpMap: Record<string, { game_xp: number; game_wins: number; game_events: number }> = {};
+    const gameXpMap: Record<string, number> = {};
     let totalXp = 0;
     
     if (xpByGame) {
       xpByGame.forEach((entry: any) => {
-        const gameId = entry.game_id || 'general';
-        const xp = entry.final_xp || entry.base_xp || 0;
-        
-        if (!gameXpMap[gameId]) {
-          gameXpMap[gameId] = { game_xp: 0, game_wins: 0, game_events: 0 };
-        }
-        gameXpMap[gameId].game_xp += xp;
-        if (entry.source === 'match_win') gameXpMap[gameId].game_wins++;
-        if (entry.source === 'event_attendance') gameXpMap[gameId].game_events++;
+        const game = entry.game || 'general';
+        const xp = entry.base_xp || 0;
+        gameXpMap[game] = (gameXpMap[game] || 0) + xp;
         totalXp += xp;
       });
     }
 
-    const gameXP = Object.entries(gameXpMap).map(([game_id, data]) => ({
+    const gameXP = Object.entries(gameXpMap).map(([game_id, game_xp]) => ({
       game_id,
-      ...data,
+      game_xp,
+      game_wins: 0,
+      game_events: 0,
     }));
 
     // Get recent activity
-    const { data: activity } = await supabase
+    const { data: activity } = await supabaseAdmin
       .from('xp_ledger')
-      .select('id, base_xp, final_xp, source, description, created_at, game_id')
+      .select('id, base_xp, final_xp, source, description, created_at, game')
       .eq('player_id', player.id)
       .order('created_at', { ascending: false })
       .limit(10);
@@ -78,18 +72,11 @@ export async function GET() {
     return NextResponse.json({
       linked: true,
       id: player.id,
-      hyp_id: player.player_id,
+      hyp_id: player.hyp_id,
       displayName: player.display_name,
       realName: player.real_name,
-      discord: player.discord_username,
-      avatar: {
-        type: player.avatar_type,
-        base: player.avatar_base,
-        photoUrl: player.avatar_photo_url,
-        background: player.avatar_background,
-        frame: player.avatar_frame,
-        badge: player.avatar_badge,
-      },
+      discord: player.discord,
+      avatar: player.avatar || { emoji: '😎', background: '#3b82f6', frame: 'none', badge: null },
       passTier: player.pass_tier,
       xp: totalXp,
       gameXP,

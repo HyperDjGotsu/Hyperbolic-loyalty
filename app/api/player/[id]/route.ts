@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +13,7 @@ export async function GET(
 
   try {
     // Get player by HYP ID
-    const { data: player, error: playerError } = await supabase
+    const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
       .select('*')
       .eq('player_id', playerId)
@@ -28,16 +23,21 @@ export async function GET(
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Get total XP directly from xp_ledger
-    const { data: xpData, error: xpError } = await supabase
+    // Get total XP directly from xp_ledger (more reliable than materialized views)
+    console.log('Querying xp_ledger for player.id:', player.id);
+    const { data: xpData, error: xpError } = await supabaseAdmin
       .from('xp_ledger')
       .select('final_xp')
       .eq('player_id', player.id);
     
+    console.log('xpData result:', xpData);
+    console.log('xpError:', xpError);
+    
     const totalXP = xpData?.reduce((sum, row) => sum + (row.final_xp || 0), 0) || 0;
+    console.log('totalXP calculated:', totalXP);
 
     // Get game XP breakdown directly from xp_ledger
-    const { data: gameXPRaw } = await supabase
+    const { data: gameXPRaw } = await supabaseAdmin
       .from('xp_ledger')
       .select('game_id, final_xp, source')
       .eq('player_id', player.id);
@@ -56,7 +56,7 @@ export async function GET(
     const gameXP = Object.values(gameXPMap);
 
     // Get recent activity
-    const { data: activity } = await supabase
+    const { data: activity } = await supabaseAdmin
       .from('xp_ledger')
       .select(`
         id,
@@ -78,9 +78,7 @@ export async function GET(
       realName: player.real_name,
       discord: player.discord_username,
       avatar: {
-        type: player.avatar_type,
-        base: player.avatar_base,
-        photoUrl: player.avatar_photo_url,
+        emoji: player.avatar_emoji,
         background: player.avatar_background,
         frame: player.avatar_frame,
         badge: player.avatar_badge,

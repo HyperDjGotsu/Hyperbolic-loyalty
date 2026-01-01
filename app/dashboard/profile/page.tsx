@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useClerk } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+// import { useUser, useClerk } from '@clerk/nextjs'; // Disabled for testing
 import { FloatingParticles, Avatar, avatarOptions } from '@/components/ui';
 import type { Player } from '@/lib/types';
 
@@ -60,14 +61,15 @@ const mockPlayer: Player = {
 };
 
 export default function ProfilePage() {
-  const { signOut } = useClerk();
+  const router = useRouter();
+  // const { user } = useUser(); // Disabled for testing
+  // const { signOut } = useClerk(); // Disabled for testing
   
-  // Sign out - clears localStorage and Clerk session
-  const handleSignOut = async () => {
+  // Test sign out - clears localStorage and redirects
+  const handleSignOut = () => {
     localStorage.removeItem('hyperbolic_player_id');
     localStorage.removeItem('hyperbolic_player_uuid');
-    // Use Clerk's built-in redirect instead of router.push
-    await signOut({ redirectUrl: '/' });
+    router.push('/');
   };
   
   const [player] = useState<Player>(mockPlayer);

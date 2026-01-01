@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Characters for HYP ID (no ambiguous 0/O/1/I/L)
 const ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-function generatePlayerId(): string {
+function generateHypId(): string {
   let id = 'HYP-';
   for (let i = 0; i < 6; i++) {
     id += ID_CHARS.charAt(Math.floor(Math.random() * ID_CHARS.length));
@@ -27,19 +22,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique HYP ID
-    let playerId = generatePlayerId();
+    let hypId = generateHypId();
     let attempts = 0;
     
     // Check for uniqueness (retry up to 10 times)
     while (attempts < 10) {
-      const { data: existing } = await supabase
+      const { data: existing } = await supabaseAdmin
         .from('players')
         .select('id')
-        .eq('player_id', playerId)
+        .eq('player_id', hypId)
         .single();
       
       if (!existing) break;
-      playerId = generatePlayerId();
+      hypId = generateHypId();
       attempts++;
     }
 
@@ -48,13 +43,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the player
-    const { data: player, error } = await supabase
+    const { data: player, error } = await supabaseAdmin
       .from('players')
       .insert({
-        player_id: playerId,
+        player_id: hypId,
         display_name: displayName.trim(),
-        avatar_type: avatar?.type || 'emoji',
-        avatar_base: avatar?.base || '😎',
+        avatar_emoji: avatar?.base || '😎',
         avatar_background: avatar?.background || '#3b82f6',
         avatar_frame: avatar?.frame || 'none',
         avatar_badge: avatar?.badge || null,
@@ -69,13 +63,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create player' }, { status: 500 });
     }
 
+    // If games were selected, we can track those for personalization later
+    // For now, we just return the new player
+
     return NextResponse.json({
       id: player.id,
       hyp_id: player.player_id,
       displayName: player.display_name,
       avatar: {
-        type: player.avatar_type,
-        base: player.avatar_base,
+        emoji: player.avatar_emoji,
         background: player.avatar_background,
         frame: player.avatar_frame,
         badge: player.avatar_badge,

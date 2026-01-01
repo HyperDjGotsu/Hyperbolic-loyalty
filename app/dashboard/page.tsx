@@ -91,16 +91,6 @@ export default function DashboardHome() {
             localStorage.setItem('hyperbolic_player_id', data.hyp_id);
             localStorage.setItem('hyperbolic_player_uuid', data.id);
             setPlayerData(data);
-            
-            // Check check-in and spin status
-            const [checkinStatus, spinStatus] = await Promise.all([
-              fetch('/api/xp/checkin').then(r => r.json()).catch(() => ({ hasCheckedInToday: false })),
-              fetch('/api/xp/daily-spin').then(r => r.json()).catch(() => ({ hasSpunToday: false }))
-            ]);
-            
-            setHasCheckedInToday(checkinStatus.hasCheckedInToday || false);
-            setHasSpunToday(spinStatus.hasSpunToday || false);
-            
             setLoading(false);
             return;
           } else {
@@ -144,6 +134,33 @@ export default function DashboardHome() {
 
     loadPlayer();
   }, [isLoaded, user, router]);
+
+  // Load check-in and spin status when player is loaded
+  useEffect(() => {
+    async function loadDailyStatus() {
+      if (!playerData || !user) return;
+      
+      try {
+        // Check check-in status
+        const checkinRes = await fetch('/api/xp/checkin');
+        if (checkinRes.ok) {
+          const checkinData = await checkinRes.json();
+          setHasCheckedInToday(checkinData.hasCheckedInToday || false);
+        }
+        
+        // Check spin status
+        const spinRes = await fetch('/api/xp/daily-spin');
+        if (spinRes.ok) {
+          const spinData = await spinRes.json();
+          setHasSpunToday(spinData.hasSpunToday || false);
+        }
+      } catch (error) {
+        console.error('Error loading daily status:', error);
+      }
+    }
+    
+    loadDailyStatus();
+  }, [playerData, user]);
 
   // Derive display values from real data
   const totalXp = playerData?.xp || 0;
