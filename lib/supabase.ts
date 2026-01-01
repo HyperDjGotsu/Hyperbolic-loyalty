@@ -50,15 +50,15 @@ export type PlayerMonthlyXp = Database['public']['Views']['player_monthly_xp']['
 // export type GameLeaderboard = Database['public']['Views']['game_leaderboards']['Row'];
 // export type OnePieceMonthlyBounty = Database['public']['Views']['one_piece_monthly_bounties']['Row'];
 
-// Enum types
+// Enum types - FIXED: use actual DB enum names
 // export type PassTier = Database['public']['Enums']['pass_tier'];
 // export type PassStatus = Database['public']['Enums']['pass_status'];
 export type XpSource = Database['public']['Enums']['xp_source'];
 export type EventStatus = Database['public']['Enums']['event_status'];
-export type ProfileVisibility = Database['public']['Enums']['profile_visibility'];
-export type FriendshipStatus = Database['public']['Enums']['friendship_status'];
-export type AvatarType = Database['public']['Enums']['avatar_type'];
-export type AvatarFrame = Database['public']['Enums']['avatar_frame'];
+export type ProfileVisibility = Database['public']['Enums']['privacy_visibility'];
+export type FriendshipStatus = Database['public']['Enums']['friend_status'];
+// export type AvatarType = Database['public']['Enums']['avatar_type'];
+// export type AvatarFrame = Database['public']['Enums']['avatar_frame'];
 
 // ============================================
 // HELPER CONSTANTS
