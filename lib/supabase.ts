@@ -29,9 +29,9 @@ export type Game = Database['public']['Tables']['games']['Row'];
 export type XpLedger = Database['public']['Tables']['xp_ledger']['Row'];
 export type Emperor = Database['public']['Tables']['emperors']['Row'];
 export type Event = Database['public']['Tables']['events']['Row'];
-export type EventRegistration = Database['public']['Tables']['event_registrations']['Row'];
-export type Pass = Database['public']['Tables']['passes']['Row'];
-export type Friendship = Database['public']['Tables']['friendships']['Row'];
+// export type EventRegistration = Database['public']['Tables']['event_registrations']['Row'];
+// export type Pass = Database['public']['Tables']['passes']['Row'];
+// export type Friendship = Database['public']['Tables']['friendships']['Row'];
 
 // Insert types (what you INSERT)
 export type PlayerInsert = Database['public']['Tables']['players']['Insert'];
