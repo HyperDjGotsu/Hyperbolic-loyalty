@@ -47,8 +47,8 @@ export type EventUpdate = Database['public']['Tables']['events']['Update'];
 export type PlayerXpTotal = Database['public']['Views']['player_xp_totals']['Row'];
 export type PlayerGameXp = Database['public']['Views']['player_game_xp']['Row'];
 export type PlayerMonthlyXp = Database['public']['Views']['player_monthly_xp']['Row'];
-export type GameLeaderboard = Database['public']['Views']['game_leaderboards']['Row'];
-export type OnePieceMonthlyBounty = Database['public']['Views']['one_piece_monthly_bounties']['Row'];
+// export type GameLeaderboard = Database['public']['Views']['game_leaderboards']['Row'];
+// export type OnePieceMonthlyBounty = Database['public']['Views']['one_piece_monthly_bounties']['Row'];
 
 // Enum types
 // export type PassTier = Database['public']['Enums']['pass_tier'];
