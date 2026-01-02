@@ -402,6 +402,14 @@ export type Database = {
           phone: string | null
           player_id: string
           primary_game_id: string | null
+          privacy_allow_friend_requests: boolean | null
+          privacy_hide_from_search: boolean | null
+          privacy_profile_visibility: string | null
+          privacy_show_activity: boolean | null
+          privacy_show_as_anonymous: boolean | null
+          privacy_show_games: boolean | null
+          privacy_show_on_leaderboard: boolean | null
+          privacy_show_real_name: boolean | null
           profile_visibility:
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
@@ -449,6 +457,14 @@ export type Database = {
           phone?: string | null
           player_id: string
           primary_game_id?: string | null
+          privacy_allow_friend_requests?: boolean | null
+          privacy_hide_from_search?: boolean | null
+          privacy_profile_visibility?: string | null
+          privacy_show_activity?: boolean | null
+          privacy_show_as_anonymous?: boolean | null
+          privacy_show_games?: boolean | null
+          privacy_show_on_leaderboard?: boolean | null
+          privacy_show_real_name?: boolean | null
           profile_visibility?:
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
@@ -496,6 +512,14 @@ export type Database = {
           phone?: string | null
           player_id?: string
           primary_game_id?: string | null
+          privacy_allow_friend_requests?: boolean | null
+          privacy_hide_from_search?: boolean | null
+          privacy_profile_visibility?: string | null
+          privacy_show_activity?: boolean | null
+          privacy_show_as_anonymous?: boolean | null
+          privacy_show_games?: boolean | null
+          privacy_show_on_leaderboard?: boolean | null
+          privacy_show_real_name?: boolean | null
           profile_visibility?:
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
