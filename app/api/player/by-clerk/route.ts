@@ -3,6 +3,32 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 // ============================================
+// GAME CONFIGURATION
+// ============================================
+
+// Game currency names (what XP is called for each game)
+const GAME_CURRENCIES: Record<string, string> = {
+  one_piece: 'Berries',
+  gundam: 'Pilot Points',
+  pokemon: 'Pokepoints',
+  mtg: 'Mana Marks',
+  star_wars: 'Holopoints',
+  star_wars_unlimited: 'Holopoints',
+  vanguard: 'Ride Gauge',
+  uvs: 'Versus Tokens',
+  hololive: 'Fan Subs',
+  riftbound: 'Essence',
+  lorcana: 'Lorepoints',
+  weiss: 'Climax Points',
+  weiss_schwarz: 'Climax Points',
+  sw_legion: 'Battle Orders',
+  union_arena: 'Plot Armor',
+  warhammer: 'War Honors',
+  digimon: 'Digi-Points',
+  yugioh: 'Star Chips',
+};
+
+// ============================================
 // RANK CALCULATION FUNCTIONS
 // ============================================
 
@@ -65,6 +91,10 @@ function getRankForGame(gameId: string, xp: number): string {
   
   // Default fallback for unknown games
   return getStandardRank(xp, ['Newcomer', 'Regular', 'Veteran', 'Expert', 'Master', 'Elite', 'Legend']);
+}
+
+function getCurrencyForGame(gameId: string): string {
+  return GAME_CURRENCIES[gameId] || 'XP';
 }
 
 // ============================================
@@ -130,7 +160,7 @@ export async function GET() {
       });
     }
 
-    // Build gameXP array WITH RANKS
+    // Build gameXP array WITH RANKS AND CURRENCY NAMES
     const gameXP = Object.entries(gameXpMap).map(([game_id, data]) => ({
       game_id,
       game_xp: data.xp,
@@ -138,6 +168,7 @@ export async function GET() {
       game_wins: data.wins,
       game_events: data.events,
       rank: getRankForGame(game_id, data.xp),
+      xpName: getCurrencyForGame(game_id),
     }));
 
     // Get recent activity
