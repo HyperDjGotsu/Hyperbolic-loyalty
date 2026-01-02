@@ -7,28 +7,30 @@ import { supabaseAdmin } from '@/lib/supabase';
 // ============================================
 
 // One Piece uses higher thresholds (2x/week events)
+// Thresholds: 0-199, 200-499, 500-999, 1000-1499, 1500-2499, 2500-3999, 4000+
 function getOnePieceRank(xp: number): string {
-  if (xp >= 1500) return 'Yonko Commander';
-  if (xp >= 1000) return 'Warlord';
-  if (xp >= 750) return 'Worst Generation';
-  if (xp >= 500) return 'Notorious Pirate';
-  if (xp >= 250) return 'Super Rookie';
-  if (xp >= 100) return 'Paradise Pirate';
+  if (xp >= 4000) return 'Yonko Commander';
+  if (xp >= 2500) return 'Warlord';
+  if (xp >= 1500) return 'Worst Generation';
+  if (xp >= 1000) return 'Notorious Pirate';
+  if (xp >= 500) return 'Super Rookie';
+  if (xp >= 200) return 'Paradise Pirate';
   return 'East Blue Rookie';
 }
 
 // Standard thresholds for 1x/week games
+// Thresholds: 0-99, 100-249, 250-499, 500-999, 1000-1499, 1500-2499, 2500+
 function getStandardRank(xp: number, ranks: string[]): string {
-  if (xp >= 750) return ranks[6];
-  if (xp >= 500) return ranks[5];
-  if (xp >= 350) return ranks[4];
-  if (xp >= 200) return ranks[3];
-  if (xp >= 100) return ranks[2];
-  if (xp >= 50) return ranks[1];
+  if (xp >= 2500) return ranks[6];
+  if (xp >= 1500) return ranks[5];
+  if (xp >= 1000) return ranks[4];
+  if (xp >= 500) return ranks[3];
+  if (xp >= 250) return ranks[2];
+  if (xp >= 100) return ranks[1];
   return ranks[0];
 }
 
-// Game-specific rank arrays [0-49, 50-99, 100-199, 200-349, 350-499, 500-749, 750+]
+// Game-specific rank arrays [0-99, 100-249, 250-499, 500-999, 1000-1499, 1500-2499, 2500+]
 const GAME_RANKS: Record<string, string[]> = {
   gundam: ['Cadet', 'Ensign', 'Lieutenant', 'Captain', 'Commander', 'Ace Pilot', 'Newtype'],
   pokemon: ['Pokemon Fan', 'Trainer', 'Ace Trainer', 'Gym Challenger', 'Gym Leader', 'Elite Four', 'Champion'],
