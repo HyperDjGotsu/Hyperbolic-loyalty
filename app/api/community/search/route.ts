@@ -86,7 +86,7 @@ export async function GET(request: Request) {
         level: isPrivate ? null : level,
         totalXp: isPrivate ? null : totalXp,
         avatar: {
-          type: 'emoji',
+          type: 'emoji' as const,
           base: isPrivate ? '🔒' : (player.avatar_base || '😎'),
           photoUrl: null,
           background: isPrivate ? '#1e293b' : (player.avatar_background || '#3b82f6'),

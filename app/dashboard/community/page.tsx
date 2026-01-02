@@ -6,7 +6,7 @@ import { FloatingParticles, Avatar, GlowButton } from '@/components/ui';
 
 // Types
 interface PlayerAvatar {
-  type: string;
+  type: 'emoji' | 'photo';
   base: string;
   photoUrl: string | null;
   background: string;

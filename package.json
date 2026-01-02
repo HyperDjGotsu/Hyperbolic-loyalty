@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-	"db:types": "npx supabase gen types typescript --project-id gdyksfarqpzfvymzifxr > types/database.types.ts"
-	
+    "db:types": "npx supabase gen types typescript --project-id gdyksfarqpzfvymzifxr > types/database.types.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.5",
@@ -30,6 +29,7 @@
     "eslint": "^8.56.0",
     "eslint-config-next": "14.2.25",
     "postcss": "^8.4.33",
+    "supabase": "^2.70.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"
   }

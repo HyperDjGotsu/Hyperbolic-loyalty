@@ -80,7 +80,7 @@ export async function GET(request: Request) {
         level,
         totalXp,
         avatar: {
-          type: 'emoji',
+          type: 'emoji' as const,
           base: showAsAnonymous ? '🎭' : (player?.avatar_base || '😎'),
           photoUrl: null,
           background: showAsAnonymous ? '#64748b' : (player?.avatar_background || '#3b82f6'),
