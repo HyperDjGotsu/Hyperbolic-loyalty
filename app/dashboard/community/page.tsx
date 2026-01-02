@@ -1,8 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 import { FloatingParticles, Avatar, GlowButton } from '@/components/ui';
 import type { CommunityMember, LeaderboardEntry } from '@/lib/types';
+
+// Privacy options configuration
+const privacyOptions = {
+  profileVisibility: [
+    { id: 'public', label: 'Public', icon: '🌐', description: 'Anyone can see your profile' },
+    { id: 'friends', label: 'Friends Only', icon: '👥', description: 'Only friends can see your profile' },
+    { id: 'private', label: 'Private', icon: '🔒', description: 'Only you can see your profile' },
+  ],
+};
 
 const mockCommunityMembers: CommunityMember[] = [
   { id: 'HYP-L1NK', name: 'LinkMaster', title: 'Gundam Ace', level: 38, totalXp: 3200, avatar: { type: 'emoji', base: '🥷', photoUrl: null, background: '#22c55e', frame: 'silver', badge: '🤖' }, games: ['gundam', 'onepiece'], isFriend: true, isOnline: true, privacy: { profileVisibility: 'public' }, lastSeen: 'Now' },
@@ -21,10 +31,74 @@ const mockLeaderboard: LeaderboardEntry[] = [
 
 const playerFriends = ['HYP-L1NK', 'HYP-Z3LD', 'HYP-S4MU'];
 
+// Default privacy settings
+const defaultPrivacySettings = {
+  profileVisibility: 'public' as 'public' | 'friends' | 'private',
+  showOnLeaderboard: true,
+  showAsAnonymous: false,
+  allowFriendRequests: true,
+  hideFromSearch: false,
+  showActivity: true,
+  showGames: true,
+  showRealName: false,
+};
+
 export default function CommunityPage() {
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'discover' | 'leaderboard'>('friends');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMember, setSelectedMember] = useState<CommunityMember | null>(null);
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+  const [privacySettings, setPrivacySettings] = useState(defaultPrivacySettings);
+  const [saving, setSaving] = useState(false);
+
+  // Load privacy settings from API
+  useEffect(() => {
+    async function loadPrivacySettings() {
+      try {
+        const res = await fetch('/api/player/privacy');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.privacy) {
+            setPrivacySettings({
+              profileVisibility: data.privacy.profile_visibility || 'public',
+              showOnLeaderboard: data.privacy.show_on_leaderboard ?? true,
+              showAsAnonymous: data.privacy.show_as_anonymous ?? false,
+              allowFriendRequests: data.privacy.allow_friend_requests ?? true,
+              hideFromSearch: data.privacy.hide_from_search ?? false,
+              showActivity: data.privacy.show_activity ?? true,
+              showGames: data.privacy.show_games ?? true,
+              showRealName: data.privacy.show_real_name ?? false,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading privacy settings:', error);
+      }
+    }
+    if (user) {
+      loadPrivacySettings();
+    }
+  }, [user]);
+
+  // Save privacy settings to API
+  const savePrivacySettings = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/player/privacy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(privacySettings),
+      });
+      if (res.ok) {
+        setShowPrivacySettings(false);
+      }
+    } catch (error) {
+      console.error('Error saving privacy settings:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const friends = mockCommunityMembers.filter((m) => playerFriends.includes(m.id));
   const onlineFriends = friends.filter((f) => f.isOnline);
@@ -46,6 +120,9 @@ export default function CommunityPage() {
             {member.privacy.profileVisibility === 'private' && (
               <span className="text-slate-500">🔒</span>
             )}
+            {member.privacy.profileVisibility === 'friends' && !isFriend && (
+              <span className="text-slate-500">👥</span>
+            )}
           </div>
           {canView ? (
             <>
@@ -55,7 +132,9 @@ export default function CommunityPage() {
               </div>
             </>
           ) : (
-            <div className="text-slate-500 text-sm italic">Private profile</div>
+            <div className="text-slate-500 text-sm italic">
+              {member.privacy.profileVisibility === 'private' ? 'Private profile' : 'Friends only'}
+            </div>
           )}
         </div>
         {isFriend ? (
@@ -66,6 +145,249 @@ export default function CommunityPage() {
       </div>
     );
   };
+
+  // Privacy Settings Modal
+  const PrivacySettingsModal = () => (
+    <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
+      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+        <button onClick={() => setShowPrivacySettings(false)} className="text-slate-400">
+          ← Back
+        </button>
+        <h2 className="text-white font-bold font-orbitron">Privacy Settings</h2>
+        <div className="w-12" />
+      </div>
+      <div className="flex-1 overflow-auto p-4 space-y-6">
+        {/* Safety Banner */}
+        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🛡️</span>
+            <div>
+              <div className="font-bold text-white">Your Safety Matters</div>
+              <div className="text-slate-300 text-sm mt-1">
+                Control who can see your profile, find you in search, and contact you. 
+                Your real name is never shown unless you enable it.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Visibility */}
+        <div>
+          <h3 className="font-bold text-white mb-3">👁️ Profile Visibility</h3>
+          <div className="space-y-2">
+            {privacyOptions.profileVisibility.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, profileVisibility: opt.id as any }))}
+                className={`w-full p-4 rounded-xl flex items-center justify-between ${
+                  privacySettings.profileVisibility === opt.id
+                    ? 'bg-cyan-500/20 border-2 border-cyan-500'
+                    : 'bg-slate-800/50 border-2 border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{opt.icon}</span>
+                  <div className="text-left">
+                    <div className="text-white font-medium">{opt.label}</div>
+                    <div className="text-slate-400 text-sm">{opt.description}</div>
+                  </div>
+                </div>
+                {privacySettings.profileVisibility === opt.id && (
+                  <span className="text-cyan-400">✓</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Leaderboard Settings */}
+        <div>
+          <h3 className="font-bold text-white mb-3">🏆 Leaderboard</h3>
+          <div className="space-y-2">
+            <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📊</span>
+                <div>
+                  <span className="text-white text-sm">Show on Leaderboard</span>
+                  <div className="text-slate-500 text-xs">Appear in public rankings</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, showOnLeaderboard: !prev.showOnLeaderboard }))}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  privacySettings.showOnLeaderboard ? 'bg-cyan-500' : 'bg-slate-700'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                    privacySettings.showOnLeaderboard ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            {privacySettings.showOnLeaderboard && (
+              <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50 ml-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">🎭</span>
+                  <div>
+                    <span className="text-white text-sm">Show as Anonymous</span>
+                    <div className="text-slate-500 text-xs">Hide your name on leaderboard</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPrivacySettings((prev) => ({ ...prev, showAsAnonymous: !prev.showAsAnonymous }))}
+                  className={`w-12 h-7 rounded-full transition-colors relative ${
+                    privacySettings.showAsAnonymous ? 'bg-cyan-500' : 'bg-slate-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                      privacySettings.showAsAnonymous ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Discovery Settings */}
+        <div>
+          <h3 className="font-bold text-white mb-3">🔍 Discovery</h3>
+          <div className="space-y-2">
+            <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🚫</span>
+                <div>
+                  <span className="text-white text-sm">Hide from Search</span>
+                  <div className="text-slate-500 text-xs">Don't appear in player searches</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, hideFromSearch: !prev.hideFromSearch }))}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  privacySettings.hideFromSearch ? 'bg-cyan-500' : 'bg-slate-700'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                    privacySettings.hideFromSearch ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">👥</span>
+                <div>
+                  <span className="text-white text-sm">Allow Friend Requests</span>
+                  <div className="text-slate-500 text-xs">Let others send you friend requests</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, allowFriendRequests: !prev.allowFriendRequests }))}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  privacySettings.allowFriendRequests ? 'bg-cyan-500' : 'bg-slate-700'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                    privacySettings.allowFriendRequests ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* What Others See */}
+        <div>
+          <h3 className="font-bold text-white mb-3">👀 What Others See</h3>
+          <div className="space-y-2">
+            <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📋</span>
+                <div>
+                  <span className="text-white text-sm">Show Activity</span>
+                  <div className="text-slate-500 text-xs">Show recent XP activity to others</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, showActivity: !prev.showActivity }))}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  privacySettings.showActivity ? 'bg-cyan-500' : 'bg-slate-700'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                    privacySettings.showActivity ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🎮</span>
+                <div>
+                  <span className="text-white text-sm">Show Games</span>
+                  <div className="text-slate-500 text-xs">Show which games you play</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, showGames: !prev.showGames }))}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  privacySettings.showGames ? 'bg-cyan-500' : 'bg-slate-700'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                    privacySettings.showGames ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            
+            <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📛</span>
+                <div>
+                  <span className="text-white text-sm">Show Real Name</span>
+                  <div className="text-slate-500 text-xs">Display your real name on profile</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, showRealName: !prev.showRealName }))}
+                className={`w-12 h-7 rounded-full transition-colors relative ${
+                  privacySettings.showRealName ? 'bg-cyan-500' : 'bg-slate-700'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                    privacySettings.showRealName ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Save Button */}
+        <div className="pt-4 pb-8">
+          <GlowButton
+            color="cyan"
+            onClick={savePrivacySettings}
+            disabled={saving}
+            className="w-full py-4"
+          >
+            {saving ? 'Saving...' : '💾 Save Privacy Settings'}
+          </GlowButton>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex-1 overflow-auto">
@@ -79,7 +401,10 @@ export default function CommunityPage() {
             </h1>
             <p className="text-slate-400 text-sm">{onlineFriends.length} friends online</p>
           </div>
-          <button className="bg-slate-800/80 p-2 rounded-xl border border-slate-700/50">
+          <button 
+            onClick={() => setShowPrivacySettings(true)}
+            className="bg-slate-800/80 p-2 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
+          >
             <span className="text-xl">🛡️</span>
           </button>
         </div>
@@ -153,6 +478,13 @@ export default function CommunityPage() {
                     <MemberCard key={f.id} member={f} />
                   ))}
                 </div>
+              </div>
+            )}
+            {friends.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">👥</div>
+                <div className="text-white font-bold">No friends yet</div>
+                <div className="text-slate-500 text-sm">Check Discover to find players!</div>
               </div>
             )}
           </div>
@@ -304,6 +636,9 @@ export default function CommunityPage() {
           </div>
         </div>
       )}
+
+      {/* Privacy Settings Modal */}
+      {showPrivacySettings && <PrivacySettingsModal />}
     </div>
   );
 }
