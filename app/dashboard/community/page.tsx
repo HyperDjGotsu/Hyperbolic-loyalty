@@ -615,7 +615,6 @@ export default function CommunityPage() {
                 <h1 className="text-2xl font-bold text-white mt-4">
                   {'hidden' in selectedMember && selectedMember.hidden ? 'Anonymous' : selectedMember.name}
                 </h1>
-                <div className="text-cyan-400 text-sm font-mono mt-1">{selectedMember.id}</div>
                 <div className="flex justify-center gap-6 mt-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{selectedMember.level}</div>
