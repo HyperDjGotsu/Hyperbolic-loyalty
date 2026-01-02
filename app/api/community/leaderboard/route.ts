@@ -62,13 +62,11 @@ export async function GET(request: Request) {
       const player = players?.find((p: any) => p.id === playerId);
       const totalXp = playerXpMap[playerId];
 
-      // Respect privacy settings
-      const showOnLeaderboard = player?.privacy_show_on_leaderboard !== false;
+      // Respect privacy settings - always show on leaderboard, but can be anonymous
+      // const showOnLeaderboard = player?.privacy_show_on_leaderboard !== false;
       const showAsAnonymous = player?.privacy_show_as_anonymous === true;
 
-      if (!showOnLeaderboard) {
-        return null; // Skip players who opted out
-      }
+      // Always include everyone to keep rankings accurate
 
       // Calculate level (simple formula: 1 level per 100 XP)
       const level = Math.floor(totalXp / 100) + 1;
@@ -89,17 +87,12 @@ export async function GET(request: Request) {
         },
         hidden: showAsAnonymous,
       };
-    }).filter(Boolean); // Remove null entries (opted-out players)
+    });
 
-    // Re-rank after filtering
-    const rerankedLeaderboard = leaderboard.map((entry, index) => ({
-      ...entry,
-      rank: index + 1,
-    }));
-
+    // No re-ranking needed - everyone is always shown
     return NextResponse.json({ 
-      leaderboard: rerankedLeaderboard,
-      total: rerankedLeaderboard.length,
+      leaderboard,
+      total: leaderboard.length,
     });
 
   } catch (error) {

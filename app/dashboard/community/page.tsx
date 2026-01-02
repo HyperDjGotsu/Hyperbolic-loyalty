@@ -308,24 +308,16 @@ export default function CommunityPage() {
           <h3 className="font-bold text-white mb-3">🏆 Leaderboard</h3>
           <div className="space-y-2">
             <ToggleSetting
-              icon="📊"
-              label="Show on Leaderboard"
-              description="Appear in public rankings"
-              value={privacySettings.showOnLeaderboard}
-              onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showOnLeaderboard: v }))}
+              icon="🎭"
+              label="Show as Anonymous"
+              description="Hide your name on leaderboard (rank still visible)"
+              value={privacySettings.showAsAnonymous}
+              onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showAsAnonymous: v }))}
             />
-            
-            {privacySettings.showOnLeaderboard && (
-              <div className="ml-4">
-                <ToggleSetting
-                  icon="🎭"
-                  label="Show as Anonymous"
-                  description="Hide your name on leaderboard"
-                  value={privacySettings.showAsAnonymous}
-                  onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showAsAnonymous: v }))}
-                />
-              </div>
-            )}
+            <div className="bg-slate-700/30 rounded-lg p-3 text-slate-400 text-xs">
+              💡 Your rank always appears on the leaderboard to keep competition fair. 
+              Anonymous mode hides your name but keeps your position accurate.
+            </div>
           </div>
         </div>
 
