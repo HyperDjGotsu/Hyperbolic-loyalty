@@ -2,6 +2,73 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// ============================================
+// RANK CALCULATION FUNCTIONS
+// ============================================
+
+// One Piece uses higher thresholds (2x/week events)
+function getOnePieceRank(xp: number): string {
+  if (xp >= 1500) return 'Yonko Commander';
+  if (xp >= 1000) return 'Warlord';
+  if (xp >= 750) return 'Worst Generation';
+  if (xp >= 500) return 'Notorious Pirate';
+  if (xp >= 250) return 'Super Rookie';
+  if (xp >= 100) return 'Paradise Pirate';
+  return 'East Blue Rookie';
+}
+
+// Standard thresholds for 1x/week games
+function getStandardRank(xp: number, ranks: string[]): string {
+  if (xp >= 750) return ranks[6];
+  if (xp >= 500) return ranks[5];
+  if (xp >= 350) return ranks[4];
+  if (xp >= 200) return ranks[3];
+  if (xp >= 100) return ranks[2];
+  if (xp >= 50) return ranks[1];
+  return ranks[0];
+}
+
+// Game-specific rank arrays [0-49, 50-99, 100-199, 200-349, 350-499, 500-749, 750+]
+const GAME_RANKS: Record<string, string[]> = {
+  gundam: ['Cadet', 'Ensign', 'Lieutenant', 'Captain', 'Commander', 'Ace Pilot', 'Newtype'],
+  pokemon: ['Pokemon Fan', 'Trainer', 'Ace Trainer', 'Gym Challenger', 'Gym Leader', 'Elite Four', 'Champion'],
+  mtg: ['Apprentice', 'Mage', 'Wizard', 'Sorcerer', 'Archmage', 'Planeswalker', 'Oldwalker'],
+  star_wars: ['Youngling', 'Padawan', 'Jedi Knight', 'Jedi Guardian', 'Jedi Master', 'Council Member', 'Grand Master'],
+  star_wars_unlimited: ['Youngling', 'Padawan', 'Jedi Knight', 'Jedi Guardian', 'Jedi Master', 'Council Member', 'Grand Master'],
+  vanguard: ['Stand Trigger', 'Rear Guard', 'Vanguard', 'Stride Bearer', 'G Unit', 'Zeroth Dragon', 'Deity'],
+  uvs: ['Rookie', 'Challenger', 'Contender', 'Fighter', 'Warrior', 'Champion', 'Legend'],
+  hololive: ['Lurker', 'Chatter', 'Regular', 'Subscriber', 'Member', 'Super Fan', 'Idol'],
+  riftbound: ['Plastic', 'Wood Tier', 'Summoner', 'Iceborn', 'Aspect', 'Celestial', 'World Rune Master'],
+  lorcana: ['Dreamer', 'Apprentice', 'Illumineer', 'Storykeeper', 'Loremaster', 'Grand Illumineer', 'Sorcerer'],
+  weiss: ['Background NPC', 'Side Character', 'Rival', 'Main Character', 'Protagonist', 'Fan Favorite', 'Best Girl/Boy'],
+  weiss_schwarz: ['Background NPC', 'Side Character', 'Rival', 'Main Character', 'Protagonist', 'Fan Favorite', 'Best Girl/Boy'],
+  sw_legion: ['Raw Recruit', 'Soldier', 'Veteran', 'Officer', 'Commander', 'General', 'Supreme Commander'],
+  union_arena: ['Fodder', 'Side Character', 'Supporting Cast', 'Main Character', 'Rival', 'Protagonist', 'Shonen Legend'],
+  warhammer: ['Conscript', 'Guardsman', 'Veteran', 'Sergeant', 'Captain', 'Chapter Master', 'Warmaster'],
+  digimon: ['Baby', 'Rookie', 'Champion', 'Ultimate', 'Mega', 'Ultra', 'DigiDestined'],
+  yugioh: ['Amateur Duelist', 'Duelist', 'Battle City Qualifier', 'Regional Champion', 'National Champion', 'World Finalist', 'King of Games'],
+};
+
+function getRankForGame(gameId: string, xp: number): string {
+  // One Piece has special high-frequency thresholds
+  if (gameId === 'one_piece') {
+    return getOnePieceRank(xp);
+  }
+  
+  // Look up game-specific ranks
+  const ranks = GAME_RANKS[gameId];
+  if (ranks) {
+    return getStandardRank(xp, ranks);
+  }
+  
+  // Default fallback for unknown games
+  return getStandardRank(xp, ['Newcomer', 'Regular', 'Veteran', 'Expert', 'Master', 'Elite', 'Legend']);
+}
+
+// ============================================
+// API ROUTE
+// ============================================
+
 export async function GET() {
   try {
     // Get the authenticated user from Clerk
@@ -61,12 +128,14 @@ export async function GET() {
       });
     }
 
+    // Build gameXP array WITH RANKS
     const gameXP = Object.entries(gameXpMap).map(([game_id, data]) => ({
       game_id,
       game_xp: data.xp,
       total_xp: data.xp,
       game_wins: data.wins,
       game_events: data.events,
+      rank: getRankForGame(game_id, data.xp),
     }));
 
     // Get recent activity
