@@ -55,7 +55,7 @@ export async function GET() {
     const now = new Date();
     const requestsList = requests.map(request => {
       const requester = requesters?.find((r: any) => r.id === request.requester_id);
-      const createdAt = new Date(request.created_at);
+      const createdAt = new Date(request.created_at || Date.now());
       const diffMs = now.getTime() - createdAt.getTime();
       const diffMins = Math.floor(diffMs / 60000);
       const diffHours = Math.floor(diffMins / 60);
