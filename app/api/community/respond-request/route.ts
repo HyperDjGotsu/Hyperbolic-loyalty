@@ -54,26 +54,44 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'This request has already been processed' }, { status: 400 });
     }
 
-    // Update the friendship status
-    const newStatus = action === 'accept' ? 'accepted' : 'declined';
-    const { error: updateError } = await supabaseAdmin
-      .from('friendships')
-      .update({ 
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', friendshipId);
+    // Handle accept or decline
+    if (action === 'accept') {
+      const { error: updateError } = await supabaseAdmin
+        .from('friendships')
+        .update({ 
+          status: 'accepted',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', friendshipId);
 
-    if (updateError) {
-      console.error('Error updating friendship:', updateError);
-      return NextResponse.json({ error: 'Failed to update friend request' }, { status: 500 });
+      if (updateError) {
+        console.error('Error updating friendship:', updateError);
+        return NextResponse.json({ error: 'Failed to accept request' }, { status: 500 });
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Friend request accepted!',
+        status: 'accepted',
+      });
+    } else {
+      // Delete the request when declining
+      const { error: deleteError } = await supabaseAdmin
+        .from('friendships')
+        .delete()
+        .eq('id', friendshipId);
+
+      if (deleteError) {
+        console.error('Error deleting friendship:', deleteError);
+        return NextResponse.json({ error: 'Failed to decline request' }, { status: 500 });
+      }
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Friend request declined',
+        status: 'declined',
+      });
     }
-
-    return NextResponse.json({ 
-      success: true, 
-      message: action === 'accept' ? 'Friend request accepted!' : 'Friend request declined',
-      status: newStatus,
-    });
 
   } catch (error) {
     console.error('Respond to friend request error:', error);
