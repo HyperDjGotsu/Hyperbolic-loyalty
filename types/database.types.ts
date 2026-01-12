@@ -167,6 +167,42 @@ export type Database = {
           },
         ]
       }
+      event_interest: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          id: string
+          player_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          player_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          player_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_interest_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_interest_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           attendance_xp: number | null
