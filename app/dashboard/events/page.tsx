@@ -45,8 +45,13 @@ const GAME_FILTERS = [
   { id: 'pokemon', name: 'Pokémon', icon: '⚡' },
   { id: 'mtg', name: 'Magic', icon: '✨' },
   { id: 'star_wars_unlimited', name: 'Star Wars', icon: '🌟' },
+  { id: 'vanguard', name: 'Vanguard', icon: '⚔️' },
   { id: 'lorcana', name: 'Lorcana', icon: '🪄' },
-  { id: 'yugioh', name: 'Yu-Gi-Oh!', icon: '🃏' },
+  { id: 'hololive', name: 'Hololive', icon: '🎤' },
+  { id: 'riftbound', name: 'Riftbound', icon: '🌀' },
+  { id: 'uvs', name: 'UVS', icon: '👊' },
+  { id: 'warhammer', name: 'Warhammer', icon: '⚔️' },
+  { id: 'sw_legion', name: 'Legion', icon: '🎖️' },
 ];
 
 export default function EventsPage() {

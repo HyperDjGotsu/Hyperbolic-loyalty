@@ -10,21 +10,29 @@ const GAME_PATTERNS: { pattern: RegExp; id: string }[] = [
   { pattern: /one\s*piece/i, id: 'one_piece' },
   { pattern: /gundam/i, id: 'gundam' },
   { pattern: /pokemon|pokémon/i, id: 'pokemon' },
-  { pattern: /magic|mtg/i, id: 'mtg' },
-  { pattern: /star\s*wars|swu/i, id: 'star_wars_unlimited' },
-  { pattern: /vanguard/i, id: 'vanguard' },
-  { pattern: /dragon\s*ball|dbz|dbs/i, id: 'dragonball' },
+  { pattern: /magic|mtg|friday\s*night\s*magic|fnm/i, id: 'mtg' },
+  { pattern: /star\s*wars\s*unlimited|swu/i, id: 'star_wars_unlimited' },  // More specific - must have "unlimited"
+  { pattern: /vanguard|cfv/i, id: 'vanguard' },
+  { pattern: /dragon\s*ball|dbz|dbs|dbscg/i, id: 'dragonball' },
   { pattern: /lorcana/i, id: 'lorcana' },
   { pattern: /yu-?gi-?oh|yugioh/i, id: 'yugioh' },
   { pattern: /digimon/i, id: 'digimon' },
   { pattern: /weiss|schwarz/i, id: 'weiss_schwarz' },
   { pattern: /union\s*arena/i, id: 'union_arena' },
-  { pattern: /warhammer|40k/i, id: 'warhammer' },
-  { pattern: /legion/i, id: 'sw_legion' },
+  { pattern: /warhammer|40k|kill\s*team/i, id: 'warhammer' },
+  { pattern: /star\s*wars\s*legion|sw\s*legion|legion/i, id: 'sw_legion' },
   { pattern: /flesh.*blood|fab/i, id: 'fab' },
   { pattern: /hololive/i, id: 'hololive' },
   { pattern: /riftbound/i, id: 'riftbound' },
-  { pattern: /uvs/i, id: 'uvs' },
+  { pattern: /uvs|universus/i, id: 'uvs' },
+  { pattern: /elite\s*spark/i, id: 'elite_spark' },  // If this is a game you run
+];
+
+// Event titles to skip (not game events)
+const SKIP_PATTERNS: RegExp[] = [
+  /store\s*open\s*hours?/i,
+  /closed/i,
+  /holiday/i,
 ];
 
 // Entry fee / settings overrides based on event title
@@ -210,66 +218,72 @@ function parseICal(icalData: string): ParsedEvent[] {
       
       if (currentEvent['SUMMARY'] && currentEvent['DTSTART']) {
         const title = (currentEvent['SUMMARY'] || '').replace(/\\,/g, ',');
-        const gameId = detectGameId(title);
         
-        // Get description (parse early so we can check for price)
-        const description = (currentEvent['DESCRIPTION'] || '')
-          .replace(/\\,/g, ',')
-          .replace(/\\n/g, '\n')
-          .replace(/\\;/g, ';')
-          .trim() || null;
+        // Skip non-game events like "Store Open Hours"
+        const shouldSkip = SKIP_PATTERNS.some(pattern => pattern.test(title));
         
-        const overrides = getOverrides(title, description);
-        
-        // Parse start date with timezone
-        const startRaw = currentEvent['DTSTART_RAW'] || currentEvent['DTSTART'] || '';
-        let startTzid: string | undefined;
-        let startDateStr = currentEvent['DTSTART'] || '';
-        
-        // Extract TZID if present (e.g., "TZID=America/Los_Angeles:20250117T173000")
-        const tzMatch = startRaw.match(/TZID=([^:;]+)/i);
-        if (tzMatch) {
-          startTzid = tzMatch[1];
+        if (!shouldSkip) {
+          const gameId = detectGameId(title);
+          
+          // Get description (parse early so we can check for price)
+          const description = (currentEvent['DESCRIPTION'] || '')
+            .replace(/\\,/g, ',')
+            .replace(/\\n/g, '\n')
+            .replace(/\\;/g, ';')
+            .trim() || null;
+          
+          const overrides = getOverrides(title, description);
+          
+          // Parse start date with timezone
+          const startRaw = currentEvent['DTSTART_RAW'] || currentEvent['DTSTART'] || '';
+          let startTzid: string | undefined;
+          let startDateStr = currentEvent['DTSTART'] || '';
+          
+          // Extract TZID if present (e.g., "TZID=America/Los_Angeles:20250117T173000")
+          const tzMatch = startRaw.match(/TZID=([^:;]+)/i);
+          if (tzMatch) {
+            startTzid = tzMatch[1];
+          }
+          if (startDateStr.includes(':')) {
+            startDateStr = startDateStr.split(':').pop() || startDateStr;
+          }
+          const startDate = parseICalDate(startDateStr, startTzid);
+          
+          // Parse end date with timezone
+          const endRaw = currentEvent['DTEND_RAW'] || currentEvent['DTEND'] || '';
+          let endTzid: string | undefined;
+          let endDateStr = currentEvent['DTEND'] || '';
+          
+          const endTzMatch = endRaw.match(/TZID=([^:;]+)/i);
+          if (endTzMatch) {
+            endTzid = endTzMatch[1];
+          }
+          if (endDateStr.includes(':')) {
+            endDateStr = endDateStr.split(':').pop() || endDateStr;
+          }
+          const endDate = endDateStr ? parseICalDate(endDateStr, endTzid) : null;
+          
+          // Get UID
+          const uid = currentEvent['UID'] || `gcal-${startDate.getTime()}-${title.slice(0, 20)}`;
+          
+          // Clean up title (remove "GoM" prefix)
+          const cleanName = title.replace(/^GoM\s*/i, '').trim();
+          
+          events.push({
+            gcal_uid: uid,
+            name: cleanName,
+            game_id: gameId,
+            description: description,
+            scheduled_at: startDate.toISOString(),
+            ends_at: endDate ? endDate.toISOString() : null,
+            entry_fee: overrides.entryFee ?? null,
+            max_players: overrides.maxPlayers ?? null,
+            has_stream: overrides.hasStream ?? false,
+            attendance_xp: overrides.attendanceXp ?? 20,
+            win_xp: overrides.winXp ?? 10,
+            status: 'scheduled',
+          });
         }
-        if (startDateStr.includes(':')) {
-          startDateStr = startDateStr.split(':').pop() || startDateStr;
-        }
-        const startDate = parseICalDate(startDateStr, startTzid);
-        
-        // Parse end date with timezone
-        const endRaw = currentEvent['DTEND_RAW'] || currentEvent['DTEND'] || '';
-        let endTzid: string | undefined;
-        let endDateStr = currentEvent['DTEND'] || '';
-        
-        const endTzMatch = endRaw.match(/TZID=([^:;]+)/i);
-        if (endTzMatch) {
-          endTzid = endTzMatch[1];
-        }
-        if (endDateStr.includes(':')) {
-          endDateStr = endDateStr.split(':').pop() || endDateStr;
-        }
-        const endDate = endDateStr ? parseICalDate(endDateStr, endTzid) : null;
-        
-        // Get UID
-        const uid = currentEvent['UID'] || `gcal-${startDate.getTime()}-${title.slice(0, 20)}`;
-        
-        // Clean up title (remove "GoM" prefix)
-        const cleanName = title.replace(/^GoM\s*/i, '').trim();
-        
-        events.push({
-          gcal_uid: uid,
-          name: cleanName,
-          game_id: gameId,
-          description: description,
-          scheduled_at: startDate.toISOString(),
-          ends_at: endDate ? endDate.toISOString() : null,
-          entry_fee: overrides.entryFee ?? null,
-          max_players: overrides.maxPlayers ?? null,
-          has_stream: overrides.hasStream ?? false,
-          attendance_xp: overrides.attendanceXp ?? 20,
-          win_xp: overrides.winXp ?? 10,
-          status: 'scheduled',
-        });
       }
     } else if (inEvent && line.includes(':')) {
       const colonIndex = line.indexOf(':');
