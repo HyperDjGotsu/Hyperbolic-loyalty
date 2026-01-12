@@ -112,6 +112,7 @@ export default function CommunityPage() {
   const [sendingRequest, setSendingRequest] = useState<string | null>(null);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Set<string>>(new Set());
+  const [unfriending, setUnfriending] = useState<string | null>(null);
 
   // Load functions as callbacks so they can be called from anywhere
   const loadFriends = useCallback(async () => {
@@ -344,6 +345,39 @@ export default function CommunityPage() {
       alert('Failed to respond to request');
     } finally {
       setRespondingTo(null);
+    }
+  };
+
+  // Unfriend someone
+  const unfriend = async (friendUuid: string, displayId: string) => {
+    if (!confirm('Are you sure you want to remove this friend?')) return;
+    
+    setUnfriending(displayId);
+    try {
+      const res = await fetch('/api/community/unfriend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: friendUuid }),
+      });
+      if (res.ok) {
+        // Remove from local state
+        setFriends(prev => prev.filter(f => f.odid !== friendUuid));
+        // Clear request sent status so they can be re-added
+        setRequestSent(prev => {
+          const next = new Set(prev);
+          next.delete(displayId);
+          return next;
+        });
+        setSelectedMember(null);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to unfriend');
+      }
+    } catch (error) {
+      console.error('Error unfriending:', error);
+      alert('Failed to unfriend');
+    } finally {
+      setUnfriending(null);
     }
   };
 
@@ -848,13 +882,26 @@ export default function CommunityPage() {
               </div>
             </div>
             <div className="px-4 -mt-4 relative z-10 flex gap-3">
-              {('odid' in selectedMember && isFriend(selectedMember.odid)) || 
-               ('isFriend' in selectedMember && selectedMember.isFriend) ||
-               requestSent.has(selectedMember.id) ? (
+              {('odid' in selectedMember && isFriend(selectedMember.odid)) ? (
+                // Already friends - show unfriend option
+                <button 
+                  onClick={() => {
+                    if ('odid' in selectedMember && selectedMember.odid) {
+                      unfriend(selectedMember.odid, selectedMember.id);
+                    }
+                  }}
+                  disabled={unfriending === selectedMember.id}
+                  className="flex-1 py-3 bg-slate-800 text-red-400 rounded-xl font-bold border border-red-500/30 hover:bg-red-500/10"
+                >
+                  {unfriending === selectedMember.id ? 'Removing...' : '✓ Friends (tap to unfriend)'}
+                </button>
+              ) : ('isFriend' in selectedMember && selectedMember.isFriend) || requestSent.has(selectedMember.id) ? (
+                // Request sent
                 <button className="flex-1 py-3 bg-slate-800 text-green-400 rounded-xl font-bold border border-green-500/30">
-                  {requestSent.has(selectedMember.id) && !('odid' in selectedMember && isFriend(selectedMember.odid)) ? '📨 Request Sent' : '✓ Friends'}
+                  📨 Request Sent
                 </button>
               ) : (
+                // Not friends - show add button
                 <GlowButton 
                   color="cyan" 
                   className="flex-1 py-3"
