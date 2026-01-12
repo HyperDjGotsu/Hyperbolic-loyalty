@@ -157,6 +157,129 @@ function parseMaxPlayers(text: string): number | null {
   return null;
 }
 
+// Expand recurring events into individual instances
+// Supports WEEKLY recurrence for the next 8 weeks
+function expandRecurringEvent(
+  baseEvent: ParsedEvent, 
+  rrule: string, 
+  startDate: Date,
+  endDate: Date | null
+): ParsedEvent[] {
+  const events: ParsedEvent[] = [];
+  const now = new Date();
+  const eightWeeksFromNow = new Date(now.getTime() + 8 * 7 * 24 * 60 * 60 * 1000);
+  
+  // Parse RRULE
+  const freqMatch = rrule.match(/FREQ=(\w+)/i);
+  const freq = freqMatch ? freqMatch[1].toUpperCase() : null;
+  
+  // Get UNTIL date if specified
+  const untilMatch = rrule.match(/UNTIL=(\d{8}(?:T\d{6}Z?)?)/i);
+  let untilDate: Date | null = null;
+  if (untilMatch) {
+    const untilStr = untilMatch[1];
+    if (untilStr.length === 8) {
+      untilDate = new Date(
+        parseInt(untilStr.slice(0, 4)),
+        parseInt(untilStr.slice(4, 6)) - 1,
+        parseInt(untilStr.slice(6, 8))
+      );
+    } else {
+      untilDate = new Date(
+        parseInt(untilStr.slice(0, 4)),
+        parseInt(untilStr.slice(4, 6)) - 1,
+        parseInt(untilStr.slice(6, 8)),
+        parseInt(untilStr.slice(9, 11)),
+        parseInt(untilStr.slice(11, 13)),
+        parseInt(untilStr.slice(13, 15))
+      );
+    }
+  }
+  
+  // Get COUNT if specified
+  const countMatch = rrule.match(/COUNT=(\d+)/i);
+  const maxCount = countMatch ? parseInt(countMatch[1]) : 52; // Default max 1 year
+  
+  // Calculate event duration
+  const duration = endDate ? endDate.getTime() - startDate.getTime() : 2 * 60 * 60 * 1000; // Default 2 hours
+  
+  if (freq === 'WEEKLY') {
+    let currentDate = new Date(startDate);
+    let count = 0;
+    
+    while (currentDate <= eightWeeksFromNow && count < maxCount) {
+      // Check UNTIL
+      if (untilDate && currentDate > untilDate) break;
+      
+      // Only add if in the future (or today)
+      const cutoff = new Date();
+      cutoff.setHours(cutoff.getHours() - 2); // Allow events from 2 hours ago
+      
+      if (currentDate >= cutoff) {
+        const instanceEnd = new Date(currentDate.getTime() + duration);
+        const instanceUid = `${baseEvent.gcal_uid}_${currentDate.toISOString().slice(0, 10)}`;
+        
+        events.push({
+          ...baseEvent,
+          gcal_uid: instanceUid,
+          scheduled_at: currentDate.toISOString(),
+          ends_at: instanceEnd.toISOString(),
+        });
+      }
+      
+      // Move to next week
+      currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+      count++;
+    }
+  } else if (freq === 'DAILY') {
+    let currentDate = new Date(startDate);
+    let count = 0;
+    const twoWeeksFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    
+    while (currentDate <= twoWeeksFromNow && count < maxCount) {
+      if (untilDate && currentDate > untilDate) break;
+      
+      const cutoff = new Date();
+      cutoff.setHours(cutoff.getHours() - 2);
+      
+      if (currentDate >= cutoff) {
+        const instanceEnd = new Date(currentDate.getTime() + duration);
+        const instanceUid = `${baseEvent.gcal_uid}_${currentDate.toISOString().slice(0, 10)}`;
+        
+        events.push({
+          ...baseEvent,
+          gcal_uid: instanceUid,
+          scheduled_at: currentDate.toISOString(),
+          ends_at: instanceEnd.toISOString(),
+        });
+      }
+      
+      currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
+      count++;
+    }
+  } else {
+    // Unknown frequency, just return the base event
+    events.push(baseEvent);
+  }
+  
+  return events;
+}
+
+interface ParsedEvent {
+  gcal_uid: string;
+  name: string;
+  game_id: string | null;
+  description: string | null;
+  scheduled_at: string;
+  ends_at: string | null;
+  entry_fee: number | null;
+  max_players: number | null;
+  has_stream: boolean;
+  attendance_xp: number;
+  win_xp: number;
+  status: string;
+}
+
 // Get overrides for event
 function getOverrides(title: string, description?: string | null): { entryFee?: number; maxPlayers?: number; attendanceXp?: number; winXp?: number; hasStream?: boolean } {
   const result: { entryFee?: number; maxPlayers?: number; attendanceXp?: number; winXp?: number; hasStream?: boolean } = {};
@@ -269,7 +392,8 @@ function parseICal(icalData: string): ParsedEvent[] {
           // Clean up title (remove "GoM" prefix)
           const cleanName = title.replace(/^GoM\s*/i, '').trim();
           
-          events.push({
+          // Build base event
+          const baseEvent: ParsedEvent = {
             gcal_uid: uid,
             name: cleanName,
             game_id: gameId,
@@ -282,7 +406,19 @@ function parseICal(icalData: string): ParsedEvent[] {
             attendance_xp: overrides.attendanceXp ?? 20,
             win_xp: overrides.winXp ?? 10,
             status: 'scheduled',
-          });
+          };
+          
+          // Check for recurrence rule
+          const rrule = currentEvent['RRULE'];
+          
+          if (rrule) {
+            // Expand recurring event into instances
+            const instances = expandRecurringEvent(baseEvent, rrule, startDate, endDate);
+            events.push(...instances);
+          } else {
+            // Single event
+            events.push(baseEvent);
+          }
         }
       }
     } else if (inEvent && line.includes(':')) {
