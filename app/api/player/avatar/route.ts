@@ -2,6 +2,22 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+interface AvatarConfig {
+  base: string;
+  background: string;
+  frame: string;
+  badge: string | null;
+  photo_url: string | null;
+}
+
+const defaultAvatarConfig: AvatarConfig = {
+  base: '😎',
+  background: '#3b82f6',
+  frame: 'none',
+  badge: null,
+  photo_url: null,
+};
+
 // POST - Update player's avatar configuration
 export async function POST(request: Request) {
   try {
@@ -17,7 +33,7 @@ export async function POST(request: Request) {
     // Get current player
     const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
-      .select('id')
+      .select('id, avatar_config')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -25,31 +41,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Build new avatar config
-    const avatarConfig: Record<string, any> = {};
-    
-    if (base !== undefined) avatarConfig.base = base;
-    if (background !== undefined) avatarConfig.background = background;
-    if (frame !== undefined) avatarConfig.frame = frame;
-    if (badge !== undefined) avatarConfig.badge = badge;
-    if (photo_url !== undefined) avatarConfig.photo_url = photo_url;
+    // Parse current config safely
+    const currentConfig: AvatarConfig = 
+      typeof player.avatar_config === 'object' && player.avatar_config !== null
+        ? (player.avatar_config as AvatarConfig)
+        : defaultAvatarConfig;
 
-    // Get current config and merge
-    const { data: currentPlayer } = await supabaseAdmin
-      .from('players')
-      .select('avatar_config')
-      .eq('id', player.id)
-      .single();
-
-    const currentConfig = currentPlayer?.avatar_config || {
-      base: '😎',
-      background: '#3b82f6',
-      frame: 'none',
-      badge: null,
-      photo_url: null,
+    // Build new config
+    const newConfig: AvatarConfig = {
+      base: base !== undefined ? base : currentConfig.base,
+      background: background !== undefined ? background : currentConfig.background,
+      frame: frame !== undefined ? frame : currentConfig.frame,
+      badge: badge !== undefined ? badge : currentConfig.badge,
+      photo_url: photo_url !== undefined ? photo_url : currentConfig.photo_url,
     };
-
-    const newConfig = { ...currentConfig, ...avatarConfig };
 
     // Update avatar config
     const { error: updateError } = await supabaseAdmin
@@ -93,15 +98,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ 
-      avatarConfig: player.avatar_config || {
-        base: '😎',
-        background: '#3b82f6',
-        frame: 'none',
-        badge: null,
-        photo_url: null,
-      },
-    });
+    const avatarConfig: AvatarConfig = 
+      typeof player.avatar_config === 'object' && player.avatar_config !== null
+        ? (player.avatar_config as AvatarConfig)
+        : defaultAvatarConfig;
+
+    return NextResponse.json({ avatarConfig });
 
   } catch (error) {
     console.error('Avatar get error:', error);
