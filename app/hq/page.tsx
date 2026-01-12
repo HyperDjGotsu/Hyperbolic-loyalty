@@ -29,8 +29,8 @@ interface PlayerDetails {
   recentActivity: Array<{
     id: string;
     game_id: string;
-    xp_amount: number;
-    reason: string;
+    final_xp: number;
+    description: string | null;
     created_at: string;
   }>;
 }
@@ -570,13 +570,13 @@ export default function HQPage() {
                           className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
                         >
                           <div>
-                            <div className="text-white">{activity.reason}</div>
+                            <div className="text-white">{activity.description || 'XP adjustment'}</div>
                             <div className="text-slate-500 text-sm">
                               {activity.game_id} • {new Date(activity.created_at).toLocaleDateString()}
                             </div>
                           </div>
-                          <div className={`font-bold ${activity.xp_amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {activity.xp_amount > 0 ? '+' : ''}{activity.xp_amount}
+                          <div className={`font-bold ${activity.final_xp > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {activity.final_xp > 0 ? '+' : ''}{activity.final_xp}
                           </div>
                         </div>
                       ))

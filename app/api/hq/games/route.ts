@@ -22,10 +22,16 @@ export async function GET() {
 
     const { data: games } = await supabaseAdmin
       .from('games')
-      .select('id, name, icon, xp_name')
+      .select('id, name, icon, currency_name')
       .order('name');
 
-    return NextResponse.json({ games: games || [] });
+    // Map currency_name to xp_name for consistency with frontend
+    const mappedGames = games?.map(g => ({
+      ...g,
+      xp_name: g.currency_name,
+    }));
+
+    return NextResponse.json({ games: mappedGames || [] });
   } catch (error) {
     console.error('Games fetch error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

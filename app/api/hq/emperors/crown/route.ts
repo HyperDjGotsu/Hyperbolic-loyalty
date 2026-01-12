@@ -65,11 +65,11 @@ export async function POST(request: Request) {
     // Get total lifetime One Piece XP (berries)
     const { data: totalXpData } = await supabaseAdmin
       .from('xp_ledger')
-      .select('xp_amount')
+      .select('final_xp')
       .eq('player_id', player.id)
       .eq('game_id', 'one_piece');
 
-    const totalBerries = totalXpData?.reduce((sum, entry) => sum + (entry.xp_amount || 0), 0) || 0;
+    const totalBerries = totalXpData?.reduce((sum, entry) => sum + (entry.final_xp || 0), 0) || 0;
     const bountyDisplay = getBounty(totalBerries);
 
     // Check if already crowned for this month

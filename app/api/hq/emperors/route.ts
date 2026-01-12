@@ -62,7 +62,7 @@ export async function GET(request: Request) {
         .from('xp_ledger')
         .select(`
           player_id,
-          xp_amount,
+          final_xp,
           players!inner(player_id, display_name)
         `)
         .eq('game_id', 'one_piece')
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
             berries: 0,
           };
         }
-        playerTotals[pid].berries += entry.xp_amount || 0;
+        playerTotals[pid].berries += entry.final_xp || 0;
       });
 
       // Sort and add bounty

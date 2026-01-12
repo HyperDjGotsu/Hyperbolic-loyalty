@@ -115,17 +115,17 @@ export async function GET(request: Request) {
     // Get games list
     const { data: games } = await supabaseAdmin
       .from('games')
-      .select('id, name, icon, xp_name');
+      .select('id, name, icon, currency_name');
 
     const gameMap: Record<string, { name: string; icon: string; xp_name: string }> = {};
     games?.forEach(g => {
-      gameMap[g.id] = { name: g.name, icon: g.icon || '🎮', xp_name: g.xp_name || 'XP' };
+      gameMap[g.id] = { name: g.name, icon: g.icon || '🎮', xp_name: g.currency_name || 'XP' };
     });
 
     // Get XP by game using materialized view or direct query
     const { data: xpData } = await supabaseAdmin
       .from('xp_ledger')
-      .select('game_id, xp_amount')
+      .select('game_id, final_xp')
       .eq('player_id', players.id);
 
     // Aggregate XP by game
@@ -134,8 +134,8 @@ export async function GET(request: Request) {
     
     xpData?.forEach(entry => {
       if (entry.game_id) {
-        xpByGame[entry.game_id] = (xpByGame[entry.game_id] || 0) + (entry.xp_amount || 0);
-        totalXp += entry.xp_amount || 0;
+        xpByGame[entry.game_id] = (xpByGame[entry.game_id] || 0) + (entry.final_xp || 0);
+        totalXp += entry.final_xp || 0;
       }
     });
 
@@ -152,7 +152,7 @@ export async function GET(request: Request) {
     // Get recent activity
     const { data: recentActivity } = await supabaseAdmin
       .from('xp_ledger')
-      .select('id, game_id, xp_amount, reason, created_at')
+      .select('id, game_id, final_xp, description, created_at')
       .eq('player_id', players.id)
       .order('created_at', { ascending: false })
       .limit(20);

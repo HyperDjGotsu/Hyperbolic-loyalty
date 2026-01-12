@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     // Verify staff
     const { data: staffCheck } = await supabaseAdmin
       .from('players')
-      .select('is_staff, player_id')
+      .select('id, is_staff, player_id')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -33,10 +33,12 @@ export async function POST(request: Request) {
       .insert({
         player_id: playerId,
         game_id: gameId,
-        xp_amount: amount,
-        reason: reason || (amount > 0 ? 'Admin adjustment' : 'Admin correction'),
-        source: 'admin',
-        awarded_by: staffCheck.player_id,
+        base_xp: amount,
+        final_xp: amount,
+        multiplier: 1,
+        description: reason || (amount > 0 ? 'Admin adjustment' : 'Admin correction'),
+        source: 'manual_adjustment',
+        awarded_by: staffCheck.id,
       });
 
     if (insertError) {
