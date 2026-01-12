@@ -63,10 +63,10 @@ export async function POST(request: Request) {
       photo_url: photo_url !== undefined ? photo_url : currentConfig.photo_url,
     };
 
-    // Update avatar config
+    // Update avatar config - cast to JSON compatible type
     const { error: updateError } = await supabaseAdmin
       .from('players')
-      .update({ avatar_config: newConfig })
+      .update({ avatar_config: JSON.parse(JSON.stringify(newConfig)) })
       .eq('id', player.id);
 
     if (updateError) {
