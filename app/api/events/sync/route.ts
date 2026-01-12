@@ -55,8 +55,9 @@ interface ParsedEvent {
   status: string;
 }
 
-// Parse iCal date format
-function parseICalDate(dateStr: string): Date {
+// Parse iCal date format with timezone support
+function parseICalDate(dateStr: string, tzid?: string): Date {
+  // Remove Z suffix if present
   dateStr = dateStr.replace('Z', '');
   
   if (dateStr.length === 8) {
@@ -73,6 +74,21 @@ function parseICalDate(dateStr: string): Date {
     const hour = parseInt(dateStr.slice(9, 11));
     const minute = parseInt(dateStr.slice(11, 13));
     const second = parseInt(dateStr.slice(13, 15)) || 0;
+    
+    // If timezone is America/Los_Angeles (or similar Pacific), create date string
+    // and let the server interpret it. For simplicity, we'll create an ISO string
+    // that represents the intended local time.
+    if (tzid?.includes('Los_Angeles') || tzid?.includes('Pacific')) {
+      // Create date string in Pacific time, then convert to UTC
+      // Pacific is UTC-8 (or UTC-7 in DST)
+      const date = new Date(Date.UTC(year, month, day, hour, minute, second));
+      // Add 8 hours to convert from Pacific to UTC (simplified, doesn't account for DST perfectly)
+      const isDST = month >= 2 && month <= 10; // Rough DST check (Mar-Nov)
+      date.setUTCHours(date.getUTCHours() + (isDST ? 7 : 8));
+      return date;
+    }
+    
+    // Default: assume the time is already in the server's timezone
     return new Date(year, month, day, hour, minute, second);
   }
 }
@@ -87,14 +103,85 @@ function detectGameId(title: string): string | null {
   return null;
 }
 
-// Get overrides for event
-function getOverrides(title: string): { entryFee?: number; maxPlayers?: number; attendanceXp?: number; winXp?: number; hasStream?: boolean } {
-  for (const override of EVENT_OVERRIDES) {
-    if (override.pattern.test(title)) {
-      return override;
+// Parse explicit price from title or description
+// Matches: "$5", "Price - $10", "Entry: $15", "Price: $20", "$5.00", "Fee - $7", "entry is $15"
+function parseExplicitPrice(text: string): number | null {
+  // Look for patterns like: $X, $X.XX, Price - $X, Entry: $X, Fee - $X, entry is $X
+  const pricePatterns = [
+    /(?:price|entry|fee|cost)\s*(?:is|:|-)\s*\$(\d+(?:\.\d{2})?)/i,  // "Price is $5" or "Entry: $10"
+    /\$(\d+(?:\.\d{2})?)\s*(?:entry|fee)?/i,                          // "$5" or "$5 entry"
+  ];
+  
+  for (const pattern of pricePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      return parseFloat(match[1]);
     }
   }
-  return {};
+  
+  // Also check for "Free" explicitly
+  if (/\bfree\s*entry\b/i.test(text) || /\bentry\s*(?:is\s*)?free\b/i.test(text)) {
+    return 0;
+  }
+  
+  return null;
+}
+
+// Parse max players from text
+// Matches: "16 spots", "max 32", "32 players max", "spots: 24", "limit 16"
+function parseMaxPlayers(text: string): number | null {
+  const patterns = [
+    /(\d+)\s*(?:spots?|seats?|players?)\s*(?:open|available|max)?/i,  // "16 spots" or "32 players"
+    /(?:max|limit|capacity)(?:\s*:)?\s*(\d+)/i,                        // "max 32" or "limit: 16"
+    /(?:spots?|seats?|players?)(?:\s*:)?\s*(\d+)/i,                    // "spots: 24"
+  ];
+  
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const num = parseInt(match[1]);
+      if (num > 0 && num <= 256) { // Sanity check
+        return num;
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Get overrides for event
+function getOverrides(title: string, description?: string | null): { entryFee?: number; maxPlayers?: number; attendanceXp?: number; winXp?: number; hasStream?: boolean } {
+  const result: { entryFee?: number; maxPlayers?: number; attendanceXp?: number; winXp?: number; hasStream?: boolean } = {};
+  
+  // First check for explicit price in title or description
+  const explicitPrice = parseExplicitPrice(title) ?? (description ? parseExplicitPrice(description) : null);
+  if (explicitPrice !== null) {
+    result.entryFee = explicitPrice;
+  }
+  
+  // Check for explicit max players in title or description
+  const explicitMaxPlayers = parseMaxPlayers(title) ?? (description ? parseMaxPlayers(description) : null);
+  if (explicitMaxPlayers !== null) {
+    result.maxPlayers = explicitMaxPlayers;
+  }
+  
+  // Then apply keyword-based overrides (won't override explicit values)
+  for (const override of EVENT_OVERRIDES) {
+    if (override.pattern.test(title)) {
+      if (result.entryFee === undefined && override.entryFee !== undefined) {
+        result.entryFee = override.entryFee;
+      }
+      if (result.maxPlayers === undefined && override.maxPlayers !== undefined) {
+        result.maxPlayers = override.maxPlayers;
+      }
+      if (override.attendanceXp !== undefined) result.attendanceXp = override.attendanceXp;
+      if (override.winXp !== undefined) result.winXp = override.winXp;
+      if (override.hasStream !== undefined) result.hasStream = override.hasStream;
+      break;
+    }
+  }
+  
+  return result;
 }
 
 // Parse iCal feed into events
@@ -124,28 +211,44 @@ function parseICal(icalData: string): ParsedEvent[] {
       if (currentEvent['SUMMARY'] && currentEvent['DTSTART']) {
         const title = (currentEvent['SUMMARY'] || '').replace(/\\,/g, ',');
         const gameId = detectGameId(title);
-        const overrides = getOverrides(title);
         
-        // Parse start date
-        let startDateStr = currentEvent['DTSTART'] || '';
-        if (startDateStr.includes(':')) {
-          startDateStr = startDateStr.split(':').pop() || startDateStr;
-        }
-        const startDate = parseICalDate(startDateStr);
-        
-        // Parse end date
-        let endDateStr = currentEvent['DTEND'] || '';
-        if (endDateStr.includes(':')) {
-          endDateStr = endDateStr.split(':').pop() || endDateStr;
-        }
-        const endDate = endDateStr ? parseICalDate(endDateStr) : null;
-        
-        // Get description
+        // Get description (parse early so we can check for price)
         const description = (currentEvent['DESCRIPTION'] || '')
           .replace(/\\,/g, ',')
           .replace(/\\n/g, '\n')
           .replace(/\\;/g, ';')
           .trim() || null;
+        
+        const overrides = getOverrides(title, description);
+        
+        // Parse start date with timezone
+        const startRaw = currentEvent['DTSTART_RAW'] || currentEvent['DTSTART'] || '';
+        let startTzid: string | undefined;
+        let startDateStr = currentEvent['DTSTART'] || '';
+        
+        // Extract TZID if present (e.g., "TZID=America/Los_Angeles:20250117T173000")
+        const tzMatch = startRaw.match(/TZID=([^:;]+)/i);
+        if (tzMatch) {
+          startTzid = tzMatch[1];
+        }
+        if (startDateStr.includes(':')) {
+          startDateStr = startDateStr.split(':').pop() || startDateStr;
+        }
+        const startDate = parseICalDate(startDateStr, startTzid);
+        
+        // Parse end date with timezone
+        const endRaw = currentEvent['DTEND_RAW'] || currentEvent['DTEND'] || '';
+        let endTzid: string | undefined;
+        let endDateStr = currentEvent['DTEND'] || '';
+        
+        const endTzMatch = endRaw.match(/TZID=([^:;]+)/i);
+        if (endTzMatch) {
+          endTzid = endTzMatch[1];
+        }
+        if (endDateStr.includes(':')) {
+          endDateStr = endDateStr.split(':').pop() || endDateStr;
+        }
+        const endDate = endDateStr ? parseICalDate(endDateStr, endTzid) : null;
         
         // Get UID
         const uid = currentEvent['UID'] || `gcal-${startDate.getTime()}-${title.slice(0, 20)}`;
@@ -170,15 +273,22 @@ function parseICal(icalData: string): ParsedEvent[] {
       }
     } else if (inEvent && line.includes(':')) {
       const colonIndex = line.indexOf(':');
-      let key = line.slice(0, colonIndex);
+      const fullKey = line.slice(0, colonIndex);
       const value = line.slice(colonIndex + 1);
       
-      if (key.includes(';')) {
-        key = key.split(';')[0];
+      // Extract base key (without parameters like TZID)
+      let key = fullKey;
+      if (fullKey.includes(';')) {
+        key = fullKey.split(';')[0];
       }
       
       currentEvent[key] = value;
       currentKey = key;
+      
+      // Store raw line for DTSTART/DTEND to extract timezone later
+      if (key === 'DTSTART' || key === 'DTEND') {
+        currentEvent[`${key}_RAW`] = fullKey;
+      }
     }
   }
   
