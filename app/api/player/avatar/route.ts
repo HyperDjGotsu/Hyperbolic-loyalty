@@ -42,10 +42,17 @@ export async function POST(request: Request) {
     }
 
     // Parse current config safely
-    const currentConfig: AvatarConfig = 
-      typeof player.avatar_config === 'object' && player.avatar_config !== null
-        ? (player.avatar_config as AvatarConfig)
-        : defaultAvatarConfig;
+    let currentConfig: AvatarConfig = defaultAvatarConfig;
+    if (player.avatar_config && typeof player.avatar_config === 'object' && !Array.isArray(player.avatar_config)) {
+      const config = player.avatar_config as unknown as Record<string, unknown>;
+      currentConfig = {
+        base: typeof config.base === 'string' ? config.base : defaultAvatarConfig.base,
+        background: typeof config.background === 'string' ? config.background : defaultAvatarConfig.background,
+        frame: typeof config.frame === 'string' ? config.frame : defaultAvatarConfig.frame,
+        badge: typeof config.badge === 'string' ? config.badge : null,
+        photo_url: typeof config.photo_url === 'string' ? config.photo_url : null,
+      };
+    }
 
     // Build new config
     const newConfig: AvatarConfig = {
@@ -98,10 +105,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const avatarConfig: AvatarConfig = 
-      typeof player.avatar_config === 'object' && player.avatar_config !== null
-        ? (player.avatar_config as AvatarConfig)
-        : defaultAvatarConfig;
+    let avatarConfig: AvatarConfig = defaultAvatarConfig;
+    if (player.avatar_config && typeof player.avatar_config === 'object' && !Array.isArray(player.avatar_config)) {
+      const config = player.avatar_config as unknown as Record<string, unknown>;
+      avatarConfig = {
+        base: typeof config.base === 'string' ? config.base : defaultAvatarConfig.base,
+        background: typeof config.background === 'string' ? config.background : defaultAvatarConfig.background,
+        frame: typeof config.frame === 'string' ? config.frame : defaultAvatarConfig.frame,
+        badge: typeof config.badge === 'string' ? config.badge : null,
+        photo_url: typeof config.photo_url === 'string' ? config.photo_url : null,
+      };
+    }
 
     return NextResponse.json({ avatarConfig });
 
