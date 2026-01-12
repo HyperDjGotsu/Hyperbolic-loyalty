@@ -11,83 +11,69 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { eventId } = body;
-
+    const { eventId } = await request.json();
+    
     if (!eventId) {
       return NextResponse.json({ error: 'Event ID required' }, { status: 400 });
     }
 
     // Get current player
-    const { data: currentPlayer, error: playerError } = await supabaseAdmin
+    const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
       .select('id')
       .eq('clerk_user_id', userId)
       .single();
 
-    if (playerError || !currentPlayer) {
+    if (playerError || !player) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Check if event exists
-    const { data: event, error: eventError } = await supabaseAdmin
-      .from('events')
-      .select('id, name')
-      .eq('id', eventId)
-      .single();
-
-    if (eventError || !event) {
-      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
-    }
-
-    // Check if already interested
-    const { data: existingInterest } = await supabaseAdmin
+    // Check if interest already exists
+    const { data: existing } = await supabaseAdmin
       .from('event_interest')
       .select('id')
+      .eq('player_id', player.id)
       .eq('event_id', eventId)
-      .eq('player_id', currentPlayer.id)
       .single();
 
-    if (existingInterest) {
+    if (existing) {
       // Remove interest
-      const { error: deleteError } = await supabaseAdmin
+      const { error } = await supabaseAdmin
         .from('event_interest')
         .delete()
-        .eq('id', existingInterest.id);
+        .eq('id', existing.id);
 
-      if (deleteError) {
-        console.error('Error removing interest:', deleteError);
-        return NextResponse.json({ error: 'Failed to update interest' }, { status: 500 });
+      if (error) {
+        console.error('Error removing interest:', error);
+        return NextResponse.json({ error: 'Failed to remove interest' }, { status: 500 });
       }
 
       return NextResponse.json({ 
-        success: true, 
-        isInterested: false,
-        message: 'Removed from interested',
+        interested: false,
+        message: 'Interest removed' 
       });
     } else {
       // Add interest
-      const { error: insertError } = await supabaseAdmin
+      const { error } = await supabaseAdmin
         .from('event_interest')
         .insert({
+          player_id: player.id,
           event_id: eventId,
-          player_id: currentPlayer.id,
         });
 
-      if (insertError) {
-        console.error('Error adding interest:', insertError);
-        return NextResponse.json({ error: 'Failed to update interest' }, { status: 500 });
+      if (error) {
+        console.error('Error adding interest:', error);
+        return NextResponse.json({ error: 'Failed to add interest' }, { status: 500 });
       }
 
       return NextResponse.json({ 
-        success: true, 
-        isInterested: true,
-        message: `You're interested in ${event.name}!`,
+        interested: true,
+        message: 'Interest added' 
       });
     }
 
   } catch (error) {
-    console.error('Event interest error:', error);
+    console.error('Interest toggle error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
