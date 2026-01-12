@@ -136,12 +136,14 @@ function parseExplicitPrice(text: string): number | null {
 }
 
 // Parse max players from text
-// Matches: "16 spots", "max 32", "32 players max", "spots: 24", "limit 16"
+// Matches: "Players: 32", "16 spots", "max 32", "spots: 24", "limit 16"
 function parseMaxPlayers(text: string): number | null {
   const patterns = [
-    /(\d+)\s*(?:spots?|seats?|players?)\s*(?:open|available|max)?/i,  // "16 spots" or "32 players"
+    // Priority 1: Explicit label before number (most reliable)
+    /(?:players?|spots?|seats?)(?:\s*:)?\s*(\d+)/i,                    // "Players: 32" or "spots: 24"
     /(?:max|limit|capacity)(?:\s*:)?\s*(\d+)/i,                        // "max 32" or "limit: 16"
-    /(?:spots?|seats?|players?)(?:\s*:)?\s*(\d+)/i,                    // "spots: 24"
+    // Priority 2: Number before label (but NOT preceded by $)
+    /(?<!\$)(\d+)\s+(?:spots?|seats?|players?)\s*(?:open|available|max)?/i,  // "32 players" but not "$32 players"
   ];
   
   for (const pattern of patterns) {
