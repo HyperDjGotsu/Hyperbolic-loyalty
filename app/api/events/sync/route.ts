@@ -529,7 +529,7 @@ export async function POST(request: Request) {
           .single() as any);
         
         if (existing) {
-          // Update existing event
+          // Update existing event - calendar is source of truth
           const { error } = await supabaseAdmin
             .from('events')
             .update({
@@ -538,8 +538,11 @@ export async function POST(request: Request) {
               description: event.description,
               scheduled_at: event.scheduled_at,
               ends_at: event.ends_at,
-              // Don't overwrite these if they were manually set:
-              // entry_fee, max_players, has_stream, attendance_xp, win_xp
+              entry_fee: event.entry_fee,
+              max_players: event.max_players,
+              has_stream: event.has_stream,
+              attendance_xp: event.attendance_xp,
+              win_xp: event.win_xp,
             })
             .eq('id', existing.id);
           
