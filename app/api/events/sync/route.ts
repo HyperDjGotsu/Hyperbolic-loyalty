@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Google Calendar iCal URL
-const ICAL_URL = 'https://calendar.google.com/calendar/ical/ecab33faca7be64c1c7331361ed56d301e429468e4e45d6356b1836991c45d14%40group.calendar.google.com/public/basic.ics';
+// Google Calendar iCal URL (use secret address from env)
+const ICAL_URL = process.env.GOOGLE_CALENDAR_ICAL_URL || '';
 
 // Game detection from event titles
 const GAME_PATTERNS: { pattern: RegExp; id: string }[] = [
@@ -195,16 +195,40 @@ export async function POST(request: Request) {
 
     console.log('Starting calendar sync...');
     
+    if (!ICAL_URL) {
+      return NextResponse.json({ 
+        error: 'Calendar URL not configured. Set GOOGLE_CALENDAR_ICAL_URL in environment variables.',
+      }, { status: 500 });
+    }
+    
+    console.log('Fetching calendar...');
+    
     // Fetch the iCal feed
-    const response = await fetch(ICAL_URL, {
-      cache: 'no-store', // Always fetch fresh
-    });
+    let response;
+    try {
+      response = await fetch(ICAL_URL, {
+        cache: 'no-store', // Always fetch fresh
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; HyperbolicLoyalty/1.0)',
+        },
+      });
+    } catch (fetchError) {
+      console.error('Fetch threw error:', fetchError);
+      return NextResponse.json({ 
+        error: 'Failed to fetch calendar - network error',
+        details: String(fetchError)
+      }, { status: 500 });
+    }
+    
+    console.log('Response status:', response.status);
     
     if (!response.ok) {
-      console.error('Failed to fetch calendar:', response.status);
+      const errorText = await response.text().catch(() => 'Could not read response');
+      console.error('Failed to fetch calendar:', response.status, errorText);
       return NextResponse.json({ 
         error: 'Failed to fetch calendar',
-        status: response.status 
+        status: response.status,
+        details: errorText.slice(0, 500)
       }, { status: 500 });
     }
     
@@ -316,6 +340,12 @@ export async function POST(request: Request) {
 // GET - Check sync status / preview what would sync
 export async function GET(request: Request) {
   try {
+    if (!ICAL_URL) {
+      return NextResponse.json({ 
+        error: 'Calendar URL not configured' 
+      }, { status: 500 });
+    }
+    
     // Fetch the iCal feed
     const response = await fetch(ICAL_URL, {
       cache: 'no-store',
