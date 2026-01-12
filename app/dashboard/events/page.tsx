@@ -251,13 +251,11 @@ export default function EventsPage() {
           <div className="flex gap-4 text-sm text-slate-400">
             <span>💰 {event.entryFee}</span>
             {event.maxSpots && (
-              <span className={event.spots === 0 ? 'text-red-400' : 'text-cyan-400'}>
-                👥 {event.spots !== null ? `${event.spots}/${event.maxSpots}` : event.maxSpots}
+              <span className="text-slate-400">
+                👥 Cap: {event.maxSpots}
               </span>
             )}
-            {event.interestedCount > 0 && (
-              <span className="text-purple-400">⭐ {event.interestedCount}</span>
-            )}
+            <span className="text-purple-400">⭐ {event.interestedCount} interested</span>
           </div>
           <StreamButtons event={event} />
         </div>
@@ -319,11 +317,21 @@ export default function EventsPage() {
             </div>
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
               <div className="text-2xl mb-1">👥</div>
-              <div className="text-slate-500 text-xs">Players</div>
+              <div className="text-slate-500 text-xs">Capacity</div>
               <div className="text-white font-bold text-lg">
-                {event.maxSpots ? `${event.currentPlayers}/${event.maxSpots}` : 'Open'}
+                {event.maxSpots || 'Open'}
               </div>
-              {event.spots === 0 && <div className="text-red-400 text-xs mt-1">FULL</div>}
+            </div>
+          </div>
+          
+          {/* Interest count */}
+          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/20">
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-2xl">⭐</span>
+              <div>
+                <div className="text-purple-400 font-bold text-xl">{event.interestedCount}</div>
+                <div className="text-slate-500 text-xs">Players Interested</div>
+              </div>
             </div>
           </div>
           
@@ -362,13 +370,6 @@ export default function EventsPage() {
                 </div>
                 <StreamButtons event={event} />
               </div>
-            </div>
-          )}
-          
-          {/* Interest count */}
-          {event.interestedCount > 0 && (
-            <div className="text-center text-slate-500 text-sm">
-              ⭐ {event.interestedCount} player{event.interestedCount !== 1 ? 's' : ''} interested
             </div>
           )}
         </div>
