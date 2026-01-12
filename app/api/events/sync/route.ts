@@ -266,23 +266,25 @@ export async function POST(request: Request) {
           }
         } else {
           // Insert new event
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const insertData: any = {
+            gcal_uid: event.gcal_uid,
+            name: event.name,
+            game_id: event.game_id,
+            description: event.description,
+            scheduled_at: event.scheduled_at,
+            ends_at: event.ends_at,
+            entry_fee: event.entry_fee,
+            max_players: event.max_players,
+            has_stream: event.has_stream,
+            attendance_xp: event.attendance_xp,
+            win_xp: event.win_xp,
+            status: 'scheduled' as const,
+            current_players: 0,
+          };
           const { error } = await supabaseAdmin
             .from('events')
-            .insert({
-              gcal_uid: event.gcal_uid,
-              name: event.name,
-              game_id: event.game_id,
-              description: event.description,
-              scheduled_at: event.scheduled_at,
-              ends_at: event.ends_at,
-              entry_fee: event.entry_fee,
-              max_players: event.max_players,
-              has_stream: event.has_stream,
-              attendance_xp: event.attendance_xp,
-              win_xp: event.win_xp,
-              status: event.status,
-              current_players: 0,
-            });
+            .insert(insertData);
           
           if (error) {
             console.error('Error inserting event:', error);
