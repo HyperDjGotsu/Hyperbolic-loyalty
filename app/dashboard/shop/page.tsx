@@ -1,278 +1,444 @@
 'use client';
 
-import React, { useState } from 'react';
-import type { ShopItem, ShopCategory } from '@/lib/types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useUser } from '@clerk/nextjs';
 
-const shopCategories: ShopCategory[] = [
-  { id: 'featured', name: 'Featured', icon: '⭐' },
-  { id: 'cosmetics', name: 'Cosmetics', icon: '🎨' },
-  { id: 'boosts', name: 'Boosts', icon: '⚡' },
-  { id: 'tickets', name: 'Tickets', icon: '🎟️' },
-  { id: 'bundles', name: 'Bundles', icon: '📦' },
-];
+interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  rarity: string;
+  assetData: any;
+  isDefault: boolean;
+}
 
-const shopItems: ShopItem[] = [
-  // Featured
-  { id: 'feat-1', name: 'Pirate King Bundle', category: 'featured', price: 1500, currency: 'gems', icon: '👑', description: 'Exclusive frame + badge + 500 XP', rarity: 'legendary', tag: 'LIMITED', includes: ['Crown Frame', 'Pirate King Badge', '500 XP Boost'] },
-  { id: 'feat-2', name: 'Season Pass', category: 'featured', price: 9.99, currency: 'usd', icon: '🏆', description: 'Unlock all season rewards', rarity: 'epic', tag: 'BEST VALUE' },
-  { id: 'feat-3', name: 'Starter Pack', category: 'featured', price: 4.99, currency: 'usd', icon: '🎁', description: '500 Gems + 3 Tickets + Bonus XP', rarity: 'rare', tag: 'NEW PLAYER', originalPrice: 9.99 },
-  // Cosmetics
-  { id: 'cos-1', name: 'Neon Frame', category: 'cosmetics', price: 400, currency: 'gems', icon: '💠', description: 'Animated neon border', rarity: 'epic' },
-  { id: 'cos-2', name: 'Fire Badge', category: 'cosmetics', price: 200, currency: 'gems', icon: '🔥', description: 'Show your streak pride', rarity: 'rare' },
-  { id: 'cos-3', name: 'Galaxy Background', category: 'cosmetics', price: 350, currency: 'gems', icon: '🌌', description: 'Cosmic avatar background', rarity: 'epic' },
-  { id: 'cos-4', name: 'Diamond Frame', category: 'cosmetics', price: 800, currency: 'gems', icon: '💎', description: 'Premium sparkle effect', rarity: 'legendary' },
-  // Boosts
-  { id: 'boost-1', name: '2x XP (24hr)', category: 'boosts', price: 100, currency: 'gems', icon: '⚡', description: 'Double all XP earned', rarity: 'rare', duration: '24 hours' },
-  { id: 'boost-2', name: '2x XP (7 days)', category: 'boosts', price: 500, currency: 'gems', icon: '🚀', description: 'Week-long XP boost', rarity: 'epic', duration: '7 days' },
-  { id: 'boost-3', name: 'Streak Shield', category: 'boosts', price: 150, currency: 'gems', icon: '🛡️', description: 'Protect your streak once', rarity: 'rare' },
-  // Tickets
-  { id: 'tix-1', name: '1 Spin Ticket', category: 'tickets', price: 50, currency: 'gems', icon: '🎟️', description: 'Extra daily spin', rarity: 'common' },
-  { id: 'tix-2', name: '5 Spin Bundle', category: 'tickets', price: 200, currency: 'gems', icon: '🎫', description: 'Save 50 gems!', rarity: 'uncommon', originalPrice: 250 },
-  // Bundles
-  { id: 'bun-1', name: 'Gem Pouch', category: 'bundles', price: 4.99, currency: 'usd', icon: '💰', description: '500 Gems', rarity: 'common', gems: 500 },
-  { id: 'bun-2', name: 'Gem Chest', category: 'bundles', price: 9.99, currency: 'usd', icon: '💎', description: '1200 Gems (+20% bonus)', rarity: 'rare', gems: 1200, tag: 'POPULAR' },
-  { id: 'bun-3', name: 'Gem Vault', category: 'bundles', price: 24.99, currency: 'usd', icon: '🏦', description: '3500 Gems (+40% bonus)', rarity: 'epic', gems: 3500, tag: 'BEST VALUE' },
-];
+interface AvatarConfig {
+  base: string;
+  background: string;
+  frame: string;
+  badge: string | null;
+  photo_url: string | null;
+}
 
-const rarityBorders: Record<string, string> = {
-  common: 'border-slate-500',
-  uncommon: 'border-green-500',
-  rare: 'border-blue-500',
-  epic: 'border-purple-500',
-  legendary: 'border-yellow-500',
+const rarityColors: Record<string, { border: string; bg: string; text: string }> = {
+  common: { border: 'border-slate-500', bg: 'bg-slate-500/20', text: 'text-slate-400' },
+  uncommon: { border: 'border-green-500', bg: 'bg-green-500/20', text: 'text-green-400' },
+  rare: { border: 'border-blue-500', bg: 'bg-blue-500/20', text: 'text-blue-400' },
+  epic: { border: 'border-purple-500', bg: 'bg-purple-500/20', text: 'text-purple-400' },
+  legendary: { border: 'border-yellow-500', bg: 'bg-yellow-500/20', text: 'text-yellow-400' },
 };
 
-const rarityGlows: Record<string, string> = {
-  common: '',
-  uncommon: 'shadow-green-500/20',
-  rare: 'shadow-blue-500/20',
-  epic: 'shadow-purple-500/30',
-  legendary: 'shadow-yellow-500/40 shadow-lg',
+const frameStyles: Record<string, string> = {
+  none: 'border-transparent',
+  silver: 'border-slate-400',
+  gold: 'border-yellow-500',
+  diamond: 'border-cyan-400',
+  fire: 'border-orange-500',
+  pirate: 'border-red-600',
+  electric: 'border-yellow-400',
+  legendary: 'border-purple-500',
 };
 
 export default function ShopPage() {
-  const [activeCategory, setActiveCategory] = useState('featured');
-  const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
-  const [playerGems] = useState(1250);
-  const [playerTickets] = useState(3);
+  const { user, isLoaded } = useUser();
+  const [activeTab, setActiveTab] = useState<'shop' | 'customize'>('shop');
+  const [activeCategory, setActiveCategory] = useState('base');
+  const [gems, setGems] = useState(0);
+  const [shopItems, setShopItems] = useState<Record<string, ShopItem[]>>({});
+  const [ownedItems, setOwnedItems] = useState<Record<string, ShopItem[]>>({});
+  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>({
+    base: '😎',
+    background: '#3b82f6',
+    frame: 'none',
+    badge: null,
+    photo_url: null,
+  });
+  const [tempAvatar, setTempAvatar] = useState<AvatarConfig>(avatarConfig);
+  const [loading, setLoading] = useState(true);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const filteredItems = shopItems.filter((item) => item.category === activeCategory);
+  const categories = [
+    { id: 'base', name: 'Base', icon: '😎' },
+    { id: 'background', name: 'Background', icon: '🎨' },
+    { id: 'frame', name: 'Frame', icon: '✨' },
+    { id: 'badge', name: 'Badge', icon: '🏷️' },
+    { id: 'title', name: 'Title', icon: '📛' },
+  ];
 
-  const canAfford = (item: ShopItem) => {
-    if (item.currency === 'gems') return playerGems >= item.price;
-    if (item.currency === 'tickets') return playerTickets >= item.price;
-    return true;
+  const loadShopData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Load shop items
+      const shopRes = await fetch('/api/shop');
+      if (shopRes.ok) {
+        const shopData = await shopRes.json();
+        setShopItems(shopData.grouped || {});
+      }
+
+      // Load inventory
+      const invRes = await fetch('/api/player/inventory');
+      if (invRes.ok) {
+        const invData = await invRes.json();
+        setGems(invData.gems || 0);
+        setOwnedItems(invData.grouped || {});
+        setAvatarConfig(invData.avatarConfig || avatarConfig);
+        setTempAvatar(invData.avatarConfig || avatarConfig);
+        
+        // Build owned IDs set
+        const owned = new Set<string>();
+        invData.items?.forEach((item: ShopItem) => owned.add(item.id));
+        setOwnedIds(owned);
+      }
+    } catch (error) {
+      console.error('Error loading shop data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      loadShopData();
+    }
+  }, [isLoaded, user, loadShopData]);
+
+  const purchaseItem = async (item: ShopItem) => {
+    if (ownedIds.has(item.id) || item.isDefault) return;
+    if (gems < item.price) {
+      alert('Not enough gems!');
+      return;
+    }
+
+    setPurchasing(item.id);
+    try {
+      const res = await fetch('/api/shop/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: item.id }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setGems(data.newBalance);
+        setOwnedIds(prev => new Set(prev).add(item.id));
+        // Add to owned items
+        setOwnedItems(prev => ({
+          ...prev,
+          [item.category]: [...(prev[item.category] || []), item],
+        }));
+        alert(`🎉 Purchased ${item.name}!`);
+      } else {
+        alert(data.error || 'Failed to purchase');
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      alert('Failed to purchase item');
+    } finally {
+      setPurchasing(null);
+    }
   };
+
+  const saveAvatar = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/player/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tempAvatar),
+      });
+
+      if (res.ok) {
+        setAvatarConfig(tempAvatar);
+        alert('✅ Avatar saved!');
+      } else {
+        alert('Failed to save avatar');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('Failed to save avatar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isOwned = (item: ShopItem) => item.isDefault || ownedIds.has(item.id);
+
+  const AvatarPreview = ({ config, size = 'lg' }: { config: AvatarConfig; size?: 'sm' | 'lg' }) => {
+    const sizeClass = size === 'lg' ? 'w-24 h-24 text-4xl' : 'w-12 h-12 text-xl';
+    const frameClass = frameStyles[config.frame] || 'border-transparent';
+    
+    return (
+      <div 
+        className={`${sizeClass} rounded-full flex items-center justify-center border-4 ${frameClass}`}
+        style={{ backgroundColor: config.background }}
+      >
+        {config.photo_url ? (
+          <img src={config.photo_url} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+        ) : (
+          config.base
+        )}
+        {config.badge && (
+          <div className="absolute -bottom-1 -right-1 text-lg bg-slate-800 rounded-full w-6 h-6 flex items-center justify-center border border-slate-700">
+            {config.badge}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const ShopItemCard = ({ item }: { item: ShopItem }) => {
+    const owned = isOwned(item);
+    const rarity = rarityColors[item.rarity] || rarityColors.common;
+    
+    return (
+      <button
+        onClick={() => !owned && purchaseItem(item)}
+        disabled={owned || purchasing === item.id}
+        className={`relative p-3 rounded-xl border-2 ${rarity.border} ${rarity.bg} text-left transition-all ${
+          owned ? 'opacity-60' : 'hover:scale-105 active:scale-95'
+        }`}
+      >
+        {owned && (
+          <div className="absolute top-1 right-1 text-green-400 text-xs font-bold">✓ OWNED</div>
+        )}
+        
+        <div className="text-2xl mb-2">
+          {item.category === 'base' && item.assetData?.emoji}
+          {item.category === 'badge' && item.assetData?.emoji}
+          {item.category === 'background' && (
+            <div 
+              className="w-8 h-8 rounded-full border-2 border-white/30"
+              style={{ backgroundColor: item.assetData?.color }}
+            />
+          )}
+          {item.category === 'frame' && (
+            <div className={`w-8 h-8 rounded-full border-4 ${frameStyles[item.assetData?.style] || ''} bg-slate-700`} />
+          )}
+          {item.category === 'title' && '📛'}
+        </div>
+        
+        <div className="text-white font-semibold text-sm">{item.name}</div>
+        <div className="text-slate-400 text-xs mt-0.5">{item.description}</div>
+        
+        <div className="flex items-center justify-between mt-2">
+          <span className={`text-xs uppercase ${rarity.text}`}>{item.rarity}</span>
+          {!owned && (
+            <span className="text-white font-bold text-sm flex items-center gap-1">
+              {item.price} 💎
+            </span>
+          )}
+        </div>
+        
+        {purchasing === item.id && (
+          <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
+            <span className="text-white animate-pulse">Buying...</span>
+          </div>
+        )}
+      </button>
+    );
+  };
+
+  const CustomizeItemCard = ({ item }: { item: ShopItem }) => {
+    const isSelected = 
+      (item.category === 'base' && tempAvatar.base === item.assetData?.emoji) ||
+      (item.category === 'background' && tempAvatar.background === item.assetData?.color) ||
+      (item.category === 'frame' && tempAvatar.frame === item.assetData?.style) ||
+      (item.category === 'badge' && tempAvatar.badge === item.assetData?.emoji);
+
+    const handleSelect = () => {
+      if (item.category === 'base') {
+        setTempAvatar(prev => ({ ...prev, base: item.assetData?.emoji, photo_url: null }));
+      } else if (item.category === 'background') {
+        setTempAvatar(prev => ({ ...prev, background: item.assetData?.color }));
+      } else if (item.category === 'frame') {
+        setTempAvatar(prev => ({ ...prev, frame: item.assetData?.style }));
+      } else if (item.category === 'badge') {
+        // Toggle badge off if already selected
+        setTempAvatar(prev => ({ 
+          ...prev, 
+          badge: prev.badge === item.assetData?.emoji ? null : item.assetData?.emoji 
+        }));
+      }
+    };
+
+    return (
+      <button
+        onClick={handleSelect}
+        className={`p-3 rounded-xl border-2 transition-all ${
+          isSelected 
+            ? 'border-cyan-500 bg-cyan-500/20' 
+            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+        }`}
+      >
+        <div className="text-2xl">
+          {item.category === 'base' && item.assetData?.emoji}
+          {item.category === 'badge' && item.assetData?.emoji}
+          {item.category === 'background' && (
+            <div 
+              className="w-8 h-8 rounded-full border-2 border-white/30 mx-auto"
+              style={{ backgroundColor: item.assetData?.color }}
+            />
+          )}
+          {item.category === 'frame' && (
+            <div className={`w-8 h-8 rounded-full border-4 ${frameStyles[item.assetData?.style] || ''} bg-slate-700 mx-auto`} />
+          )}
+        </div>
+        <div className="text-white text-xs mt-1 text-center">{item.name}</div>
+        {isSelected && <div className="text-cyan-400 text-xs mt-0.5">✓</div>}
+      </button>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl animate-bounce mb-4">🛍️</div>
+          <div className="text-slate-400">Loading shop...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 overflow-auto">
-      {/* Header with currencies */}
+      {/* Header */}
       <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-white font-orbitron">Shop</h1>
-            <div className="flex gap-3">
-              <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-full">
-                <span>💎</span>
-                <span className="text-white font-bold">{playerGems.toLocaleString()}</span>
-                <button className="ml-1 w-5 h-5 bg-green-500 rounded-full text-xs text-white font-bold">
-                  +
-                </button>
-              </div>
-              <div className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-full">
-                <span>🎟️</span>
-                <span className="text-white font-bold">{playerTickets}</span>
-              </div>
+            <h1 className="text-xl font-bold text-white">Shop</h1>
+            <div className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-full">
+              <span className="text-xl">💎</span>
+              <span className="text-white font-bold">{gems.toLocaleString()}</span>
             </div>
           </div>
 
-          {/* Category tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {shopCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                  activeCategory === cat.id
-                    ? 'bg-cyan-500 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Items grid */}
-      <div className="p-4">
-        <div className="grid grid-cols-2 gap-3">
-          {filteredItems.map((item) => {
-            const affordable = canAfford(item);
-            return (
-              <button
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className={`relative bg-slate-800/50 rounded-xl p-3 border-2 ${
-                  rarityBorders[item.rarity]
-                } ${rarityGlows[item.rarity]} text-left transition-transform hover:scale-105 active:scale-95`}
-              >
-                {item.tag && (
-                  <div
-                    className={`absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-xs font-bold ${
-                      item.tag === 'LIMITED'
-                        ? 'bg-red-500 text-white'
-                        : item.tag === 'BEST VALUE'
-                        ? 'bg-green-500 text-white'
-                        : item.tag === 'NEW PLAYER'
-                        ? 'bg-cyan-500 text-white'
-                        : item.tag === 'POPULAR'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-slate-600 text-white'
-                    }`}
-                  >
-                    {item.tag}
-                  </div>
-                )}
-                <div className="text-3xl mb-2">{item.icon}</div>
-                <div className="text-white font-semibold text-sm leading-tight">{item.name}</div>
-                <div className="text-slate-500 text-xs mt-1 line-clamp-2">{item.description}</div>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    {item.originalPrice && (
-                      <span className="text-slate-500 text-xs line-through">
-                        {item.currency === 'usd' ? `$${item.originalPrice}` : item.originalPrice}
-                      </span>
-                    )}
-                    <span
-                      className={`font-bold ${
-                        affordable || item.currency === 'usd' ? 'text-white' : 'text-red-400'
-                      }`}
-                    >
-                      {item.currency === 'usd' ? `$${item.price}` : item.price}
-                    </span>
-                    {item.currency === 'gems' && <span className="text-sm">💎</span>}
-                    {item.currency === 'tickets' && <span className="text-sm">🎟️</span>}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Item detail modal */}
-      {selectedItem && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex items-end justify-center p-4">
-          <div className="bg-slate-900 rounded-3xl w-full max-w-md overflow-hidden border border-slate-700 animate-slide-up">
-            <div
-              className={`p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-b-2 ${
-                rarityBorders[selectedItem.rarity]
+          {/* Main tabs */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('shop')}
+              className={`flex-1 py-2 rounded-xl font-medium transition-all ${
+                activeTab === 'shop'
+                  ? 'bg-cyan-500 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
             >
-              <div className="text-center">
-                <div className="text-6xl mb-3">{selectedItem.icon}</div>
-                <h2 className="text-xl font-bold text-white">{selectedItem.name}</h2>
-                <div
-                  className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${
-                    selectedItem.rarity === 'legendary'
-                      ? 'bg-yellow-500/20 text-yellow-400'
-                      : selectedItem.rarity === 'epic'
-                      ? 'bg-purple-500/20 text-purple-400'
-                      : selectedItem.rarity === 'rare'
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : selectedItem.rarity === 'uncommon'
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-slate-500/20 text-slate-400'
-                  }`}
-                >
-                  {selectedItem.rarity}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4">
-              <p className="text-slate-300 text-center mb-4">{selectedItem.description}</p>
-
-              {selectedItem.includes && (
-                <div className="bg-slate-800/50 rounded-xl p-3 mb-4">
-                  <div className="text-slate-500 text-xs mb-2">INCLUDES:</div>
-                  {selectedItem.includes.map((inc, i) => (
-                    <div key={i} className="text-white text-sm flex items-center gap-2">
-                      <span className="text-green-400">✓</span> {inc}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center justify-between bg-slate-800 rounded-xl p-3 mb-4">
-                <div>
-                  <div className="text-slate-500 text-xs">Price</div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-white">
-                      {selectedItem.currency === 'usd'
-                        ? `$${selectedItem.price}`
-                        : selectedItem.price}
-                    </span>
-                    {selectedItem.currency === 'gems' && <span className="text-xl">💎</span>}
-                    {selectedItem.currency === 'tickets' && <span className="text-xl">🎟️</span>}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
-                  canAfford(selectedItem) || selectedItem.currency === 'usd'
-                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-400 hover:to-purple-400'
-                    : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                }`}
-              >
-                {selectedItem.currency === 'usd'
-                  ? '💳 Purchase'
-                  : canAfford(selectedItem)
-                  ? '✨ Buy Now'
-                  : '❌ Not Enough'}
-              </button>
-            </div>
-
-            <div className="p-4 pt-0">
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="w-full py-3 text-slate-500 font-medium"
-              >
-                Close
-              </button>
-            </div>
+              🛍️ Buy Items
+            </button>
+            <button
+              onClick={() => setActiveTab('customize')}
+              className={`flex-1 py-2 rounded-xl font-medium transition-all ${
+                activeTab === 'customize'
+                  ? 'bg-cyan-500 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              ✨ Customize
+            </button>
           </div>
+        </div>
+
+        {/* Category tabs */}
+        <div className="flex gap-2 px-4 pb-3 overflow-x-auto">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+                activeCategory === cat.id
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              <span>{cat.icon}</span>
+              <span>{cat.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Shop Tab */}
+      {activeTab === 'shop' && (
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-3">
+            {(shopItems[activeCategory] || []).map(item => (
+              <ShopItemCard key={item.id} item={item} />
+            ))}
+          </div>
+          
+          {(!shopItems[activeCategory] || shopItems[activeCategory].length === 0) && (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">🏪</div>
+              <div className="text-slate-400">No items in this category</div>
+            </div>
+          )}
         </div>
       )}
 
-      <style jsx>{`
-        .animate-slide-up {
-          animation: slideUp 0.3s ease-out;
-        }
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .scrollbar-none::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      {/* Customize Tab */}
+      {activeTab === 'customize' && (
+        <div className="p-4">
+          {/* Avatar Preview */}
+          <div className="bg-slate-800/50 rounded-xl p-6 mb-4 border border-slate-700/50">
+            <div className="flex items-center justify-center mb-4">
+              <div className="relative">
+                <AvatarPreview config={tempAvatar} size="lg" />
+              </div>
+            </div>
+            <div className="text-center text-slate-400 text-sm mb-4">
+              Preview your changes
+            </div>
+            <button
+              onClick={saveAvatar}
+              disabled={saving}
+              className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-xl disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : '💾 Save Avatar'}
+            </button>
+          </div>
+
+          {/* Owned items in current category */}
+          <div className="mb-2 text-slate-400 text-sm">
+            Your {categories.find(c => c.id === activeCategory)?.name} Options
+          </div>
+          
+          <div className="grid grid-cols-4 gap-2">
+            {activeCategory === 'badge' && (
+              <button
+                onClick={() => setTempAvatar(prev => ({ ...prev, badge: null }))}
+                className={`p-3 rounded-xl border-2 transition-all ${
+                  tempAvatar.badge === null 
+                    ? 'border-cyan-500 bg-cyan-500/20' 
+                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                }`}
+              >
+                <div className="text-2xl">🚫</div>
+                <div className="text-white text-xs mt-1 text-center">None</div>
+              </button>
+            )}
+            {(ownedItems[activeCategory] || []).map(item => (
+              <CustomizeItemCard key={item.id} item={item} />
+            ))}
+          </div>
+
+          {(!ownedItems[activeCategory] || ownedItems[activeCategory].length === 0) && (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">📦</div>
+              <div className="text-slate-400">No items owned in this category</div>
+              <button
+                onClick={() => setActiveTab('shop')}
+                className="mt-2 text-cyan-400 text-sm"
+              >
+                Browse shop →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -405,6 +405,42 @@ export type Database = {
           },
         ]
       }
+      player_inventory: {
+        Row: {
+          id: string
+          item_id: string | null
+          player_id: string | null
+          purchased_at: string | null
+        }
+        Insert: {
+          id?: string
+          item_id?: string | null
+          player_id?: string | null
+          purchased_at?: string | null
+        }
+        Update: {
+          id?: string
+          item_id?: string | null
+          player_id?: string | null
+          purchased_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_inventory_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_inventory_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           allow_friend_requests: boolean | null
@@ -414,6 +450,7 @@ export type Database = {
           avatar_background: string | null
           avatar_badge: string | null
           avatar_base: string | null
+          avatar_config: Json | null
           avatar_frame: string | null
           avatar_photo_url: string | null
           avatar_type: string | null
@@ -422,6 +459,7 @@ export type Database = {
           discord_username: string | null
           display_name: string
           email: string | null
+          gems: number | null
           id: string
           is_banned: boolean | null
           is_founding_member: boolean | null
@@ -469,6 +507,7 @@ export type Database = {
           avatar_background?: string | null
           avatar_badge?: string | null
           avatar_base?: string | null
+          avatar_config?: Json | null
           avatar_frame?: string | null
           avatar_photo_url?: string | null
           avatar_type?: string | null
@@ -477,6 +516,7 @@ export type Database = {
           discord_username?: string | null
           display_name: string
           email?: string | null
+          gems?: number | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
@@ -524,6 +564,7 @@ export type Database = {
           avatar_background?: string | null
           avatar_badge?: string | null
           avatar_base?: string | null
+          avatar_config?: Json | null
           avatar_frame?: string | null
           avatar_photo_url?: string | null
           avatar_type?: string | null
@@ -532,6 +573,7 @@ export type Database = {
           discord_username?: string | null
           display_name?: string
           email?: string | null
+          gems?: number | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
@@ -725,6 +767,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shop_items: {
+        Row: {
+          asset_data: Json
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          price: number
+          rarity: string
+        }
+        Insert: {
+          asset_data: Json
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          price?: number
+          rarity?: string
+        }
+        Update: {
+          asset_data?: Json
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          price?: number
+          rarity?: string
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
