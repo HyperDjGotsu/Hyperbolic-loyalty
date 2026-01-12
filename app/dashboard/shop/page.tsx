@@ -85,8 +85,9 @@ export default function ShopPage() {
         const invData = await invRes.json();
         setGems(invData.gems || 0);
         setOwnedItems(invData.grouped || {});
-        setAvatarConfig(invData.avatarConfig || avatarConfig);
-        setTempAvatar(invData.avatarConfig || avatarConfig);
+        const loadedConfig = invData.avatarConfig || avatarConfig;
+        setAvatarConfig(loadedConfig);
+        setTempAvatar(loadedConfig);
         
         // Build owned IDs set
         const owned = new Set<string>();
@@ -142,8 +143,13 @@ export default function ShopPage() {
     }
   };
 
-  const saveAvatar = async () => {
+  const saveAvatar = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Starting save...', tempAvatar);
     setSaving(true);
+    
     try {
       const res = await fetch('/api/player/avatar', {
         method: 'POST',
@@ -151,15 +157,19 @@ export default function ShopPage() {
         body: JSON.stringify(tempAvatar),
       });
 
+      console.log('Response status:', res.status);
+      const data = await res.json();
+      console.log('Response data:', data);
+
       if (res.ok) {
         setAvatarConfig(tempAvatar);
         alert('✅ Avatar saved!');
       } else {
-        alert('Failed to save avatar');
+        alert('Failed to save avatar: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save avatar');
+      alert('Failed to save avatar: ' + String(error));
     } finally {
       setSaving(false);
     }
@@ -172,15 +182,17 @@ export default function ShopPage() {
     const frameClass = frameStyles[config.frame] || 'border-transparent';
     
     return (
-      <div 
-        className={`${sizeClass} rounded-full flex items-center justify-center border-4 ${frameClass}`}
-        style={{ backgroundColor: config.background }}
-      >
-        {config.photo_url ? (
-          <img src={config.photo_url} alt="Avatar" className="w-full h-full rounded-full object-cover" />
-        ) : (
-          config.base
-        )}
+      <div className="relative inline-block">
+        <div 
+          className={`${sizeClass} rounded-full flex items-center justify-center border-4 ${frameClass}`}
+          style={{ backgroundColor: config.background }}
+        >
+          {config.photo_url ? (
+            <img src={config.photo_url} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+          ) : (
+            config.base
+          )}
+        </div>
         {config.badge && (
           <div className="absolute -bottom-1 -right-1 text-lg bg-slate-800 rounded-full w-6 h-6 flex items-center justify-center border border-slate-700">
             {config.badge}
@@ -196,6 +208,7 @@ export default function ShopPage() {
     
     return (
       <button
+        type="button"
         onClick={() => !owned && purchaseItem(item)}
         disabled={owned || purchasing === item.id}
         className={`relative p-3 rounded-xl border-2 ${rarity.border} ${rarity.bg} text-left transition-all ${
@@ -267,6 +280,7 @@ export default function ShopPage() {
 
     return (
       <button
+        type="button"
         onClick={handleSelect}
         className={`p-3 rounded-xl border-2 transition-all ${
           isSelected 
@@ -320,6 +334,7 @@ export default function ShopPage() {
           {/* Main tabs */}
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setActiveTab('shop')}
               className={`flex-1 py-2 rounded-xl font-medium transition-all ${
                 activeTab === 'shop'
@@ -330,6 +345,7 @@ export default function ShopPage() {
               🛍️ Buy Items
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('customize')}
               className={`flex-1 py-2 rounded-xl font-medium transition-all ${
                 activeTab === 'customize'
@@ -346,6 +362,7 @@ export default function ShopPage() {
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto">
           {categories.map(cat => (
             <button
+              type="button"
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
@@ -385,14 +402,13 @@ export default function ShopPage() {
           {/* Avatar Preview */}
           <div className="bg-slate-800/50 rounded-xl p-6 mb-4 border border-slate-700/50">
             <div className="flex items-center justify-center mb-4">
-              <div className="relative">
-                <AvatarPreview config={tempAvatar} size="lg" />
-              </div>
+              <AvatarPreview config={tempAvatar} size="lg" />
             </div>
             <div className="text-center text-slate-400 text-sm mb-4">
               Preview your changes
             </div>
             <button
+              type="button"
               onClick={saveAvatar}
               disabled={saving}
               className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-xl disabled:opacity-50"
@@ -409,6 +425,7 @@ export default function ShopPage() {
           <div className="grid grid-cols-4 gap-2">
             {activeCategory === 'badge' && (
               <button
+                type="button"
                 onClick={() => setTempAvatar(prev => ({ ...prev, badge: null }))}
                 className={`p-3 rounded-xl border-2 transition-all ${
                   tempAvatar.badge === null 
@@ -425,11 +442,12 @@ export default function ShopPage() {
             ))}
           </div>
 
-          {(!ownedItems[activeCategory] || ownedItems[activeCategory].length === 0) && (
+          {(!ownedItems[activeCategory] || ownedItems[activeCategory].length === 0) && activeCategory !== 'badge' && (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">📦</div>
               <div className="text-slate-400">No items owned in this category</div>
               <button
+                type="button"
                 onClick={() => setActiveTab('shop')}
                 className="mt-2 text-cyan-400 text-sm"
               >
