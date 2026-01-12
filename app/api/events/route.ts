@@ -62,7 +62,7 @@ export async function GET(request: Request) {
     }
 
     // Get game info for each event
-    const gameIds = [...new Set(events?.map(e => e.game_id).filter(Boolean))];
+    const gameIds = Array.from(new Set(events?.map(e => e.game_id).filter(Boolean)));
     const { data: games } = await supabaseAdmin
       .from('games')
       .select('id, name, icon, color')
