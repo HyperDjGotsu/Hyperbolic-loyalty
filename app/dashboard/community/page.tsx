@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { FloatingParticles, Avatar, GlowButton } from '@/components/ui';
 
@@ -100,9 +100,9 @@ export default function CommunityPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendsLoading, setFriendsLoading] = useState(true);
+  const [friendsLoading, setFriendsLoading] = useState(false);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<SearchResult | LeaderboardEntry | Friend | null>(null);
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(defaultPrivacySettings);
@@ -113,11 +113,66 @@ export default function CommunityPage() {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Set<string>>(new Set());
 
-  // Clear search when switching tabs
+  // Load functions as callbacks so they can be called from anywhere
+  const loadFriends = useCallback(async () => {
+    setFriendsLoading(true);
+    try {
+      const res = await fetch('/api/community/friends');
+      if (res.ok) {
+        const data = await res.json();
+        setFriends(data.friends || []);
+      }
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    } finally {
+      setFriendsLoading(false);
+    }
+  }, []);
+
+  const loadFriendRequests = useCallback(async () => {
+    setRequestsLoading(true);
+    try {
+      const res = await fetch('/api/community/friend-requests');
+      if (res.ok) {
+        const data = await res.json();
+        setFriendRequests(data.requests || []);
+      }
+    } catch (error) {
+      console.error('Error loading friend requests:', error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  }, []);
+
+  const loadLeaderboard = useCallback(async () => {
+    setLeaderboardLoading(true);
+    try {
+      const res = await fetch('/api/community/leaderboard?limit=50');
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboard(data.leaderboard || []);
+      }
+    } catch (error) {
+      console.error('Error loading leaderboard:', error);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }, []);
+
+  // Handle tab change - refresh data for that tab
   const handleTabChange = (tab: 'friends' | 'requests' | 'discover' | 'leaderboard') => {
     setActiveTab(tab);
     setSearchQuery('');
     setSearchResults([]);
+    
+    // Refresh data for the selected tab
+    if (tab === 'friends') {
+      loadFriends();
+    } else if (tab === 'requests') {
+      loadFriendRequests();
+    } else if (tab === 'leaderboard') {
+      loadLeaderboard();
+    }
   };
 
   // Load current player ID
@@ -143,66 +198,17 @@ export default function CommunityPage() {
     }
   }, [isLoaded, user]);
 
-  // Load leaderboard
+  // Initial data load
   useEffect(() => {
-    async function loadLeaderboard() {
-      setLeaderboardLoading(true);
-      try {
-        const res = await fetch('/api/community/leaderboard?limit=50');
-        if (res.ok) {
-          const data = await res.json();
-          setLeaderboard(data.leaderboard || []);
-        }
-      } catch (error) {
-        console.error('Error loading leaderboard:', error);
-      } finally {
-        setLeaderboardLoading(false);
-      }
-    }
     loadLeaderboard();
-  }, []);
+  }, [loadLeaderboard]);
 
-  // Load friends list
   useEffect(() => {
-    async function loadFriends() {
-      setFriendsLoading(true);
-      try {
-        const res = await fetch('/api/community/friends');
-        if (res.ok) {
-          const data = await res.json();
-          setFriends(data.friends || []);
-        }
-      } catch (error) {
-        console.error('Error loading friends:', error);
-      } finally {
-        setFriendsLoading(false);
-      }
-    }
     if (isLoaded && user) {
       loadFriends();
-    }
-  }, [isLoaded, user]);
-
-  // Load friend requests
-  useEffect(() => {
-    async function loadFriendRequests() {
-      setRequestsLoading(true);
-      try {
-        const res = await fetch('/api/community/friend-requests');
-        if (res.ok) {
-          const data = await res.json();
-          setFriendRequests(data.requests || []);
-        }
-      } catch (error) {
-        console.error('Error loading friend requests:', error);
-      } finally {
-        setRequestsLoading(false);
-      }
-    }
-    if (isLoaded && user) {
       loadFriendRequests();
     }
-  }, [isLoaded, user]);
+  }, [isLoaded, user, loadFriends, loadFriendRequests]);
 
   // Load privacy settings
   useEffect(() => {
@@ -270,12 +276,7 @@ export default function CommunityPage() {
       });
       if (res.ok) {
         setShowPrivacySettings(false);
-        // Reload leaderboard to reflect changes
-        const lbRes = await fetch('/api/community/leaderboard?limit=50');
-        if (lbRes.ok) {
-          const data = await lbRes.json();
-          setLeaderboard(data.leaderboard || []);
-        }
+        loadLeaderboard();
       }
     } catch (error) {
       console.error('Error saving privacy settings:', error);
@@ -298,8 +299,12 @@ export default function CommunityPage() {
       console.log('Friend request response:', data);
       
       if (res.ok) {
-        // Mark as sent
+        // Mark as sent locally
         setRequestSent(prev => new Set(prev).add(displayId));
+        // Update search results to show sent status
+        setSearchResults(prev => prev.map(r => 
+          r.id === displayId ? { ...r, isFriend: true } : r
+        ));
         setSelectedMember(null);
       } else {
         alert(data.error || 'Failed to send request');
@@ -322,16 +327,14 @@ export default function CommunityPage() {
         body: JSON.stringify({ friendshipId, action }),
       });
       if (res.ok) {
-        // Remove from requests list
+        // Remove from local state immediately
         setFriendRequests(prev => prev.filter(r => r.friendshipId !== friendshipId));
-        // If accepted, reload friends list
-        if (action === 'accept') {
-          const friendsRes = await fetch('/api/community/friends');
-          if (friendsRes.ok) {
-            const data = await friendsRes.json();
-            setFriends(data.friends || []);
-          }
-        }
+        
+        // Refresh both lists
+        await Promise.all([
+          loadFriends(),
+          loadFriendRequests()
+        ]);
       } else {
         const data = await res.json();
         alert(data.error || 'Failed to respond to request');
@@ -356,7 +359,7 @@ export default function CommunityPage() {
     const memberOdid = 'odid' in member ? member.odid : null;
     const memberIsFriend = memberOdid ? isFriend(memberOdid) : ('isFriend' in member && member.isFriend);
     const canView = !isPrivate && (!isFriendsOnly || memberIsFriend);
-    const alreadySent = requestSent.has(member.id);
+    const alreadySent = requestSent.has(member.id) || ('isFriend' in member && member.isFriend);
 
     return (
       <div
@@ -385,8 +388,8 @@ export default function CommunityPage() {
             </div>
           )}
         </div>
-        {memberIsFriend || alreadySent || ('isFriend' in member && member.isFriend) ? (
-          <span className="text-green-500 text-xl">{alreadySent ? '📨' : '✓'}</span>
+        {memberIsFriend || alreadySent ? (
+          <span className="text-green-500 text-xl">{memberIsFriend && !requestSent.has(member.id) ? '✓' : '📨'}</span>
         ) : (
           <button 
             onClick={(e) => { 
@@ -849,7 +852,7 @@ export default function CommunityPage() {
                ('isFriend' in selectedMember && selectedMember.isFriend) ||
                requestSent.has(selectedMember.id) ? (
                 <button className="flex-1 py-3 bg-slate-800 text-green-400 rounded-xl font-bold border border-green-500/30">
-                  {requestSent.has(selectedMember.id) ? '📨 Request Sent' : '✓ Friends'}
+                  {requestSent.has(selectedMember.id) && !('odid' in selectedMember && isFriend(selectedMember.odid)) ? '📨 Request Sent' : '✓ Friends'}
                 </button>
               ) : (
                 <GlowButton 
