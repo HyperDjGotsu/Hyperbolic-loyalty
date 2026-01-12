@@ -1,6 +1,37 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Avatar config helper
+interface AvatarConfig {
+  base: string;
+  background: string;
+  frame: string;
+  badge: string | null;
+  photo_url: string | null;
+}
+
+const defaultAvatarConfig: AvatarConfig = {
+  base: '😎',
+  background: '#3b82f6',
+  frame: 'none',
+  badge: null,
+  photo_url: null,
+};
+
+function parseAvatarConfig(avatarConfig: unknown): AvatarConfig {
+  if (avatarConfig && typeof avatarConfig === 'object' && !Array.isArray(avatarConfig)) {
+    const config = avatarConfig as Record<string, unknown>;
+    return {
+      base: typeof config.base === 'string' ? config.base : defaultAvatarConfig.base,
+      background: typeof config.background === 'string' ? config.background : defaultAvatarConfig.background,
+      frame: typeof config.frame === 'string' ? config.frame : defaultAvatarConfig.frame,
+      badge: typeof config.badge === 'string' ? config.badge : null,
+      photo_url: typeof config.photo_url === 'string' ? config.photo_url : null,
+    };
+  }
+  return defaultAvatarConfig;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -49,7 +80,7 @@ export async function GET(request: Request) {
     // Fetch player details for top players
     const { data: players, error: playersError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, privacy_show_on_leaderboard, privacy_show_as_anonymous')
+      .select('id, player_id, display_name, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
       .in('id', sortedPlayerIds);
 
     if (playersError) {
@@ -71,6 +102,9 @@ export async function GET(request: Request) {
       // Calculate level (simple formula: 1 level per 100 XP)
       const level = Math.floor(totalXp / 100) + 1;
 
+      // Parse avatar config
+      const avatarConfig = parseAvatarConfig(player?.avatar_config);
+
       return {
         rank: index + 1,
         id: player?.player_id || 'Unknown',
@@ -78,12 +112,12 @@ export async function GET(request: Request) {
         level,
         totalXp,
         avatar: {
-          type: 'emoji' as const,
-          base: showAsAnonymous ? '🎭' : (player?.avatar_base || '😎'),
-          photoUrl: null,
-          background: showAsAnonymous ? '#64748b' : (player?.avatar_background || '#3b82f6'),
-          frame: showAsAnonymous ? 'none' : (player?.avatar_frame || 'none'),
-          badge: showAsAnonymous ? null : (player?.avatar_badge || null),
+          type: (avatarConfig.photo_url && !showAsAnonymous) ? 'photo' as const : 'emoji' as const,
+          base: showAsAnonymous ? '🎭' : avatarConfig.base,
+          photoUrl: showAsAnonymous ? null : avatarConfig.photo_url,
+          background: showAsAnonymous ? '#64748b' : avatarConfig.background,
+          frame: showAsAnonymous ? 'none' : avatarConfig.frame,
+          badge: showAsAnonymous ? null : avatarConfig.badge,
         },
         hidden: showAsAnonymous,
       };

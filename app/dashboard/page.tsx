@@ -241,9 +241,9 @@ export default function DashboardHome() {
   const avatar = playerData?.avatar || {};
 
   const avatarForComponent = {
-    type: 'emoji' as const,
-    base: avatar.emoji || '😎',
-    photoUrl: null,
+    type: (avatar.photoUrl || avatar.photo_url) ? 'photo' as const : 'emoji' as const,
+    base: avatar.base || avatar.emoji || '😎',
+    photoUrl: avatar.photoUrl || avatar.photo_url || null,
     background: avatar.background || '#3b82f6',
     frame: avatar.frame || 'none',
     badge: avatar.badge || null,
