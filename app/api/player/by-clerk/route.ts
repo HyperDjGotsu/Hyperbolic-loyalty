@@ -98,6 +98,40 @@ function getCurrencyForGame(gameId: string): string {
 }
 
 // ============================================
+// AVATAR HELPER
+// ============================================
+
+interface AvatarConfig {
+  base: string;
+  background: string;
+  frame: string;
+  badge: string | null;
+  photo_url: string | null;
+}
+
+const defaultAvatarConfig: AvatarConfig = {
+  base: '😎',
+  background: '#3b82f6',
+  frame: 'none',
+  badge: null,
+  photo_url: null,
+};
+
+function parseAvatarConfig(avatarConfig: unknown): AvatarConfig {
+  if (avatarConfig && typeof avatarConfig === 'object' && !Array.isArray(avatarConfig)) {
+    const config = avatarConfig as Record<string, unknown>;
+    return {
+      base: typeof config.base === 'string' ? config.base : defaultAvatarConfig.base,
+      background: typeof config.background === 'string' ? config.background : defaultAvatarConfig.background,
+      frame: typeof config.frame === 'string' ? config.frame : defaultAvatarConfig.frame,
+      badge: typeof config.badge === 'string' ? config.badge : null,
+      photo_url: typeof config.photo_url === 'string' ? config.photo_url : null,
+    };
+  }
+  return defaultAvatarConfig;
+}
+
+// ============================================
 // API ROUTE
 // ============================================
 
@@ -179,15 +213,18 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    // Build avatar object from separate columns
+    // Parse avatar from avatar_config JSONB column
+    const avatarConfig = parseAvatarConfig(player.avatar_config);
+    
+    // Build avatar object for response (compatible format)
     const avatar = {
-      emoji: player.avatar_base || '😎',
-      base: player.avatar_base || '😎',
-      background: player.avatar_background || '#3b82f6',
-      frame: player.avatar_frame || 'none',
-      badge: player.avatar_badge || null,
-      type: player.avatar_type || 'emoji',
-      photoUrl: player.avatar_photo_url || null,
+      type: avatarConfig.photo_url ? 'photo' : 'emoji',
+      base: avatarConfig.base,
+      background: avatarConfig.background,
+      frame: avatarConfig.frame,
+      badge: avatarConfig.badge,
+      photoUrl: avatarConfig.photo_url,
+      photo_url: avatarConfig.photo_url,
     };
 
     return NextResponse.json({
@@ -200,6 +237,7 @@ export async function GET() {
       email: player.email,
       phone: player.phone,
       avatar,
+      avatarConfig, // Also include raw config
       passTier: player.pass_tier,
       passStatus: player.pass_status,
       xp: totalXp,
