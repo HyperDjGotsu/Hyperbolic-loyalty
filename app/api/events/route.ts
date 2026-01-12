@@ -2,13 +2,16 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Store timezone - all events are in Pacific
+const STORE_TIMEZONE = 'America/Los_Angeles';
+
 // GET - Fetch upcoming events
 export async function GET(request: Request) {
   try {
     const { userId } = await auth();
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'upcoming'; // upcoming, past, all
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '50');
 
     // Get current player if logged in
     let currentPlayerId: string | null = null;
@@ -116,28 +119,55 @@ export async function GET(request: Request) {
       });
     }
 
+    // Helper to get current time in store timezone
+    const nowInStore = new Date().toLocaleString('en-US', { timeZone: STORE_TIMEZONE });
+    const nowDate = new Date(nowInStore);
+    const todayStr = nowDate.toDateString();
+    const tomorrowDate = new Date(nowDate);
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrowStr = tomorrowDate.toDateString();
+
     // Build response
     const eventsWithDetails = events.map(event => {
       const game = event.game_id ? gameMap[event.game_id] : null;
       const interestCount = counts[event.id] || 0;
       const isInterested = userInterests.has(event.id);
       
-      // Determine if event is happening soon (within 2 hours)
+      // Convert event time to store timezone for display
       const eventTime = new Date(event.scheduled_at);
       const hoursUntil = (eventTime.getTime() - Date.now()) / (1000 * 60 * 60);
-      const isToday = eventTime.toDateString() === new Date().toDateString();
-      const isTomorrow = eventTime.toDateString() === new Date(Date.now() + 86400000).toDateString();
       
-      let dateLabel = eventTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      // Get event date string in store timezone
+      const eventDateInStore = eventTime.toLocaleDateString('en-US', { 
+        timeZone: STORE_TIMEZONE,
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      const eventDateStr = eventTime.toLocaleDateString('en-US', { timeZone: STORE_TIMEZONE });
+      const eventDateObj = new Date(eventDateStr);
+      
+      // Check if today/tomorrow in store timezone
+      const isToday = eventDateObj.toDateString() === todayStr;
+      const isTomorrow = eventDateObj.toDateString() === tomorrowStr;
+      
+      let dateLabel = eventDateInStore;
       if (isToday) dateLabel = 'Today';
       if (isTomorrow) dateLabel = 'Tomorrow';
+
+      // Format time in store timezone
+      const timeStr = eventTime.toLocaleTimeString('en-US', { 
+        timeZone: STORE_TIMEZONE,
+        hour: 'numeric', 
+        minute: '2-digit' 
+      });
 
       return {
         id: event.id,
         name: event.name,
         description: event.description,
         date: dateLabel,
-        time: eventTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        time: timeStr,
         scheduledAt: event.scheduled_at,
         endsAt: event.ends_at,
         game: game ? {

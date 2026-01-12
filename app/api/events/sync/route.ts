@@ -158,7 +158,7 @@ function parseMaxPlayers(text: string): number | null {
 }
 
 // Expand recurring events into individual instances
-// Supports WEEKLY recurrence for the next 8 weeks
+// Supports WEEKLY recurrence for the next 4 weeks
 function expandRecurringEvent(
   baseEvent: ParsedEvent, 
   rrule: string, 
@@ -167,7 +167,7 @@ function expandRecurringEvent(
 ): ParsedEvent[] {
   const events: ParsedEvent[] = [];
   const now = new Date();
-  const eightWeeksFromNow = new Date(now.getTime() + 8 * 7 * 24 * 60 * 60 * 1000);
+  const fourWeeksFromNow = new Date(now.getTime() + 4 * 7 * 24 * 60 * 60 * 1000);
   
   // Parse RRULE
   const freqMatch = rrule.match(/FREQ=(\w+)/i);
@@ -207,7 +207,7 @@ function expandRecurringEvent(
     let currentDate = new Date(startDate);
     let count = 0;
     
-    while (currentDate <= eightWeeksFromNow && count < maxCount) {
+    while (currentDate <= fourWeeksFromNow && count < maxCount) {
       // Check UNTIL
       if (untilDate && currentDate > untilDate) break;
       
