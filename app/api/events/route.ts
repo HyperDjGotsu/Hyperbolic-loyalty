@@ -61,57 +61,66 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
     }
 
+    if (!events || events.length === 0) {
+      return NextResponse.json({ events: [] });
+    }
+
     // Get game info for each event
-    const gameIds = Array.from(new Set(events?.map(e => e.game_id).filter((id): id is string => id !== null)));
-    const { data: games } = await supabaseAdmin
-      .from('games')
-      .select('id, name, icon, color')
-      .in('id', gameIds);
+    const gameIds: string[] = [];
+    events.forEach(e => {
+      if (e.game_id && !gameIds.includes(e.game_id)) {
+        gameIds.push(e.game_id);
+      }
+    });
 
     const gameMap: Record<string, any> = {};
-    games?.forEach(g => { gameMap[g.id] = g; });
+    if (gameIds.length > 0) {
+      const { data: games } = await supabaseAdmin
+        .from('games')
+        .select('id, name, icon, color')
+        .in('id', gameIds);
+      
+      games?.forEach(g => { gameMap[g.id] = g; });
+    }
 
     // Get interest counts and user's interest status
-    let interestMap: Record<string, { count: number; isInterested: boolean }> = {};
-    if (events && events.length > 0) {
-      const eventIds = events.map(e => e.id);
-      
-      // Get counts
-      const { data: interestCounts } = await supabaseAdmin
+    const eventIds = events.map(e => e.id);
+    
+    // Get counts
+    const { data: interestCounts } = await supabaseAdmin
+      .from('event_interest')
+      .select('event_id')
+      .in('event_id', eventIds);
+
+    // Count per event
+    const counts: Record<string, number> = {};
+    interestCounts?.forEach(i => {
+      if (i.event_id) {
+        counts[i.event_id] = (counts[i.event_id] || 0) + 1;
+      }
+    });
+
+    // Get user's interests
+    const userInterests: Set<string> = new Set();
+    if (currentPlayerId) {
+      const { data: myInterests } = await supabaseAdmin
         .from('event_interest')
         .select('event_id')
+        .eq('player_id', currentPlayerId)
         .in('event_id', eventIds);
-
-      // Count per event
-      const counts: Record<string, number> = {};
-      interestCounts?.forEach(i => {
-        counts[i.event_id] = (counts[i.event_id] || 0) + 1;
-      });
-
-      // Get user's interests
-      let userInterests: Set<string> = new Set();
-      if (currentPlayerId) {
-        const { data: myInterests } = await supabaseAdmin
-          .from('event_interest')
-          .select('event_id')
-          .eq('player_id', currentPlayerId)
-          .in('event_id', eventIds);
-        
-        myInterests?.forEach(i => userInterests.add(i.event_id));
-      }
-
-      eventIds.forEach(id => {
-        interestMap[id] = {
-          count: counts[id] || 0,
-          isInterested: userInterests.has(id),
-        };
+      
+      myInterests?.forEach(i => {
+        if (i.event_id) {
+          userInterests.add(i.event_id);
+        }
       });
     }
 
     // Build response
-    const eventsWithDetails = events?.map(event => {
-      const game = gameMap[event.game_id] || null;
-      const interest = interestMap[event.id] || { count: 0, isInterested: false };
+    const eventsWithDetails = events.map(event => {
+      const game = event.game_id ? gameMap[event.game_id] : null;
+      const interestCount = counts[event.id] || 0;
+      const isInterested = userInterests.has(event.id);
       
       // Determine if event is happening soon (within 2 hours)
       const eventTime = new Date(event.scheduled_at);
@@ -141,7 +150,7 @@ export async function GET(request: Request) {
         maxSpots: event.max_players,
         currentPlayers: event.current_players || 0,
         entryFee: event.entry_fee ? `$${event.entry_fee}` : 'Free',
-        isFree: !event.entry_fee || event.entry_fee === 0,
+        isFree: !event.entry_fee || Number(event.entry_fee) === 0,
         passFreeEntry: event.pass_free_entry,
         status: event.status,
         hasStream: event.has_stream,
@@ -149,12 +158,12 @@ export async function GET(request: Request) {
         youtubeUrl: event.youtube_url,
         attendanceXp: event.attendance_xp || 20,
         winXp: event.win_xp || 10,
-        interestedCount: interest.count,
-        isInterested: interest.isInterested,
+        interestedCount: interestCount,
+        isInterested: isInterested,
         isStartingSoon: hoursUntil > 0 && hoursUntil <= 2,
         isLive: event.status === 'active',
       };
-    }) || [];
+    });
 
     return NextResponse.json({ events: eventsWithDetails });
 
