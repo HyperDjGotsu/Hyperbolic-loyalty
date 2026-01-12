@@ -52,6 +52,65 @@ export type Database = {
           },
         ]
       }
+      banners: {
+        Row: {
+          id: string
+          title: string
+          subtitle: string | null
+          icon: string | null
+          color_from: string | null
+          color_to: string | null
+          badge: string | null
+          link_url: string | null
+          event_id: string | null
+          is_active: boolean | null
+          sort_order: number | null
+          starts_at: string | null
+          ends_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          subtitle?: string | null
+          icon?: string | null
+          color_from?: string | null
+          color_to?: string | null
+          badge?: string | null
+          link_url?: string | null
+          event_id?: string | null
+          is_active?: boolean | null
+          sort_order?: number | null
+          starts_at?: string | null
+          ends_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          subtitle?: string | null
+          icon?: string | null
+          color_from?: string | null
+          color_to?: string | null
+          badge?: string | null
+          link_url?: string | null
+          event_id?: string | null
+          is_active?: boolean | null
+          sort_order?: number | null
+          starts_at?: string | null
+          ends_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banners_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emperors: {
         Row: {
           berries: number | null
