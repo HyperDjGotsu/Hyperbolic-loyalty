@@ -174,7 +174,9 @@ export default function DashboardHome() {
             colorTo: b.colorTo || '#ec4899',
             icon: b.icon || '🎮',
             badge: b.badge || '',
-            hasStream: false,
+            hasStream: b.hasStream || false,
+            twitchUrl: b.twitchUrl,
+            youtubeUrl: b.youtubeUrl,
           }));
           setBanners(transformedBanners);
         }
