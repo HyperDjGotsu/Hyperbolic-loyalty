@@ -47,12 +47,6 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   sw_legion: { icon: '🎖️', color: '#059669' },
 };
 
-const mockBanners: Banner[] = [
-  { id: 1, title: 'ONE PIECE WEEKLY', subtitle: 'Tonight @ 6PM', color: 'from-red-600 to-orange-600', icon: '🏴‍☠️', badge: 'LIVE SOON', hasStream: true },
-  { id: 2, title: 'DOUBLE XP WEEKEND', subtitle: 'All Events 2x Points', color: 'from-purple-600 to-pink-600', icon: '⚡', badge: '2 DAYS LEFT', hasStream: false },
-  { id: 3, title: 'NEW: LORCANA', subtitle: 'Launch Tournament Friday', color: 'from-pink-600 to-purple-600', icon: '🪄', badge: 'NEW', hasStream: true },
-];
-
 // Loading skeleton component
 function LoadingSkeleton() {
   return (
@@ -74,6 +68,7 @@ export default function DashboardHome() {
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [hasSpunToday, setHasSpunToday] = useState(false);
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   // Load player data on mount
   useEffect(() => {
@@ -161,6 +156,34 @@ export default function DashboardHome() {
     
     loadDailyStatus();
   }, [playerData, user]);
+
+  // Load banners for carousel
+  useEffect(() => {
+    async function loadBanners() {
+      try {
+        const res = await fetch('/api/banners');
+        if (res.ok) {
+          const data = await res.json();
+          // Transform to match Banner type expected by BannerCarousel
+          const transformedBanners = (data.banners || []).map((b: any) => ({
+            id: b.id,
+            title: b.title,
+            subtitle: b.subtitle || '',
+            // Pass actual color values for inline style gradient
+            colorFrom: b.colorFrom || '#8b5cf6',
+            colorTo: b.colorTo || '#ec4899',
+            icon: b.icon || '🎮',
+            badge: b.badge || '',
+            hasStream: false,
+          }));
+          setBanners(transformedBanners);
+        }
+      } catch (error) {
+        console.error('Error loading banners:', error);
+      }
+    }
+    loadBanners();
+  }, []);
 
   // Derive display values from real data
   const totalXp = playerData?.xp || 0;
@@ -336,9 +359,11 @@ export default function DashboardHome() {
       </div>
 
       {/* Banner Carousel */}
-      <div className="mt-4">
-        <BannerCarousel banners={mockBanners} />
-      </div>
+      {banners.length > 0 && (
+        <div className="mt-4">
+          <BannerCarousel banners={banners} />
+        </div>
+      )}
 
       {/* Battle Pass Banner */}
       {playerData?.passTier && playerData.passTier !== 'none' && (

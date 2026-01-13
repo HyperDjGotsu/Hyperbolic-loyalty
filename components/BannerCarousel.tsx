@@ -12,17 +12,32 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
+    if (banners.length === 0) return;
     const timer = setInterval(() => {
       setCurrent((c) => (c + 1) % banners.length);
     }, 4000);
     return () => clearInterval(timer);
   }, [banners.length]);
 
+  if (banners.length === 0) return null;
+
   const banner = banners[current];
+
+  // Support both old format (color class) and new format (colorFrom/colorTo)
+  const gradientStyle = banner.colorFrom && banner.colorTo
+    ? { background: `linear-gradient(to right, ${banner.colorFrom}, ${banner.colorTo})` }
+    : undefined;
+
+  const gradientClass = !gradientStyle && banner.color
+    ? `bg-gradient-to-r ${banner.color}`
+    : '';
 
   return (
     <div className="relative mx-4 rounded-2xl overflow-hidden shadow-lg">
-      <div className={`absolute inset-0 bg-gradient-to-r ${banner.color}`}>
+      <div 
+        className={`absolute inset-0 ${gradientClass}`}
+        style={gradientStyle}
+      >
         <FloatingParticles />
       </div>
       <div className="relative p-4">
@@ -34,9 +49,11 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
               <div className="text-white/80 text-sm">{banner.subtitle}</div>
             </div>
           </div>
-          <div className="bg-white/20 px-3 py-1 rounded-full">
-            <span className="text-white text-xs font-bold">{banner.badge}</span>
-          </div>
+          {banner.badge && (
+            <div className="bg-white/20 px-3 py-1 rounded-full">
+              <span className="text-white text-xs font-bold">{banner.badge}</span>
+            </div>
+          )}
         </div>
         {banner.hasStream && (
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/20">

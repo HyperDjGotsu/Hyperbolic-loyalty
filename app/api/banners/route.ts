@@ -1,0 +1,41 @@
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
+
+// Public API - returns active banners for the dashboard
+export async function GET() {
+  try {
+    const now = new Date().toISOString();
+    
+    const { data: banners, error } = await supabaseAdmin
+      .from('banners')
+      .select('*')
+      .eq('is_active', true)
+      .or(`starts_at.is.null,starts_at.lte.${now}`)
+      .or(`ends_at.is.null,ends_at.gte.${now}`)
+      .order('sort_order', { ascending: true });
+
+    if (error) {
+      console.error('Banners fetch error:', error);
+      return NextResponse.json({ banners: [] });
+    }
+
+    // Transform to frontend format
+    const transformedBanners = (banners || []).map(b => ({
+      id: b.id,
+      title: b.title,
+      subtitle: b.subtitle || '',
+      icon: b.icon || '🎮',
+      color: `from-[${b.color_from}] to-[${b.color_to}]`,
+      colorFrom: b.color_from,
+      colorTo: b.color_to,
+      badge: b.badge || '',
+      linkUrl: b.link_url,
+      eventId: b.event_id,
+    }));
+
+    return NextResponse.json({ banners: transformedBanners });
+  } catch (error) {
+    console.error('Banners error:', error);
+    return NextResponse.json({ banners: [] });
+  }
+}

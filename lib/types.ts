@@ -126,19 +126,21 @@ export interface GameEvent {
 }
 
 export interface Banner {
-  id: number;
+  id: number | string;
   title: string;
   subtitle: string;
-  color: string;
+  color?: string;        // Old format: Tailwind class like 'from-red-600 to-orange-600'
+  colorFrom?: string;    // New format: hex color like '#E63946'
+  colorTo?: string;      // New format: hex color like '#f97316'
   icon: string;
   badge: string;
-  hasStream: boolean;
+  hasStream?: boolean;
 }
 
 // ========== ACTIVITY TYPES ==========
 export interface ActivityItem {
   id: number;
-  type: 'event' | 'purchase' | 'gacha' | 'checkin';
+  type: 'event' | 'purchase' | 'gacha' | 'checkin' | string;
   text: string;
   xp: number;
   time: string;

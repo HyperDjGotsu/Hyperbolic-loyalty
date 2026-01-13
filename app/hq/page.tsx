@@ -102,6 +102,7 @@ export default function HQPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [bannerLoading, setBannerLoading] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Check staff access
   useEffect(() => {
@@ -717,19 +718,22 @@ export default function HQPage() {
                 <p className="text-slate-500">Manage the carousel on the dashboard</p>
               </div>
               <button
-                onClick={() => setEditingBanner({
-                  id: '',
-                  title: '',
-                  subtitle: '',
-                  icon: '🎮',
-                  color_from: '#8b5cf6',
-                  color_to: '#ec4899',
-                  badge: '',
-                  is_active: true,
-                  sort_order: banners.length,
-                  starts_at: null,
-                  ends_at: null,
-                })}
+                onClick={() => {
+                  setShowEmojiPicker(false);
+                  setEditingBanner({
+                    id: '',
+                    title: '',
+                    subtitle: '',
+                    icon: '🎮',
+                    color_from: '#8b5cf6',
+                    color_to: '#ec4899',
+                    badge: '',
+                    is_active: true,
+                    sort_order: banners.length,
+                    starts_at: null,
+                    ends_at: null,
+                  });
+                }}
                 className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
               >
                 + New Banner
@@ -844,12 +848,40 @@ export default function HQPage() {
                       </div>
                       <div>
                         <label className="text-slate-400 text-sm mb-1 block">Icon</label>
-                        <input
-                          type="text"
-                          value={editingBanner.icon}
-                          onChange={(e) => setEditingBanner({ ...editingBanner, icon: e.target.value })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
-                        />
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-left flex items-center justify-between"
+                          >
+                            <span className="text-2xl">{editingBanner.icon || '🎮'}</span>
+                            <span className="text-slate-500 text-sm">Click to change</span>
+                          </button>
+                          {showEmojiPicker && (
+                            <div className="absolute top-full left-0 mt-2 p-3 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 w-64">
+                              <div className="grid grid-cols-8 gap-1">
+                                {['🎮', '🎲', '🎯', '🏆', '👑', '⭐', '🔥', '⚡',
+                                  '🎪', '🎭', '🎨', '🎬', '🎤', '🎧', '🎸', '🎹',
+                                  '🏴‍☠️', '⚔️', '🛡️', '🗡️', '🎴', '🃏', '♠️', '♦️',
+                                  '🤖', '👾', '🦊', '🐉', '🦁', '🦅', '🐺', '🦖',
+                                  '✨', '💎', '💰', '🎁', '🎟️', '🎫', '📦', '🛒',
+                                  '🚀', '💫', '🌟', '⚡', '❄️', '🔮', '🪄', '✨'].map(emoji => (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingBanner({ ...editingBanner, icon: emoji });
+                                      setShowEmojiPicker(false);
+                                    }}
+                                    className="text-2xl hover:bg-slate-700 rounded p-1 transition-colors"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div>
                         <label className="text-slate-400 text-sm mb-1 block">Badge</label>
