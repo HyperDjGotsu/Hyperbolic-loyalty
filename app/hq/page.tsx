@@ -734,6 +734,8 @@ export default function HQPage() {
                     sort_order: banners.length,
                     starts_at: null,
                     ends_at: null,
+                    twitch_url: null,
+                    youtube_url: null,
                   });
                 }}
                 className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
