@@ -31,6 +31,9 @@ export async function GET() {
       badge: b.badge || '',
       linkUrl: b.link_url,
       eventId: b.event_id,
+      twitchUrl: b.twitch_url,
+      youtubeUrl: b.youtube_url,
+      hasStream: !!(b.twitch_url || b.youtube_url),
     }));
 
     return NextResponse.json(

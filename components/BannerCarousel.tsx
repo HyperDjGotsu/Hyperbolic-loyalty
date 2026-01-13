@@ -1,12 +1,42 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FloatingParticles, StreamButtons } from '@/components/ui';
+import { FloatingParticles } from '@/components/ui';
 import type { Banner } from '@/lib/types';
 
 interface BannerCarouselProps {
   banners: Banner[];
 }
+
+const StreamButtons = ({ twitchUrl, youtubeUrl, isLive }: { twitchUrl?: string; youtubeUrl?: string; isLive?: boolean }) => {
+  if (!twitchUrl && !youtubeUrl) return null;
+  
+  return (
+    <div className="flex gap-2">
+      {twitchUrl && (
+        <a 
+          href={twitchUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors"
+        >
+          📺 Twitch
+          {isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+        </a>
+      )}
+      {youtubeUrl && (
+        <a 
+          href={youtubeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors"
+        >
+          ▶️ YouTube
+        </a>
+      )}
+    </div>
+  );
+};
 
 export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
   const [current, setCurrent] = useState(0);
@@ -32,6 +62,9 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
     ? `bg-gradient-to-r ${banner.color}`
     : '';
 
+  const hasStream = banner.twitchUrl || banner.youtubeUrl;
+  const isLive = banner.badge === 'LIVE' || banner.badge === 'LIVE NOW' || banner.badge === 'LIVE SOON';
+
   return (
     <div className="relative mx-4 rounded-2xl overflow-hidden shadow-lg">
       <div 
@@ -55,10 +88,14 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
             </div>
           )}
         </div>
-        {banner.hasStream && (
+        {hasStream && (
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/20">
             <span className="text-white/70 text-sm">Watch:</span>
-            <StreamButtons hasStream={banner.hasStream} streamStarting={banner.badge === 'LIVE SOON'} />
+            <StreamButtons 
+              twitchUrl={banner.twitchUrl} 
+              youtubeUrl={banner.youtubeUrl}
+              isLive={isLive}
+            />
           </div>
         )}
       </div>

@@ -47,6 +47,8 @@ interface Banner {
   sort_order: number;
   starts_at: string | null;
   ends_at: string | null;
+  twitch_url: string | null;
+  youtube_url: string | null;
 }
 
 interface EmperorRanking {
@@ -773,7 +775,10 @@ export default function HQPage() {
                           {banner.is_active ? 'Active' : 'Inactive'}
                         </span>
                         <button
-                          onClick={() => setEditingBanner(banner)}
+                          onClick={() => {
+                            setShowEmojiPicker(false);
+                            setEditingBanner(banner);
+                          }}
                           className="p-2 hover:bg-white/10 rounded-lg"
                         >
                           ✏️
@@ -870,7 +875,7 @@ export default function HQPage() {
                                     key={emoji}
                                     type="button"
                                     onClick={() => {
-                                      setEditingBanner({ ...editingBanner, icon: emoji });
+                                      setEditingBanner(prev => prev ? { ...prev, icon: emoji } : prev);
                                       setShowEmojiPicker(false);
                                     }}
                                     className="text-2xl hover:bg-slate-700 rounded p-1 transition-colors"
@@ -909,6 +914,30 @@ export default function HQPage() {
                           value={editingBanner.color_to}
                           onChange={(e) => setEditingBanner({ ...editingBanner, color_to: e.target.value })}
                           className="w-full h-10 bg-slate-800 border border-slate-700 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stream URLs */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-slate-400 text-sm mb-1 block">📺 Twitch URL</label>
+                        <input
+                          type="url"
+                          value={editingBanner.twitch_url || ''}
+                          onChange={(e) => setEditingBanner({ ...editingBanner, twitch_url: e.target.value || null })}
+                          placeholder="https://twitch.tv/..."
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 text-sm mb-1 block">▶️ YouTube URL</label>
+                        <input
+                          type="url"
+                          value={editingBanner.youtube_url || ''}
+                          onChange={(e) => setEditingBanner({ ...editingBanner, youtube_url: e.target.value || null })}
+                          placeholder="https://youtube.com/..."
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
                         />
                       </div>
                     </div>

@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at } = body;
+    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -70,6 +70,8 @@ export async function POST(request: Request) {
         sort_order: sort_order || 0,
         starts_at,
         ends_at,
+        twitch_url,
+        youtube_url,
       })
       .select()
       .single();
@@ -96,7 +98,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at } = body;
+    const { id, title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Banner ID is required' }, { status: 400 });
@@ -115,6 +117,8 @@ export async function PUT(request: Request) {
         sort_order,
         starts_at,
         ends_at,
+        twitch_url,
+        youtube_url,
       })
       .eq('id', id)
       .select()
