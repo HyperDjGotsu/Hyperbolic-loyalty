@@ -86,38 +86,78 @@ export async function GET(request: Request) {
       games?.forEach(g => { gameMap[g.id] = g; });
     }
 
-    // Get interest counts and user's interest status
+    // Get all interest data with player info
     const eventIds = events.map(e => e.id);
     
-    // Get counts
-    const { data: interestCounts } = await supabaseAdmin
+    const { data: allInterests } = await supabaseAdmin
       .from('event_interest')
-      .select('event_id')
+      .select(`
+        event_id,
+        player_id,
+        players (
+          id,
+          display_name,
+          avatar_config
+        )
+      `)
       .in('event_id', eventIds);
 
-    // Count per event
-    const counts: Record<string, number> = {};
-    interestCounts?.forEach(i => {
-      if (i.event_id) {
-        counts[i.event_id] = (counts[i.event_id] || 0) + 1;
-      }
-    });
-
-    // Get user's interests
-    const userInterests: Set<string> = new Set();
+    // Get user's friends (accepted friendships only)
+    let friendIds: Set<string> = new Set();
     if (currentPlayerId) {
-      const { data: myInterests } = await supabaseAdmin
-        .from('event_interest')
-        .select('event_id')
-        .eq('player_id', currentPlayerId)
-        .in('event_id', eventIds);
+      const { data: friendships } = await supabaseAdmin
+        .from('friendships')
+        .select('requester_id, addressee_id')
+        .eq('status', 'accepted')
+        .or(`requester_id.eq.${currentPlayerId},addressee_id.eq.${currentPlayerId}`);
       
-      myInterests?.forEach(i => {
-        if (i.event_id) {
-          userInterests.add(i.event_id);
+      friendships?.forEach(f => {
+        if (f.requester_id === currentPlayerId) {
+          friendIds.add(f.addressee_id);
+        } else {
+          friendIds.add(f.requester_id);
         }
       });
     }
+
+    // Build interest data per event
+    const interestData: Record<string, {
+      count: number;
+      isInterested: boolean;
+      friends: Array<{ id: string; name: string; avatar: any }>;
+    }> = {};
+
+    eventIds.forEach(eventId => {
+      interestData[eventId] = {
+        count: 0,
+        isInterested: false,
+        friends: [],
+      };
+    });
+
+    allInterests?.forEach((interest: any) => {
+      const eventId = interest.event_id;
+      const playerId = interest.player_id;
+      const player = interest.players;
+
+      if (!eventId || !interestData[eventId]) return;
+
+      interestData[eventId].count++;
+
+      // Check if this is the current user
+      if (playerId === currentPlayerId) {
+        interestData[eventId].isInterested = true;
+      }
+
+      // Check if this is a friend
+      if (friendIds.has(playerId) && player) {
+        interestData[eventId].friends.push({
+          id: player.id,
+          name: player.display_name || 'Player',
+          avatar: player.avatar_config || {},
+        });
+      }
+    });
 
     // Helper to get current time in store timezone
     const nowInStore = new Date().toLocaleString('en-US', { timeZone: STORE_TIMEZONE });
@@ -130,8 +170,7 @@ export async function GET(request: Request) {
     // Build response
     const eventsWithDetails = events.map(event => {
       const game = event.game_id ? gameMap[event.game_id] : null;
-      const interestCount = counts[event.id] || 0;
-      const isInterested = userInterests.has(event.id);
+      const interest = interestData[event.id] || { count: 0, isInterested: false, friends: [] };
       
       // Convert event time to store timezone for display
       const eventTime = new Date(event.scheduled_at);
@@ -188,8 +227,9 @@ export async function GET(request: Request) {
         youtubeUrl: event.youtube_url,
         attendanceXp: event.attendance_xp || 20,
         winXp: event.win_xp || 10,
-        interestedCount: interestCount,
-        isInterested: isInterested,
+        interestedCount: interest.count,
+        isInterested: interest.isInterested,
+        interestedFriends: interest.friends,
         isStartingSoon: hoursUntil > 0 && hoursUntil <= 2,
         isLive: event.status === 'active',
       };
