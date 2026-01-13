@@ -33,9 +33,23 @@ export async function GET() {
       eventId: b.event_id,
     }));
 
-    return NextResponse.json({ banners: transformedBanners });
+    return NextResponse.json(
+      { banners: transformedBanners },
+      { 
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        }
+      }
+    );
   } catch (error) {
     console.error('Banners error:', error);
-    return NextResponse.json({ banners: [] });
+    return NextResponse.json(
+      { banners: [] },
+      { 
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        }
+      }
+    );
   }
 }
