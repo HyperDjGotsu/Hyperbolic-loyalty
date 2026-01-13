@@ -20,7 +20,7 @@ export async function GET() {
     }
 
     // Transform to frontend format
-    const transformedBanners = (banners || []).map(b => ({
+    const transformedBanners = (banners || []).map((b: any) => ({
       id: b.id,
       title: b.title,
       subtitle: b.subtitle || '',
