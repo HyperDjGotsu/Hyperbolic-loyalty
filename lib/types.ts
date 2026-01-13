@@ -135,6 +135,8 @@ export interface Banner {
   icon: string;
   badge: string;
   hasStream?: boolean;
+  twitchUrl?: string;
+  youtubeUrl?: string;
 }
 
 // ========== ACTIVITY TYPES ==========
