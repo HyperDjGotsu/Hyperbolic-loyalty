@@ -46,6 +46,7 @@ interface CalendarEvent {
 
 interface Friend {
   id: string;
+  odid: string;
   name: string;
   avatar: any;
 }
@@ -157,13 +158,13 @@ const ShareModal = ({
     loadFriends();
   }, []);
 
-  const toggleFriend = (id: string) => {
+  const toggleFriend = (odid: string) => {
     setSelectedFriends(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
+      if (next.has(odid)) {
+        next.delete(odid);
       } else {
-        next.add(id);
+        next.add(odid);
       }
       return next;
     });
@@ -213,17 +214,17 @@ const ShareModal = ({
               <div className="text-slate-400 text-xs mb-3">Select friends to share with:</div>
               {friends.map(friend => (
                 <button
-                  key={friend.id}
-                  onClick={() => toggleFriend(friend.id)}
+                  key={friend.odid}
+                  onClick={() => toggleFriend(friend.odid)}
                   className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                    selectedFriends.has(friend.id)
+                    selectedFriends.has(friend.odid)
                       ? 'bg-cyan-500/20 border border-cyan-500/50'
                       : 'bg-slate-800 border border-slate-700 hover:border-slate-600'
                   }`}
                 >
                   <MiniAvatar avatar={friend.avatar} name={friend.name} />
                   <span className="text-white flex-1 text-left">{friend.name}</span>
-                  {selectedFriends.has(friend.id) && (
+                  {selectedFriends.has(friend.odid) && (
                     <span className="text-cyan-400">✓</span>
                   )}
                 </button>
