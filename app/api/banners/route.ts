@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+
+export const dynamic = 'force-dynamic';
 // Public API - returns active banners for the dashboard
 export async function GET() {
   try {

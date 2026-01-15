@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+
+export const dynamic = 'force-dynamic';
 // Google Calendar iCal URL (use secret address from env)
 const ICAL_URL = process.env.GOOGLE_CALENDAR_ICAL_URL || '';
 

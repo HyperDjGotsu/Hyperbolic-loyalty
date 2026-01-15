@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+
+export const dynamic = 'force-dynamic';
 // One Piece bounty thresholds based on TOTAL berries
 const BOUNTY_THRESHOLDS = [
   { min: 0, bounty: '฿3,000,000' },

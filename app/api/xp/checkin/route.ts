@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+
+export const dynamic = 'force-dynamic';
 // GET - Check if user has checked in today
 export async function GET() {
   try {

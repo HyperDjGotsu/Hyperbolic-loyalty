@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+
+export const dynamic = 'force-dynamic';
 // Generate random HYP-ID
 function generatePlayerId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
