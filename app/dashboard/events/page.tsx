@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FloatingParticles } from '@/components/ui';
 
@@ -249,7 +249,7 @@ const ShareModal = ({
   );
 };
 
-export default function EventsPage() {
+function EventsPageContent() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -772,5 +772,28 @@ export default function EventsPage() {
       {selectedEvent && <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
       {shareEvent && <ShareModal event={shareEvent} onClose={() => setShareEvent(null)} onShare={handleShareEvent} />}
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function EventsLoading() {
+  return (
+    <div className="min-h-screen bg-slate-950 p-4">
+      <div className="animate-pulse">
+        <div className="h-8 bg-slate-800 rounded w-48 mb-4"></div>
+        <div className="h-32 bg-slate-800 rounded mb-4"></div>
+        <div className="h-32 bg-slate-800 rounded mb-4"></div>
+        <div className="h-32 bg-slate-800 rounded"></div>
+      </div>
+    </div>
+  );
+}
+
+// Wrap in Suspense for useSearchParams
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<EventsLoading />}>
+      <EventsPageContent />
+    </Suspense>
   );
 }
