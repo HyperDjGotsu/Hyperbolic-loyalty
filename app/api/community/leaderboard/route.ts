@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // Avatar config helper
 interface AvatarConfig {
   base: string;
@@ -94,10 +96,7 @@ export async function GET(request: Request) {
       const totalXp = playerXpMap[playerId];
 
       // Respect privacy settings - always show on leaderboard, but can be anonymous
-      // const showOnLeaderboard = player?.privacy_show_on_leaderboard !== false;
       const showAsAnonymous = player?.privacy_show_as_anonymous === true;
-
-      // Always include everyone to keep rankings accurate
 
       // Calculate level (simple formula: 1 level per 100 XP)
       const level = Math.floor(totalXp / 100) + 1;
@@ -123,7 +122,6 @@ export async function GET(request: Request) {
       };
     });
 
-    // No re-ranking needed - everyone is always shown
     return NextResponse.json({ 
       leaderboard,
       total: leaderboard.length,
