@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Notification {
   id: string;
@@ -18,6 +19,53 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Handle notification click - navigate and mark as read
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
+    if (!notification.is_read) {
+      try {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notificationIds: [notification.id] }),
+        });
+        
+        setNotifications(prev => 
+          prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error('Error marking as read:', error);
+      }
+    }
+
+    // Close dropdown
+    setIsOpen(false);
+
+    // Navigate based on notification type
+    switch (notification.type) {
+      case 'event_share':
+        const eventId = notification.data?.event_id;
+        if (eventId) {
+          router.push(`/dashboard/events?event=${eventId}`);
+        } else {
+          router.push('/dashboard/events');
+        }
+        break;
+      case 'friend_request':
+        router.push('/dashboard/community');
+        break;
+      case 'xp_earned':
+      case 'achievement':
+        router.push('/dashboard/profile');
+        break;
+      default:
+        // Stay on current page
+        break;
+    }
+  };
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -152,9 +200,10 @@ export default function NotificationBell() {
               </div>
             ) : (
               notifications.map(notification => (
-                <div
+                <button
                   key={notification.id}
-                  className={`p-3 border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors ${
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`w-full text-left p-3 border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors ${
                     !notification.is_read ? 'bg-cyan-500/10' : ''
                   }`}
                 >
@@ -177,8 +226,8 @@ export default function NotificationBell() {
                       </p>
                     </div>
                   </div>
-                </div>
-              ))
+                </button>
+              )))
             )}
           </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { FloatingParticles } from '@/components/ui';
 
 interface GameInfo {
@@ -258,6 +259,18 @@ export default function EventsPage() {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [togglingInterest, setTogglingInterest] = useState<string | null>(null);
   const [shareEvent, setShareEvent] = useState<CalendarEvent | null>(null);
+  const searchParams = useSearchParams();
+
+  // Check for event ID in URL params (from notification click)
+  useEffect(() => {
+    const eventId = searchParams.get('event');
+    if (eventId && events.length > 0) {
+      const event = events.find(e => e.id === eventId);
+      if (event) {
+        setSelectedEvent(event);
+      }
+    }
+  }, [searchParams, events]);
 
   const loadEvents = async () => {
     setLoading(true);
