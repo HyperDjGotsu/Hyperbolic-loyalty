@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // One Piece rank thresholds (high frequency)
 const ONE_PIECE_RANKS = [
   { min: 0, title: 'East Blue Rookie', bounty: '฿3,000,000' },
