@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Search players
 export async function GET(request: Request) {
   try {
