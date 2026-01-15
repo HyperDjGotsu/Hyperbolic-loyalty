@@ -2,11 +2,12 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
+import NotificationBell from '@/components/NotificationBell';
 
 const navItems = [
   { id: 'home', path: '/dashboard', icon: '🏠', label: 'Home' },
   { id: 'events', path: '/dashboard/events', icon: '📅', label: 'Events' },
-  { id: 'shop', path: '/dashboard/shop', icon: '🛍️', label: 'Shop' },
+  { id: 'shop', path: '/dashboard/shop', icon: '🛒', label: 'Shop' },
   { id: 'community', path: '/dashboard/community', icon: '👥', label: 'Community' },
   { id: 'profile', path: '/dashboard/profile', icon: '👤', label: 'Profile' },
 ];
@@ -31,8 +32,8 @@ export default function DashboardLayout({
       {/* Status Bar (mock) */}
       <div className="bg-slate-900 text-white text-xs py-2 px-4 flex justify-between items-center border-b border-slate-800">
         <span className="font-mono">9:41</span>
-        <div className="flex gap-3 items-center">
-          <span className="text-slate-400">📶 🔋</span>
+        <div className="flex gap-2 items-center">
+          <NotificationBell />
           <UserButton 
             afterSignOutUrl="/"
             appearance={{

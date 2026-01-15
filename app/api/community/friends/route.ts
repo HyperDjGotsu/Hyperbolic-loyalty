@@ -43,10 +43,10 @@ export async function GET() {
       return NextResponse.json({ friends: [], total: 0 });
     }
 
-    // Fetch friend details
+    // Fetch friend details - including avatar_photo_url and avatar_config
     const { data: friends, error: friendsError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, privacy_profile_visibility')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_profile_visibility')
       .in('id', friendIds);
 
     if (friendsError) {
@@ -71,6 +71,10 @@ export async function GET() {
     const friendsList = friends?.map((friend: any) => {
       const totalXp = xpMap[friend.id] || 0;
       const level = Math.floor(totalXp / 100) + 1;
+      
+      // Get photo URL from avatar_config or avatar_photo_url
+      const avatarConfig = friend.avatar_config || {};
+      const photoUrl = avatarConfig.photo_url || avatarConfig.photoUrl || friend.avatar_photo_url || null;
 
       return {
         id: friend.player_id,
@@ -80,12 +84,13 @@ export async function GET() {
         level,
         totalXp,
         avatar: {
-          type: 'emoji' as const,
-          base: friend.avatar_base || '😎',
-          photoUrl: null,
-          background: friend.avatar_background || '#3b82f6',
-          frame: friend.avatar_frame || 'none',
-          badge: friend.avatar_badge || null,
+          type: photoUrl ? 'photo' : 'emoji' as const,
+          base: avatarConfig.base || friend.avatar_base || '😎',
+          photoUrl: photoUrl,
+          photo_url: photoUrl, // Include both formats
+          background: avatarConfig.background || friend.avatar_background || '#3b82f6',
+          frame: avatarConfig.frame || friend.avatar_frame || 'none',
+          badge: avatarConfig.badge || friend.avatar_badge || null,
         },
         privacy: {
           profileVisibility: friend.privacy_profile_visibility || 'public',
