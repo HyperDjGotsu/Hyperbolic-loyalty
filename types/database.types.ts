@@ -67,6 +67,8 @@ export type Database = {
           sort_order: number | null
           starts_at: string | null
           ends_at: string | null
+          twitch_url: string | null
+          youtube_url: string | null
           created_at: string | null
         }
         Insert: {
@@ -83,6 +85,8 @@ export type Database = {
           sort_order?: number | null
           starts_at?: string | null
           ends_at?: string | null
+          twitch_url?: string | null
+          youtube_url?: string | null
           created_at?: string | null
         }
         Update: {
@@ -99,6 +103,8 @@ export type Database = {
           sort_order?: number | null
           starts_at?: string | null
           ends_at?: string | null
+          twitch_url?: string | null
+          youtube_url?: string | null
           created_at?: string | null
         }
         Relationships: [
@@ -410,6 +416,47 @@ export type Database = {
           pass_slots_total?: number | null
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          player_id: string
+          type: string
+          title: string
+          message: string
+          data: Json | null
+          is_read: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          type: string
+          title: string
+          message: string
+          data?: Json | null
+          is_read?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          type?: string
+          title?: string
+          message?: string
+          data?: Json | null
+          is_read?: boolean
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pass_history: {
         Row: {
