@@ -48,7 +48,7 @@ export async function GET() {
     // Fetch friend details - including avatar_photo_url and avatar_config
     const { data: friends, error: friendsError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_profile_visibility')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_profile_visibility, status_text')
       .in('id', friendIds);
 
     if (friendsError) {
@@ -97,6 +97,7 @@ export async function GET() {
         privacy: {
           profileVisibility: friend.privacy_profile_visibility || 'public',
         },
+        status: friend.status_text || null,
         isFriend: true,
         isOnline: null, // TODO: implement online status
       };

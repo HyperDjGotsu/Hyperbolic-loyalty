@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
+import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
 
 interface ShopItem {
   id: string;
@@ -30,6 +31,7 @@ interface PlayerData {
   level: number;
   gems: number;
   avatarConfig: AvatarConfig;
+  status: string | null;
 }
 
 const frameStyles: Record<string, string> = {
@@ -64,6 +66,9 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Status editor state
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
     try {
@@ -76,6 +81,19 @@ export default function ProfilePage() {
           const invRes = await fetch('/api/player/inventory');
           if (invRes.ok) {
             const invData = await invRes.json();
+            
+            // Load status
+            let status = null;
+            try {
+              const statusRes = await fetch('/api/player/status');
+              if (statusRes.ok) {
+                const statusData = await statusRes.json();
+                status = statusData.status;
+              }
+            } catch (e) {
+              console.error('Error loading status:', e);
+            }
+
             setPlayerData({
               id: data.hyp_id,
               odid: data.id,
@@ -84,6 +102,7 @@ export default function ProfilePage() {
               level: Math.floor((data.xp || 0) / 100) + 1,
               gems: invData.gems || 0,
               avatarConfig: invData.avatarConfig || defaultAvatarConfig,
+              status,
             });
             setTempAvatar(invData.avatarConfig || defaultAvatarConfig);
             setOwnedItems(invData.grouped || {});
@@ -137,6 +156,10 @@ export default function ProfilePage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleStatusChange = (newStatus: string | null) => {
+    setPlayerData(prev => prev ? { ...prev, status: newStatus } : null);
   };
 
   const AvatarPreview = ({ config, size = 'lg', onClick }: { config: AvatarConfig; size?: 'md' | 'lg' | 'xl'; onClick?: () => void }) => {
@@ -417,6 +440,14 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-bold text-white mt-4">{playerData.displayName}</h1>
           <div className="text-cyan-400 text-sm font-mono mt-1">{playerData.id}</div>
           
+          {/* Status Badge */}
+          <div className="mt-3 flex justify-center">
+            <StatusBadge 
+              status={playerData.status} 
+              onClick={() => setStatusModalOpen(true)} 
+            />
+          </div>
+          
           <div className="flex justify-center gap-6 mt-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-white">{playerData.level}</div>
@@ -437,13 +468,20 @@ export default function ProfilePage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="px-4 -mt-4 relative z-10">
+      <div className="px-4 -mt-4 relative z-10 flex gap-2">
         <button
           type="button"
           onClick={() => setEditingAvatar(true)}
-          className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-white py-3 rounded-xl font-bold"
+          className="flex-1 bg-gradient-to-r from-cyan-500 to-purple-500 text-white py-3 rounded-xl font-bold"
         >
           ✨ Customize Avatar
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatusModalOpen(true)}
+          className="bg-slate-700 text-white px-4 py-3 rounded-xl font-bold hover:bg-slate-600 transition-colors"
+        >
+          💬
         </button>
       </div>
 
@@ -532,6 +570,14 @@ export default function ProfilePage() {
 
       {/* Avatar Editor Modal */}
       {editingAvatar && <AvatarEditorModal />}
+
+      {/* Status Editor Modal */}
+      <StatusEditor
+        currentStatus={playerData.status}
+        onStatusChange={handleStatusChange}
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+      />
     </div>
   );
 }
