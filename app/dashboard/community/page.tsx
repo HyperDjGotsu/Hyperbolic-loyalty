@@ -48,6 +48,7 @@ interface Friend {
   avatar: PlayerAvatar;
   isFriend: boolean;
   isOnline: boolean | null;
+  status: string | null;
 }
 
 interface FriendRequest {
@@ -412,9 +413,14 @@ export default function CommunityPage() {
           {canView || isLeaderboard ? (
             <>
               <div className="text-slate-400 text-sm">{'title' in member ? member.title : `Level ${member.level}`}</div>
-              <div className="text-slate-500 text-xs">
-                Level {member.level} • {member.totalXp?.toLocaleString()} XP
-              </div>
+              {'status' in member && member.status && (
+                <div className="text-cyan-400 text-xs mt-0.5 truncate">{member.status}</div>
+              )}
+              {!('status' in member && member.status) && (
+                <div className="text-slate-500 text-xs">
+                  Level {member.level} • {member.totalXp?.toLocaleString()} XP
+                </div>
+              )}
             </>
           ) : (
             <div className="text-slate-500 text-sm italic">
@@ -866,6 +872,11 @@ export default function CommunityPage() {
                 <h1 className="text-2xl font-bold text-white mt-4">
                   {'hidden' in selectedMember && selectedMember.hidden ? 'Anonymous' : selectedMember.name}
                 </h1>
+                {'status' in selectedMember && selectedMember.status && (
+                  <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-700/50 text-sm text-white">
+                    {selectedMember.status}
+                  </div>
+                )}
                 <div className="flex justify-center gap-6 mt-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{selectedMember.level}</div>
