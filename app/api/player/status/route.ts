@@ -17,7 +17,7 @@ export async function GET() {
       .from('players')
       .select('status_text, status_updated_at')
       .eq('clerk_user_id', userId)
-      .single();
+      .single() as { data: any; error: any };
 
     if (error) {
       console.error('Error fetching status:', error);
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       .update({ 
         status_text: status || null,
         status_updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('clerk_user_id', userId);
 
     if (error) {
