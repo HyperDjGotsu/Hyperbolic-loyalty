@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       const { data: players, error } = await supabaseAdmin
         .from('players')
         .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
-        .eq('privacy_show_on_leaderboard', true)
+        .or('privacy_show_on_leaderboard.is.null,privacy_show_on_leaderboard.eq.true')
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       
       const { data: xpData, error: xpError } = await supabaseAdmin
         .from('xp_ledger')
-        .select('player_id, points')
+        .select('player_id, final_xp')
         .in('player_id', playerIds);
 
       if (xpError) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       // Sum XP per player
       const xpByPlayer: Record<string, number> = {};
       xpData?.forEach(entry => {
-        xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + entry.points;
+        xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + (entry.final_xp || 0);
       });
 
       // Build leaderboard
@@ -64,23 +64,13 @@ export async function GET(request: NextRequest) {
 
     } else {
       // Game-specific leaderboard
-      const { data: gameData, error: gameError } = await supabaseAdmin
-        .from('games')
-        .select('id')
-        .eq('slug', game)
-        .single();
-
-      if (gameError || !gameData) {
-        return NextResponse.json({ error: 'Game not found' }, { status: 404 });
-      }
-
-      const gameId = gameData.id;
+      // game_id in xp_ledger is stored as string slug (e.g. 'one_piece'), not UUID
 
       // Get players who show on leaderboard
       const { data: players, error: playersError } = await supabaseAdmin
         .from('players')
         .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
-        .eq('privacy_show_on_leaderboard', true);
+        .or('privacy_show_on_leaderboard.is.null,privacy_show_on_leaderboard.eq.true');
 
       if (playersError) {
         console.error('Error fetching players:', playersError);
@@ -89,12 +79,12 @@ export async function GET(request: NextRequest) {
 
       const playerIds = players?.map(p => p.id) || [];
 
-      // Get XP for this specific game
+      // Get XP for this specific game (game_id is stored as slug string)
       const { data: xpData, error: xpError } = await supabaseAdmin
         .from('xp_ledger')
-        .select('player_id, points')
+        .select('player_id, final_xp')
         .in('player_id', playerIds)
-        .eq('game_id', gameId);
+        .eq('game_id', game);
 
       if (xpError) {
         console.error('Error fetching game XP:', xpError);
@@ -103,7 +93,7 @@ export async function GET(request: NextRequest) {
       // Sum XP per player for this game
       const xpByPlayer: Record<string, number> = {};
       xpData?.forEach(entry => {
-        xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + entry.points;
+        xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + (entry.final_xp || 0);
       });
 
       // Build leaderboard - only include players with XP in this game
