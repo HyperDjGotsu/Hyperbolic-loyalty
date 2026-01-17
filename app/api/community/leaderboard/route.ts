@@ -8,6 +8,16 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Default avatar for anonymous players
+const ANONYMOUS_AVATAR = {
+  type: 'emoji',
+  base: '❓',
+  photoUrl: null,
+  background: '#374151',
+  frame: 'none',
+  badge: null,
+};
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -17,10 +27,10 @@ export async function GET(request: NextRequest) {
     let leaderboard: any[] = [];
 
     if (!game || game === 'overall') {
-      // Overall leaderboard - get ALL players (no privacy filter for now)
+      // Overall leaderboard - everyone appears
       const { data: players, error } = await supabaseAdmin
         .from('players')
-        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous')
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -45,24 +55,27 @@ export async function GET(request: NextRequest) {
       });
 
       leaderboard = (players || [])
-        .map(player => ({
-          id: player.player_id,
-          odid: player.id,
-          name: player.display_name || 'Unknown',
-          totalXp: xpByPlayer[player.id] || 0,
-          level: Math.floor((xpByPlayer[player.id] || 0) / 100) + 1,
-          hidden: player.privacy_show_as_anonymous,
-          avatar: buildAvatar(player),
-        }))
+        .map(player => {
+          const isAnonymous = player.privacy_show_as_anonymous === true;
+          return {
+            id: player.player_id,
+            odid: player.id,
+            name: isAnonymous ? 'Anonymous' : (player.display_name || 'Unknown'),
+            totalXp: xpByPlayer[player.id] || 0,
+            level: Math.floor((xpByPlayer[player.id] || 0) / 100) + 1,
+            hidden: isAnonymous,
+            avatar: isAnonymous ? ANONYMOUS_AVATAR : buildAvatar(player),
+          };
+        })
         .sort((a, b) => b.totalXp - a.totalXp)
         .slice(0, limit)
         .map((entry, index) => ({ ...entry, rank: index + 1 }));
 
     } else {
-      // Game-specific leaderboard - get ALL players (no privacy filter for now)
+      // Game-specific leaderboard - everyone appears
       const { data: players, error: playersError } = await supabaseAdmin
         .from('players')
-        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous');
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous');
 
       if (playersError) {
         console.error('Error fetching players:', playersError);
@@ -88,15 +101,18 @@ export async function GET(request: NextRequest) {
 
       leaderboard = (players || [])
         .filter(player => xpByPlayer[player.id] > 0)
-        .map(player => ({
-          id: player.player_id,
-          odid: player.id,
-          name: player.display_name || 'Unknown',
-          totalXp: xpByPlayer[player.id] || 0,
-          level: Math.floor((xpByPlayer[player.id] || 0) / 100) + 1,
-          hidden: player.privacy_show_as_anonymous,
-          avatar: buildAvatar(player),
-        }))
+        .map(player => {
+          const isAnonymous = player.privacy_show_as_anonymous === true;
+          return {
+            id: player.player_id,
+            odid: player.id,
+            name: isAnonymous ? 'Anonymous' : (player.display_name || 'Unknown'),
+            totalXp: xpByPlayer[player.id] || 0,
+            level: Math.floor((xpByPlayer[player.id] || 0) / 100) + 1,
+            hidden: isAnonymous,
+            avatar: isAnonymous ? ANONYMOUS_AVATAR : buildAvatar(player),
+          };
+        })
         .sort((a, b) => b.totalXp - a.totalXp)
         .slice(0, limit)
         .map((entry, index) => ({ ...entry, rank: index + 1 }));
