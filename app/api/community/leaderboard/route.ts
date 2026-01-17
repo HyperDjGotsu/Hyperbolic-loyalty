@@ -1,134 +1,158 @@
-import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-// Avatar config helper
-interface AvatarConfig {
-  base: string;
-  background: string;
-  frame: string;
-  badge: string | null;
-  photo_url: string | null;
-}
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-const defaultAvatarConfig: AvatarConfig = {
-  base: '😎',
-  background: '#3b82f6',
-  frame: 'none',
-  badge: null,
-  photo_url: null,
-};
-
-function parseAvatarConfig(avatarConfig: unknown): AvatarConfig {
-  if (avatarConfig && typeof avatarConfig === 'object' && !Array.isArray(avatarConfig)) {
-    const config = avatarConfig as Record<string, unknown>;
-    return {
-      base: typeof config.base === 'string' ? config.base : defaultAvatarConfig.base,
-      background: typeof config.background === 'string' ? config.background : defaultAvatarConfig.background,
-      frame: typeof config.frame === 'string' ? config.frame : defaultAvatarConfig.frame,
-      badge: typeof config.badge === 'string' ? config.badge : null,
-      photo_url: typeof config.photo_url === 'string' ? config.photo_url : null,
-    };
-  }
-  return defaultAvatarConfig;
-}
-
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const gameId = searchParams.get('game'); // Optional: filter by game
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const game = searchParams.get('game'); // null = overall, or game slug like 'one_piece'
 
-    // Get all XP entries, grouped by player
-    let query = supabaseAdmin
-      .from('xp_ledger')
-      .select('player_id, final_xp, base_xp');
+    let leaderboard: any[] = [];
 
-    if (gameId) {
-      query = query.eq('game_id', gameId);
-    }
+    if (!game || game === 'overall') {
+      // Overall leaderboard - sum all XP across games
+      const { data: players, error } = await supabaseAdmin
+        .from('players')
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
+        .eq('privacy_show_on_leaderboard', true)
+        .order('created_at', { ascending: true });
 
-    const { data: xpEntries, error: xpError } = await query;
-
-    if (xpError) {
-      console.error('Error fetching XP:', xpError);
-      return NextResponse.json({ error: 'Failed to fetch XP data' }, { status: 500 });
-    }
-
-    // Aggregate XP by player
-    const playerXpMap: Record<string, number> = {};
-    
-    xpEntries?.forEach((entry: any) => {
-      const playerId = entry.player_id;
-      const xp = entry.final_xp || entry.base_xp || 0;
-      
-      if (!playerXpMap[playerId]) {
-        playerXpMap[playerId] = 0;
+      if (error) {
+        console.error('Error fetching players:', error);
+        return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 });
       }
-      playerXpMap[playerId] += xp;
-    });
 
-    // Get player IDs sorted by XP
-    const sortedPlayerIds = Object.entries(playerXpMap)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, limit)
-      .map(([id]) => id);
+      // Get XP totals for each player
+      const playerIds = players?.map(p => p.id) || [];
+      
+      const { data: xpData, error: xpError } = await supabaseAdmin
+        .from('xp_ledger')
+        .select('player_id, points')
+        .in('player_id', playerIds);
 
-    if (sortedPlayerIds.length === 0) {
-      return NextResponse.json({ leaderboard: [] });
+      if (xpError) {
+        console.error('Error fetching XP:', xpError);
+      }
+
+      // Sum XP per player
+      const xpByPlayer: Record<string, number> = {};
+      xpData?.forEach(entry => {
+        xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + entry.points;
+      });
+
+      // Build leaderboard
+      leaderboard = (players || [])
+        .map(player => ({
+          id: player.player_id,
+          odid: player.id,
+          name: player.display_name || 'Unknown',
+          totalXp: xpByPlayer[player.id] || 0,
+          level: Math.floor((xpByPlayer[player.id] || 0) / 100) + 1,
+          hidden: player.privacy_show_as_anonymous,
+          avatar: buildAvatar(player),
+        }))
+        .sort((a, b) => b.totalXp - a.totalXp)
+        .slice(0, limit)
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+    } else {
+      // Game-specific leaderboard
+      const { data: gameData, error: gameError } = await supabaseAdmin
+        .from('games')
+        .select('id')
+        .eq('slug', game)
+        .single();
+
+      if (gameError || !gameData) {
+        return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+      }
+
+      const gameId = gameData.id;
+
+      // Get players who show on leaderboard
+      const { data: players, error: playersError } = await supabaseAdmin
+        .from('players')
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
+        .eq('privacy_show_on_leaderboard', true);
+
+      if (playersError) {
+        console.error('Error fetching players:', playersError);
+        return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 });
+      }
+
+      const playerIds = players?.map(p => p.id) || [];
+
+      // Get XP for this specific game
+      const { data: xpData, error: xpError } = await supabaseAdmin
+        .from('xp_ledger')
+        .select('player_id, points')
+        .in('player_id', playerIds)
+        .eq('game_id', gameId);
+
+      if (xpError) {
+        console.error('Error fetching game XP:', xpError);
+      }
+
+      // Sum XP per player for this game
+      const xpByPlayer: Record<string, number> = {};
+      xpData?.forEach(entry => {
+        xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + entry.points;
+      });
+
+      // Build leaderboard - only include players with XP in this game
+      leaderboard = (players || [])
+        .filter(player => xpByPlayer[player.id] > 0)
+        .map(player => ({
+          id: player.player_id,
+          odid: player.id,
+          name: player.display_name || 'Unknown',
+          totalXp: xpByPlayer[player.id] || 0,
+          level: Math.floor((xpByPlayer[player.id] || 0) / 100) + 1,
+          hidden: player.privacy_show_as_anonymous,
+          avatar: buildAvatar(player),
+        }))
+        .sort((a, b) => b.totalXp - a.totalXp)
+        .slice(0, limit)
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
     }
 
-    // Fetch player details for top players
-    const { data: players, error: playersError } = await supabaseAdmin
-      .from('players')
-      .select('id, player_id, display_name, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
-      .in('id', sortedPlayerIds);
-
-    if (playersError) {
-      console.error('Error fetching players:', playersError);
-      return NextResponse.json({ error: 'Failed to fetch player data' }, { status: 500 });
-    }
-
-    // Build leaderboard with player info
-    const leaderboard = sortedPlayerIds.map((playerId, index) => {
-      const player = players?.find((p: any) => p.id === playerId);
-      const totalXp = playerXpMap[playerId];
-
-      // Respect privacy settings - always show on leaderboard, but can be anonymous
-      const showAsAnonymous = player?.privacy_show_as_anonymous === true;
-
-      // Calculate level (simple formula: 1 level per 100 XP)
-      const level = Math.floor(totalXp / 100) + 1;
-
-      // Parse avatar config
-      const avatarConfig = parseAvatarConfig(player?.avatar_config);
-
-      return {
-        rank: index + 1,
-        id: player?.player_id || 'Unknown',
-        name: showAsAnonymous ? 'Anonymous' : (player?.display_name || 'Unknown'),
-        level,
-        totalXp,
-        avatar: {
-          type: (avatarConfig.photo_url && !showAsAnonymous) ? 'photo' as const : 'emoji' as const,
-          base: showAsAnonymous ? '🎭' : avatarConfig.base,
-          photoUrl: showAsAnonymous ? null : avatarConfig.photo_url,
-          background: showAsAnonymous ? '#64748b' : avatarConfig.background,
-          frame: showAsAnonymous ? 'none' : avatarConfig.frame,
-          badge: showAsAnonymous ? null : avatarConfig.badge,
-        },
-        hidden: showAsAnonymous,
-      };
-    });
-
-    return NextResponse.json({ 
-      leaderboard,
-      total: leaderboard.length,
-    });
-
+    return NextResponse.json({ leaderboard });
   } catch (error) {
     console.error('Leaderboard error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+function buildAvatar(player: any) {
+  // Check for avatar_config JSON first
+  if (player.avatar_config) {
+    const config = typeof player.avatar_config === 'string' 
+      ? JSON.parse(player.avatar_config) 
+      : player.avatar_config;
+    return {
+      type: config.photo_url ? 'photo' : 'emoji',
+      base: config.base || '😎',
+      photoUrl: config.photo_url || null,
+      background: config.background || '#3b82f6',
+      frame: config.frame || 'none',
+      badge: config.badge || null,
+    };
+  }
+
+  // Fallback to individual columns
+  return {
+    type: player.avatar_photo_url ? 'photo' : 'emoji',
+    base: player.avatar_base || '😎',
+    photoUrl: player.avatar_photo_url || null,
+    background: player.avatar_background || '#3b82f6',
+    frame: player.avatar_frame || 'none',
+    badge: player.avatar_badge || null,
+  };
 }

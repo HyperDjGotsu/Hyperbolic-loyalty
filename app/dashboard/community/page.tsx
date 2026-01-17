@@ -92,6 +92,21 @@ const defaultPrivacySettings: PrivacySettings = {
   showRealName: false,
 };
 
+// Game options for leaderboard filter
+const LEADERBOARD_GAMES = [
+  { id: 'overall', name: 'Overall', icon: '🏆', currency: 'XP' },
+  { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️', currency: 'Berries' },
+  { id: 'pokemon', name: 'Pokemon', icon: '⚡', currency: 'Pokepoints' },
+  { id: 'mtg', name: 'MTG', icon: '✨', currency: 'Mana Marks' },
+  { id: 'gundam', name: 'Gundam', icon: '🤖', currency: 'Pilot Points' },
+  { id: 'star_wars_unlimited', name: 'Star Wars', icon: '🌟', currency: 'Holopoints' },
+  { id: 'vanguard', name: 'Vanguard', icon: '⚔️', currency: 'Ride Gauge' },
+  { id: 'lorcana', name: 'Lorcana', icon: '🪄', currency: 'Lorepoints' },
+  { id: 'uvs', name: 'UVS', icon: '👊', currency: 'Versus Tokens' },
+  { id: 'digimon', name: 'Digimon', icon: '🦖', currency: 'Digi-Points' },
+  { id: 'yugioh', name: 'Yu-Gi-Oh', icon: '⭐', currency: 'Star Chips' },
+];
+
 export default function CommunityPage() {
   const { user, isLoaded } = useUser();
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'discover' | 'leaderboard'>('leaderboard');
@@ -100,6 +115,7 @@ export default function CommunityPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardGame, setLeaderboardGame] = useState('overall');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -146,10 +162,11 @@ export default function CommunityPage() {
     }
   }, []);
 
-  const loadLeaderboard = useCallback(async () => {
+  const loadLeaderboard = useCallback(async (game: string = 'overall') => {
     setLeaderboardLoading(true);
     try {
-      const res = await fetch('/api/community/leaderboard?limit=50');
+      const gameParam = game === 'overall' ? '' : `&game=${game}`;
+      const res = await fetch(`/api/community/leaderboard?limit=50${gameParam}`);
       if (res.ok) {
         const data = await res.json();
         setLeaderboard(data.leaderboard || []);
@@ -173,8 +190,14 @@ export default function CommunityPage() {
     } else if (tab === 'requests') {
       loadFriendRequests();
     } else if (tab === 'leaderboard') {
-      loadLeaderboard();
+      loadLeaderboard(leaderboardGame);
     }
+  };
+
+  // Handle leaderboard game change
+  const handleGameChange = (game: string) => {
+    setLeaderboardGame(game);
+    loadLeaderboard(game);
   };
 
   // Load current player ID
@@ -698,57 +721,114 @@ export default function CommunityPage() {
         {/* Tab Content */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-3">
+            {/* Game Selector */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+              {LEADERBOARD_GAMES.map((game) => (
+                <button
+                  key={game.id}
+                  onClick={() => handleGameChange(game.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap transition-all ${
+                    leaderboardGame === game.id
+                      ? 'bg-cyan-500 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  }`}
+                >
+                  <span>{game.icon}</span>
+                  <span className="text-sm font-medium">{game.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Current Game Header */}
+            {leaderboardGame !== 'overall' && (
+              <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/40 rounded-xl p-3 border border-slate-700/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon}</span>
+                    <div>
+                      <div className="font-bold text-white">{LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.name}</div>
+                      <div className="text-xs text-slate-400">Ranked by {LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}</div>
+                    </div>
+                  </div>
+                  {leaderboardGame === 'one_piece' && (
+                    <div className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30">
+                      🎯 Top 5 = WANTED
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Leaderboard List */}
             {leaderboardLoading ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4 animate-bounce">🏆</div>
                 <div className="text-slate-400">Loading rankings...</div>
               </div>
             ) : leaderboard.length > 0 ? (
-              leaderboard.map((entry) => (
-                <div
-                  key={entry.id}
-                  className={`bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border ${
-                    entry.id === currentPlayerId ? 'border-cyan-500/50' : 'border-slate-700/50'
-                  }`}
-                >
+              leaderboard.map((entry) => {
+                const currentGame = LEADERBOARD_GAMES.find(g => g.id === leaderboardGame);
+                const isWanted = leaderboardGame === 'one_piece' && entry.rank <= 5;
+                
+                return (
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                      entry.rank === 1
-                        ? 'bg-yellow-500 text-black'
-                        : entry.rank === 2
-                        ? 'bg-slate-400 text-black'
-                        : entry.rank === 3
-                        ? 'bg-orange-600 text-white'
-                        : 'bg-slate-700 text-slate-400'
+                    key={entry.id}
+                    className={`bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border ${
+                      isWanted
+                        ? 'border-red-500/50 bg-red-900/10'
+                        : entry.id === currentPlayerId 
+                        ? 'border-cyan-500/50' 
+                        : 'border-slate-700/50'
                     }`}
                   >
-                    {entry.rank}
-                  </div>
-                  <Avatar avatar={entry.avatar} size="sm" showBadge={false} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-white truncate">
-                        {entry.hidden ? 'Anonymous' : entry.name}
-                      </span>
-                      {entry.id === currentPlayerId && (
-                        <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full">
-                          You
-                        </span>
-                      )}
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                        entry.rank === 1
+                          ? 'bg-yellow-500 text-black'
+                          : entry.rank === 2
+                          ? 'bg-slate-400 text-black'
+                          : entry.rank === 3
+                          ? 'bg-orange-600 text-white'
+                          : isWanted
+                          ? 'bg-red-600 text-white'
+                          : 'bg-slate-700 text-slate-400'
+                      }`}
+                    >
+                      {entry.rank}
                     </div>
-                    <div className="text-slate-500 text-xs">Level {entry.level}</div>
+                    <Avatar avatar={entry.avatar} size="sm" showBadge={false} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white truncate">
+                          {entry.hidden ? 'Anonymous' : entry.name}
+                        </span>
+                        {entry.id === currentPlayerId && (
+                          <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full">
+                            You
+                          </span>
+                        )}
+                        {isWanted && (
+                          <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
+                            WANTED
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-slate-500 text-xs">Level {entry.level}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-bold ${isWanted ? 'text-red-400' : 'text-cyan-400'}`}>
+                        {entry.totalXp.toLocaleString()}
+                      </div>
+                      <div className="text-slate-500 text-xs">{currentGame?.currency || 'XP'}</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-cyan-400 font-bold">{entry.totalXp.toLocaleString()}</div>
-                    <div className="text-slate-500 text-xs">XP</div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏆</div>
                 <div className="text-white font-bold">No rankings yet</div>
-                <div className="text-slate-500 text-sm">Be the first to earn XP!</div>
+                <div className="text-slate-500 text-sm">Be the first to earn {LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}!</div>
               </div>
             )}
           </div>
