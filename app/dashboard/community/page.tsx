@@ -92,8 +92,8 @@ const defaultPrivacySettings: PrivacySettings = {
   showRealName: false,
 };
 
-// Game options for leaderboard filter
-const LEADERBOARD_GAMES = [
+// Game options for leaderboard filter - ALL SUPPORTED GAMES
+const ALL_LEADERBOARD_GAMES = [
   { id: 'overall', name: 'Overall', icon: '🏆', currency: 'XP' },
   { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️', currency: 'Berries' },
   { id: 'pokemon', name: 'Pokemon', icon: '⚡', currency: 'Pokepoints' },
@@ -105,6 +105,12 @@ const LEADERBOARD_GAMES = [
   { id: 'uvs', name: 'UVS', icon: '👊', currency: 'Versus Tokens' },
   { id: 'digimon', name: 'Digimon', icon: '🦖', currency: 'Digi-Points' },
   { id: 'yugioh', name: 'Yu-Gi-Oh', icon: '⭐', currency: 'Star Chips' },
+  { id: 'riftbound', name: 'Riftbound', icon: '🌀', currency: 'Essence' },
+  { id: 'hololive', name: 'Hololive', icon: '🎤', currency: 'Fan Subs' },
+  { id: 'weiss', name: 'Weiss Schwarz', icon: '🎴', currency: 'Climax Points' },
+  { id: 'sw_legion', name: 'SW Legion', icon: '🎖️', currency: 'Battle Orders' },
+  { id: 'union_arena', name: 'Union Arena', icon: '🛡️', currency: 'Plot Armor' },
+  { id: 'warhammer', name: 'Warhammer', icon: '⚔️', currency: 'War Honors' },
 ];
 
 export default function CommunityPage() {
@@ -116,6 +122,9 @@ export default function CommunityPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardGame, setLeaderboardGame] = useState('overall');
+  const [favoriteGames, setFavoriteGames] = useState<string[]>(['overall', 'one_piece']);
+  const [showFavoritesPicker, setShowFavoritesPicker] = useState(false);
+  const [savingFavorites, setSavingFavorites] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -234,6 +243,63 @@ export default function CommunityPage() {
       loadFriendRequests();
     }
   }, [isLoaded, user, loadFriends, loadFriendRequests]);
+
+  // Load favorite games
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        const res = await fetch('/api/player/favorite-games');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.favorites && data.favorites.length > 0) {
+            setFavoriteGames(data.favorites);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading favorite games:', error);
+      }
+    }
+    if (isLoaded && user) {
+      loadFavorites();
+    }
+  }, [isLoaded, user]);
+
+  // Save favorite games
+  const saveFavoriteGames = async (newFavorites: string[]) => {
+    setSavingFavorites(true);
+    try {
+      const res = await fetch('/api/player/favorite-games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ favorites: newFavorites }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFavoriteGames(data.favorites);
+        setShowFavoritesPicker(false);
+      }
+    } catch (error) {
+      console.error('Error saving favorites:', error);
+    } finally {
+      setSavingFavorites(false);
+    }
+  };
+
+  // Toggle a game in favorites (for picker)
+  const toggleFavorite = (gameId: string) => {
+    if (gameId === 'overall') return; // Overall is always included
+    setFavoriteGames(prev => {
+      if (prev.includes(gameId)) {
+        return prev.filter(id => id !== gameId);
+      } else if (prev.length < 8) {
+        return [...prev, gameId];
+      }
+      return prev; // Max 8 favorites
+    });
+  };
+
+  // Get filtered games based on favorites
+  const visibleGames = ALL_LEADERBOARD_GAMES.filter(game => favoriteGames.includes(game.id));
 
   // Load privacy settings
   useEffect(() => {
@@ -722,8 +788,8 @@ export default function CommunityPage() {
         {activeTab === 'leaderboard' && (
           <div className="space-y-3">
             {/* Game Selector */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-              {LEADERBOARD_GAMES.map((game) => (
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide items-center">
+              {visibleGames.map((game) => (
                 <button
                   key={game.id}
                   onClick={() => handleGameChange(game.id)}
@@ -737,6 +803,14 @@ export default function CommunityPage() {
                   <span className="text-sm font-medium">{game.name}</span>
                 </button>
               ))}
+              {/* Edit Favorites Button */}
+              <button
+                onClick={() => setShowFavoritesPicker(true)}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-slate-700/50 text-slate-400 hover:bg-slate-700 hover:text-white transition-all border border-dashed border-slate-600"
+              >
+                <span>⚙️</span>
+                <span className="text-sm">Edit</span>
+              </button>
             </div>
 
             {/* Current Game Header */}
@@ -744,10 +818,10 @@ export default function CommunityPage() {
               <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/40 rounded-xl p-3 border border-slate-700/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon}</span>
+                    <span className="text-2xl">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon}</span>
                     <div>
-                      <div className="font-bold text-white">{LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.name}</div>
-                      <div className="text-xs text-slate-400">Ranked by {LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}</div>
+                      <div className="font-bold text-white">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.name}</div>
+                      <div className="text-xs text-slate-400">Ranked by {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}</div>
                     </div>
                   </div>
                   {leaderboardGame === 'one_piece' && (
@@ -767,7 +841,7 @@ export default function CommunityPage() {
               </div>
             ) : leaderboard.length > 0 ? (
               leaderboard.map((entry) => {
-                const currentGame = LEADERBOARD_GAMES.find(g => g.id === leaderboardGame);
+                const currentGame = ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame);
                 const isWanted = leaderboardGame === 'one_piece' && entry.rank <= 5;
                 
                 return (
@@ -828,7 +902,7 @@ export default function CommunityPage() {
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏆</div>
                 <div className="text-white font-bold">No rankings yet</div>
-                <div className="text-slate-500 text-sm">Be the first to earn {LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}!</div>
+                <div className="text-slate-500 text-sm">Be the first to earn {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}!</div>
               </div>
             )}
           </div>
@@ -1021,6 +1095,74 @@ export default function CommunityPage() {
 
       {/* Privacy Settings Modal */}
       {showPrivacySettings && <PrivacySettingsModal />}
+
+      {/* Favorites Picker Modal */}
+      {showFavoritesPicker && (
+        <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
+          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+            <button 
+              onClick={() => setShowFavoritesPicker(false)} 
+              className="text-slate-400"
+            >
+              Cancel
+            </button>
+            <h2 className="text-white font-bold">Edit Leaderboards</h2>
+            <button 
+              onClick={() => saveFavoriteGames(favoriteGames)}
+              disabled={savingFavorites}
+              className="text-cyan-400 font-bold disabled:opacity-50"
+            >
+              {savingFavorites ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-auto p-4">
+            <p className="text-slate-400 text-sm mb-4">
+              Select up to 8 games to show on your leaderboard tabs. Overall is always included.
+            </p>
+
+            <div className="space-y-2">
+              {ALL_LEADERBOARD_GAMES.map((game) => {
+                const isSelected = favoriteGames.includes(game.id);
+                const isOverall = game.id === 'overall';
+                const canSelect = isSelected || favoriteGames.length < 8;
+
+                return (
+                  <button
+                    key={game.id}
+                    onClick={() => !isOverall && toggleFavorite(game.id)}
+                    disabled={isOverall || (!isSelected && !canSelect)}
+                    className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
+                      isSelected
+                        ? 'bg-cyan-500/20 border-2 border-cyan-500'
+                        : canSelect
+                        ? 'bg-slate-800/50 border-2 border-transparent hover:border-slate-600'
+                        : 'bg-slate-800/30 border-2 border-transparent opacity-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{game.icon}</span>
+                      <div className="text-left">
+                        <div className="text-white font-medium">{game.name}</div>
+                        <div className="text-slate-400 text-xs">{game.currency}</div>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <span className="text-cyan-400">
+                        {isOverall ? '🔒' : '✓'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 text-center text-slate-500 text-sm">
+              {favoriteGames.length}/8 selected
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
