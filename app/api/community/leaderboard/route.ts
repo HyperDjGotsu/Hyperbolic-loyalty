@@ -12,16 +12,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
-    const game = searchParams.get('game'); // null = overall, or game slug like 'one_piece'
+    const game = searchParams.get('game');
 
     let leaderboard: any[] = [];
 
     if (!game || game === 'overall') {
-      // Overall leaderboard - sum all XP across games
+      // Overall leaderboard - get ALL players (no privacy filter for now)
       const { data: players, error } = await supabaseAdmin
         .from('players')
         .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
-        .or('privacy_show_on_leaderboard.is.null,privacy_show_on_leaderboard.eq.true')
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -29,7 +28,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 });
       }
 
-      // Get XP totals for each player
       const playerIds = players?.map(p => p.id) || [];
       
       const { data: xpData, error: xpError } = await supabaseAdmin
@@ -41,13 +39,11 @@ export async function GET(request: NextRequest) {
         console.error('Error fetching XP:', xpError);
       }
 
-      // Sum XP per player
       const xpByPlayer: Record<string, number> = {};
       xpData?.forEach(entry => {
         xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + (entry.final_xp || 0);
       });
 
-      // Build leaderboard
       leaderboard = (players || [])
         .map(player => ({
           id: player.player_id,
@@ -63,14 +59,10 @@ export async function GET(request: NextRequest) {
         .map((entry, index) => ({ ...entry, rank: index + 1 }));
 
     } else {
-      // Game-specific leaderboard
-      // game_id in xp_ledger is stored as string slug (e.g. 'one_piece'), not UUID
-
-      // Get players who show on leaderboard
+      // Game-specific leaderboard - get ALL players (no privacy filter for now)
       const { data: players, error: playersError } = await supabaseAdmin
         .from('players')
-        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous')
-        .or('privacy_show_on_leaderboard.is.null,privacy_show_on_leaderboard.eq.true');
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_on_leaderboard, privacy_show_as_anonymous');
 
       if (playersError) {
         console.error('Error fetching players:', playersError);
@@ -79,7 +71,6 @@ export async function GET(request: NextRequest) {
 
       const playerIds = players?.map(p => p.id) || [];
 
-      // Get XP for this specific game (game_id is stored as slug string)
       const { data: xpData, error: xpError } = await supabaseAdmin
         .from('xp_ledger')
         .select('player_id, final_xp')
@@ -90,13 +81,11 @@ export async function GET(request: NextRequest) {
         console.error('Error fetching game XP:', xpError);
       }
 
-      // Sum XP per player for this game
       const xpByPlayer: Record<string, number> = {};
       xpData?.forEach(entry => {
         xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + (entry.final_xp || 0);
       });
 
-      // Build leaderboard - only include players with XP in this game
       leaderboard = (players || [])
         .filter(player => xpByPlayer[player.id] > 0)
         .map(player => ({
@@ -121,7 +110,6 @@ export async function GET(request: NextRequest) {
 }
 
 function buildAvatar(player: any) {
-  // Check for avatar_config JSON first
   if (player.avatar_config) {
     const config = typeof player.avatar_config === 'string' 
       ? JSON.parse(player.avatar_config) 
@@ -136,7 +124,6 @@ function buildAvatar(player: any) {
     };
   }
 
-  // Fallback to individual columns
   return {
     type: player.avatar_photo_url ? 'photo' : 'emoji',
     base: player.avatar_base || '😎',
