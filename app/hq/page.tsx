@@ -273,7 +273,12 @@ export default function HQPage() {
       if (data.error) {
         showToast(data.error, 'error');
       } else {
-        showToast(`${totalXp > 0 ? '+' : ''}${totalXp} XP awarded! (${reason})`, 'success');
+        // Check if bonus was awarded
+        if (data.bonusAwarded) {
+          showToast(`🏴 ${data.achievementName} unlocked! +${totalXp} XP + ${data.bonusXp} bonus!`, 'success');
+        } else {
+          showToast(`${totalXp > 0 ? '+' : ''}${totalXp} XP awarded! (${reason})`, 'success');
+        }
         setSelectedTiles([]); // Clear selections
         // Refresh player data
         searchPlayer();
