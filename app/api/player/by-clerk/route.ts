@@ -30,12 +30,21 @@ const GAME_CURRENCIES: Record<string, string> = {
   yugioh: 'Star Chips',
 };
 
+// Pirate's Life / Hyperlife configuration
+// One Piece: 6 events (2x/week = ~8 events/month)
+// All others: 3 events (1x/week = ~4 events/month)
+const MONTHLY_ATTENDANCE_THRESHOLD: Record<string, number> = {
+  one_piece: 6,
+};
+const DEFAULT_ATTENDANCE_THRESHOLD = 3;
+
+const MONTHLY_BONUS_XP = 30;
+
 // ============================================
 // RANK CALCULATION FUNCTIONS
 // ============================================
 
 // One Piece uses higher thresholds (2x/week events)
-// Thresholds: 0-199, 200-499, 500-999, 1000-1499, 1500-2499, 2500-3999, 4000+
 function getOnePieceRank(xp: number): string {
   if (xp >= 4000) return 'Yonko Commander';
   if (xp >= 2500) return 'Warlord';
@@ -47,7 +56,6 @@ function getOnePieceRank(xp: number): string {
 }
 
 // Standard thresholds for 1x/week games
-// Thresholds: 0-99, 100-249, 250-499, 500-999, 1000-1499, 1500-2499, 2500+
 function getStandardRank(xp: number, ranks: string[]): string {
   if (xp >= 2500) return ranks[6];
   if (xp >= 1500) return ranks[5];
@@ -58,7 +66,7 @@ function getStandardRank(xp: number, ranks: string[]): string {
   return ranks[0];
 }
 
-// Game-specific rank arrays [0-99, 100-249, 250-499, 500-999, 1000-1499, 1500-2499, 2500+]
+// Game-specific rank arrays
 const GAME_RANKS: Record<string, string[]> = {
   gundam: ['Cadet', 'Ensign', 'Lieutenant', 'Captain', 'Commander', 'Ace Pilot', 'Newtype'],
   pokemon: ['Pokemon Fan', 'Trainer', 'Ace Trainer', 'Gym Challenger', 'Gym Leader', 'Elite Four', 'Champion'],
@@ -80,18 +88,15 @@ const GAME_RANKS: Record<string, string[]> = {
 };
 
 function getRankForGame(gameId: string, xp: number): string {
-  // One Piece has special high-frequency thresholds
   if (gameId === 'one_piece') {
     return getOnePieceRank(xp);
   }
   
-  // Look up game-specific ranks
   const ranks = GAME_RANKS[gameId];
   if (ranks) {
     return getStandardRank(xp, ranks);
   }
   
-  // Default fallback for unknown games
   return getStandardRank(xp, ['Newcomer', 'Regular', 'Veteran', 'Expert', 'Master', 'Elite', 'Legend']);
 }
 
@@ -134,12 +139,37 @@ function parseAvatarConfig(avatarConfig: unknown): AvatarConfig {
 }
 
 // ============================================
+// HELPER: Get current month boundaries (Pacific Time)
+// ============================================
+function getCurrentMonthBoundaries(): { start: string; end: string; monthKey: string } {
+  // Use Pacific timezone for consistency with store
+  const now = new Date();
+  const pacificNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+  
+  const year = pacificNow.getFullYear();
+  const month = pacificNow.getMonth();
+  
+  // Start of current month (midnight Pacific)
+  const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0);
+  // Start of next month
+  const startOfNextMonth = new Date(year, month + 1, 1, 0, 0, 0, 0);
+  
+  // Convert to ISO strings for Supabase query
+  const start = startOfMonth.toISOString();
+  const end = startOfNextMonth.toISOString();
+  
+  // Month key for tracking (e.g., "2026-01")
+  const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+  
+  return { start, end, monthKey };
+}
+
+// ============================================
 // API ROUTE
 // ============================================
 
 export async function GET() {
   try {
-    // Get the authenticated user from Clerk
     const { userId } = await auth();
     
     if (!userId) {
@@ -165,23 +195,28 @@ export async function GET() {
       });
     }
 
+    // Get current month boundaries for attendance tracking
+    const { start: monthStart, end: monthEnd, monthKey } = getCurrentMonthBoundaries();
+
     // Get XP breakdown by game
-    const { data: xpByGame, error: xpError } = await supabaseAdmin
+    const { data: xpByGame } = await supabaseAdmin
       .from('xp_ledger')
-      .select('game_id, base_xp, final_xp, source')
+      .select('game_id, base_xp, final_xp, source, description, created_at')
       .eq('player_id', player.id);
 
-    // Aggregate XP by game
-    const gameXpMap: Record<string, { xp: number; wins: number; events: number }> = {};
+    // Aggregate XP by game AND track monthly attendance
+    const gameXpMap: Record<string, { xp: number; wins: number; events: number; monthlyAttendance: number; earnedMonthlyBonus: boolean }> = {};
     let totalXp = 0;
     
     if (xpByGame) {
       xpByGame.forEach((entry: any) => {
         const game = entry.game_id || 'general';
         const xp = entry.final_xp || entry.base_xp || 0;
+        const createdAt = entry.created_at;
+        const description = entry.description || '';
         
         if (!gameXpMap[game]) {
-          gameXpMap[game] = { xp: 0, wins: 0, events: 0 };
+          gameXpMap[game] = { xp: 0, wins: 0, events: 0, monthlyAttendance: 0, earnedMonthlyBonus: false };
         }
         
         gameXpMap[game].xp += xp;
@@ -193,19 +228,43 @@ export async function GET() {
         if (entry.source === 'event_attendance') {
           gameXpMap[game].events += 1;
         }
+        
+        // Track monthly attendance (entries with "Attended" in description this month)
+        if (createdAt >= monthStart && createdAt < monthEnd) {
+          // Check if this is an attendance entry
+          if (description.includes('Attended') || entry.source === 'event_attendance') {
+            gameXpMap[game].monthlyAttendance += 1;
+          }
+          // Check if they already earned the monthly bonus
+          if (description.includes("Pirate's Life") || description.includes('Hyperlife')) {
+            gameXpMap[game].earnedMonthlyBonus = true;
+          }
+        }
       });
     }
 
-    // Build gameXP array WITH RANKS AND CURRENCY NAMES
-    const gameXP = Object.entries(gameXpMap).map(([game_id, data]) => ({
-      game_id,
-      game_xp: data.xp,
-      total_xp: data.xp,
-      game_wins: data.wins,
-      game_events: data.events,
-      rank: getRankForGame(game_id, data.xp),
-      xpName: getCurrencyForGame(game_id),
-    }));
+    // Build gameXP array WITH RANKS, CURRENCY NAMES, AND MONTHLY PROGRESS
+    const gameXP = Object.entries(gameXpMap).map(([game_id, data]) => {
+      const threshold = MONTHLY_ATTENDANCE_THRESHOLD[game_id] || DEFAULT_ATTENDANCE_THRESHOLD;
+      const achievementName = game_id === 'one_piece' ? "Pirate's Life" : 'Hyperlife';
+      
+      return {
+        game_id,
+        game_xp: data.xp,
+        total_xp: data.xp,
+        game_wins: data.wins,
+        game_events: data.events,
+        rank: getRankForGame(game_id, data.xp),
+        xpName: getCurrencyForGame(game_id),
+        // Monthly attendance tracking
+        monthlyAttendance: data.monthlyAttendance,
+        monthlyThreshold: threshold,
+        monthlyBonus: MONTHLY_BONUS_XP,
+        earnedMonthlyBonus: data.earnedMonthlyBonus,
+        achievementName,
+        monthKey,
+      };
+    });
 
     // Get recent activity
     const { data: activity } = await supabaseAdmin
@@ -215,10 +274,9 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    // Parse avatar from avatar_config JSONB column
+    // Parse avatar
     const avatarConfig = parseAvatarConfig(player.avatar_config);
     
-    // Build avatar object for response (compatible format)
     const avatar = {
       type: avatarConfig.photo_url ? 'photo' : 'emoji',
       base: avatarConfig.base,
@@ -239,7 +297,7 @@ export async function GET() {
       email: player.email,
       phone: player.phone,
       avatar,
-      avatarConfig, // Also include raw config
+      avatarConfig,
       passTier: player.pass_tier,
       passStatus: player.pass_status,
       xp: totalXp,
@@ -249,6 +307,8 @@ export async function GET() {
       isFoundingMember: player.is_founding_member,
       isShadowVip: player.is_shadow_vip,
       createdAt: player.created_at,
+      // Include current month info for display
+      currentMonth: monthKey,
     });
   } catch (error) {
     console.error('Error in by-clerk route:', error);

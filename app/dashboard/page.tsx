@@ -25,6 +25,12 @@ interface GameDisplay {
   level: number;
   color: string;
   rank: string;
+  // Monthly attendance tracking (Pirate's Life / Hyperlife)
+  monthlyAttendance?: number;
+  monthlyThreshold?: number;
+  monthlyBonus?: number;
+  earnedMonthlyBonus?: boolean;
+  achievementName?: string;
 }
 
 // Game icons and colors for display
@@ -34,6 +40,7 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   pokemon: { icon: '⚡', color: '#FACC15' },
   mtg: { icon: '✨', color: '#8B5CF6' },
   star_wars: { icon: '🌟', color: '#00d4ff' },
+  star_wars_unlimited: { icon: '🌟', color: '#00d4ff' },
   vanguard: { icon: '⚔️', color: '#ef4444' },
   uvs: { icon: '👊', color: '#f97316' },
   hololive: { icon: '🎤', color: '#ff69b4' },
@@ -42,9 +49,11 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   yugioh: { icon: '🃏', color: '#9333ea' },
   digimon: { icon: '🦖', color: '#f59e0b' },
   weiss_schwarz: { icon: '🎴', color: '#6366f1' },
+  weiss: { icon: '🎴', color: '#6366f1' },
   union_arena: { icon: '🏟️', color: '#14b8a6' },
   warhammer: { icon: '⚔️', color: '#dc2626' },
   sw_legion: { icon: '🎖️', color: '#059669' },
+  general: { icon: '🎮', color: '#64748b' },
 };
 
 // Loading skeleton component
@@ -193,7 +202,7 @@ export default function DashboardHome() {
   const levelProgress = (totalXp % 100);
   const nextLevelXp = level * 100;
 
-  // Transform game XP data for display
+  // Transform game XP data for display (now includes monthly attendance)
   const games: GameDisplay[] = (playerData?.gameXP || [])
     .filter((gxp: any) => gxp && gxp.game_id)
     .map((gxp: any) => {
@@ -203,53 +212,43 @@ export default function DashboardHome() {
       return {
         id: slug,
         name: slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        xpName: slug === 'one_piece' ? 'Bounty' : 'XP',
+        xpName: gxp.xpName || (slug === 'one_piece' ? 'Berries' : 'XP'),
         icon: config.icon,
         xp: xpValue,
         level: Math.floor(xpValue / 50) + 1,
         color: config.color,
         rank: gxp.rank || 'Newcomer',
+        // Pass monthly attendance data
+        monthlyAttendance: gxp.monthlyAttendance || 0,
+        monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 6 : 3),
+        monthlyBonus: gxp.monthlyBonus || 30,
+        earnedMonthlyBonus: gxp.earnedMonthlyBonus || false,
+        achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'Hyperlife'),
       };
     });
 
   const displayedGames: GameDisplay[] = showAllGames ? games : games.slice(0, 3);
 
   // Transform activity for display
-  const recentActivity: ActivityItem[] = (playerData?.recentActivity || []).map((entry: any, i: number) => {
-    const sourceIcons: Record<string, string> = {
-      event_attendance: '📍',
-      match_win: '🏆',
-      purchase: '🛒',
-      daily_spin: '🎰',
-      referral: '👥',
-      achievement: '🎖️',
-      check_in: '📍',
-      manual_adjustment: '✨',
-    };
-    return {
-      id: i,
-      type: entry.source,
-      text: entry.description || entry.source.replace(/_/g, ' '),
-      xp: entry.final_xp,
-      time: new Date(entry.created_at).toLocaleDateString(),
-      icon: sourceIcons[entry.source] || '⚡',
-    };
-  });
+  const recentActivity = (playerData?.recentActivity || []).map((a: any) => ({
+    id: a.id,
+    text: a.description || a.source?.replace(/_/g, ' ') || 'XP Earned',
+    xp: a.final_xp || a.base_xp || 0,
+    time: new Date(a.created_at).toLocaleDateString(),
+    icon: '⭐',
+  }));
 
-  const handleGachaComplete = (result: { xp?: number }) => {
+  // Handle gacha completion
+  const handleGachaComplete = (result: { xp: number; rarity: string }) => {
     setHasSpunToday(true);
-    if (result.xp && playerData) {
-      setPlayerData((prev: any) => ({ ...prev, xp: (prev?.xp || 0) + result.xp! }));
-    }
-    setShowGacha(false);
+    // Optionally refresh player data to show new XP
+    // You could re-fetch here or optimistically update
   };
 
-  const handleCheckInComplete = (xpEarned: number) => {
+  // Handle check-in completion
+  const handleCheckInComplete = () => {
     setHasCheckedInToday(true);
-    if (playerData) {
-      setPlayerData((prev: any) => ({ ...prev, xp: (prev?.xp || 0) + xpEarned }));
-    }
-    setShowCheckIn(false);
+    // Optionally refresh player data
   };
 
   if (loading) {
@@ -431,7 +430,7 @@ export default function DashboardHome() {
         </h2>
         {recentActivity.length > 0 ? (
           <div className="space-y-2">
-            {recentActivity.map((a) => (
+            {recentActivity.map((a: any) => (
               <div
                 key={a.id}
                 className="bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700/50"
@@ -443,7 +442,9 @@ export default function DashboardHome() {
                   <div className="text-white text-sm truncate">{a.text}</div>
                   <div className="text-slate-500 text-xs">{a.time}</div>
                 </div>
-                <div className="text-cyan-400 font-bold text-sm">+{a.xp}</div>
+                <div className={`font-bold text-sm ${a.xp >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
+                  {a.xp >= 0 ? '+' : ''}{a.xp}
+                </div>
               </div>
             ))}
           </div>

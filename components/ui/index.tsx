@@ -4,7 +4,6 @@ import React from 'react';
 
 // ========== FLOATING PARTICLES ==========
 export const FloatingParticles = () => {
-  // Generate particles on client side only to avoid hydration mismatch
   const [particles, setParticles] = React.useState<Array<{
     left: string;
     top: string;
@@ -183,6 +182,12 @@ interface Game {
   level: number;
   color: string;
   rank: string;
+  // Monthly attendance tracking (Pirate's Life / Hyperlife)
+  monthlyAttendance?: number;
+  monthlyThreshold?: number;
+  monthlyBonus?: number;
+  earnedMonthlyBonus?: boolean;
+  achievementName?: string;
 }
 
 interface GameXpCardProps {
@@ -191,53 +196,111 @@ interface GameXpCardProps {
   onClick: () => void;
 }
 
-export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => (
-  <div
-    onClick={onClick}
-    className={`bg-slate-800/80 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${
-      isExpanded ? 'border-cyan-500' : 'border-transparent'
-    }`}
-    style={{ borderLeftColor: game.color, borderLeftWidth: '4px' }}
-  >
-    <div className="p-3 flex items-center gap-3">
-      <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-        style={{ backgroundColor: `${game.color}30` }}
-      >
-        {game.icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-white text-sm">{game.name}</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
-            Lv.{game.level || 1}
-          </span>
+export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
+  // Monthly achievement tracking
+  const attendance = game.monthlyAttendance || 0;
+  const threshold = game.monthlyThreshold || (game.id === 'one_piece' ? 6 : 3);
+  const achievementName = game.achievementName || (game.id === 'one_piece' ? "Pirate's Life" : 'Hyperlife');
+  const earned = game.earnedMonthlyBonus || false;
+  const progress = Math.min(attendance, threshold);
+  const isComplete = attendance >= threshold;
+  
+  // Get current month name
+  const currentMonth = new Date().toLocaleString('en-US', { month: 'short' });
+
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-slate-800/80 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${
+        isExpanded ? 'border-cyan-500' : 'border-transparent'
+      }`}
+      style={{ borderLeftColor: game.color, borderLeftWidth: '4px' }}
+    >
+      <div className="p-3 flex items-center gap-3">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+          style={{ backgroundColor: `${game.color}30` }}
+        >
+          {game.icon}
         </div>
-        <div className="flex items-center gap-2 mt-1">
-          <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full"
-              style={{ width: `${(game.xp || 0) % 100}%`, backgroundColor: game.color }}
-            />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white text-sm">{game.name}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+              Lv.{game.level || 1}
+            </span>
           </div>
-          <span className="text-xs text-slate-400 font-mono">{(game.xp || 0).toLocaleString()}</span>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${(game.xp || 0) % 100}%`, backgroundColor: game.color }}
+              />
+            </div>
+            <span className="text-xs text-slate-400 font-mono">{(game.xp || 0).toLocaleString()}</span>
+          </div>
+          
+          {/* Pirate's Life / Hyperlife Progress */}
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-xs">{game.id === 'one_piece' ? '🏴' : '⚡'}</span>
+            <div className="flex gap-0.5">
+              {[...Array(threshold)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i < progress
+                      ? earned
+                        ? 'bg-yellow-400 shadow-sm shadow-yellow-400/50'
+                        : isComplete
+                          ? 'bg-green-400 shadow-sm shadow-green-400/50'
+                          : 'bg-cyan-400'
+                      : 'bg-slate-600'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className={`text-xs ${earned ? 'text-yellow-400' : isComplete ? 'text-green-400' : 'text-slate-500'}`}>
+              {earned ? `✓ ${achievementName}` : `${progress}/${threshold} ${currentMonth}`}
+            </span>
+          </div>
         </div>
       </div>
+      
+      {isExpanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-slate-700/50 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-400">
+              Rank: <span className="text-white">{game.rank}</span>
+            </span>
+            <span className="text-slate-400">
+              {game.xpName}: <span style={{ color: game.color }}>{(game.xp || 0).toLocaleString()}</span>
+            </span>
+          </div>
+          
+          {/* Achievement details when expanded */}
+          <div className="bg-slate-900/50 rounded-lg p-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span>{game.id === 'one_piece' ? '🏴' : '⚡'}</span>
+                <span className="text-xs font-medium text-white">{achievementName}</span>
+              </div>
+              {earned ? (
+                <span className="text-xs text-yellow-400 font-medium">+30 XP Earned!</span>
+              ) : isComplete ? (
+                <span className="text-xs text-green-400 font-medium">Complete! +30 XP pending</span>
+              ) : (
+                <span className="text-xs text-slate-400">{threshold - progress} more to go</span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Attend {threshold} events this month to earn +30 bonus XP
+            </p>
+          </div>
+        </div>
+      )}
     </div>
-    {isExpanded && (
-      <div className="px-3 pb-3 pt-1 border-t border-slate-700/50">
-        <div className="flex justify-between text-sm">
-          <span className="text-slate-400">
-            Rank: <span className="text-white">{game.rank}</span>
-          </span>
-          <span className="text-slate-400">
-            {game.xpName}: <span style={{ color: game.color }}>{(game.xp || 0).toLocaleString()}</span>
-          </span>
-        </div>
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 // ========== STREAM BUTTONS ==========
 interface StreamButtonsProps {
