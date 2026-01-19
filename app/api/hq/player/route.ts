@@ -97,10 +97,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Search query required' }, { status: 400 });
     }
 
-    // Search by player_id or display_name
+    // Search by player_id or display_name - now includes favorite_games
     let playerQuery = supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, email, is_staff, created_at');
+      .select('id, player_id, display_name, email, is_staff, created_at, favorite_games');
 
     if (query.toUpperCase().startsWith('HYP-')) {
       playerQuery = playerQuery.ilike('player_id', `%${query}%`);
