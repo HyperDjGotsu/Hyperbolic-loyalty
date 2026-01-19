@@ -18,10 +18,12 @@ interface LeaderboardEntry {
   rank: number;
   id: string;
   name: string;
-  level: number;
-  totalXp: number;
+  level?: number;
+  totalXp?: number;
+  xp?: number;
   avatar: PlayerAvatar;
   hidden?: boolean;
+  isWanted?: boolean;
 }
 
 interface SearchResult {
@@ -999,7 +1001,7 @@ export default function CommunityPage() {
                       <div>
                         <div className="text-xl font-bold text-white">{currentEmperor.name}</div>
                         <div className="text-yellow-400">{currentEmperor.month} {currentEmperor.year}</div>
-                        <div className="text-slate-400 text-sm">{currentEmperor.xp.toLocaleString()} Berries</div>
+                        <div className="text-slate-400 text-sm">{(currentEmperor.xp || 0).toLocaleString()} Berries</div>
                       </div>
                     </div>
                   ) : (
@@ -1065,7 +1067,7 @@ export default function CommunityPage() {
                           <span className="text-white text-sm flex-1 truncate">
                             {entry.hidden ? 'Anonymous' : entry.name}
                           </span>
-                          <span className="text-red-400 text-xs">{entry.totalXp.toLocaleString()}</span>
+                          <span className="text-red-400 text-xs">{(entry.totalXp || entry.xp || 0).toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
