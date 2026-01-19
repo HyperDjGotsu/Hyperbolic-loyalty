@@ -242,7 +242,7 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
           
           {/* Pirate's Life / Hyperlife Progress */}
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-xs">{game.id === 'one_piece' ? '🏴' : '⚡'}</span>
+            <span className="text-xs">{game.id === 'one_piece' ? '🏴' : '⏳'}</span>
             <div className="flex gap-0.5">
               {[...Array(threshold)].map((_, i) => (
                 <div
@@ -281,7 +281,7 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
           <div className="bg-slate-900/50 rounded-lg p-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span>{game.id === 'one_piece' ? '🏴' : '⚡'}</span>
+                <span>{game.id === 'one_piece' ? '🏴' : '⏳'}</span>
                 <span className="text-xs font-medium text-white">{achievementName}</span>
               </div>
               {earned ? (
