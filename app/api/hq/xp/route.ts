@@ -48,7 +48,7 @@ async function hasEarnedMonthlyBonus(playerId: string, gameId: string, monthStar
     .ilike('description', `%${achievementName}%`)
     .limit(1);
   
-  return (data && data.length > 0);
+  return data !== null && data.length > 0;
 }
 
 // Count monthly attendance for a player/game
