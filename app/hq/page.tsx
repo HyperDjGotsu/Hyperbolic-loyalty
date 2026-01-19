@@ -94,6 +94,7 @@ export default function HQPage() {
   const [xpReason, setXpReason] = useState('');
   const [games, setGames] = useState<Game[]>([]);
   const [gameFilter, setGameFilter] = useState('with_xp'); // 'all', 'with_xp', or specific game_id
+  const [selectedTiles, setSelectedTiles] = useState<Array<{ label: string; xp: number }>>([]); // Multi-select XP tiles
   
   // Emperor state
   const [selectedMonth, setSelectedMonth] = useState('');
@@ -207,11 +208,73 @@ export default function HQPage() {
     }
   };
 
-  // Add XP
-  const addXp = async (amount?: number) => {
+  // Toggle tile selection for multi-select
+  const toggleTile = (label: string, xp: number) => {
+    setSelectedTiles(prev => {
+      const exists = prev.find(t => t.label === label);
+      if (exists) {
+        return prev.filter(t => t.label !== label);
+      } else {
+        return [...prev, { label, xp }];
+      }
+    });
+  };
+
+  // Check if a tile is selected
+  const isTileSelected = (label: string) => {
+    return selectedTiles.some(t => t.label === label);
+  };
+
+  // Get total XP from selected tiles
+  const getSelectedTotal = () => {
+    return selectedTiles.reduce((sum, t) => sum + t.xp, 0);
+  };
+
+  // Award all selected XP tiles
+  const awardSelectedXp = async () => {
     if (!playerDetails || !selectedGame) return;
     
-    const xp = amount || parseInt(xpAmount);
+    const totalXp = getSelectedTotal();
+    if (totalXp === 0 && selectedTiles.length === 0) {
+      showToast('Select at least one XP tile', 'error');
+      return;
+    }
+    
+    // Build reason from selected tile labels
+    const reason = selectedTiles.map(t => t.label).join(', ');
+    
+    try {
+      const res = await fetch('/api/hq/xp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: playerDetails.player.id,
+          gameId: selectedGame,
+          amount: totalXp,
+          reason: reason,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast(`${totalXp > 0 ? '+' : ''}${totalXp} XP awarded! (${reason})`, 'success');
+        setSelectedTiles([]); // Clear selections
+        // Refresh player data
+        searchPlayer();
+      }
+    } catch (error) {
+      showToast('Failed to add XP', 'error');
+    }
+  };
+
+  // Add custom XP (positive or negative)
+  const addCustomXp = async () => {
+    if (!playerDetails || !selectedGame) return;
+    
+    const xp = parseInt(xpAmount);
     if (!xp || xp === 0) {
       showToast('Enter a valid XP amount', 'error');
       return;
@@ -225,7 +288,7 @@ export default function HQPage() {
           playerId: playerDetails.player.id,
           gameId: selectedGame,
           amount: xp,
-          reason: xpReason || (xp > 0 ? 'Admin adjustment' : 'Admin correction'),
+          reason: xpReason || (xp > 0 ? 'Custom bonus' : 'Custom correction'),
         }),
       });
       
@@ -601,7 +664,7 @@ export default function HQPage() {
                   )}
                 </div>
 
-                {/* XP Management - Tile-based like old admin */}
+                {/* XP Management - Multi-select Tiles */}
                 <div className="p-6 border-b border-slate-800">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
@@ -626,8 +689,12 @@ export default function HQPage() {
                     <div className="text-xs font-medium text-purple-400 uppercase tracking-wider mb-2">📅 Event Entry</div>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => addXp(10)}
-                        className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-purple-500 hover:bg-purple-500/10 transition-all"
+                        onClick={() => toggleTile('Attended', 10)}
+                        className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
+                          isTileSelected('Attended')
+                            ? 'bg-purple-500/20 border-purple-500 text-white'
+                            : 'bg-slate-800 border-slate-700 hover:border-purple-500 hover:bg-purple-500/10'
+                        }`}
                       >
                         <span className="font-medium">Attended</span>
                         <span className="text-xs text-purple-400">+10 XP</span>
@@ -648,8 +715,12 @@ export default function HQPage() {
                       ].map(item => (
                         <button
                           key={item.label}
-                          onClick={() => addXp(item.xp)}
-                          className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-green-500 hover:bg-green-500/10 transition-all"
+                          onClick={() => toggleTile(item.label, item.xp)}
+                          className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
+                            isTileSelected(item.label)
+                              ? 'bg-green-500/20 border-green-500 text-white'
+                              : 'bg-slate-800 border-slate-700 hover:border-green-500 hover:bg-green-500/10'
+                          }`}
                         >
                           <span className="font-medium">{item.label}</span>
                           <span className="text-xs text-green-400">+{item.xp} XP</span>
@@ -663,15 +734,19 @@ export default function HQPage() {
                     <div className="text-xs font-medium text-orange-400 uppercase tracking-wider mb-2">👥 Community</div>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { label: 'Referral', xp: 25 },
-                        { label: 'Taught Player', xp: 20 },
-                        { label: 'First-timer Return', xp: 25 },
+                        { label: 'First Timer', xp: 25 },
+                        { label: 'Returner', xp: 25 },
                         { label: 'Signed Up', xp: 50 },
+                        { label: 'Taught Player', xp: 20 },
                       ].map(item => (
                         <button
                           key={item.label}
-                          onClick={() => addXp(item.xp)}
-                          className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-orange-500 hover:bg-orange-500/10 transition-all"
+                          onClick={() => toggleTile(item.label, item.xp)}
+                          className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
+                            isTileSelected(item.label)
+                              ? 'bg-orange-500/20 border-orange-500 text-white'
+                              : 'bg-slate-800 border-slate-700 hover:border-orange-500 hover:bg-orange-500/10'
+                          }`}
                         >
                           <span className="font-medium">{item.label}</span>
                           <span className="text-xs text-orange-400">+{item.xp} XP</span>
@@ -680,48 +755,68 @@ export default function HQPage() {
                     </div>
                   </div>
 
-                  {/* Corrections (negative) */}
-                  <div className="mb-4">
-                    <div className="text-xs font-medium text-red-400 uppercase tracking-wider mb-2">⚠️ Corrections</div>
-                    <div className="flex flex-wrap gap-2">
-                      {[-5, -10, -25, -50].map(amt => (
+                  {/* Selected Summary & Award Button */}
+                  {selectedTiles.length > 0 && (
+                    <div className="mb-4 p-4 bg-slate-800 rounded-xl border border-cyan-500/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm text-slate-400">Selected:</div>
                         <button
-                          key={amt}
-                          onClick={() => addXp(amt)}
-                          className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-red-500 hover:bg-red-500/10 transition-all"
+                          onClick={() => setSelectedTiles([])}
+                          className="text-xs text-slate-500 hover:text-white"
                         >
-                          <span className="font-medium">{amt}</span>
-                          <span className="text-xs text-red-400">XP</span>
+                          Clear all
                         </button>
-                      ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {selectedTiles.map(tile => (
+                          <span
+                            key={tile.label}
+                            className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-sm"
+                          >
+                            {tile.label} (+{tile.xp})
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-lg font-bold text-cyan-400">
+                          Total: +{getSelectedTotal()} XP
+                        </div>
+                        <button
+                          onClick={awardSelectedXp}
+                          className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg font-bold text-white hover:opacity-90"
+                        >
+                          ⚡ Award XP
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Custom Award */}
+                  {/* Custom Award/Remove */}
                   <div>
-                    <div className="text-xs font-medium text-cyan-400 uppercase tracking-wider mb-2">✨ Custom Award</div>
+                    <div className="text-xs font-medium text-cyan-400 uppercase tracking-wider mb-2">✨ Custom (+ or -)</div>
                     <div className="flex gap-3">
                       <input
                         type="number"
                         value={xpAmount}
                         onChange={(e) => setXpAmount(e.target.value)}
-                        placeholder="XP"
+                        placeholder="+/- XP"
                         className="w-24 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-center"
                       />
                       <input
                         type="text"
                         value={xpReason}
                         onChange={(e) => setXpReason(e.target.value)}
-                        placeholder="Reason (e.g., Helped new player)"
+                        placeholder="Reason (e.g., Prize payout, Correction)"
                         className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                       />
                       <button
-                        onClick={() => addXp()}
+                        onClick={addCustomXp}
                         className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
                       >
-                        + Add
+                        Apply
                       </button>
                     </div>
+                    <p className="text-xs text-slate-500 mt-2">Use negative numbers to remove XP (e.g., -25)</p>
                   </div>
                 </div>
 
