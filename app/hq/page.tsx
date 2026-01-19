@@ -492,7 +492,13 @@ export default function HQPage() {
                     {/* Game Filter Dropdown */}
                     <select
                       value={gameFilter}
-                      onChange={(e) => setGameFilter(e.target.value)}
+                      onChange={(e) => {
+                        setGameFilter(e.target.value);
+                        // If selecting a specific game, also set it as selectedGame for XP management
+                        if (e.target.value !== 'all' && e.target.value !== 'with_xp') {
+                          setSelectedGame(e.target.value);
+                        }
+                      }}
                       className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
                     >
                       <option value="with_xp">Games with XP ({playerDetails.gameXp.filter(g => g.xp > 0).length})</option>
@@ -507,133 +513,215 @@ export default function HQPage() {
                     </select>
                   </div>
                   
-                  {/* Game Tiles */}
-                  {filteredGames.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {filteredGames.map(game => (
-                        <div
-                          key={game.game_id}
-                          onClick={() => setSelectedGame(game.game_id)}
-                          className={`p-4 rounded-xl cursor-pointer transition-all ${
-                            selectedGame === game.game_id
-                              ? 'bg-gradient-to-br from-cyan-500/30 to-purple-500/30 border-2 border-cyan-500 shadow-lg shadow-cyan-500/20'
-                              : game.xp > 0
-                                ? 'bg-slate-800 border-2 border-transparent hover:border-slate-600'
-                                : 'bg-slate-800/50 border-2 border-transparent hover:border-slate-700 opacity-60'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-2xl">{game.icon}</span>
-                            <span className="font-medium text-sm truncate">{game.game_name}</span>
+                  {/* Game Tiles - Collapse to single when specific game selected */}
+                  {gameFilter !== 'all' && gameFilter !== 'with_xp' ? (
+                    // Single game selected - show expanded card
+                    <div className="flex items-center gap-4">
+                      {(() => {
+                        const game = playerDetails.gameXp.find(g => g.game_id === gameFilter);
+                        if (!game) return null;
+                        return (
+                          <div className="flex-1 p-5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border-2 border-cyan-500">
+                            <div className="flex items-center gap-4">
+                              <span className="text-4xl">{game.icon}</span>
+                              <div className="flex-1">
+                                <div className="font-bold text-lg">{game.game_name}</div>
+                                <div className="text-purple-400 text-sm">{game.rank}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-3xl font-bold text-cyan-400">
+                                  {game.xp.toLocaleString()}
+                                </div>
+                                <div className="text-slate-400 text-sm">{game.xp_name}</div>
+                              </div>
+                            </div>
                           </div>
-                          <div className={`text-xl font-bold ${game.xp > 0 ? 'text-cyan-400' : 'text-slate-500'}`}>
-                            {game.xp.toLocaleString()}
-                          </div>
-                          <div className="text-slate-500 text-xs">{game.xp_name}</div>
-                          {game.xp > 0 && (
-                            <div className="mt-1 text-xs text-purple-400">{game.rank}</div>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })()}
+                      <button
+                        onClick={() => setGameFilter('with_xp')}
+                        className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg text-sm"
+                      >
+                        Show All
+                      </button>
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-slate-500">
-                      No games match the current filter
-                    </div>
-                  )}
-                  
-                  {/* Quick stats when filter is active */}
-                  {gameFilter === 'with_xp' && playerDetails.gameXp.filter(g => g.xp === 0).length > 0 && (
-                    <p className="text-slate-500 text-xs mt-3">
-                      +{playerDetails.gameXp.filter(g => g.xp === 0).length} more games with 0 XP • 
-                      <button 
-                        onClick={() => setGameFilter('all')}
-                        className="text-cyan-400 hover:underline ml-1"
-                      >
-                        Show all
-                      </button>
-                    </p>
+                    // Multiple games - show grid
+                    <>
+                      {filteredGames.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {filteredGames.map(game => (
+                            <div
+                              key={game.game_id}
+                              onClick={() => {
+                                setSelectedGame(game.game_id);
+                                setGameFilter(game.game_id); // Collapse to this game
+                              }}
+                              className={`p-4 rounded-xl cursor-pointer transition-all ${
+                                selectedGame === game.game_id
+                                  ? 'bg-gradient-to-br from-cyan-500/30 to-purple-500/30 border-2 border-cyan-500 shadow-lg shadow-cyan-500/20'
+                                  : game.xp > 0
+                                    ? 'bg-slate-800 border-2 border-transparent hover:border-slate-600'
+                                    : 'bg-slate-800/50 border-2 border-transparent hover:border-slate-700 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-2xl">{game.icon}</span>
+                                <span className="font-medium text-sm truncate">{game.game_name}</span>
+                              </div>
+                              <div className={`text-xl font-bold ${game.xp > 0 ? 'text-cyan-400' : 'text-slate-500'}`}>
+                                {game.xp.toLocaleString()}
+                              </div>
+                              <div className="text-slate-500 text-xs">{game.xp_name}</div>
+                              {game.xp > 0 && (
+                                <div className="mt-1 text-xs text-purple-400">{game.rank}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-500">
+                          No games match the current filter
+                        </div>
+                      )}
+                      
+                      {/* Quick stats when filter is active */}
+                      {gameFilter === 'with_xp' && playerDetails.gameXp.filter(g => g.xp === 0).length > 0 && (
+                        <p className="text-slate-500 text-xs mt-3">
+                          +{playerDetails.gameXp.filter(g => g.xp === 0).length} more games with 0 XP • 
+                          <button 
+                            onClick={() => setGameFilter('all')}
+                            className="text-cyan-400 hover:underline ml-1"
+                          >
+                            Show all
+                          </button>
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 
-                {/* XP Management */}
+                {/* XP Management - Tile-based like old admin */}
                 <div className="p-6 border-b border-slate-800">
-                  <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
-                    Add/Remove XP
-                  </h3>
-                  
-                  {/* Selected Game Display */}
-                  {selectedGame && (
-                    <div className="mb-4 p-3 bg-slate-800 rounded-lg flex items-center gap-3">
-                      <span className="text-2xl">
-                        {games.find(g => g.id === selectedGame)?.icon || '🎮'}
-                      </span>
-                      <div className="flex-1">
-                        <div className="font-medium">
-                          {games.find(g => g.id === selectedGame)?.name || 'Select a game'}
-                        </div>
-                        <div className="text-slate-500 text-sm">
-                          Current: {playerDetails.gameXp.find(g => g.game_id === selectedGame)?.xp.toLocaleString() || 0} {games.find(g => g.id === selectedGame)?.xp_name || 'XP'}
-                        </div>
-                      </div>
-                      <select
-                        value={selectedGame}
-                        onChange={(e) => setSelectedGame(e.target.value)}
-                        className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
-                      >
-                        {games.map(game => (
-                          <option key={game.id} value={game.id}>
-                            {game.icon} {game.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Quick buttons */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {[5, 10, 15, 20, 25, 30].map(amt => (
-                      <button
-                        key={amt}
-                        onClick={() => addXp(amt)}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-medium"
-                      >
-                        +{amt}
-                      </button>
-                    ))}
-                    {[-5, -10, -25].map(amt => (
-                      <button
-                        key={amt}
-                        onClick={() => addXp(amt)}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg font-medium"
-                      >
-                        {amt}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                      Award XP
+                    </h3>
+                    {/* Game selector for XP */}
+                    <select
+                      value={selectedGame}
+                      onChange={(e) => setSelectedGame(e.target.value)}
+                      className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                    >
+                      {games.map(game => (
+                        <option key={game.id} value={game.id}>
+                          {game.icon} {game.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Custom amount */}
-                  <div className="flex gap-3">
-                    <input
-                      type="number"
-                      value={xpAmount}
-                      onChange={(e) => setXpAmount(e.target.value)}
-                      placeholder="Custom amount"
-                      className="w-32 bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-                    />
-                    <input
-                      type="text"
-                      value={xpReason}
-                      onChange={(e) => setXpReason(e.target.value)}
-                      placeholder="Reason (optional)"
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-                    />
-                    <button
-                      onClick={() => addXp()}
-                      className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
-                    >
-                      Add XP
-                    </button>
+                  {/* Event Entry */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-purple-400 uppercase tracking-wider mb-2">📅 Event Entry</div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => addXp(10)}
+                        className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-purple-500 hover:bg-purple-500/10 transition-all"
+                      >
+                        <span className="font-medium">Attended</span>
+                        <span className="text-xs text-purple-400">+10 XP</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Match Wins */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2">🏆 Match Wins</div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: '1 Win', xp: 10 },
+                        { label: '2 Wins', xp: 20 },
+                        { label: '3 Wins', xp: 30 },
+                        { label: '4 Wins', xp: 40 },
+                        { label: 'Undefeated', xp: 10 },
+                      ].map(item => (
+                        <button
+                          key={item.label}
+                          onClick={() => addXp(item.xp)}
+                          className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-green-500 hover:bg-green-500/10 transition-all"
+                        >
+                          <span className="font-medium">{item.label}</span>
+                          <span className="text-xs text-green-400">+{item.xp} XP</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Community */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-orange-400 uppercase tracking-wider mb-2">👥 Community</div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: 'Referral', xp: 25 },
+                        { label: 'Taught Player', xp: 20 },
+                        { label: 'First-timer Return', xp: 25 },
+                        { label: 'Signed Up', xp: 50 },
+                      ].map(item => (
+                        <button
+                          key={item.label}
+                          onClick={() => addXp(item.xp)}
+                          className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-orange-500 hover:bg-orange-500/10 transition-all"
+                        >
+                          <span className="font-medium">{item.label}</span>
+                          <span className="text-xs text-orange-400">+{item.xp} XP</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Corrections (negative) */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-red-400 uppercase tracking-wider mb-2">⚠️ Corrections</div>
+                    <div className="flex flex-wrap gap-2">
+                      {[-5, -10, -25, -50].map(amt => (
+                        <button
+                          key={amt}
+                          onClick={() => addXp(amt)}
+                          className="flex flex-col items-center px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-lg hover:border-red-500 hover:bg-red-500/10 transition-all"
+                        >
+                          <span className="font-medium">{amt}</span>
+                          <span className="text-xs text-red-400">XP</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Award */}
+                  <div>
+                    <div className="text-xs font-medium text-cyan-400 uppercase tracking-wider mb-2">✨ Custom Award</div>
+                    <div className="flex gap-3">
+                      <input
+                        type="number"
+                        value={xpAmount}
+                        onChange={(e) => setXpAmount(e.target.value)}
+                        placeholder="XP"
+                        className="w-24 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-center"
+                      />
+                      <input
+                        type="text"
+                        value={xpReason}
+                        onChange={(e) => setXpReason(e.target.value)}
+                        placeholder="Reason (e.g., Helped new player)"
+                        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                      />
+                      <button
+                        onClick={() => addXp()}
+                        className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
+                      >
+                        + Add
+                      </button>
+                    </div>
                   </div>
                 </div>
 
