@@ -11,6 +11,7 @@ interface Player {
   email: string;
   is_staff: boolean;
   created_at: string;
+  favorite_games?: string[]; // Player's favorite game IDs
 }
 
 interface GameXP {
@@ -184,8 +185,12 @@ export default function HQPage() {
         if (data.gameXp?.length > 0) {
           setSelectedGame(data.gameXp[0].game_id);
         }
-        // Reset filter when loading new player
-        setGameFilter('with_xp');
+        // Default to favorites if player has them, otherwise show games with XP
+        if (data.player?.favorite_games?.length > 0) {
+          setGameFilter('favorites');
+        } else {
+          setGameFilter('with_xp');
+        }
       }
     } catch (error) {
       showToast('Search failed', 'error');
@@ -202,10 +207,18 @@ export default function HQPage() {
       return playerDetails.gameXp;
     } else if (gameFilter === 'with_xp') {
       return playerDetails.gameXp.filter(g => g.xp > 0);
+    } else if (gameFilter === 'favorites') {
+      const favIds = playerDetails.player.favorite_games || [];
+      return playerDetails.gameXp.filter(g => favIds.includes(g.game_id));
     } else {
       // Specific game selected
       return playerDetails.gameXp.filter(g => g.game_id === gameFilter);
     }
+  };
+
+  // Get count of favorites
+  const getFavoritesCount = () => {
+    return playerDetails?.player?.favorite_games?.length || 0;
   };
 
   // Toggle tile selection for multi-select
@@ -558,12 +571,15 @@ export default function HQPage() {
                       onChange={(e) => {
                         setGameFilter(e.target.value);
                         // If selecting a specific game, also set it as selectedGame for XP management
-                        if (e.target.value !== 'all' && e.target.value !== 'with_xp') {
+                        if (e.target.value !== 'all' && e.target.value !== 'with_xp' && e.target.value !== 'favorites') {
                           setSelectedGame(e.target.value);
                         }
                       }}
                       className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
                     >
+                      {getFavoritesCount() > 0 && (
+                        <option value="favorites">⭐ Favorites ({getFavoritesCount()})</option>
+                      )}
                       <option value="with_xp">Games with XP ({playerDetails.gameXp.filter(g => g.xp > 0).length})</option>
                       <option value="all">All Games ({playerDetails.gameXp.length})</option>
                       <optgroup label="Individual Games">
@@ -577,7 +593,7 @@ export default function HQPage() {
                   </div>
                   
                   {/* Game Tiles - Collapse to single when specific game selected */}
-                  {gameFilter !== 'all' && gameFilter !== 'with_xp' ? (
+                  {gameFilter !== 'all' && gameFilter !== 'with_xp' && gameFilter !== 'favorites' ? (
                     // Single game selected - show expanded card
                     <div className="flex items-center gap-4">
                       {(() => {
@@ -602,7 +618,7 @@ export default function HQPage() {
                         );
                       })()}
                       <button
-                        onClick={() => setGameFilter('with_xp')}
+                        onClick={() => setGameFilter(getFavoritesCount() > 0 ? 'favorites' : 'with_xp')}
                         className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg text-sm"
                       >
                         Show All
@@ -657,6 +673,17 @@ export default function HQPage() {
                             className="text-cyan-400 hover:underline ml-1"
                           >
                             Show all
+                          </button>
+                        </p>
+                      )}
+                      {gameFilter === 'favorites' && (
+                        <p className="text-slate-500 text-xs mt-3">
+                          ⭐ Showing player&apos;s favorite games • 
+                          <button 
+                            onClick={() => setGameFilter('all')}
+                            className="text-cyan-400 hover:underline ml-1"
+                          >
+                            Show all {playerDetails.gameXp.length} games
                           </button>
                         </p>
                       )}
