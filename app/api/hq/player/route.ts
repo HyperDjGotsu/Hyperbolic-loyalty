@@ -100,7 +100,7 @@ export async function GET(request: Request) {
     // Search by player_id or display_name - now includes favorite_games
     let playerQuery = supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, email, is_staff, created_at, favorite_games');
+      .select('id, player_id, display_name, email, is_staff, created_at, favorite_games') as any;
 
     if (query.toUpperCase().startsWith('HYP-')) {
       playerQuery = playerQuery.ilike('player_id', `%${query}%`);
@@ -113,6 +113,17 @@ export async function GET(request: Request) {
     if (playerError || !players) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
+
+    // Type the player data
+    const player = players as {
+      id: string;
+      player_id: string;
+      display_name: string;
+      email: string;
+      is_staff: boolean;
+      created_at: string;
+      favorite_games: string[] | null;
+    };
 
     // Get games list
     const { data: games } = await supabaseAdmin
@@ -128,7 +139,7 @@ export async function GET(request: Request) {
     const { data: xpData } = await supabaseAdmin
       .from('xp_ledger')
       .select('game_id, final_xp')
-      .eq('player_id', players.id);
+      .eq('player_id', player.id);
 
     // Aggregate XP by game
     const xpByGame: Record<string, number> = {};
@@ -155,12 +166,12 @@ export async function GET(request: Request) {
     const { data: recentActivity } = await supabaseAdmin
       .from('xp_ledger')
       .select('id, game_id, final_xp, description, created_at')
-      .eq('player_id', players.id)
+      .eq('player_id', player.id)
       .order('created_at', { ascending: false })
       .limit(20);
 
     return NextResponse.json({
-      player: players,
+      player,
       totalXp,
       gameXp,
       recentActivity: recentActivity || [],
