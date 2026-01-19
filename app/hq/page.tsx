@@ -93,6 +93,7 @@ export default function HQPage() {
   const [xpAmount, setXpAmount] = useState('');
   const [xpReason, setXpReason] = useState('');
   const [games, setGames] = useState<Game[]>([]);
+  const [gameFilter, setGameFilter] = useState('with_xp'); // 'all', 'with_xp', or specific game_id
   
   // Emperor state
   const [selectedMonth, setSelectedMonth] = useState('');
@@ -182,11 +183,27 @@ export default function HQPage() {
         if (data.gameXp?.length > 0) {
           setSelectedGame(data.gameXp[0].game_id);
         }
+        // Reset filter when loading new player
+        setGameFilter('with_xp');
       }
     } catch (error) {
       showToast('Search failed', 'error');
     } finally {
       setSearchLoading(false);
+    }
+  };
+
+  // Filter games based on dropdown selection
+  const getFilteredGames = (): GameXP[] => {
+    if (!playerDetails) return [];
+    
+    if (gameFilter === 'all') {
+      return playerDetails.gameXp;
+    } else if (gameFilter === 'with_xp') {
+      return playerDetails.gameXp.filter(g => g.xp > 0);
+    } else {
+      // Specific game selected
+      return playerDetails.gameXp.filter(g => g.game_id === gameFilter);
     }
   };
 
@@ -363,6 +380,8 @@ export default function HQPage() {
     );
   }
 
+  const filteredGames = getFilteredGames();
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Toast */}
@@ -464,31 +483,77 @@ export default function HQPage() {
                   </div>
                 </div>
 
-                {/* Game XP */}
+                {/* Game XP Section - REDESIGNED */}
                 <div className="p-6 border-b border-slate-800">
-                  <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
-                    Game XP
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {playerDetails.gameXp.map(game => (
-                      <div
-                        key={game.game_id}
-                        onClick={() => setSelectedGame(game.game_id)}
-                        className={`p-4 rounded-lg cursor-pointer transition-all ${
-                          selectedGame === game.game_id
-                            ? 'bg-cyan-500/20 border-2 border-cyan-500'
-                            : 'bg-slate-800 border-2 border-transparent hover:border-slate-600'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xl">{game.icon}</span>
-                          <span className="font-medium">{game.game_name}</span>
-                        </div>
-                        <div className="text-cyan-400 font-bold">{game.xp.toLocaleString()} {game.xp_name}</div>
-                        <div className="text-slate-500 text-sm">{game.rank}</div>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                      Game XP
+                    </h3>
+                    {/* Game Filter Dropdown */}
+                    <select
+                      value={gameFilter}
+                      onChange={(e) => setGameFilter(e.target.value)}
+                      className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="with_xp">Games with XP ({playerDetails.gameXp.filter(g => g.xp > 0).length})</option>
+                      <option value="all">All Games ({playerDetails.gameXp.length})</option>
+                      <optgroup label="Individual Games">
+                        {playerDetails.gameXp.map(game => (
+                          <option key={game.game_id} value={game.game_id}>
+                            {game.icon} {game.game_name} ({game.xp.toLocaleString()})
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
                   </div>
+                  
+                  {/* Game Tiles */}
+                  {filteredGames.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {filteredGames.map(game => (
+                        <div
+                          key={game.game_id}
+                          onClick={() => setSelectedGame(game.game_id)}
+                          className={`p-4 rounded-xl cursor-pointer transition-all ${
+                            selectedGame === game.game_id
+                              ? 'bg-gradient-to-br from-cyan-500/30 to-purple-500/30 border-2 border-cyan-500 shadow-lg shadow-cyan-500/20'
+                              : game.xp > 0
+                                ? 'bg-slate-800 border-2 border-transparent hover:border-slate-600'
+                                : 'bg-slate-800/50 border-2 border-transparent hover:border-slate-700 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl">{game.icon}</span>
+                            <span className="font-medium text-sm truncate">{game.game_name}</span>
+                          </div>
+                          <div className={`text-xl font-bold ${game.xp > 0 ? 'text-cyan-400' : 'text-slate-500'}`}>
+                            {game.xp.toLocaleString()}
+                          </div>
+                          <div className="text-slate-500 text-xs">{game.xp_name}</div>
+                          {game.xp > 0 && (
+                            <div className="mt-1 text-xs text-purple-400">{game.rank}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      No games match the current filter
+                    </div>
+                  )}
+                  
+                  {/* Quick stats when filter is active */}
+                  {gameFilter === 'with_xp' && playerDetails.gameXp.filter(g => g.xp === 0).length > 0 && (
+                    <p className="text-slate-500 text-xs mt-3">
+                      +{playerDetails.gameXp.filter(g => g.xp === 0).length} more games with 0 XP • 
+                      <button 
+                        onClick={() => setGameFilter('all')}
+                        className="text-cyan-400 hover:underline ml-1"
+                      >
+                        Show all
+                      </button>
+                    </p>
+                  )}
                 </div>
 
                 {/* XP Management */}
@@ -497,21 +562,33 @@ export default function HQPage() {
                     Add/Remove XP
                   </h3>
                   
-                  {/* Game Selector */}
-                  <div className="mb-4">
-                    <label className="text-slate-400 text-sm mb-2 block">Game</label>
-                    <select
-                      value={selectedGame}
-                      onChange={(e) => setSelectedGame(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
-                    >
-                      {games.map(game => (
-                        <option key={game.id} value={game.id}>
-                          {game.icon} {game.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Selected Game Display */}
+                  {selectedGame && (
+                    <div className="mb-4 p-3 bg-slate-800 rounded-lg flex items-center gap-3">
+                      <span className="text-2xl">
+                        {games.find(g => g.id === selectedGame)?.icon || '🎮'}
+                      </span>
+                      <div className="flex-1">
+                        <div className="font-medium">
+                          {games.find(g => g.id === selectedGame)?.name || 'Select a game'}
+                        </div>
+                        <div className="text-slate-500 text-sm">
+                          Current: {playerDetails.gameXp.find(g => g.game_id === selectedGame)?.xp.toLocaleString() || 0} {games.find(g => g.id === selectedGame)?.xp_name || 'XP'}
+                        </div>
+                      </div>
+                      <select
+                        value={selectedGame}
+                        onChange={(e) => setSelectedGame(e.target.value)}
+                        className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      >
+                        {games.map(game => (
+                          <option key={game.id} value={game.id}>
+                            {game.icon} {game.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {/* Quick buttons */}
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -619,94 +696,83 @@ export default function HQPage() {
               {/* Current Emperor */}
               <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
                 <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
-                  Current Leader
+                  Monthly Rankings
                 </h3>
                 {emperorLoading ? (
                   <div className="text-center py-8 text-slate-500">Loading...</div>
                 ) : monthlyRankings.length > 0 ? (
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">👑</div>
-                    <div className="text-2xl font-bold">{monthlyRankings[0].display_name}</div>
-                    <div className="text-cyan-400 font-bold text-xl">{monthlyRankings[0].berries.toLocaleString()} Berries</div>
-                    <div className="text-slate-500">earned this month</div>
+                  <div className="space-y-3">
+                    {monthlyRankings.slice(0, 10).map((player, index) => (
+                      <div
+                        key={player.player_id}
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          index === 0 ? 'bg-yellow-500/20 border border-yellow-500/30' : 'bg-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                            index === 0 ? 'bg-yellow-500 text-black' :
+                            index === 1 ? 'bg-slate-400 text-black' :
+                            index === 2 ? 'bg-amber-600 text-black' :
+                            'bg-slate-700'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-medium">{player.display_name}</div>
+                            <div className="text-slate-500 text-sm">{player.bounty}</div>
+                          </div>
+                        </div>
+                        <div className="text-cyan-400 font-bold">
+                          {player.berries.toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Crown button */}
                     <button
                       onClick={crownEmperor}
-                      className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg font-medium hover:opacity-90"
+                      className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-lg font-bold text-black hover:opacity-90"
                     >
-                      👑 Crown Emperor
+                      👑 Crown {monthlyRankings[0]?.display_name} as Emperor
                     </button>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-2">🏴‍☠️</div>
-                    <div className="text-slate-500">No One Piece activity this month</div>
+                  <div className="text-center py-8 text-slate-500">
+                    No rankings for this month
                   </div>
                 )}
               </div>
 
-              {/* Rankings List */}
+              {/* Hall of Fame */}
               <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
                 <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
-                  Monthly Rankings
+                  Hall of Fame
                 </h3>
-                <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {monthlyRankings.map((player, index) => (
-                    <div
-                      key={player.player_id}
-                      className={`flex items-center gap-3 p-3 rounded-lg ${
-                        index === 0 ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-slate-800'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                        index === 0 ? 'bg-yellow-500 text-black' :
-                        index === 1 ? 'bg-slate-400 text-black' :
-                        index === 2 ? 'bg-orange-600 text-white' :
-                        'bg-slate-700 text-slate-400'
-                      }`}>
-                        {index + 1}
+                {hallOfFame.length > 0 ? (
+                  <div className="space-y-3">
+                    {hallOfFame.map((emperor) => (
+                      <div
+                        key={emperor.id}
+                        className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-lg border border-purple-500/20"
+                      >
+                        <div>
+                          <div className="font-medium">👑 {emperor.player_name}</div>
+                          <div className="text-slate-500 text-sm">{emperor.month}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-cyan-400 font-bold">{emperor.bounty_display}</div>
+                          <div className="text-slate-500 text-xs">+{emperor.monthly_xp.toLocaleString()} that month</div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{player.display_name}</div>
-                        <div className="text-slate-500 text-sm">{player.player_id}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-cyan-400 font-bold">{player.berries.toLocaleString()}</div>
-                        <div className="text-slate-500 text-sm">this month</div>
-                      </div>
-                    </div>
-                  ))}
-                  {monthlyRankings.length === 0 && !emperorLoading && (
-                    <div className="text-slate-500 text-center py-4">No rankings yet</div>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    No emperors crowned yet
+                  </div>
+                )}
               </div>
-            </div>
-
-            {/* Hall of Fame */}
-            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-              <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
-                🏆 Hall of Fame
-              </h3>
-              {hallOfFame.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {hallOfFame.map(emperor => (
-                    <div
-                      key={emperor.id}
-                      className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-lg p-4 text-center"
-                    >
-                      <div className="text-slate-400 text-sm">{emperor.month}</div>
-                      <div className="font-bold">{emperor.player_name}</div>
-                      <div className="text-orange-400 font-bold">{emperor.bounty_display}</div>
-                      <div className="text-slate-500 text-xs">+{emperor.monthly_xp?.toLocaleString()} that month</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">🏆</div>
-                  <div className="text-slate-500">No emperors crowned yet</div>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -715,102 +781,98 @@ export default function HQPage() {
         {activeTab === 'banners' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold">Home Page Banners</h2>
-                <p className="text-slate-500">Manage the carousel on the dashboard</p>
-              </div>
+              <h2 className="text-xl font-bold">Banner Management</h2>
               <button
-                onClick={() => {
-                  setShowEmojiPicker(false);
-                  setEditingBanner({
-                    id: '',
-                    title: '',
-                    subtitle: '',
-                    icon: '🎮',
-                    color_from: '#8b5cf6',
-                    color_to: '#ec4899',
-                    badge: '',
-                    is_active: true,
-                    sort_order: banners.length,
-                    starts_at: null,
-                    ends_at: null,
-                    twitch_url: null,
-                    youtube_url: null,
-                  });
-                }}
+                onClick={() => setEditingBanner({
+                  id: '',
+                  title: '',
+                  subtitle: '',
+                  icon: '🎮',
+                  color_from: '#8b5cf6',
+                  color_to: '#ec4899',
+                  badge: '',
+                  is_active: true,
+                  sort_order: banners.length,
+                  starts_at: null,
+                  ends_at: null,
+                  twitch_url: null,
+                  youtube_url: null,
+                })}
                 className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
               >
                 + New Banner
               </button>
             </div>
 
-            {/* Banner List */}
-            <div className="space-y-3">
-              {banners.map(banner => (
-                <div
-                  key={banner.id}
-                  className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden"
-                >
+            {bannerLoading ? (
+              <div className="text-center py-8 text-slate-500">Loading banners...</div>
+            ) : (
+              <div className="grid gap-4">
+                {banners.map(banner => (
                   <div
-                    className="p-4"
-                    style={{
-                      background: `linear-gradient(135deg, ${banner.color_from}30, ${banner.color_to}30)`,
-                    }}
+                    key={banner.id}
+                    className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden"
                   >
-                    <div className="flex items-center justify-between">
+                    <div
+                      className="p-4"
+                      style={{
+                        background: `linear-gradient(135deg, ${banner.color_from}, ${banner.color_to})`,
+                      }}
+                    >
                       <div className="flex items-center gap-3">
                         <span className="text-3xl">{banner.icon}</span>
-                        <div>
-                          <div className="font-bold text-lg">{banner.title}</div>
-                          <div className="text-slate-400">{banner.subtitle}</div>
+                        <div className="flex-1">
+                          <div className="font-bold text-white">{banner.title}</div>
+                          <div className="text-white/80 text-sm">{banner.subtitle}</div>
                         </div>
                         {banner.badge && (
-                          <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-bold">
+                          <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-bold text-white">
                             {banner.badge}
                           </span>
                         )}
+                        {(banner.twitch_url || banner.youtube_url) && (
+                          <div className="flex gap-1">
+                            {banner.twitch_url && <span className="text-white">📺</span>}
+                            {banner.youtube_url && <span className="text-white">▶️</span>}
+                          </div>
+                        )}
                       </div>
+                    </div>
+                    <div className="p-3 flex items-center justify-between bg-slate-800/50">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          banner.is_active ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'
-                        }`}>
+                        <span className={`w-2 h-2 rounded-full ${banner.is_active ? 'bg-green-500' : 'bg-slate-500'}`}></span>
+                        <span className="text-slate-400 text-sm">
                           {banner.is_active ? 'Active' : 'Inactive'}
                         </span>
+                      </div>
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => {
-                            setShowEmojiPicker(false);
-                            setEditingBanner(banner);
-                          }}
-                          className="p-2 hover:bg-white/10 rounded-lg"
+                          onClick={() => setEditingBanner(banner)}
+                          className="px-3 py-1 text-cyan-400 hover:bg-cyan-500/20 rounded"
                         >
-                          ✏️
+                          Edit
                         </button>
                         <button
                           onClick={() => deleteBanner(banner.id)}
-                          className="p-2 hover:bg-red-500/20 rounded-lg text-red-400"
+                          className="px-3 py-1 text-red-400 hover:bg-red-500/20 rounded"
                         >
-                          🗑️
+                          Delete
                         </button>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {banners.length === 0 && !bannerLoading && (
-                <div className="bg-slate-900 rounded-xl p-8 border border-slate-800 text-center">
-                  <div className="text-4xl mb-2">🎨</div>
-                  <div className="text-slate-500">No banners yet. Create one!</div>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Banner Editor Modal */}
             {editingBanner && (
-              <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                <div className="bg-slate-900 rounded-xl w-full max-w-lg border border-slate-700">
-                  <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-                    <h3 className="font-bold">{editingBanner.id ? 'Edit Banner' : 'New Banner'}</h3>
-                    <button onClick={() => setEditingBanner(null)} className="text-slate-400">✕</button>
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-slate-900 rounded-xl border border-slate-800 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-4 border-b border-slate-800">
+                    <h3 className="text-lg font-bold">
+                      {editingBanner.id ? 'Edit Banner' : 'New Banner'}
+                    </h3>
                   </div>
                   <div className="p-4 space-y-4">
                     {/* Preview */}
