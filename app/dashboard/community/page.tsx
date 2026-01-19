@@ -219,43 +219,30 @@ export default function CommunityPage() {
   const loadOnePieceData = useCallback(async () => {
     setOnePieceLoading(true);
     try {
-      // Load One Piece leaderboard (for WANTED list)
-      const lbRes = await fetch('/api/community/leaderboard?limit=10&game=one_piece');
-      if (lbRes.ok) {
-        const lbData = await lbRes.json();
-        setOnePieceLeaderboard(lbData.leaderboard || []);
+      // Use the public One Piece API
+      const res = await fetch('/api/community/one-piece');
+      if (res.ok) {
+        const data = await res.json();
+        
+        // Set leaderboard (for WANTED list)
+        setOnePieceLeaderboard(data.leaderboard || []);
+        
+        // Set current emperor
+        setCurrentEmperor(data.currentEmperor || null);
+        
+        // Set hall of fame
+        setHallOfFame(data.hallOfFame || []);
+        
+        // Set bounty hunter status
+        setBountyHunterStatus(data.bountyHunterStatus || {
+          isWanted: false,
+          isHunter: false,
+          rank: null,
+          xp: 0,
+          optInOpen: true,
+          nextEventDate: null,
+        });
       }
-
-      // Load Emperor data
-      const empRes = await fetch('/api/hq/emperors');
-      if (empRes.ok) {
-        const empData = await empRes.json();
-        if (empData.rankings && empData.rankings.length > 0) {
-          // Current emperor is #1 this month
-          const topPlayer = empData.rankings[0];
-          setCurrentEmperor({
-            id: topPlayer.id,
-            name: topPlayer.name,
-            avatar: topPlayer.avatar,
-            xp: topPlayer.monthlyXp,
-            month: new Date().toLocaleString('en-US', { month: 'long' }),
-            year: new Date().getFullYear(),
-          });
-        }
-        setHallOfFame(empData.hallOfFame || []);
-      }
-
-      // Load Bounty Hunter status (placeholder - will need API)
-      // For now, use mock data
-      setBountyHunterStatus({
-        isWanted: false,
-        isHunter: false,
-        rank: null,
-        xp: 0,
-        optInOpen: true, // Would come from event schedule
-        nextEventDate: 'January 25, 2026',
-      });
-
     } catch (error) {
       console.error('Error loading One Piece data:', error);
     } finally {
