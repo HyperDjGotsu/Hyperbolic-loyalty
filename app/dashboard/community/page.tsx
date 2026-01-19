@@ -846,7 +846,7 @@ export default function CommunityPage() {
               </span>
             )}
             {/* Show red dot for pending requests */}
-            {'requestCount' in tab && tab.requestCount > 0 && (
+            {'requestCount' in tab && tab.requestCount !== undefined && tab.requestCount > 0 && (
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
             )}
           </button>
