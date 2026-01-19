@@ -71,6 +71,24 @@ interface PrivacySettings {
   showRealName: boolean;
 }
 
+interface Emperor {
+  id: string;
+  name: string;
+  avatar: PlayerAvatar;
+  xp: number;
+  month: string;
+  year: number;
+}
+
+interface BountyHunterStatus {
+  isWanted: boolean;
+  isHunter: boolean;
+  rank: number | null;
+  xp: number;
+  optInOpen: boolean;
+  nextEventDate: string | null;
+}
+
 // Privacy options configuration
 const privacyOptions = {
   profileVisibility: [
@@ -115,10 +133,12 @@ const ALL_LEADERBOARD_GAMES = [
 
 export default function CommunityPage() {
   const { user, isLoaded } = useUser();
-  const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'discover' | 'leaderboard'>('leaderboard');
+  // Updated tabs: removed 'requests' and 'discover', added 'one_piece'
+  const [activeTab, setActiveTab] = useState<'leaderboard' | 'friends' | 'one_piece'>('leaderboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false); // New search modal state
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardGame, setLeaderboardGame] = useState('overall');
@@ -139,8 +159,16 @@ export default function CommunityPage() {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [requestSent, setRequestSent] = useState<Set<string>>(new Set());
   const [unfriending, setUnfriending] = useState<string | null>(null);
+  
+  // One Piece tab state
+  const [onePieceLeaderboard, setOnePieceLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [currentEmperor, setCurrentEmperor] = useState<Emperor | null>(null);
+  const [hallOfFame, setHallOfFame] = useState<Emperor[]>([]);
+  const [bountyHunterStatus, setBountyHunterStatus] = useState<BountyHunterStatus | null>(null);
+  const [onePieceLoading, setOnePieceLoading] = useState(false);
+  const [optingIn, setOptingIn] = useState(false);
 
-  // Load functions as callbacks so they can be called from anywhere
+  // Load functions as callbacks
   const loadFriends = useCallback(async () => {
     setFriendsLoading(true);
     try {
@@ -187,19 +215,65 @@ export default function CommunityPage() {
     }
   }, []);
 
-  // Handle tab change - refresh data for that tab
-  const handleTabChange = (tab: 'friends' | 'requests' | 'discover' | 'leaderboard') => {
+  // Load One Piece specific data
+  const loadOnePieceData = useCallback(async () => {
+    setOnePieceLoading(true);
+    try {
+      // Load One Piece leaderboard (for WANTED list)
+      const lbRes = await fetch('/api/community/leaderboard?limit=10&game=one_piece');
+      if (lbRes.ok) {
+        const lbData = await lbRes.json();
+        setOnePieceLeaderboard(lbData.leaderboard || []);
+      }
+
+      // Load Emperor data
+      const empRes = await fetch('/api/hq/emperors');
+      if (empRes.ok) {
+        const empData = await empRes.json();
+        if (empData.rankings && empData.rankings.length > 0) {
+          // Current emperor is #1 this month
+          const topPlayer = empData.rankings[0];
+          setCurrentEmperor({
+            id: topPlayer.id,
+            name: topPlayer.name,
+            avatar: topPlayer.avatar,
+            xp: topPlayer.monthlyXp,
+            month: new Date().toLocaleString('en-US', { month: 'long' }),
+            year: new Date().getFullYear(),
+          });
+        }
+        setHallOfFame(empData.hallOfFame || []);
+      }
+
+      // Load Bounty Hunter status (placeholder - will need API)
+      // For now, use mock data
+      setBountyHunterStatus({
+        isWanted: false,
+        isHunter: false,
+        rank: null,
+        xp: 0,
+        optInOpen: true, // Would come from event schedule
+        nextEventDate: 'January 25, 2026',
+      });
+
+    } catch (error) {
+      console.error('Error loading One Piece data:', error);
+    } finally {
+      setOnePieceLoading(false);
+    }
+  }, []);
+
+  // Handle tab change
+  const handleTabChange = (tab: 'leaderboard' | 'friends' | 'one_piece') => {
     setActiveTab(tab);
-    setSearchQuery('');
-    setSearchResults([]);
     
-    // Refresh data for the selected tab
     if (tab === 'friends') {
       loadFriends();
-    } else if (tab === 'requests') {
-      loadFriendRequests();
+      loadFriendRequests(); // Also load requests for inline display
     } else if (tab === 'leaderboard') {
       loadLeaderboard(leaderboardGame);
+    } else if (tab === 'one_piece') {
+      loadOnePieceData();
     }
   };
 
@@ -285,16 +359,16 @@ export default function CommunityPage() {
     }
   };
 
-  // Toggle a game in favorites (for picker)
+  // Toggle a game in favorites
   const toggleFavorite = (gameId: string) => {
-    if (gameId === 'overall') return; // Overall is always included
+    if (gameId === 'overall') return;
     setFavoriteGames(prev => {
       if (prev.includes(gameId)) {
         return prev.filter(id => id !== gameId);
       } else if (prev.length < 8) {
         return [...prev, gameId];
       }
-      return prev; // Max 8 favorites
+      return prev;
     });
   };
 
@@ -330,7 +404,7 @@ export default function CommunityPage() {
     }
   }, [isLoaded, user]);
 
-  // Search players
+  // Search players (for search modal)
   useEffect(() => {
     const searchPlayers = async () => {
       if (searchQuery.length < 2) {
@@ -378,7 +452,6 @@ export default function CommunityPage() {
 
   // Send friend request
   const sendFriendRequest = async (targetUuid: string, displayId: string) => {
-    console.log('Sending friend request to:', targetUuid, displayId);
     setSendingRequest(displayId);
     try {
       const res = await fetch('/api/community/friend-requests', {
@@ -386,23 +459,16 @@ export default function CommunityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targetPlayerId: targetUuid }),
       });
-      const data = await res.json();
-      console.log('Friend request response:', data);
       
       if (res.ok) {
-        // Mark as sent locally
         setRequestSent(prev => new Set(prev).add(displayId));
-        // Update search results to show sent status
         setSearchResults(prev => prev.map(r => 
           r.id === displayId ? { ...r, isFriend: true } : r
         ));
         setSelectedMember(null);
-      } else {
-        alert(data.error || 'Failed to send request');
       }
     } catch (error) {
       console.error('Error sending friend request:', error);
-      alert('Failed to send friend request');
     } finally {
       setSendingRequest(null);
     }
@@ -412,129 +478,117 @@ export default function CommunityPage() {
   const respondToRequest = async (friendshipId: string, action: 'accept' | 'decline') => {
     setRespondingTo(friendshipId);
     try {
-      const res = await fetch('/api/community/respond-request', {
-        method: 'POST',
+      const res = await fetch(`/api/community/friend-requests/${friendshipId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ friendshipId, action }),
+        body: JSON.stringify({ action }),
       });
+      
       if (res.ok) {
-        // Remove from local state immediately
         setFriendRequests(prev => prev.filter(r => r.friendshipId !== friendshipId));
-        
-        // Refresh both lists
-        await Promise.all([
-          loadFriends(),
-          loadFriendRequests()
-        ]);
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to respond to request');
+        if (action === 'accept') {
+          loadFriends();
+        }
       }
     } catch (error) {
       console.error('Error responding to request:', error);
-      alert('Failed to respond to request');
     } finally {
       setRespondingTo(null);
     }
   };
 
-  // Unfriend someone
-  const unfriend = async (friendUuid: string, displayId: string) => {
-    if (!confirm('Are you sure you want to remove this friend?')) return;
-    
+  // Unfriend
+  const unfriend = async (targetUuid: string, displayId: string) => {
     setUnfriending(displayId);
     try {
-      const res = await fetch('/api/community/unfriend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ friendId: friendUuid }),
+      const res = await fetch(`/api/community/friends/${targetUuid}`, {
+        method: 'DELETE',
       });
+      
       if (res.ok) {
-        // Remove from local state
-        setFriends(prev => prev.filter(f => f.odid !== friendUuid));
-        // Clear request sent status so they can be re-added
-        setRequestSent(prev => {
-          const next = new Set(prev);
-          next.delete(displayId);
-          return next;
-        });
+        setFriends(prev => prev.filter(f => f.odid !== targetUuid));
         setSelectedMember(null);
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to unfriend');
       }
     } catch (error) {
       console.error('Error unfriending:', error);
-      alert('Failed to unfriend');
     } finally {
       setUnfriending(null);
     }
   };
 
-  // Check if user is a friend
+  // Check if player is a friend
   const isFriend = (odid: string) => {
     return friends.some(f => f.odid === odid);
   };
 
-  // Member card component
-  const MemberCard = ({ member, isLeaderboard = false }: { member: SearchResult | LeaderboardEntry | Friend; isLeaderboard?: boolean }) => {
-    const isPrivate = 'privacy' in member && member.privacy?.profileVisibility === 'private';
-    const isFriendsOnly = 'privacy' in member && member.privacy?.profileVisibility === 'friends';
-    const memberOdid = 'odid' in member ? member.odid : null;
-    const memberIsFriend = memberOdid ? isFriend(memberOdid) : ('isFriend' in member && member.isFriend);
-    const canView = !isPrivate && (!isFriendsOnly || memberIsFriend);
-    const alreadySent = requestSent.has(member.id) || ('isFriend' in member && member.isFriend);
+  // Opt in as Hunter for Bounty Hunter Night
+  const optInAsHunter = async () => {
+    setOptingIn(true);
+    try {
+      // TODO: Implement API call
+      // const res = await fetch('/api/bounty-hunter/opt-in', { method: 'POST' });
+      setBountyHunterStatus(prev => prev ? { ...prev, isHunter: true } : null);
+    } catch (error) {
+      console.error('Error opting in:', error);
+    } finally {
+      setOptingIn(false);
+    }
+  };
 
+  // Member Card Component
+  const MemberCard = ({ member }: { member: SearchResult | LeaderboardEntry | Friend }) => {
+    const isAnonymous = 'hidden' in member && member.hidden;
+    const displayName = isAnonymous ? 'Anonymous' : member.name;
+    const memberStatus = 'status' in member ? member.status : null;
+    const memberOdid = 'odid' in member ? member.odid : null;
+    
     return (
       <div
-        onClick={() => setSelectedMember(member)}
-        className="bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700/50 cursor-pointer hover:border-cyan-500/30 transition-colors"
+        onClick={() => !isAnonymous && setSelectedMember(member)}
+        className={`bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700/50 ${
+          !isAnonymous ? 'cursor-pointer hover:border-cyan-500/50' : ''
+        }`}
       >
-        <Avatar avatar={member.avatar} size="md" showBadge={canView} isOnline={null} />
+        <Avatar
+          avatar={isAnonymous ? {
+            type: 'emoji',
+            base: '❓',
+            photoUrl: null,
+            background: '#64748b',
+            frame: 'none',
+            badge: null,
+          } : member.avatar}
+          size="md"
+          isOnline={'isOnline' in member ? member.isOnline : null}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white truncate">
-              {'hidden' in member && member.hidden ? 'Anonymous' : member.name}
-            </span>
-            {isPrivate && <span className="text-slate-500">🔒</span>}
-            {isFriendsOnly && !memberIsFriend && <span className="text-slate-500">👥</span>}
+            <span className="font-bold text-white truncate">{displayName}</span>
+            {'rank' in member && member.rank <= 5 && (
+              <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">WANTED</span>
+            )}
           </div>
-          {canView || isLeaderboard ? (
-            <>
-              <div className="text-slate-400 text-sm">{'title' in member ? member.title : `Level ${member.level}`}</div>
-              {'status' in member && member.status && (
-                <div className="text-cyan-400 text-xs mt-0.5 truncate">{member.status}</div>
-              )}
-              {!('status' in member && member.status) && (
-                <div className="text-slate-500 text-xs">
-                  Level {member.level} • {member.totalXp?.toLocaleString()} XP
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-slate-500 text-sm italic">
-              {isPrivate ? 'Private profile' : 'Friends only'}
-            </div>
+          {memberStatus && (
+            <div className="text-slate-400 text-xs truncate">{memberStatus}</div>
           )}
+          <div className="flex items-center gap-2 mt-0.5">
+            {'level' in member && member.level && (
+              <span className="text-xs text-slate-500">Lv.{member.level}</span>
+            )}
+            {'totalXp' in member && member.totalXp !== null && (
+              <span className="text-xs text-cyan-400">{member.totalXp?.toLocaleString()} XP</span>
+            )}
+          </div>
         </div>
-        {memberIsFriend || alreadySent ? (
-          <span className="text-green-500 text-xl">{memberIsFriend && !requestSent.has(member.id) ? '✓' : '📨'}</span>
-        ) : (
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation();
-              if ('odid' in member && member.odid) {
-                sendFriendRequest(member.odid, member.id);
-              } else {
-                console.error('No odid found for member:', member);
-                alert('Cannot send request - missing player ID');
-              }
-            }}
-            disabled={sendingRequest === member.id}
-            className="px-3 py-1 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-500 disabled:opacity-50"
-          >
-            {sendingRequest === member.id ? '...' : 'Add'}
-          </button>
+        {'rank' in member && (
+          <div className={`text-2xl font-bold ${
+            member.rank === 1 ? 'text-yellow-400' :
+            member.rank === 2 ? 'text-slate-300' :
+            member.rank === 3 ? 'text-amber-600' :
+            'text-slate-500'
+          }`}>
+            #{member.rank}
+          </div>
         )}
       </div>
     );
@@ -558,8 +612,7 @@ export default function CommunityPage() {
             <div>
               <div className="font-bold text-white">Your Safety Matters</div>
               <div className="text-slate-300 text-sm mt-1">
-                Control who can see your profile, find you in search, and contact you. 
-                Your real name is never shown unless you enable it.
+                Control who can see your profile, find you in search, and contact you.
               </div>
             </div>
           </div>
@@ -605,10 +658,6 @@ export default function CommunityPage() {
               value={privacySettings.showAsAnonymous}
               onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showAsAnonymous: v }))}
             />
-            <div className="bg-slate-700/30 rounded-lg p-3 text-slate-400 text-xs">
-              💡 Your rank always appears on the leaderboard to keep competition fair. 
-              Anonymous mode hides your name but keeps your position accurate.
-            </div>
           </div>
         </div>
 
@@ -629,34 +678,6 @@ export default function CommunityPage() {
               description="Let others send you friend requests"
               value={privacySettings.allowFriendRequests}
               onChange={(v) => setPrivacySettings((prev) => ({ ...prev, allowFriendRequests: v }))}
-            />
-          </div>
-        </div>
-
-        {/* What Others See */}
-        <div>
-          <h3 className="font-bold text-white mb-3">👀 What Others See</h3>
-          <div className="space-y-2">
-            <ToggleSetting
-              icon="📋"
-              label="Show Activity"
-              description="Show recent XP activity to others"
-              value={privacySettings.showActivity}
-              onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showActivity: v }))}
-            />
-            <ToggleSetting
-              icon="🎮"
-              label="Show Games"
-              description="Show which games you play"
-              value={privacySettings.showGames}
-              onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showGames: v }))}
-            />
-            <ToggleSetting
-              icon="📛"
-              label="Show Real Name"
-              description="Display your real name on profile"
-              value={privacySettings.showRealName}
-              onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showRealName: v }))}
             />
           </div>
         </div>
@@ -713,6 +734,63 @@ export default function CommunityPage() {
     </div>
   );
 
+  // Search Modal Component
+  const SearchModal = () => (
+    <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
+      <div className="p-4 border-b border-slate-800">
+        <div className="flex items-center gap-3">
+          <button onClick={() => {
+            setShowSearchModal(false);
+            setSearchQuery('');
+            setSearchResults([]);
+          }} className="text-slate-400">
+            ← Back
+          </button>
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search players..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+              className="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 px-4 pl-10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+            />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
+            {isSearching && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 animate-spin">⏳</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto p-4">
+        {searchQuery.length >= 2 ? (
+          searchResults.length > 0 ? (
+            <div className="space-y-3">
+              <h3 className="text-slate-400 text-sm mb-2">
+                Results — {searchResults.length}
+              </h3>
+              {searchResults.map((result) => (
+                <MemberCard key={result.id} member={result} />
+              ))}
+            </div>
+          ) : !isSearching ? (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">🔍</div>
+              <div className="text-white font-bold">No players found</div>
+              <div className="text-slate-500 text-sm">Try a different search term</div>
+            </div>
+          ) : null
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-4">🔍</div>
+            <div className="text-white font-bold">Find Players</div>
+            <div className="text-slate-500 text-sm">Search by name or player ID (HYP-XXXXX)</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
@@ -725,44 +803,35 @@ export default function CommunityPage() {
             </h1>
             <p className="text-slate-400 text-sm">{leaderboard.length} players ranked</p>
           </div>
-          <button 
-            onClick={() => setShowPrivacySettings(true)}
-            className="bg-slate-800/80 p-2 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
-          >
-            <span className="text-xl">🛡️</span>
-          </button>
-        </div>
-
-        {/* Search - Only show on Discover tab */}
-        {activeTab === 'discover' && (
-          <div className="relative mt-4">
-            <input
-              type="text"
-              placeholder="Search players..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 px-4 pl-10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
-            {isSearching && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 animate-spin">⏳</span>
-            )}
+          {/* Header buttons: Search + Privacy */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowSearchModal(true)}
+              className="bg-slate-800/80 p-2 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
+            >
+              <span className="text-xl">🔍</span>
+            </button>
+            <button 
+              onClick={() => setShowPrivacySettings(true)}
+              className="bg-slate-800/80 p-2 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
+            >
+              <span className="text-xl">🛡️</span>
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - Simplified: Ranks, Friends, One Piece */}
       <div className="flex border-b border-slate-800">
         {[
-          { id: 'leaderboard' as const, label: 'Ranks', count: leaderboard.length },
-          { id: 'friends' as const, label: 'Friends', count: friends.length },
-          { id: 'requests' as const, label: 'Requests', count: friendRequests.length },
-          { id: 'discover' as const, label: 'Discover' },
+          { id: 'leaderboard' as const, label: '🏆 Ranks', icon: '🏆' },
+          { id: 'friends' as const, label: '👥 Friends', count: friends.length, requestCount: friendRequests.length },
+          { id: 'one_piece' as const, label: '🏴‍☠️ One Piece', icon: '🏴‍☠️' },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            className={`flex-1 py-3 text-sm font-medium ${
+            className={`flex-1 py-3 text-sm font-medium relative ${
               activeTab === tab.id
                 ? 'text-cyan-400 border-b-2 border-cyan-400'
                 : 'text-slate-500'
@@ -770,13 +839,15 @@ export default function CommunityPage() {
           >
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span
-                className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
-                  activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800'
-                }`}
-              >
+              <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
+                activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800'
+              }`}>
                 {tab.count}
               </span>
+            )}
+            {/* Show red dot for pending requests */}
+            {'requestCount' in tab && tab.requestCount > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
             )}
           </button>
         ))}
@@ -784,7 +855,7 @@ export default function CommunityPage() {
 
       {/* Content */}
       <div className="p-4">
-        {/* Tab Content */}
+        {/* Leaderboard Tab */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-3">
             {/* Game Selector */}
@@ -803,7 +874,6 @@ export default function CommunityPage() {
                   <span className="text-sm font-medium">{game.name}</span>
                 </button>
               ))}
-              {/* Edit Favorites Button */}
               <button
                 onClick={() => setShowFavoritesPicker(true)}
                 className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-slate-700/50 text-slate-400 hover:bg-slate-700 hover:text-white transition-all border border-dashed border-slate-600"
@@ -840,64 +910,9 @@ export default function CommunityPage() {
                 <div className="text-slate-400">Loading rankings...</div>
               </div>
             ) : leaderboard.length > 0 ? (
-              leaderboard.map((entry) => {
-                const currentGame = ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame);
-                const isWanted = leaderboardGame === 'one_piece' && entry.rank <= 5;
-                
-                return (
-                  <div
-                    key={entry.id}
-                    className={`bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border ${
-                      isWanted
-                        ? 'border-red-500/50 bg-red-900/10'
-                        : entry.id === currentPlayerId 
-                        ? 'border-cyan-500/50' 
-                        : 'border-slate-700/50'
-                    }`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                        entry.rank === 1
-                          ? 'bg-yellow-500 text-black'
-                          : entry.rank === 2
-                          ? 'bg-slate-400 text-black'
-                          : entry.rank === 3
-                          ? 'bg-orange-600 text-white'
-                          : isWanted
-                          ? 'bg-red-600 text-white'
-                          : 'bg-slate-700 text-slate-400'
-                      }`}
-                    >
-                      {entry.rank}
-                    </div>
-                    <Avatar avatar={entry.avatar} size="sm" showBadge={false} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white truncate">
-                          {entry.hidden ? 'Anonymous' : entry.name}
-                        </span>
-                        {entry.id === currentPlayerId && (
-                          <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full">
-                            You
-                          </span>
-                        )}
-                        {isWanted && (
-                          <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
-                            WANTED
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-slate-500 text-xs">Level {entry.level}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`font-bold ${isWanted ? 'text-red-400' : 'text-cyan-400'}`}>
-                        {entry.totalXp.toLocaleString()}
-                      </div>
-                      <div className="text-slate-500 text-xs">{currentGame?.currency || 'XP'}</div>
-                    </div>
-                  </div>
-                );
-              })
+              leaderboard.map((entry) => (
+                <MemberCard key={entry.id} member={entry} />
+              ))
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏆</div>
@@ -908,97 +923,226 @@ export default function CommunityPage() {
           </div>
         )}
 
+        {/* Friends Tab - Now includes pending requests */}
         {activeTab === 'friends' && (
           <div className="space-y-3">
+            {/* Pending Requests Section (inline) */}
+            {friendRequests.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-orange-400">
+                    ⚠️ Pending Requests ({friendRequests.length})
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  {friendRequests.map((request) => (
+                    <div key={request.friendshipId} className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar avatar={request.avatar} size="sm" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-white truncate">{request.name}</div>
+                          <div className="text-slate-500 text-xs">{request.timestamp}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => respondToRequest(request.friendshipId, 'accept')}
+                            disabled={respondingTo === request.friendshipId}
+                            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50"
+                          >
+                            ✓
+                          </button>
+                          <button 
+                            onClick={() => respondToRequest(request.friendshipId, 'decline')}
+                            disabled={respondingTo === request.friendshipId}
+                            className="p-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 disabled:opacity-50"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Friends List */}
             {friendsLoading ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4 animate-bounce">👥</div>
                 <div className="text-slate-400">Loading friends...</div>
               </div>
             ) : friends.length > 0 ? (
-              friends.map((friend) => (
-                <MemberCard key={friend.id} member={friend} />
-              ))
+              <>
+                <h3 className="text-sm font-medium text-slate-400 mb-2">
+                  Friends ({friends.length})
+                </h3>
+                {friends.map((friend) => (
+                  <MemberCard key={friend.id} member={friend} />
+                ))}
+              </>
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">👥</div>
                 <div className="text-white font-bold">No friends yet</div>
-                <div className="text-slate-500 text-sm">Go to Discover to find players!</div>
+                <div className="text-slate-500 text-sm">Use the 🔍 search to find players!</div>
               </div>
             )}
           </div>
         )}
 
-        {activeTab === 'requests' && (
-          <div className="space-y-3">
-            {requestsLoading ? (
+        {/* One Piece Tab - Emperor + Bounty Hunter Night */}
+        {activeTab === 'one_piece' && (
+          <div className="space-y-4">
+            {onePieceLoading ? (
               <div className="text-center py-8">
-                <div className="text-4xl mb-4 animate-bounce">📬</div>
-                <div className="text-slate-400">Loading requests...</div>
+                <div className="text-4xl mb-4 animate-bounce">🏴‍☠️</div>
+                <div className="text-slate-400">Loading...</div>
               </div>
-            ) : friendRequests.length > 0 ? (
-              friendRequests.map((request) => (
-                <div key={request.friendshipId} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-                  <div className="flex items-center gap-3">
-                    <Avatar avatar={request.avatar} size="md" />
-                    <div className="flex-1">
-                      <div className="font-bold text-white">{request.name}</div>
-                      <div className="text-slate-500 text-xs">{request.timestamp}</div>
+            ) : (
+              <>
+                {/* Emperor of the Month */}
+                <div className="bg-gradient-to-r from-yellow-600/20 via-orange-500/20 to-red-500/20 border border-yellow-500/40 rounded-xl p-4">
+                  <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-3">
+                    👑 Emperor of the Month
+                  </h3>
+                  {currentEmperor ? (
+                    <div className="flex items-center gap-4">
+                      <Avatar avatar={currentEmperor.avatar} size="lg" />
+                      <div>
+                        <div className="text-xl font-bold text-white">{currentEmperor.name}</div>
+                        <div className="text-yellow-400">{currentEmperor.month} {currentEmperor.year}</div>
+                        <div className="text-slate-400 text-sm">{currentEmperor.xp.toLocaleString()} Berries</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-slate-400 text-center py-4">
+                      No emperor crowned yet this month
+                    </div>
+                  )}
+                </div>
+
+                {/* Hall of Fame */}
+                {hallOfFame.length > 0 && (
+                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                    <h3 className="text-sm font-bold text-purple-400 uppercase tracking-wider mb-3">
+                      🏆 Hall of Fame
+                    </h3>
+                    <div className="space-y-2">
+                      {hallOfFame.slice(0, 5).map((emperor, i) => (
+                        <div key={emperor.id} className="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg">
+                          <Avatar avatar={emperor.avatar} size="sm" />
+                          <div className="flex-1">
+                            <div className="text-white text-sm font-medium">{emperor.name}</div>
+                            <div className="text-slate-500 text-xs">{emperor.month} {emperor.year}</div>
+                          </div>
+                          <div className="text-yellow-400 text-sm">{emperor.xp.toLocaleString()}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3">
-                    <button 
-                      onClick={() => respondToRequest(request.friendshipId, 'accept')}
-                      disabled={respondingTo === request.friendshipId}
-                      className="flex-1 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-500 disabled:opacity-50"
+                )}
+
+                {/* Bounty Hunter Night */}
+                <div className="bg-gradient-to-r from-red-600/20 via-red-500/10 to-slate-800/50 border border-red-500/40 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider">
+                      🎯 Bounty Hunter Night
+                    </h3>
+                    {bountyHunterStatus?.nextEventDate && (
+                      <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full">
+                        {bountyHunterStatus.nextEventDate}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-slate-400 text-sm mb-4">
+                    Monthly high-stakes event! Top 5 are WANTED. Others can opt-in as Hunters to claim their bounties.
+                  </p>
+
+                  {/* WANTED List (Top 5) */}
+                  <div className="mb-4">
+                    <h4 className="text-xs font-medium text-red-400 mb-2">🏴‍☠️ WANTED (Top 5)</h4>
+                    <div className="space-y-1">
+                      {onePieceLeaderboard.slice(0, 5).map((entry, i) => (
+                        <div key={entry.id} className="flex items-center gap-2 p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                          <span className="text-red-400 font-bold w-6">#{i + 1}</span>
+                          <Avatar avatar={entry.hidden ? {
+                            type: 'emoji',
+                            base: '❓',
+                            photoUrl: null,
+                            background: '#64748b',
+                            frame: 'none',
+                            badge: null,
+                          } : entry.avatar} size="sm" />
+                          <span className="text-white text-sm flex-1 truncate">
+                            {entry.hidden ? 'Anonymous' : entry.name}
+                          </span>
+                          <span className="text-red-400 text-xs">{entry.totalXp.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Your Status */}
+                  {bountyHunterStatus && (
+                    <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
+                      <h4 className="text-xs font-medium text-slate-400 mb-2">Your Status</h4>
+                      <div className="flex items-center gap-2">
+                        {bountyHunterStatus.isWanted ? (
+                          <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium border border-red-500/30">
+                            🎯 WANTED (Rank #{bountyHunterStatus.rank})
+                          </span>
+                        ) : bountyHunterStatus.isHunter ? (
+                          <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium border border-green-500/30">
+                            🏹 Hunter
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-slate-700 text-slate-400 rounded-full text-sm">
+                            😐 Civilian
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Opt-in Button */}
+                  {bountyHunterStatus && !bountyHunterStatus.isWanted && !bountyHunterStatus.isHunter && bountyHunterStatus.optInOpen && (
+                    <GlowButton
+                      color="orange"
+                      onClick={optInAsHunter}
+                      disabled={optingIn}
+                      className="w-full py-3"
                     >
-                      {respondingTo === request.friendshipId ? '...' : 'Accept'}
-                    </button>
-                    <button 
-                      onClick={() => respondToRequest(request.friendshipId, 'decline')}
-                      disabled={respondingTo === request.friendshipId}
-                      className="flex-1 py-2 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600 disabled:opacity-50"
-                    >
-                      Decline
-                    </button>
+                      {optingIn ? 'Opting in...' : '🏹 Become a Hunter'}
+                    </GlowButton>
+                  )}
+
+                  {/* Point Stakes Info */}
+                  <div className="mt-4 pt-4 border-t border-slate-700/50">
+                    <h4 className="text-xs font-medium text-slate-400 mb-2">Point Stakes (Round 1)</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-slate-900/50 rounded p-2">
+                        <div className="text-green-400">Hunter upsets WANTED</div>
+                        <div className="text-white">+30 / -25</div>
+                      </div>
+                      <div className="bg-slate-900/50 rounded p-2">
+                        <div className="text-red-400">WANTED defends</div>
+                        <div className="text-white">+15 / -20</div>
+                      </div>
+                      <div className="bg-slate-900/50 rounded p-2">
+                        <div className="text-slate-400">Hunter vs Hunter</div>
+                        <div className="text-white">+15 / -15</div>
+                      </div>
+                      <div className="bg-slate-900/50 rounded p-2">
+                        <div className="text-orange-400">WANTED vs WANTED</div>
+                        <div className="text-white">+20 / -20</div>
+                      </div>
+                    </div>
+                    <p className="text-slate-500 text-xs mt-2">* Plus normal +10 for match win</p>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">📬</div>
-                <div className="text-white font-bold">No Pending Requests</div>
-                <div className="text-slate-500 text-sm">Friend requests will appear here</div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'discover' && (
-          <div className="space-y-3">
-            {searchQuery.length >= 2 ? (
-              searchResults.length > 0 ? (
-                <>
-                  <h3 className="text-slate-400 text-sm mb-2">
-                    Results — {searchResults.length}
-                  </h3>
-                  {searchResults.map((result) => (
-                    <MemberCard key={result.id} member={result} />
-                  ))}
-                </>
-              ) : !isSearching ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-4">🔍</div>
-                  <div className="text-white font-bold">No players found</div>
-                  <div className="text-slate-500 text-sm">Try a different search term</div>
-                </div>
-              ) : null
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">🔍</div>
-                <div className="text-white font-bold">Find Players</div>
-                <div className="text-slate-500 text-sm">Search by name or player ID (HYP-XXXXX)</div>
-              </div>
+              </>
             )}
           </div>
         )}
@@ -1048,7 +1192,6 @@ export default function CommunityPage() {
             </div>
             <div className="px-4 -mt-4 relative z-10 flex gap-3">
               {('odid' in selectedMember && isFriend(selectedMember.odid)) ? (
-                // Already friends - show unfriend option
                 <button 
                   onClick={() => {
                     if ('odid' in selectedMember && selectedMember.odid) {
@@ -1061,20 +1204,16 @@ export default function CommunityPage() {
                   {unfriending === selectedMember.id ? 'Removing...' : '✓ Friends (tap to unfriend)'}
                 </button>
               ) : ('isFriend' in selectedMember && selectedMember.isFriend) || requestSent.has(selectedMember.id) ? (
-                // Request sent
                 <button className="flex-1 py-3 bg-slate-800 text-green-400 rounded-xl font-bold border border-green-500/30">
                   📨 Request Sent
                 </button>
               ) : (
-                // Not friends - show add button
                 <GlowButton 
                   color="cyan" 
                   className="flex-1 py-3"
                   onClick={() => {
                     if ('odid' in selectedMember && selectedMember.odid) {
                       sendFriendRequest(selectedMember.odid, selectedMember.id);
-                    } else {
-                      alert('Cannot send request - missing player ID');
                     }
                   }}
                   disabled={sendingRequest !== null}
@@ -1095,6 +1234,9 @@ export default function CommunityPage() {
 
       {/* Privacy Settings Modal */}
       {showPrivacySettings && <PrivacySettingsModal />}
+
+      {/* Search Modal */}
+      {showSearchModal && <SearchModal />}
 
       {/* Favorites Picker Modal */}
       {showFavoritesPicker && (
@@ -1118,7 +1260,7 @@ export default function CommunityPage() {
 
           <div className="flex-1 overflow-auto p-4">
             <p className="text-slate-400 text-sm mb-4">
-              Select up to 8 games to show on your leaderboard tabs. Overall is always included.
+              Select up to 8 games to show on your leaderboard tabs.
             </p>
 
             <div className="space-y-2">
