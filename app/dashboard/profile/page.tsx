@@ -148,6 +148,21 @@ export default function ProfilePage() {
     }
   }, []);
 
+  // Load favorite games
+  const loadFavoriteGames = useCallback(async () => {
+    try {
+      const res = await fetch('/api/player/favorite-games');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.favorites && data.favorites.length > 0) {
+          setFavoriteGames(data.favorites);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading favorite games:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (isLoaded && user) {
       loadPlayerData();
@@ -194,21 +209,6 @@ export default function ProfilePage() {
   const handleStatusChange = (newStatus: string | null) => {
     setPlayerData(prev => prev ? { ...prev, status: newStatus } : null);
   };
-
-  // Load favorite games
-  const loadFavoriteGames = useCallback(async () => {
-    try {
-      const res = await fetch('/api/player/favorite-games');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.favorites && data.favorites.length > 0) {
-          setFavoriteGames(data.favorites);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading favorite games:', error);
-    }
-  }, []);
 
   // Save favorite games
   const saveFavoriteGames = async () => {
