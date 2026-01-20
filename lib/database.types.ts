@@ -14,6 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
+      banners: {
+        Row: {
+          badge: string | null
+          color_from: string | null
+          color_to: string | null
+          created_at: string | null
+          ends_at: string | null
+          event_id: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          link_url: string | null
+          sort_order: number | null
+          starts_at: string | null
+          subtitle: string | null
+          title: string
+          twitch_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          badge?: string | null
+          color_from?: string | null
+          color_to?: string | null
+          created_at?: string | null
+          ends_at?: string | null
+          event_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          sort_order?: number | null
+          starts_at?: string | null
+          subtitle?: string | null
+          title: string
+          twitch_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          badge?: string | null
+          color_from?: string | null
+          color_to?: string | null
+          created_at?: string | null
+          ends_at?: string | null
+          event_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          sort_order?: number | null
+          starts_at?: string | null
+          subtitle?: string | null
+          title?: string
+          twitch_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banners_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_hunter_events: {
+        Row: {
+          created_at: string | null
+          event_date: string
+          id: string
+          month_key: string
+          opt_in_closes_at: string
+          opt_in_opens_at: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_date: string
+          id?: string
+          month_key: string
+          opt_in_closes_at: string
+          opt_in_opens_at: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_date?: string
+          id?: string
+          month_key?: string
+          opt_in_closes_at?: string
+          opt_in_opens_at?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bounty_hunter_participants: {
+        Row: {
+          event_id: string | null
+          id: string
+          opted_in_at: string | null
+          player_id: string | null
+          role: string
+        }
+        Insert: {
+          event_id?: string | null
+          id?: string
+          opted_in_at?: string | null
+          player_id?: string | null
+          role: string
+        }
+        Update: {
+          event_id?: string | null
+          id?: string
+          opted_in_at?: string | null
+          player_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_hunter_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_hunter_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_participants_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_spins: {
         Row: {
           created_at: string | null
@@ -48,143 +185,6 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bounty_hunter_events: {
-        Row: {
-          id: string
-          event_date: string
-          month_key: string
-          opt_in_opens_at: string
-          opt_in_closes_at: string
-          status: string
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          event_date: string
-          month_key: string
-          opt_in_opens_at: string
-          opt_in_closes_at: string
-          status?: string
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          event_date?: string
-          month_key?: string
-          opt_in_opens_at?: string
-          opt_in_closes_at?: string
-          status?: string
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      bounty_hunter_participants: {
-        Row: {
-          id: string
-          event_id: string
-          player_id: string
-          role: string
-          opted_in_at: string | null
-        }
-        Insert: {
-          id?: string
-          event_id: string
-          player_id: string
-          role: string
-          opted_in_at?: string | null
-        }
-        Update: {
-          id?: string
-          event_id?: string
-          player_id?: string
-          role?: string
-          opted_in_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bounty_hunter_participants_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_hunter_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bounty_hunter_participants_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      banners: {
-        Row: {
-          id: string
-          title: string
-          subtitle: string | null
-          icon: string | null
-          color_from: string | null
-          color_to: string | null
-          badge: string | null
-          link_url: string | null
-          event_id: string | null
-          is_active: boolean | null
-          sort_order: number | null
-          starts_at: string | null
-          ends_at: string | null
-          twitch_url: string | null
-          youtube_url: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          title: string
-          subtitle?: string | null
-          icon?: string | null
-          color_from?: string | null
-          color_to?: string | null
-          badge?: string | null
-          link_url?: string | null
-          event_id?: string | null
-          is_active?: boolean | null
-          sort_order?: number | null
-          starts_at?: string | null
-          ends_at?: string | null
-          twitch_url?: string | null
-          youtube_url?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          title?: string
-          subtitle?: string | null
-          icon?: string | null
-          color_from?: string | null
-          color_to?: string | null
-          badge?: string | null
-          link_url?: string | null
-          event_id?: string | null
-          is_active?: boolean | null
-          sort_order?: number | null
-          starts_at?: string | null
-          ends_at?: string | null
-          twitch_url?: string | null
-          youtube_url?: string | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "banners_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -349,6 +349,7 @@ export type Database = {
           ends_at: string | null
           entry_fee: number | null
           game_id: string | null
+          gcal_uid: string | null
           has_stream: boolean | null
           id: string
           max_players: number | null
@@ -369,6 +370,7 @@ export type Database = {
           ends_at?: string | null
           entry_fee?: number | null
           game_id?: string | null
+          gcal_uid?: string | null
           has_stream?: boolean | null
           id?: string
           max_players?: number | null
@@ -389,6 +391,7 @@ export type Database = {
           ends_at?: string | null
           entry_fee?: number | null
           game_id?: string | null
+          gcal_uid?: string | null
           has_stream?: boolean | null
           id?: string
           max_players?: number | null
@@ -491,34 +494,34 @@ export type Database = {
       }
       notifications: {
         Row: {
-          id: string
-          player_id: string
-          type: string
-          title: string
-          message: string
-          data: Json | null
-          is_read: boolean
           created_at: string | null
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          message: string
+          player_id: string
+          title: string
+          type: string
         }
         Insert: {
-          id?: string
-          player_id: string
-          type: string
-          title: string
-          message: string
-          data?: Json | null
-          is_read?: boolean
           created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          player_id: string
+          title: string
+          type: string
         }
         Update: {
-          id?: string
-          player_id?: string
-          type?: string
-          title?: string
-          message?: string
-          data?: Json | null
-          is_read?: boolean
           created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          player_id?: string
+          title?: string
+          type?: string
         }
         Relationships: [
           {
@@ -637,6 +640,7 @@ export type Database = {
           discord_username: string | null
           display_name: string
           email: string | null
+          favorite_games: Json | null
           gems: number | null
           id: string
           is_banned: boolean | null
@@ -673,6 +677,8 @@ export type Database = {
           show_real_name: boolean | null
           show_stats: boolean | null
           square_customer_id: string | null
+          status_text: string | null
+          status_updated_at: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string | null
@@ -694,6 +700,7 @@ export type Database = {
           discord_username?: string | null
           display_name: string
           email?: string | null
+          favorite_games?: Json | null
           gems?: number | null
           id?: string
           is_banned?: boolean | null
@@ -730,6 +737,8 @@ export type Database = {
           show_real_name?: boolean | null
           show_stats?: boolean | null
           square_customer_id?: string | null
+          status_text?: string | null
+          status_updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
@@ -751,6 +760,7 @@ export type Database = {
           discord_username?: string | null
           display_name?: string
           email?: string | null
+          favorite_games?: Json | null
           gems?: number | null
           id?: string
           is_banned?: boolean | null
@@ -787,6 +797,8 @@ export type Database = {
           show_real_name?: boolean | null
           show_stats?: boolean | null
           square_customer_id?: string | null
+          status_text?: string | null
+          status_updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null

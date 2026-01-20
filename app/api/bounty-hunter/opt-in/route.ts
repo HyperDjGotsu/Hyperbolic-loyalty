@@ -52,18 +52,18 @@ export async function POST() {
     const optInCloses = new Date(event.opt_in_closes_at);
 
     if (event.status !== 'opt_in_open') {
-      return NextResponse.json({ error: 'Opt-in period is not open' }, { status: 400 });
+      return NextResponse.json({ error: 'Opt-in is not currently open' }, { status: 400 });
     }
 
     if (now < optInOpens) {
-      return NextResponse.json({ error: 'Opt-in period has not started yet' }, { status: 400 });
+      return NextResponse.json({ error: 'Opt-in has not started yet' }, { status: 400 });
     }
 
     if (now > optInCloses) {
       return NextResponse.json({ error: 'Opt-in period has ended' }, { status: 400 });
     }
 
-    // Check if player is in WANTED list (Top 5) - they can't opt in as hunter
+    // Check if player is in WANTED list (Top 5) - they can't opt in as Hunter
     const { data: xpData } = await supabaseAdmin
       .from('xp_ledger')
       .select('player_id, final_xp')
@@ -80,9 +80,9 @@ export async function POST() {
       .sort(([, a], [, b]) => b - a);
     
     const wantedPlayerIds = sortedPlayers.slice(0, 5).map(([id]) => id);
-
+    
     if (wantedPlayerIds.includes(player.id)) {
-      return NextResponse.json({ error: 'You are WANTED! Top 5 cannot opt-in as hunters.' }, { status: 400 });
+      return NextResponse.json({ error: 'You are WANTED! Top 5 players cannot opt-in as Hunters.' }, { status: 400 });
     }
 
     // Check if already opted in
@@ -94,10 +94,10 @@ export async function POST() {
       .single();
 
     if (existing) {
-      return NextResponse.json({ error: 'You are already registered for this event' }, { status: 400 });
+      return NextResponse.json({ error: 'You have already opted in' }, { status: 400 });
     }
 
-    // Register as hunter
+    // Add participation
     const { error: insertError } = await supabaseAdmin
       .from('bounty_hunter_participants')
       .insert({
@@ -108,7 +108,7 @@ export async function POST() {
 
     if (insertError) {
       console.error('Insert error:', insertError);
-      return NextResponse.json({ error: 'Failed to register' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to opt in' }, { status: 500 });
     }
 
     return NextResponse.json({ 
