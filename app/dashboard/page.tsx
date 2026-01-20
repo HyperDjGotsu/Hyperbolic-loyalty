@@ -78,6 +78,27 @@ export default function DashboardHome() {
   const [hasSpunToday, setHasSpunToday] = useState(false);
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
+
+  // Load favorite games
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        const res = await fetch('/api/player/favorite-games');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.favorites && data.favorites.length > 0) {
+            setFavoriteGames(data.favorites);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading favorite games:', error);
+      }
+    }
+    if (isLoaded && user) {
+      loadFavorites();
+    }
+  }, [isLoaded, user]);
 
   // Load player data on mount
   useEffect(() => {
@@ -227,7 +248,17 @@ export default function DashboardHome() {
       };
     });
 
-  const displayedGames: GameDisplay[] = showAllGames ? games : games.slice(0, 3);
+  // Filter to favorite games (if any), sort by XP, show top 3
+  const filteredGames = favoriteGames.length > 0
+    ? games
+        .filter(g => favoriteGames.includes(g.id))
+        .sort((a, b) => b.xp - a.xp)
+    : games.sort((a, b) => b.xp - a.xp);
+  
+  const displayedGames: GameDisplay[] = showAllGames ? filteredGames : filteredGames.slice(0, 3);
+  
+  // Count for "View All" button - show total favorites or total games
+  const totalGamesCount = favoriteGames.length > 0 ? filteredGames.length : games.length;
 
   // Transform activity for display
   const recentActivity = (playerData?.recentActivity || []).map((a: any) => ({
@@ -386,17 +417,20 @@ export default function DashboardHome() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-white flex items-center gap-2">
             <span className="text-xl">🎮</span> My Games
+            {favoriteGames.length > 0 && (
+              <span className="text-xs text-slate-500 font-normal">(Favorites)</span>
+            )}
           </h2>
-          {games.length > 3 && (
+          {totalGamesCount > 3 && (
             <button
               onClick={() => setShowAllGames(!showAllGames)}
               className="text-cyan-400 text-sm"
             >
-              {showAllGames ? 'Show Less' : `View All (${games.length})`}
+              {showAllGames ? 'Show Less' : `View All (${totalGamesCount})`}
             </button>
           )}
         </div>
-        {games.length > 0 ? (
+        {filteredGames.length > 0 ? (
           <div className="space-y-2">
             {displayedGames.map((game) => (
               <GameXpCard

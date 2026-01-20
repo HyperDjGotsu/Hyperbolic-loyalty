@@ -34,6 +34,32 @@ interface PlayerData {
   status: string | null;
 }
 
+interface Game {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+// All supported games
+const ALL_GAMES: Game[] = [
+  { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️' },
+  { id: 'pokemon', name: 'Pokemon', icon: '⚡' },
+  { id: 'mtg', name: 'MTG', icon: '✨' },
+  { id: 'gundam', name: 'Gundam', icon: '🤖' },
+  { id: 'star_wars_unlimited', name: 'Star Wars', icon: '🌟' },
+  { id: 'vanguard', name: 'Vanguard', icon: '⚔️' },
+  { id: 'lorcana', name: 'Lorcana', icon: '🪄' },
+  { id: 'uvs', name: 'UVS', icon: '👊' },
+  { id: 'digimon', name: 'Digimon', icon: '🦖' },
+  { id: 'yugioh', name: 'Yu-Gi-Oh', icon: '⭐' },
+  { id: 'riftbound', name: 'Riftbound', icon: '🌀' },
+  { id: 'hololive', name: 'Hololive', icon: '🎤' },
+  { id: 'weiss', name: 'Weiss Schwarz', icon: '🎴' },
+  { id: 'sw_legion', name: 'SW Legion', icon: '🎖️' },
+  { id: 'union_arena', name: 'Union Arena', icon: '🛡️' },
+  { id: 'warhammer', name: 'Warhammer', icon: '⚔️' },
+];
+
 const frameStyles: Record<string, string> = {
   none: 'border-transparent',
   silver: 'border-slate-400',
@@ -68,6 +94,12 @@ export default function ProfilePage() {
 
   // Status editor state
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+
+  // Favorite games state
+  const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
+  const [editingFavorites, setEditingFavorites] = useState(false);
+  const [tempFavorites, setTempFavorites] = useState<string[]>([]);
+  const [savingFavorites, setSavingFavorites] = useState(false);
 
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
@@ -119,8 +151,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (isLoaded && user) {
       loadPlayerData();
+      loadFavoriteGames();
     }
-  }, [isLoaded, user, loadPlayerData]);
+  }, [isLoaded, user, loadPlayerData, loadFavoriteGames]);
 
   const saveAvatar = async () => {
     setSaving(true);
@@ -160,6 +193,64 @@ export default function ProfilePage() {
 
   const handleStatusChange = (newStatus: string | null) => {
     setPlayerData(prev => prev ? { ...prev, status: newStatus } : null);
+  };
+
+  // Load favorite games
+  const loadFavoriteGames = useCallback(async () => {
+    try {
+      const res = await fetch('/api/player/favorite-games');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.favorites && data.favorites.length > 0) {
+          setFavoriteGames(data.favorites);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading favorite games:', error);
+    }
+  }, []);
+
+  // Save favorite games
+  const saveFavoriteGames = async () => {
+    setSavingFavorites(true);
+    try {
+      const res = await fetch('/api/player/favorite-games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ favorites: tempFavorites }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFavoriteGames(data.favorites);
+        setEditingFavorites(false);
+        alert('✅ Favorite games saved!');
+      } else {
+        alert('Failed to save favorites');
+      }
+    } catch (error) {
+      console.error('Error saving favorites:', error);
+      alert('Failed to save favorites');
+    } finally {
+      setSavingFavorites(false);
+    }
+  };
+
+  // Toggle a game in temp favorites
+  const toggleFavorite = (gameId: string) => {
+    setTempFavorites(prev => {
+      if (prev.includes(gameId)) {
+        return prev.filter(id => id !== gameId);
+      } else if (prev.length < 8) {
+        return [...prev, gameId];
+      }
+      return prev;
+    });
+  };
+
+  // Start editing favorites
+  const startEditingFavorites = () => {
+    setTempFavorites([...favoriteGames]);
+    setEditingFavorites(true);
   };
 
   const AvatarPreview = ({ config, size = 'lg', onClick }: { config: AvatarConfig; size?: 'md' | 'lg' | 'xl'; onClick?: () => void }) => {
@@ -540,6 +631,56 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Favorite Games */}
+      <div className="px-4 mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-white flex items-center gap-2">
+            <span className="text-xl">⭐</span> Favorite Games
+          </h2>
+          <button
+            type="button"
+            onClick={startEditingFavorites}
+            className="text-cyan-400 text-sm font-medium"
+          >
+            Edit
+          </button>
+        </div>
+        
+        {favoriteGames.length > 0 ? (
+          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+            <div className="flex flex-wrap gap-2">
+              {favoriteGames.map(gameId => {
+                const game = ALL_GAMES.find(g => g.id === gameId);
+                if (!game) return null;
+                return (
+                  <div
+                    key={gameId}
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-700/50 rounded-lg border border-slate-600/50"
+                  >
+                    <span>{game.icon}</span>
+                    <span className="text-white text-sm">{game.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-slate-500 text-xs mt-3">
+              These games appear on your dashboard and leaderboard tabs
+            </p>
+          </div>
+        ) : (
+          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
+            <p className="text-slate-400">No favorite games selected</p>
+            <button
+              type="button"
+              onClick={startEditingFavorites}
+              className="mt-2 text-cyan-400 text-sm font-medium"
+            >
+              + Add favorites
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Settings placeholder */}
       <div className="px-4 mt-6 mb-6">
         <h2 className="font-bold text-white flex items-center gap-2 mb-3">
@@ -578,6 +719,92 @@ export default function ProfilePage() {
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
       />
+
+      {/* Favorite Games Editor Modal */}
+      {editingFavorites && (
+        <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
+          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+            <button 
+              type="button" 
+              onClick={() => setEditingFavorites(false)} 
+              className="text-slate-400"
+            >
+              Cancel
+            </button>
+            <h2 className="text-white font-bold">Favorite Games</h2>
+            <button 
+              type="button" 
+              onClick={saveFavoriteGames} 
+              disabled={savingFavorites}
+              className="text-cyan-400 font-bold disabled:opacity-50"
+            >
+              {savingFavorites ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+
+          <div className="p-4 border-b border-slate-800 bg-slate-900/50">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400 text-sm">Selected: {tempFavorites.length}/8</span>
+              {tempFavorites.length >= 8 && (
+                <span className="text-orange-400 text-xs">Maximum reached</span>
+              )}
+            </div>
+            {tempFavorites.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {tempFavorites.map(gameId => {
+                  const game = ALL_GAMES.find(g => g.id === gameId);
+                  if (!game) return null;
+                  return (
+                    <button
+                      key={gameId}
+                      type="button"
+                      onClick={() => toggleFavorite(gameId)}
+                      className="flex items-center gap-1 px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm border border-cyan-500/30"
+                    >
+                      <span>{game.icon}</span>
+                      <span>{game.name}</span>
+                      <span className="ml-1">×</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-auto p-4">
+            <p className="text-slate-400 text-sm mb-4">
+              Select up to 8 games. These will appear on your dashboard and in leaderboard tabs.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {ALL_GAMES.map(game => {
+                const isSelected = tempFavorites.includes(game.id);
+                const isDisabled = !isSelected && tempFavorites.length >= 8;
+                return (
+                  <button
+                    key={game.id}
+                    type="button"
+                    onClick={() => !isDisabled && toggleFavorite(game.id)}
+                    disabled={isDisabled}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                      isSelected
+                        ? 'bg-cyan-500/20 border-cyan-500 text-white'
+                        : isDisabled
+                          ? 'bg-slate-800/30 border-slate-700/30 text-slate-600 cursor-not-allowed'
+                          : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:border-slate-600'
+                    }`}
+                  >
+                    <span className="text-2xl">{game.icon}</span>
+                    <span className="font-medium">{game.name}</span>
+                    {isSelected && (
+                      <span className="ml-auto text-cyan-400">✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
