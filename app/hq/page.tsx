@@ -134,6 +134,7 @@ export default function HQPage() {
   const [bountyHunters, setBountyHunters] = useState<BountyParticipant[]>([]);
   const [bountyLoading, setBountyLoading] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(false);
   const [newEventDate, setNewEventDate] = useState('');
   const [newOptInOpens, setNewOptInOpens] = useState('');
   const [newOptInCloses, setNewOptInCloses] = useState('');
@@ -590,6 +591,61 @@ export default function HQPage() {
     } catch (error) {
       showToast('Failed to delete event', 'error');
     }
+  };
+
+  // Start editing event - populate form fields
+  const startEditingEvent = () => {
+    if (!bountyEvent) return;
+    setNewEventDate(bountyEvent.event_date);
+    // Convert ISO dates to datetime-local format
+    const opensDate = new Date(bountyEvent.opt_in_opens_at);
+    const closesDate = new Date(bountyEvent.opt_in_closes_at);
+    setNewOptInOpens(opensDate.toISOString().slice(0, 16));
+    setNewOptInCloses(closesDate.toISOString().slice(0, 16));
+    setEditingEvent(true);
+  };
+
+  // Save edited event
+  const saveEditedEvent = async () => {
+    if (!bountyEvent || !newEventDate || !newOptInOpens || !newOptInCloses) {
+      showToast('Please fill all fields', 'error');
+      return;
+    }
+    
+    setCreatingEvent(true);
+    try {
+      const res = await fetch('/api/hq/bounty-hunter', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: bountyEvent.id,
+          event_date: newEventDate,
+          opt_in_opens_at: new Date(newOptInOpens).toISOString(),
+          opt_in_closes_at: new Date(newOptInCloses).toISOString(),
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast('Event updated!', 'success');
+        setEditingEvent(false);
+        loadBountyData();
+      }
+    } catch (error) {
+      showToast('Failed to update event', 'error');
+    } finally {
+      setCreatingEvent(false);
+    }
+  };
+
+  // Cancel editing
+  const cancelEditingEvent = () => {
+    setEditingEvent(false);
+    setNewEventDate('');
+    setNewOptInOpens('');
+    setNewOptInCloses('');
   };
 
   if (loading || isStaff === null) {
@@ -1414,50 +1470,111 @@ export default function HQPage() {
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-slate-800/50 rounded-lg p-3">
-                      <div className="text-slate-400 text-xs">Event Date</div>
-                      <div className="text-white font-medium">{bountyEvent.event_date}</div>
+                  {editingEvent ? (
+                    /* Edit Form */
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm text-slate-400 mb-1">Event Date</label>
+                          <input
+                            type="date"
+                            value={newEventDate}
+                            onChange={(e) => setNewEventDate(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-slate-400 mb-1">Opt-In Opens</label>
+                          <input
+                            type="datetime-local"
+                            value={newOptInOpens}
+                            onChange={(e) => setNewOptInOpens(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-slate-400 mb-1">Opt-In Closes</label>
+                          <input
+                            type="datetime-local"
+                            value={newOptInCloses}
+                            onChange={(e) => setNewOptInCloses(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={saveEditedEvent}
+                          disabled={creatingEvent}
+                          className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                        >
+                          {creatingEvent ? 'Saving...' : 'Save Changes'}
+                        </button>
+                        <button
+                          onClick={cancelEditingEvent}
+                          className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                    <div className="bg-slate-800/50 rounded-lg p-3">
-                      <div className="text-slate-400 text-xs">Month</div>
-                      <div className="text-white font-medium">{bountyEvent.month_key}</div>
-                    </div>
-                    <div className="bg-slate-800/50 rounded-lg p-3">
-                      <div className="text-slate-400 text-xs">Opt-In Opens</div>
-                      <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_opens_at).toLocaleDateString()}</div>
-                    </div>
-                    <div className="bg-slate-800/50 rounded-lg p-3">
-                      <div className="text-slate-400 text-xs">Opt-In Closes</div>
-                      <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_closes_at).toLocaleDateString()}</div>
-                    </div>
-                  </div>
+                  ) : (
+                    /* Display View */
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-slate-800/50 rounded-lg p-3">
+                          <div className="text-slate-400 text-xs">Event Date</div>
+                          <div className="text-white font-medium">{bountyEvent.event_date}</div>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-lg p-3">
+                          <div className="text-slate-400 text-xs">Month</div>
+                          <div className="text-white font-medium">{bountyEvent.month_key}</div>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-lg p-3">
+                          <div className="text-slate-400 text-xs">Opt-In Opens</div>
+                          <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_opens_at).toLocaleDateString()}</div>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-lg p-3">
+                          <div className="text-slate-400 text-xs">Opt-In Closes</div>
+                          <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_closes_at).toLocaleDateString()}</div>
+                        </div>
+                      </div>
 
-                  {/* Status Controls */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="text-slate-400 text-sm mr-2">Change Status:</span>
-                    {['upcoming', 'opt_in_open', 'active', 'completed'].map(status => (
-                      <button
-                        key={status}
-                        onClick={() => updateEventStatus(status)}
-                        disabled={bountyEvent.status === status}
-                        className={`px-3 py-1 rounded text-sm font-medium transition-all ${
-                          bountyEvent.status === status
-                            ? 'bg-cyan-500 text-white'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                        }`}
-                      >
-                        {status.replace('_', ' ')}
-                      </button>
-                    ))}
-                  </div>
+                      {/* Status Controls */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span className="text-slate-400 text-sm mr-2">Change Status:</span>
+                        {['upcoming', 'opt_in_open', 'active', 'completed'].map(status => (
+                          <button
+                            key={status}
+                            onClick={() => updateEventStatus(status)}
+                            disabled={bountyEvent.status === status}
+                            className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                              bountyEvent.status === status
+                                ? 'bg-cyan-500 text-white'
+                                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            }`}
+                          >
+                            {status.replace('_', ' ')}
+                          </button>
+                        ))}
+                      </div>
 
-                  <button
-                    onClick={deleteBountyEvent}
-                    className="text-red-400 hover:text-red-300 text-sm"
-                  >
-                    🗑️ Delete Event
-                  </button>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={startEditingEvent}
+                          className="text-cyan-400 hover:text-cyan-300 text-sm"
+                        >
+                          ✏️ Edit Event
+                        </button>
+                        <button
+                          onClick={deleteBountyEvent}
+                          className="text-red-400 hover:text-red-300 text-sm"
+                        >
+                          🗑️ Delete Event
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* WANTED List */}

@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update event status
+// PUT - Update event (status or details)
 export async function PUT(request: NextRequest) {
   try {
     const { userId } = await auth();
@@ -203,25 +203,48 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { event_id, status } = body;
+    const { event_id, status, event_date, opt_in_opens_at, opt_in_closes_at } = body;
 
-    if (!event_id || !status) {
-      return NextResponse.json({ error: 'Missing event_id or status' }, { status: 400 });
+    if (!event_id) {
+      return NextResponse.json({ error: 'Missing event_id' }, { status: 400 });
     }
 
-    const validStatuses = ['upcoming', 'opt_in_open', 'active', 'completed'];
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    // Build update object
+    const updates: any = { updated_at: new Date().toISOString() };
+    
+    // Update status if provided
+    if (status) {
+      const validStatuses = ['upcoming', 'opt_in_open', 'active', 'completed'];
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+      }
+      updates.status = status;
+    }
+    
+    // Update event details if provided
+    if (event_date) {
+      updates.event_date = event_date;
+      // Update month_key based on new event date
+      const eventDateObj = new Date(event_date);
+      updates.month_key = `${eventDateObj.getFullYear()}-${String(eventDateObj.getMonth() + 1).padStart(2, '0')}`;
+    }
+    
+    if (opt_in_opens_at) {
+      updates.opt_in_opens_at = opt_in_opens_at;
+    }
+    
+    if (opt_in_closes_at) {
+      updates.opt_in_closes_at = opt_in_closes_at;
     }
 
     const { error: updateError } = await (supabaseAdmin as any)
       .from('bounty_hunter_events')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', event_id);
 
     if (updateError) {
       console.error('Update error:', updateError);
-      return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update event' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
