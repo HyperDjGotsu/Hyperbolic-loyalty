@@ -34,6 +34,23 @@ interface PlayerData {
   status: string | null;
 }
 
+interface ReferralStats {
+  referralCode: string;
+  shareUrl: string;
+  stats: {
+    totalReferred: number;
+    attendedFirstEvent: number;
+    pendingAttendance: number;
+    totalXpEarned: number;
+  };
+  referrals: {
+    id: string;
+    name: string;
+    hasAttended: boolean;
+    joinedAt: string;
+  }[];
+}
+
 interface Game {
   id: string;
   name: string;
@@ -101,6 +118,13 @@ export default function ProfilePage() {
   const [tempFavorites, setTempFavorites] = useState<string[]>([]);
   const [savingFavorites, setSavingFavorites] = useState(false);
 
+  // Referral state
+  const [referralStats, setReferralStats] = useState<ReferralStats | null>(null);
+  const [referralLoading, setReferralLoading] = useState(true);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [showReferralDetails, setShowReferralDetails] = useState(false);
+
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
     try {
@@ -163,12 +187,29 @@ export default function ProfilePage() {
     }
   }, []);
 
+  // Load referral stats
+  const loadReferralStats = useCallback(async () => {
+    setReferralLoading(true);
+    try {
+      const res = await fetch('/api/referral/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setReferralStats(data);
+      }
+    } catch (error) {
+      console.error('Error loading referral stats:', error);
+    } finally {
+      setReferralLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (isLoaded && user) {
       loadPlayerData();
       loadFavoriteGames();
+      loadReferralStats();
     }
-  }, [isLoaded, user, loadPlayerData, loadFavoriteGames]);
+  }, [isLoaded, user, loadPlayerData, loadFavoriteGames, loadReferralStats]);
 
   const saveAvatar = async () => {
     setSaving(true);
@@ -251,6 +292,24 @@ export default function ProfilePage() {
   const startEditingFavorites = () => {
     setTempFavorites([...favoriteGames]);
     setEditingFavorites(true);
+  };
+
+  // Copy referral code to clipboard
+  const copyReferralCode = async () => {
+    if (referralStats?.referralCode) {
+      await navigator.clipboard.writeText(referralStats.referralCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  // Copy share link to clipboard
+  const copyShareLink = async () => {
+    if (referralStats?.shareUrl) {
+      await navigator.clipboard.writeText(referralStats.shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
   };
 
   const AvatarPreview = ({ config, size = 'lg', onClick }: { config: AvatarConfig; size?: 'md' | 'lg' | 'xl'; onClick?: () => void }) => {
@@ -401,28 +460,27 @@ export default function ProfilePage() {
               accept="image/*" 
               className="hidden" 
             />
-            <button 
+            <button
               type="button"
-              onClick={() => fileInputRef.current?.click()} 
-              className="w-full bg-cyan-600 text-white py-4 rounded-xl font-bold"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full p-6 border-2 border-dashed border-slate-600 rounded-xl text-center hover:border-cyan-500 transition-colors"
             >
-              📷 Upload Photo
+              <div className="text-4xl mb-2">📷</div>
+              <div className="text-white font-medium">Upload Photo</div>
+              <div className="text-slate-500 text-sm">Tap to select an image</div>
             </button>
             {tempAvatar.photo_url && (
-              <button 
+              <button
                 type="button"
-                onClick={() => setTempAvatar(prev => ({ ...prev, photo_url: null }))} 
-                className="w-full bg-red-600/20 text-red-400 py-3 rounded-xl border border-red-500/30"
+                onClick={() => setTempAvatar(prev => ({ ...prev, photo_url: null }))}
+                className="w-full p-3 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30"
               >
                 Remove Photo
               </button>
             )}
-            <p className="text-slate-500 text-sm text-center">
-              Upload a photo to use as your avatar
-            </p>
           </div>
         )}
-
+        
         {activeTab === 'base' && (
           <div className="grid grid-cols-4 gap-3">
             {(ownedItems.base || []).map(item => (
@@ -430,7 +488,7 @@ export default function ProfilePage() {
             ))}
           </div>
         )}
-
+        
         {activeTab === 'background' && (
           <div className="grid grid-cols-4 gap-3">
             {(ownedItems.background || []).map(item => (
@@ -438,153 +496,85 @@ export default function ProfilePage() {
             ))}
           </div>
         )}
-
+        
         {activeTab === 'frame' && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {(ownedItems.frame || []).map(item => (
               <CustomizeItemCard key={item.id} item={item} />
             ))}
           </div>
         )}
-
+        
         {activeTab === 'badge' && (
           <div className="grid grid-cols-4 gap-3">
-            <button
-              type="button"
-              onClick={() => setTempAvatar(prev => ({ ...prev, badge: null }))}
-              className={`p-3 rounded-xl border-2 transition-all ${
-                tempAvatar.badge === null 
-                  ? 'border-cyan-500 bg-cyan-500/20' 
-                  : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-              }`}
-            >
-              <div className="text-2xl">🚫</div>
-              <div className="text-white text-xs mt-1 text-center">None</div>
-            </button>
             {(ownedItems.badge || []).map(item => (
               <CustomizeItemCard key={item.id} item={item} />
             ))}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {activeTab !== 'photo' && (!ownedItems[activeTab] || ownedItems[activeTab].length === 0) && (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">📦</div>
-            <div className="text-slate-400">No items owned</div>
-            <p className="text-slate-500 text-sm mt-2">Visit the Shop to buy more!</p>
           </div>
         )}
       </div>
     </div>
   );
 
-  if (loading) {
+  if (loading || !isLoaded) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl animate-bounce mb-4">👤</div>
-          <div className="text-slate-400">Loading profile...</div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!playerData) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
         <div className="text-center">
-          <div className="text-4xl mb-4">❌</div>
-          <div className="text-white font-bold">Profile not found</div>
-          <p className="text-slate-400 text-sm mt-2">Please link your account first</p>
+          <div className="text-4xl mb-4">😕</div>
+          <h2 className="text-white text-xl font-bold mb-2">Profile Not Found</h2>
+          <p className="text-slate-400">Please make sure you're logged in.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="min-h-screen bg-slate-950 pb-20">
       {/* Header */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 pt-6 pb-8">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(15)].map((_, i) => (
-            <div 
-              key={i} 
-              className="absolute rounded-full opacity-30"
-              style={{ 
-                left: `${Math.random() * 100}%`, 
-                top: `${Math.random() * 100}%`, 
-                width: `${Math.random() * 4 + 2}px`, 
-                height: `${Math.random() * 4 + 2}px`,
-                background: ['#22d3ee', '#a855f7', '#ec4899'][Math.floor(Math.random() * 3)],
-              }} 
-            />
-          ))}
-        </div>
-        
-        <div className="relative text-center">
+      <div className="bg-gradient-to-b from-slate-900 to-slate-950 pt-8 pb-6 px-4">
+        <div className="flex flex-col items-center">
           <AvatarPreview 
             config={playerData.avatarConfig} 
             size="xl" 
-            onClick={() => setEditingAvatar(true)} 
+            onClick={() => {
+              setTempAvatar(playerData.avatarConfig);
+              setEditingAvatar(true);
+            }} 
           />
-          <h1 className="text-2xl font-bold text-white mt-4">{playerData.displayName}</h1>
-          <div className="text-cyan-400 text-sm font-mono mt-1">{playerData.id}</div>
+          <h1 className="text-white text-2xl font-bold mt-4">{playerData.displayName}</h1>
+          <div className="text-slate-500 font-mono text-sm">{playerData.id}</div>
           
           {/* Status Badge */}
-          <div className="mt-3 flex justify-center">
-            <StatusBadge 
-              status={playerData.status} 
-              onClick={() => setStatusModalOpen(true)} 
-            />
-          </div>
-          
-          <div className="flex justify-center gap-6 mt-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">{playerData.level}</div>
-              <div className="text-slate-500 text-xs">Level</div>
-            </div>
-            <div className="w-px bg-slate-700" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-cyan-400">{playerData.totalXp.toLocaleString()}</div>
-              <div className="text-slate-500 text-xs">XP</div>
-            </div>
-            <div className="w-px bg-slate-700" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-400">{playerData.gems.toLocaleString()}</div>
-              <div className="text-slate-500 text-xs">Gems</div>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => setStatusModalOpen(true)}
+            className="mt-3"
+          >
+            {playerData.status ? (
+              <StatusBadge status={playerData.status} />
+            ) : (
+              <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-500 text-sm flex items-center gap-2">
+                <span>+ Set Status</span>
+              </div>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="px-4 -mt-4 relative z-10 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setEditingAvatar(true)}
-          className="flex-1 bg-gradient-to-r from-cyan-500 to-purple-500 text-white py-3 rounded-xl font-bold"
-        >
-          ✨ Customize Avatar
-        </button>
-        <button
-          type="button"
-          onClick={() => setStatusModalOpen(true)}
-          className="bg-slate-700 text-white px-4 py-3 rounded-xl font-bold hover:bg-slate-600 transition-colors"
-        >
-          💬
-        </button>
-      </div>
-
       {/* Stats */}
-      <div className="px-4 mt-6">
-        <h2 className="font-bold text-white flex items-center gap-2 mb-3">
-          <span className="text-xl">📊</span> Stats
-        </h2>
+      <div className="px-4 -mt-2">
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 text-center">
-            <div className="text-2xl mb-1">🎮</div>
-            <div className="text-white font-bold">{playerData.level}</div>
+            <div className="text-2xl mb-1">🏆</div>
+            <div className="text-white font-bold text-lg">{playerData.level}</div>
             <div className="text-slate-500 text-xs">Level</div>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 text-center">
@@ -598,6 +588,136 @@ export default function ProfilePage() {
             <div className="text-slate-500 text-xs">Gems</div>
           </div>
         </div>
+      </div>
+
+      {/* Referral Section */}
+      <div className="px-4 mt-6">
+        <h2 className="font-bold text-white flex items-center gap-2 mb-3">
+          <span className="text-xl">🎁</span> Invite Friends
+        </h2>
+        
+        {referralLoading ? (
+          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+            <div className="flex items-center justify-center py-4">
+              <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
+        ) : referralStats ? (
+          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/20">
+            {/* Referral Code */}
+            <div className="mb-4">
+              <div className="text-slate-400 text-xs mb-1">Your Referral Code</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-slate-800 rounded-lg px-4 py-3 font-mono text-lg text-white tracking-wider">
+                  {referralStats.referralCode}
+                </div>
+                <button
+                  type="button"
+                  onClick={copyReferralCode}
+                  className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                    copiedCode
+                      ? 'bg-green-500 text-white'
+                      : 'bg-purple-500 hover:bg-purple-400 text-white'
+                  }`}
+                >
+                  {copiedCode ? '✓' : '📋'}
+                </button>
+              </div>
+            </div>
+
+            {/* Share Link */}
+            <div className="mb-4">
+              <div className="text-slate-400 text-xs mb-1">Share Link</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-slate-800 rounded-lg px-4 py-3 text-sm text-slate-300 truncate">
+                  {referralStats.shareUrl}
+                </div>
+                <button
+                  type="button"
+                  onClick={copyShareLink}
+                  className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                    copiedLink
+                      ? 'bg-green-500 text-white'
+                      : 'bg-cyan-500 hover:bg-cyan-400 text-white'
+                  }`}
+                >
+                  {copiedLink ? '✓' : '🔗'}
+                </button>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                <div className="text-white font-bold text-xl">{referralStats.stats.totalReferred}</div>
+                <div className="text-slate-500 text-xs">Invited</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                <div className="text-green-400 font-bold text-xl">{referralStats.stats.attendedFirstEvent}</div>
+                <div className="text-slate-500 text-xs">Attended</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                <div className="text-cyan-400 font-bold text-xl">+{referralStats.stats.totalXpEarned}</div>
+                <div className="text-slate-500 text-xs">XP Earned</div>
+              </div>
+            </div>
+
+            {/* How it works */}
+            <div className="bg-slate-800/30 rounded-lg p-3">
+              <div className="text-slate-400 text-xs mb-2 font-medium">How it works</div>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>Friend signs up with your code → They get <span className="text-cyan-400">+30 XP</span></span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-300">
+                  <span className="text-green-400">✓</span>
+                  <span>They attend their first event → You get <span className="text-purple-400">+50 XP</span></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Referral List (expandable) */}
+            {referralStats.referrals.length > 0 && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowReferralDetails(!showReferralDetails)}
+                  className="w-full flex items-center justify-between text-slate-400 text-sm"
+                >
+                  <span>Your Referrals ({referralStats.referrals.length})</span>
+                  <span>{showReferralDetails ? '▲' : '▼'}</span>
+                </button>
+                
+                {showReferralDetails && (
+                  <div className="mt-2 space-y-2">
+                    {referralStats.referrals.map(referral => (
+                      <div
+                        key={referral.id}
+                        className="flex items-center justify-between bg-slate-800/50 rounded-lg px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-white text-sm">{referral.name}</span>
+                        </div>
+                        <div className={`text-xs px-2 py-1 rounded-full ${
+                          referral.hasAttended
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-orange-500/20 text-orange-400'
+                        }`}>
+                          {referral.hasAttended ? '✓ Attended' : '⏳ Pending'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
+            <p className="text-slate-400">Unable to load referral info</p>
+          </div>
+        )}
       </div>
 
       {/* Inventory Summary */}
