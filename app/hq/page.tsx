@@ -139,6 +139,14 @@ export default function HQPage() {
   const [newOptInOpens, setNewOptInOpens] = useState('');
   const [newOptInCloses, setNewOptInCloses] = useState('');
 
+  // Match recording state
+  const [matches, setMatches] = useState<any[]>([]);
+  const [recordingMatch, setRecordingMatch] = useState(false);
+  const [matchWinner, setMatchWinner] = useState('');
+  const [matchLoser, setMatchLoser] = useState('');
+  const [matchType, setMatchType] = useState('');
+  const [matchRound, setMatchRound] = useState(1);
+
   // Check staff access
   useEffect(() => {
     if (!isLoaded) return;
@@ -497,15 +505,89 @@ export default function HQPage() {
         setBountyEvent(data.event);
         setBountyWanted(data.wanted || []);
         setBountyHunters(data.hunters || []);
+        
+        // Also load matches for this event
+        const matchRes = await fetch(`/api/hq/bounty-hunter/matches?event_id=${data.event.id}`);
+        if (matchRes.ok) {
+          const matchData = await matchRes.json();
+          setMatches(matchData.matches || []);
+        }
       } else {
         setBountyEvent(null);
         setBountyWanted([]);
         setBountyHunters([]);
+        setMatches([]);
       }
     } catch (error) {
       console.error('Failed to load bounty data:', error);
     } finally {
       setBountyLoading(false);
+    }
+  };
+
+  // Record a match
+  const recordMatch = async () => {
+    if (!bountyEvent || !matchWinner || !matchLoser || !matchType) {
+      showToast('Please select winner, loser, and match type', 'error');
+      return;
+    }
+    
+    if (matchWinner === matchLoser) {
+      showToast('Winner and loser cannot be the same', 'error');
+      return;
+    }
+    
+    setRecordingMatch(true);
+    try {
+      const res = await fetch('/api/hq/bounty-hunter/matches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: bountyEvent.id,
+          winner_id: matchWinner,
+          loser_id: matchLoser,
+          match_type: matchType,
+          round: matchRound,
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast(data.message || 'Match recorded!', 'success');
+        // Reset form
+        setMatchWinner('');
+        setMatchLoser('');
+        setMatchType('');
+        // Reload matches
+        loadBountyData();
+      }
+    } catch (error) {
+      showToast('Failed to record match', 'error');
+    } finally {
+      setRecordingMatch(false);
+    }
+  };
+
+  // Delete a match
+  const deleteMatch = async (matchId: string) => {
+    if (!confirm('Delete this match? XP will be reversed.')) return;
+    
+    try {
+      const res = await fetch(`/api/hq/bounty-hunter/matches?id=${matchId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast(data.message || 'Match deleted', 'success');
+        loadBountyData();
+      }
+    } catch (error) {
+      showToast('Failed to delete match', 'error');
     }
   };
 
@@ -1612,6 +1694,142 @@ export default function HQPage() {
                     <p className="text-slate-500">No hunters registered yet</p>
                   )}
                 </div>
+
+                {/* Match Recording - Only show when event is active */}
+                {bountyEvent?.status === 'active' && (
+                  <div className="bg-gradient-to-r from-orange-900/30 to-slate-900 rounded-xl p-6 border border-orange-500/30">
+                    <h3 className="text-lg font-bold text-orange-400 mb-4">⚔️ Record Match Result</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {/* Winner */}
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-1">Winner</label>
+                        <select
+                          value={matchWinner}
+                          onChange={(e) => setMatchWinner(e.target.value)}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                        >
+                          <option value="">Select winner...</option>
+                          <optgroup label="🎯 WANTED">
+                            {bountyWanted.map(p => (
+                              <option key={p.player_id} value={p.player_id}>
+                                {p.display_name} ({p.xp.toLocaleString()})
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="🏹 Hunters">
+                            {bountyHunters.map(p => (
+                              <option key={p.player_id} value={p.player_id}>
+                                {p.display_name} ({p.xp.toLocaleString()})
+                              </option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      {/* Loser */}
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-1">Loser</label>
+                        <select
+                          value={matchLoser}
+                          onChange={(e) => setMatchLoser(e.target.value)}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                        >
+                          <option value="">Select loser...</option>
+                          <optgroup label="🎯 WANTED">
+                            {bountyWanted.map(p => (
+                              <option key={p.player_id} value={p.player_id}>
+                                {p.display_name} ({p.xp.toLocaleString()})
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="🏹 Hunters">
+                            {bountyHunters.map(p => (
+                              <option key={p.player_id} value={p.player_id}>
+                                {p.display_name} ({p.xp.toLocaleString()})
+                              </option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {/* Match Type */}
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-1">Match Type</label>
+                        <select
+                          value={matchType}
+                          onChange={(e) => setMatchType(e.target.value)}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                        >
+                          <option value="">Select type...</option>
+                          <option value="hunter_upsets_wanted">🏹 Hunter upsets WANTED (+30/-25)</option>
+                          <option value="wanted_defends">🎯 WANTED defends (+15/-20)</option>
+                          <option value="hunter_vs_hunter">🏹 Hunter vs Hunter (+15/-15)</option>
+                          <option value="wanted_vs_wanted">🎯 WANTED vs WANTED (+20/-20)</option>
+                        </select>
+                      </div>
+
+                      {/* Round */}
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-1">Round</label>
+                        <select
+                          value={matchRound}
+                          onChange={(e) => setMatchRound(Number(e.target.value))}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                        >
+                          <option value={1}>Round 1 (Bounty Round)</option>
+                          <option value={2}>Round 2</option>
+                          <option value={3}>Round 3</option>
+                          <option value={4}>Round 4</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={recordMatch}
+                      disabled={recordingMatch || !matchWinner || !matchLoser || !matchType}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                    >
+                      {recordingMatch ? 'Recording...' : '⚔️ Record Match'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Match History */}
+                {matches.length > 0 && (
+                  <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                    <h3 className="text-lg font-bold text-slate-300 mb-4">📜 Match History ({matches.length})</h3>
+                    <div className="space-y-2 max-h-96 overflow-auto">
+                      {matches.map((match: any) => (
+                        <div key={match.id} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-green-400 font-medium">{match.winner_name}</span>
+                              <span className="text-slate-500">defeated</span>
+                              <span className="text-red-400 font-medium">{match.loser_name}</span>
+                            </div>
+                            <div className="text-xs text-slate-500 mt-1">
+                              {match.match_type.replace(/_/g, ' ')} • Round {match.round}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-green-400 text-sm">+{match.winner_points}</div>
+                            <div className="text-red-400 text-sm">{match.loser_points}</div>
+                          </div>
+                          <button
+                            onClick={() => deleteMatch(match.id)}
+                            className="text-slate-500 hover:text-red-400 p-1"
+                            title="Delete match"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               /* No Current Event - Create New */
