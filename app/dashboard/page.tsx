@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import gsap from 'gsap';
+import Lenis from 'lenis';
 import {
   FloatingParticles,
   Avatar,
@@ -66,6 +68,31 @@ function LoadingSkeleton() {
   );
 }
 
+// Animated counter component
+function AnimatedCounter({ value, duration = 1.5 }: { value: number; duration?: number }) {
+  const counterRef = useRef<HTMLSpanElement>(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (!counterRef.current || hasAnimated.current) return;
+    hasAnimated.current = true;
+
+    const target = { val: 0 };
+    gsap.to(target, {
+      val: value,
+      duration,
+      ease: 'power2.out',
+      onUpdate: () => {
+        if (counterRef.current) {
+          counterRef.current.textContent = Math.floor(target.val).toLocaleString();
+        }
+      },
+    });
+  }, [value, duration]);
+
+  return <span ref={counterRef}>0</span>;
+}
+
 export default function DashboardHome() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -79,6 +106,86 @@ export default function DashboardHome() {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
+
+  // Animation refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const playerCardRef = useRef<HTMLDivElement>(null);
+  const gamesContainerRef = useRef<HTMLDivElement>(null);
+  const activityContainerRef = useRef<HTMLDivElement>(null);
+  const hasAnimated = useRef(false);
+
+  // Initialize Lenis smooth scroll
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      touchMultiplier: 2,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+
+  // Run entrance animations after data loads
+  useEffect(() => {
+    if (loading || !playerData || hasAnimated.current) return;
+    hasAnimated.current = true;
+
+    const ctx = gsap.context(() => {
+      // Player card entrance
+      if (playerCardRef.current) {
+        gsap.fromTo(
+          playerCardRef.current,
+          { y: -30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }
+        );
+      }
+
+      // Game cards staggered entrance
+      if (gamesContainerRef.current) {
+        const gameCards = gamesContainerRef.current.querySelectorAll('.game-card');
+        gsap.fromTo(
+          gameCards,
+          { x: -50, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: 'power2.out',
+            delay: 0.3,
+          }
+        );
+      }
+
+      // Activity items staggered entrance
+      if (activityContainerRef.current) {
+        const activityItems = activityContainerRef.current.querySelectorAll('.activity-item');
+        gsap.fromTo(
+          activityItems,
+          { x: 50, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.4,
+            stagger: 0.08,
+            ease: 'power2.out',
+            delay: 0.5,
+          }
+        );
+      }
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [loading, playerData]);
 
   // Load favorite games
   useEffect(() => {
@@ -305,7 +412,7 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="min-h-full pb-4">
+    <div ref={containerRef} className="min-h-full pb-4">
       {/* Header with Player Card */}
       <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 pt-4 pb-6">
         <FloatingParticles />
@@ -319,7 +426,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Player Card */}
-        <div className="mx-4">
+        <div className="mx-4" ref={playerCardRef}>
           <div className="bg-slate-800/90 rounded-2xl p-4 border border-cyan-500/30 shadow-xl">
             <div className="flex items-start gap-3">
               <div className="relative">
@@ -337,14 +444,14 @@ export default function DashboardHome() {
                 <div className="mt-2">
                   <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full"
+                      className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${levelProgress}%` }}
                     />
                   </div>
                   <div className="flex justify-between mt-1 text-xs">
                     <span className="text-slate-500">XP to next level</span>
                     <span className="text-cyan-400 font-mono">
-                      {totalXp.toLocaleString()} / {nextLevelXp.toLocaleString()}
+                      <AnimatedCounter value={totalXp} /> / {nextLevelXp.toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -431,14 +538,15 @@ export default function DashboardHome() {
           )}
         </div>
         {filteredGames.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-2" ref={gamesContainerRef}>
             {displayedGames.map((game) => (
-              <GameXpCard
-                key={game.id}
-                game={game}
-                isExpanded={expandedGame === game.id}
-                onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
-              />
+              <div key={game.id} className="game-card">
+                <GameXpCard
+                  game={game}
+                  isExpanded={expandedGame === game.id}
+                  onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
+                />
+              </div>
             ))}
           </div>
         ) : (
@@ -451,7 +559,7 @@ export default function DashboardHome() {
           <div className="flex justify-between items-center">
             <span className="text-slate-400 text-sm">Total Combined XP</span>
             <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              {totalXp.toLocaleString()}
+              <AnimatedCounter value={totalXp} duration={2} />
             </span>
           </div>
         </div>
@@ -463,11 +571,11 @@ export default function DashboardHome() {
           <span className="text-xl">📋</span> Recent Activity
         </h2>
         {recentActivity.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-2" ref={activityContainerRef}>
             {recentActivity.map((a: any) => (
               <div
                 key={a.id}
-                className="bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700/50"
+                className="activity-item bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700/50"
               >
                 <div className="w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center text-xl">
                   {a.icon}
