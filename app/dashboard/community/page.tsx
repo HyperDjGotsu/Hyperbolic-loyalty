@@ -88,7 +88,10 @@ interface BountyHunterStatus {
   rank: number | null;
   xp: number;
   optInOpen: boolean;
+  canOptOut?: boolean;
   nextEventDate: string | null;
+  eventStatus?: string | null;
+  hunterCount?: number;
 }
 
 // Privacy options configuration
@@ -234,15 +237,35 @@ export default function CommunityPage() {
         
         // Set hall of fame
         setHallOfFame(data.hallOfFame || []);
-        
-        // Set bounty hunter status
-        setBountyHunterStatus(data.bountyHunterStatus || {
+      }
+
+      // Also fetch bounty hunter status from dedicated API
+      const bhRes = await fetch('/api/bounty-hunter/status');
+      if (bhRes.ok) {
+        const bhData = await bhRes.json();
+        setBountyHunterStatus({
+          isWanted: bhData.status?.isWanted || false,
+          isHunter: bhData.status?.isHunter || false,
+          rank: bhData.status?.rank || null,
+          xp: bhData.status?.xp || 0,
+          optInOpen: bhData.status?.canOptIn || false,
+          canOptOut: bhData.status?.canOptOut || false,
+          nextEventDate: bhData.event?.eventDate || null,
+          eventStatus: bhData.event?.status || null,
+          hunterCount: bhData.hunterCount || 0,
+        });
+      } else {
+        // No event or error - set defaults
+        setBountyHunterStatus({
           isWanted: false,
           isHunter: false,
           rank: null,
           xp: 0,
-          optInOpen: true,
+          optInOpen: false,
+          canOptOut: false,
           nextEventDate: null,
+          eventStatus: null,
+          hunterCount: 0,
         });
       }
     } catch (error) {
@@ -514,11 +537,56 @@ export default function CommunityPage() {
   const optInAsHunter = async () => {
     setOptingIn(true);
     try {
-      // TODO: Implement API call
-      // const res = await fetch('/api/bounty-hunter/opt-in', { method: 'POST' });
-      setBountyHunterStatus(prev => prev ? { ...prev, isHunter: true } : null);
+      const res = await fetch('/api/bounty-hunter/opt-in', { method: 'POST' });
+      const data = await res.json();
+      
+      if (res.ok) {
+        // Update local status
+        setBountyHunterStatus(prev => prev ? { 
+          ...prev, 
+          isHunter: true, 
+          optInOpen: false,
+          canOptOut: true,
+          hunterCount: (prev.hunterCount || 0) + 1,
+        } : null);
+        alert(data.message || '🏹 You are now a Hunter!');
+      } else {
+        alert(data.error || 'Failed to opt in');
+      }
     } catch (error) {
       console.error('Error opting in:', error);
+      alert('Failed to opt in. Please try again.');
+    } finally {
+      setOptingIn(false);
+    }
+  };
+
+  // Opt out as Hunter (withdraw)
+  const optOutAsHunter = async () => {
+    if (!confirm('Are you sure you want to withdraw from Bounty Hunter Night?')) {
+      return;
+    }
+    
+    setOptingIn(true);
+    try {
+      const res = await fetch('/api/bounty-hunter/opt-in', { method: 'DELETE' });
+      const data = await res.json();
+      
+      if (res.ok) {
+        setBountyHunterStatus(prev => prev ? { 
+          ...prev, 
+          isHunter: false, 
+          optInOpen: true,
+          canOptOut: false,
+          hunterCount: Math.max((prev.hunterCount || 1) - 1, 0),
+        } : null);
+        alert(data.message || 'You have withdrawn.');
+      } else {
+        alert(data.error || 'Failed to withdraw');
+      }
+    } catch (error) {
+      console.error('Error opting out:', error);
+      alert('Failed to withdraw. Please try again.');
     } finally {
       setOptingIn(false);
     }
@@ -1077,21 +1145,39 @@ export default function CommunityPage() {
                   {bountyHunterStatus && (
                     <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
                       <h4 className="text-xs font-medium text-slate-400 mb-2">Your Status</h4>
-                      <div className="flex items-center gap-2">
-                        {bountyHunterStatus.isWanted ? (
-                          <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium border border-red-500/30">
-                            🎯 WANTED (Rank #{bountyHunterStatus.rank})
-                          </span>
-                        ) : bountyHunterStatus.isHunter ? (
-                          <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium border border-green-500/30">
-                            🏹 Hunter
-                          </span>
-                        ) : (
-                          <span className="px-3 py-1 bg-slate-700 text-slate-400 rounded-full text-sm">
-                            😐 Civilian
-                          </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {bountyHunterStatus.isWanted ? (
+                            <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium border border-red-500/30">
+                              🎯 WANTED (Rank #{bountyHunterStatus.rank})
+                            </span>
+                          ) : bountyHunterStatus.isHunter ? (
+                            <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium border border-green-500/30">
+                              🏹 Hunter
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 bg-slate-700 text-slate-400 rounded-full text-sm">
+                              😐 Civilian
+                            </span>
+                          )}
+                        </div>
+                        {/* Withdraw button for hunters */}
+                        {bountyHunterStatus.isHunter && bountyHunterStatus.canOptOut && (
+                          <button
+                            onClick={optOutAsHunter}
+                            disabled={optingIn}
+                            className="text-xs text-slate-500 hover:text-red-400 transition-colors"
+                          >
+                            Withdraw
+                          </button>
                         )}
                       </div>
+                      {/* Hunter count */}
+                      {bountyHunterStatus.hunterCount !== undefined && bountyHunterStatus.hunterCount > 0 && (
+                        <div className="mt-2 text-xs text-slate-500">
+                          🏹 {bountyHunterStatus.hunterCount} hunter{bountyHunterStatus.hunterCount !== 1 ? 's' : ''} registered
+                        </div>
+                      )}
                     </div>
                   )}
 
