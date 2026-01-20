@@ -70,6 +70,25 @@ interface HallOfFameEntry {
   bounty_display: string;
 }
 
+interface BountyHunterEvent {
+  id: string;
+  event_date: string;
+  month_key: string;
+  opt_in_opens_at: string;
+  opt_in_closes_at: string;
+  status: 'upcoming' | 'opt_in_open' | 'active' | 'completed';
+  created_at: string;
+}
+
+interface BountyParticipant {
+  id: string;
+  player_id: string;
+  display_name: string;
+  role: 'wanted' | 'hunter';
+  xp: number;
+  rank?: number;
+}
+
 interface Game {
   id: string;
   name: string;
@@ -108,6 +127,16 @@ export default function HQPage() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [bannerLoading, setBannerLoading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Bounty Hunter state
+  const [bountyEvent, setBountyEvent] = useState<BountyHunterEvent | null>(null);
+  const [bountyWanted, setBountyWanted] = useState<BountyParticipant[]>([]);
+  const [bountyHunters, setBountyHunters] = useState<BountyParticipant[]>([]);
+  const [bountyLoading, setBountyLoading] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+  const [newEventDate, setNewEventDate] = useState('');
+  const [newOptInOpens, setNewOptInOpens] = useState('');
+  const [newOptInCloses, setNewOptInCloses] = useState('');
 
   // Check staff access
   useEffect(() => {
@@ -445,6 +474,9 @@ export default function HQPage() {
     if (activeTab === 'banners' && banners.length === 0) {
       loadBanners();
     }
+    if (activeTab === 'bounty') {
+      loadBountyData();
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -452,6 +484,113 @@ export default function HQPage() {
       loadEmperorRankings(selectedMonth);
     }
   }, [selectedMonth]);
+
+  // Load Bounty Hunter data
+  const loadBountyData = async () => {
+    setBountyLoading(true);
+    try {
+      const res = await fetch('/api/hq/bounty-hunter');
+      const data = await res.json();
+      
+      if (data.event) {
+        setBountyEvent(data.event);
+        setBountyWanted(data.wanted || []);
+        setBountyHunters(data.hunters || []);
+      } else {
+        setBountyEvent(null);
+        setBountyWanted([]);
+        setBountyHunters([]);
+      }
+    } catch (error) {
+      console.error('Failed to load bounty data:', error);
+    } finally {
+      setBountyLoading(false);
+    }
+  };
+
+  // Create Bounty Hunter Event
+  const createBountyEvent = async () => {
+    if (!newEventDate || !newOptInOpens || !newOptInCloses) {
+      showToast('Please fill all fields', 'error');
+      return;
+    }
+    
+    setCreatingEvent(true);
+    try {
+      const res = await fetch('/api/hq/bounty-hunter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_date: newEventDate,
+          opt_in_opens_at: newOptInOpens,
+          opt_in_closes_at: newOptInCloses,
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast('Bounty Hunter event created!', 'success');
+        setNewEventDate('');
+        setNewOptInOpens('');
+        setNewOptInCloses('');
+        loadBountyData();
+      }
+    } catch (error) {
+      showToast('Failed to create event', 'error');
+    } finally {
+      setCreatingEvent(false);
+    }
+  };
+
+  // Update event status
+  const updateEventStatus = async (status: string) => {
+    if (!bountyEvent) return;
+    
+    try {
+      const res = await fetch('/api/hq/bounty-hunter', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: bountyEvent.id,
+          status,
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast(`Status updated to ${status}`, 'success');
+        loadBountyData();
+      }
+    } catch (error) {
+      showToast('Failed to update status', 'error');
+    }
+  };
+
+  // Delete event
+  const deleteBountyEvent = async () => {
+    if (!bountyEvent) return;
+    if (!confirm('Delete this Bounty Hunter event? This cannot be undone.')) return;
+    
+    try {
+      const res = await fetch(`/api/hq/bounty-hunter?id=${bountyEvent.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast('Event deleted', 'success');
+        loadBountyData();
+      }
+    } catch (error) {
+      showToast('Failed to delete event', 'error');
+    }
+  };
 
   if (loading || isStaff === null) {
     return (
@@ -498,6 +637,7 @@ export default function HQPage() {
             {[
               { id: 'players', label: '👤 Players', icon: '👤' },
               { id: 'emperor', label: '👑 Emperor', icon: '👑' },
+              { id: 'bounty', label: '🎯 Bounty', icon: '🎯' },
               { id: 'banners', label: '🎨 Banners', icon: '🎨' },
               { id: 'events', label: '📅 Events', icon: '📅' },
             ].map(tab => (
@@ -1247,6 +1387,166 @@ export default function HQPage() {
                       Save
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bounty Hunter Tab */}
+        {activeTab === 'bounty' && (
+          <div className="space-y-6">
+            {bountyLoading ? (
+              <div className="text-center py-12 text-slate-400">Loading...</div>
+            ) : bountyEvent ? (
+              <>
+                {/* Current Event */}
+                <div className="bg-gradient-to-r from-red-900/30 to-slate-900 rounded-xl p-6 border border-red-500/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-red-400">🎯 Current Bounty Hunter Event</h2>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      bountyEvent.status === 'opt_in_open' ? 'bg-green-500/20 text-green-400' :
+                      bountyEvent.status === 'active' ? 'bg-orange-500/20 text-orange-400' :
+                      bountyEvent.status === 'completed' ? 'bg-slate-500/20 text-slate-400' :
+                      'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {bountyEvent.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-slate-800/50 rounded-lg p-3">
+                      <div className="text-slate-400 text-xs">Event Date</div>
+                      <div className="text-white font-medium">{bountyEvent.event_date}</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-3">
+                      <div className="text-slate-400 text-xs">Month</div>
+                      <div className="text-white font-medium">{bountyEvent.month_key}</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-3">
+                      <div className="text-slate-400 text-xs">Opt-In Opens</div>
+                      <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_opens_at).toLocaleDateString()}</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-3">
+                      <div className="text-slate-400 text-xs">Opt-In Closes</div>
+                      <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_closes_at).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+
+                  {/* Status Controls */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="text-slate-400 text-sm mr-2">Change Status:</span>
+                    {['upcoming', 'opt_in_open', 'active', 'completed'].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => updateEventStatus(status)}
+                        disabled={bountyEvent.status === status}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                          bountyEvent.status === status
+                            ? 'bg-cyan-500 text-white'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                      >
+                        {status.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={deleteBountyEvent}
+                    className="text-red-400 hover:text-red-300 text-sm"
+                  >
+                    🗑️ Delete Event
+                  </button>
+                </div>
+
+                {/* WANTED List */}
+                <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                  <h3 className="text-lg font-bold text-red-400 mb-4">🏴‍☠️ WANTED (Top 5 Auto-Added)</h3>
+                  {bountyWanted.length > 0 ? (
+                    <div className="space-y-2">
+                      {bountyWanted.map((player, i) => (
+                        <div key={player.player_id} className="flex items-center gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                          <span className="text-red-400 font-bold w-8">#{i + 1}</span>
+                          <span className="text-white flex-1">{player.display_name}</span>
+                          <span className="text-red-400">{player.xp.toLocaleString()} Berries</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500">No WANTED players yet (Top 5 One Piece leaderboard)</p>
+                  )}
+                </div>
+
+                {/* Hunters List */}
+                <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                  <h3 className="text-lg font-bold text-green-400 mb-4">🏹 Registered Hunters ({bountyHunters.length})</h3>
+                  {bountyHunters.length > 0 ? (
+                    <div className="grid gap-2">
+                      {bountyHunters.map(hunter => (
+                        <div key={hunter.player_id} className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                          <span className="text-green-400">🏹</span>
+                          <span className="text-white flex-1">{hunter.display_name}</span>
+                          <span className="text-slate-400">{hunter.xp.toLocaleString()} Berries</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500">No hunters registered yet</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* No Current Event - Create New */
+              <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                <h2 className="text-xl font-bold mb-4">🎯 Create Bounty Hunter Event</h2>
+                <p className="text-slate-400 mb-6">No event scheduled for this month. Create one below.</p>
+                
+                <div className="grid gap-4 max-w-md">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Event Date</label>
+                    <input
+                      type="date"
+                      value={newEventDate}
+                      onChange={(e) => setNewEventDate(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Opt-In Opens</label>
+                    <input
+                      type="datetime-local"
+                      value={newOptInOpens}
+                      onChange={(e) => setNewOptInOpens(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Opt-In Closes</label>
+                    <input
+                      type="datetime-local"
+                      value={newOptInCloses}
+                      onChange={(e) => setNewOptInCloses(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                    />
+                  </div>
+                  <button
+                    onClick={createBountyEvent}
+                    disabled={creatingEvent}
+                    className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                  >
+                    {creatingEvent ? 'Creating...' : '🎯 Create Event'}
+                  </button>
+                </div>
+
+                <div className="mt-6 p-4 bg-slate-800/50 rounded-lg">
+                  <h4 className="font-medium text-slate-300 mb-2">💡 How it works</h4>
+                  <ul className="text-sm text-slate-400 space-y-1">
+                    <li>• Top 5 One Piece players are auto-WANTED (can&apos;t opt out)</li>
+                    <li>• Other players can opt-in as Hunters during the opt-in window</li>
+                    <li>• On event night, Hunters try to claim WANTED bounties</li>
+                    <li>• Point stakes apply to Round 1 bounty matches</li>
+                  </ul>
                 </div>
               </div>
             )}
