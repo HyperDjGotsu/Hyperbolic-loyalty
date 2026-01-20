@@ -144,9 +144,9 @@ export async function POST(request: NextRequest) {
         game_id: 'one_piece',
         base_xp: points.winner,
         final_xp: points.winner,
-        source: 'bounty_hunter',
+        source: 'manual_adjustment',
         description: `Bounty Hunter Night: ${match_type.replace(/_/g, ' ')} (Win)`,
-      });
+      } as any);
 
     if (winnerXpError) {
       console.error('Error awarding winner XP:', winnerXpError);
@@ -173,9 +173,9 @@ export async function POST(request: NextRequest) {
           game_id: 'one_piece',
           base_xp: actualDeduction,
           final_xp: actualDeduction,
-          source: 'bounty_hunter',
+          source: 'manual_adjustment',
           description: `Bounty Hunter Night: ${match_type.replace(/_/g, ' ')} (Loss)`,
-        });
+        } as any);
 
       if (loserXpError) {
         console.error('Error deducting loser XP:', loserXpError);
@@ -253,9 +253,9 @@ export async function DELETE(request: NextRequest) {
         game_id: 'one_piece',
         base_xp: -match.winner_points,
         final_xp: -match.winner_points,
-        source: 'bounty_hunter',
+        source: 'manual_adjustment',
         description: 'Bounty Hunter Night: Match reversed',
-      });
+      } as any);
 
     // Reverse loser XP (add back what was deducted)
     if (match.loser_points < 0) {
@@ -266,9 +266,9 @@ export async function DELETE(request: NextRequest) {
           game_id: 'one_piece',
           base_xp: -match.loser_points,
           final_xp: -match.loser_points,
-          source: 'bounty_hunter',
+          source: 'manual_adjustment',
           description: 'Bounty Hunter Night: Match reversed',
-        });
+        } as any);
     }
 
     // Delete the match
