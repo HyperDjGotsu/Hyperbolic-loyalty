@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-
 export const dynamic = 'force-dynamic';
+
 // Generate random HYP-ID
 function generatePlayerId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -12,6 +12,12 @@ function generatePlayerId(): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+// Generate referral code from player ID
+function generateReferralCode(playerId: string): string {
+  // Use last 8 chars of UUID for uniqueness
+  return `REF-${playerId.substring(0, 8).toUpperCase()}`;
 }
 
 export async function POST(request: Request) {
@@ -23,7 +29,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, hypId, displayName, discordUsername, phone, primaryGame } = body;
+    const { action, hypId, displayName, discordUsername, phone, primaryGame, referralCode } = body;
 
     // Check if user already has a linked player
     const { data: existingLink } = await supabaseAdmin
@@ -117,6 +123,23 @@ export async function POST(request: Request) {
         attempts++;
       }
 
+      // Look up referrer if referral code provided
+      let referrerId: string | null = null;
+      let referrerName: string | null = null;
+      
+      if (referralCode) {
+        const { data: referrer } = await supabaseAdmin
+          .from('players')
+          .select('id, display_name')
+          .eq('referral_code', referralCode.toUpperCase())
+          .single();
+        
+        if (referrer) {
+          referrerId = referrer.id;
+          referrerName = referrer.display_name;
+        }
+      }
+
       // Create the player with all fields
       const { data: newPlayer, error: createError } = await supabaseAdmin
         .from('players')
@@ -131,6 +154,9 @@ export async function POST(request: Request) {
           discord_username: discordUsername || null,
           phone: phone || null,
           primary_game_id: primaryGame || null,
+          // Referral fields
+          referred_by: referrerId,
+          referral_bonus_paid: false,
           // Defaults
           avatar_type: 'emoji',
           avatar_base: '😎',
@@ -154,10 +180,36 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Failed to create player' }, { status: 500 });
       }
 
+      // Generate and set referral code for the new player (using their UUID)
+      const newReferralCode = generateReferralCode(newPlayer.id);
+      await supabaseAdmin
+        .from('players')
+        .update({ referral_code: newReferralCode })
+        .eq('id', newPlayer.id);
+
+      // If valid referral code was used, award +30 XP to the new player
+      if (referrerId) {
+        await supabaseAdmin
+          .from('xp_ledger')
+          .insert({
+            player_id: newPlayer.id,
+            game_id: 'general',
+            base_xp: 30,
+            final_xp: 30,
+            multiplier: 1,
+            description: `Referral bonus - invited by ${referrerName}`,
+            source: 'referral',
+          });
+        
+        console.log(`🎁 Referral bonus: +30 XP awarded to ${displayName} (referred by ${referrerName})`);
+      }
+
       return NextResponse.json({ 
         success: true, 
         player_id: newPlayer.player_id,
-        displayName: newPlayer.display_name 
+        displayName: newPlayer.display_name,
+        referralBonus: referrerId ? 30 : 0,
+        referredBy: referrerName,
       });
 
     } else {

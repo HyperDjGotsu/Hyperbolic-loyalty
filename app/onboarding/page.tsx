@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const GAME_OPTIONS = [
   { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️' },
@@ -19,12 +19,16 @@ const GAME_OPTIONS = [
 export default function OnboardingPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<'choice' | 'link' | 'create'>('choice');
   const [hypId, setHypId] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [discordUsername, setDiscordUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [primaryGame, setPrimaryGame] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [referralValid, setReferralValid] = useState<boolean | null>(null);
+  const [referralChecking, setReferralChecking] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkingLink, setCheckingLink] = useState(true);
@@ -56,10 +60,46 @@ export default function OnboardingPage() {
       } else if (user.username) {
         setDisplayName(user.username);
       }
+      
+      // Check for referral code in URL (e.g., ?ref=REF-XXXXXXXX)
+      const refParam = searchParams.get('ref');
+      if (refParam) {
+        setReferralCode(refParam.toUpperCase());
+        validateReferralCode(refParam.toUpperCase());
+      }
     }
     
     checkExistingLink();
-  }, [isLoaded, user, router]);
+  }, [isLoaded, user, router, searchParams]);
+
+  // Validate referral code with debounce
+  const validateReferralCode = async (code: string) => {
+    if (!code || code.length < 5) {
+      setReferralValid(null);
+      return;
+    }
+    
+    setReferralChecking(true);
+    try {
+      const response = await fetch(`/api/referral/validate?code=${encodeURIComponent(code)}`);
+      const data = await response.json();
+      setReferralValid(data.valid);
+    } catch (err) {
+      setReferralValid(false);
+    } finally {
+      setReferralChecking(false);
+    }
+  };
+
+  // Debounced referral code validation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (referralCode) {
+        validateReferralCode(referralCode);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [referralCode]);
 
   const handleLinkExisting = async () => {
     if (!hypId.trim()) {
@@ -116,6 +156,7 @@ export default function OnboardingPage() {
           discordUsername: discordUsername.trim() || null,
           phone: phone.trim() || null,
           primaryGame: primaryGame || null,
+          referralCode: referralCode.trim().toUpperCase() || null,
         }),
       });
 
@@ -275,6 +316,49 @@ export default function OnboardingPage() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                 maxLength={30}
               />
+            </div>
+
+            {/* Referral Code */}
+            <div className="mb-4">
+              <label className="block text-slate-400 text-sm mb-2">
+                Referral Code
+                <span className="text-slate-600 ml-2">(optional)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  placeholder="REF-XXXXXXXX"
+                  className={`w-full bg-slate-800 border rounded-xl py-3 px-4 pr-10 text-white placeholder-slate-500 focus:outline-none font-mono tracking-wider ${
+                    referralValid === true
+                      ? 'border-green-500 focus:border-green-500'
+                      : referralValid === false
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-slate-700 focus:border-cyan-500'
+                  }`}
+                  maxLength={20}
+                />
+                {/* Validation indicator */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {referralChecking ? (
+                    <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                  ) : referralValid === true ? (
+                    <span className="text-green-500 text-lg">✓</span>
+                  ) : referralValid === false ? (
+                    <span className="text-red-500 text-lg">✗</span>
+                  ) : null}
+                </div>
+              </div>
+              {referralValid === true && (
+                <p className="text-green-400 text-xs mt-1">✨ Valid code! You'll get +30 XP bonus</p>
+              )}
+              {referralValid === false && referralCode && (
+                <p className="text-red-400 text-xs mt-1">Invalid referral code</p>
+              )}
+              {!referralCode && (
+                <p className="text-slate-600 text-xs mt-1">Got a friend's code? Enter it for bonus XP!</p>
+              )}
             </div>
 
             {/* Discord Username */}

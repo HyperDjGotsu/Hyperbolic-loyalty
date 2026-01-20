@@ -11,6 +11,9 @@ const MONTHLY_THRESHOLD: Record<string, number> = {
 const DEFAULT_THRESHOLD = 3;  // 1x/week = ~4 events/month, need 3
 const MONTHLY_BONUS_XP = 30;
 
+// Referral bonus amount
+const REFERRAL_FIRST_EVENT_BONUS = 50;
+
 // Get current month boundaries (Pacific Time)
 function getCurrentMonthBoundaries(): { start: string; end: string; monthLabel: string; monthKey: string } {
   const now = new Date();
@@ -69,6 +72,84 @@ async function getMonthlyAttendanceCount(playerId: string, gameId: string, month
   ).length;
 }
 
+// Check and award referral bonus when player attends first event
+async function checkReferralBonus(playerId: string, staffId: string): Promise<{
+  awarded: boolean;
+  referrerName?: string;
+  newPlayerName?: string;
+} | null> {
+  try {
+    // Get player's referral info
+    const { data: player } = await supabaseAdmin
+      .from('players')
+      .select('id, referred_by, referral_bonus_paid, display_name')
+      .eq('id', playerId)
+      .single();
+
+    // Skip if no referrer or bonus already paid
+    if (!player?.referred_by || player.referral_bonus_paid) {
+      return null;
+    }
+
+    // Check total "Attended" entries for this player (across all games)
+    const { count } = await supabaseAdmin
+      .from('xp_ledger')
+      .select('id', { count: 'exact', head: true })
+      .eq('player_id', playerId)
+      .ilike('description', '%Attended%');
+
+    // If this is their first attendance (count is 1 because we just added it)
+    if (count === 1) {
+      // Get referrer info
+      const { data: referrer } = await supabaseAdmin
+        .from('players')
+        .select('id, display_name')
+        .eq('id', player.referred_by)
+        .single();
+
+      if (referrer) {
+        // Award +50 XP to referrer (General game)
+        const { error: bonusError } = await supabaseAdmin
+          .from('xp_ledger')
+          .insert({
+            player_id: referrer.id,
+            game_id: 'general',
+            base_xp: REFERRAL_FIRST_EVENT_BONUS,
+            final_xp: REFERRAL_FIRST_EVENT_BONUS,
+            multiplier: 1,
+            description: `Referral reward - ${player.display_name} attended first event`,
+            source: 'referral',
+            awarded_by: staffId,
+          });
+
+        if (bonusError) {
+          console.error('Referral bonus insert error:', bonusError);
+          return null;
+        }
+
+        // Mark bonus as paid so it doesn't trigger again
+        await supabaseAdmin
+          .from('players')
+          .update({ referral_bonus_paid: true })
+          .eq('id', playerId);
+
+        console.log(`🎁 Referral reward: +${REFERRAL_FIRST_EVENT_BONUS} XP awarded to ${referrer.display_name} (${player.display_name} attended first event)`);
+        
+        return {
+          awarded: true,
+          referrerName: referrer.display_name,
+          newPlayerName: player.display_name,
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Referral bonus check error:', error);
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
@@ -119,8 +200,15 @@ export async function POST(request: Request) {
     let bonusAwarded = false;
     let achievementName = '';
     
+    // ================================================
+    // AUTO-AWARD: Referral Bonus Check (First Event)
+    // ================================================
+    let referralBonusAwarded = false;
+    let referralInfo: { referrerName?: string; newPlayerName?: string } | null = null;
+    
     // Only check if this was an attendance entry
     if (reason && reason.includes('Attended')) {
+      // Check Pirate's Life / Hyperlife
       const { start: monthStart, end: monthEnd, monthLabel } = getCurrentMonthBoundaries();
       const threshold = MONTHLY_THRESHOLD[gameId] || DEFAULT_THRESHOLD;
       achievementName = gameId === 'one_piece' ? "Pirate's Life" : 'Hyperlife';
@@ -158,13 +246,28 @@ export async function POST(request: Request) {
           }
         }
       }
+      
+      // Check referral bonus (first event attendance)
+      const referralResult = await checkReferralBonus(playerId, staffCheck.id);
+      if (referralResult?.awarded) {
+        referralBonusAwarded = true;
+        referralInfo = {
+          referrerName: referralResult.referrerName,
+          newPlayerName: referralResult.newPlayerName,
+        };
+      }
     }
 
     return NextResponse.json({ 
       success: true,
+      // Pirate's Life / Hyperlife bonus
       bonusAwarded,
       achievementName: bonusAwarded ? achievementName : null,
       bonusXp: bonusAwarded ? MONTHLY_BONUS_XP : 0,
+      // Referral bonus
+      referralBonusAwarded,
+      referralInfo,
+      referralBonusXp: referralBonusAwarded ? REFERRAL_FIRST_EVENT_BONUS : 0,
     });
   } catch (error) {
     console.error('XP add error:', error);
