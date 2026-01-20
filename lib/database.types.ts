@@ -112,6 +112,74 @@ export type Database = {
         }
         Relationships: []
       }
+      bounty_hunter_matches: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          id: string
+          loser_id: string | null
+          loser_points: number
+          match_type: string
+          recorded_by: string | null
+          round: number | null
+          winner_id: string | null
+          winner_points: number
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          loser_id?: string | null
+          loser_points: number
+          match_type: string
+          recorded_by?: string | null
+          round?: number | null
+          winner_id?: string | null
+          winner_points: number
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          loser_id?: string | null
+          loser_points?: number
+          match_type?: string
+          recorded_by?: string | null
+          round?: number | null
+          winner_id?: string | null
+          winner_points?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_hunter_matches_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_hunter_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_matches_loser_id_fkey"
+            columns: ["loser_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_matches_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_matches_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bounty_hunter_participants: {
         Row: {
           event_id: string | null
@@ -670,6 +738,9 @@ export type Database = {
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
           real_name: string | null
+          referral_bonus_paid: boolean | null
+          referral_code: string | null
+          referred_by: string | null
           shopify_customer_id: string | null
           show_activity: boolean | null
           show_games: boolean | null
@@ -730,6 +801,9 @@ export type Database = {
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
           real_name?: string | null
+          referral_bonus_paid?: boolean | null
+          referral_code?: string | null
+          referred_by?: string | null
           shopify_customer_id?: string | null
           show_activity?: boolean | null
           show_games?: boolean | null
@@ -790,6 +864,9 @@ export type Database = {
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
           real_name?: string | null
+          referral_bonus_paid?: boolean | null
+          referral_code?: string | null
+          referred_by?: string | null
           shopify_customer_id?: string | null
           show_activity?: boolean | null
           show_games?: boolean | null
@@ -809,6 +886,13 @@ export type Database = {
             columns: ["primary_game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "players"
             referencedColumns: ["id"]
           },
         ]
