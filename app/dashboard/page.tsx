@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
-import Lenis from 'lenis';
 import {
   FloatingParticles,
   Avatar,
@@ -113,26 +112,6 @@ export default function DashboardHome() {
   const gamesContainerRef = useRef<HTMLDivElement>(null);
   const activityContainerRef = useRef<HTMLDivElement>(null);
   const hasAnimated = useRef(false);
-
-  // Initialize Lenis smooth scroll
-  useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      touchMultiplier: 2,
-    });
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
-    return () => {
-      lenis.destroy();
-    };
-  }, []);
 
   // Run entrance animations after data loads
   useEffect(() => {
