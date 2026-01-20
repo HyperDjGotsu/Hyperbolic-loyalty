@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -16,7 +16,8 @@ const GAME_OPTIONS = [
   { id: 'digimon', name: 'Digimon', icon: '🦖' },
 ];
 
-export default function OnboardingPage() {
+// Inner component that uses useSearchParams
+function OnboardingContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -433,5 +434,26 @@ export default function OnboardingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function OnboardingLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-slate-400">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main export with Suspense wrapper
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<OnboardingLoading />}>
+      <OnboardingContent />
+    </Suspense>
   );
 }
