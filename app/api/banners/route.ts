@@ -36,6 +36,7 @@ export async function GET() {
       twitchUrl: b.twitch_url,
       youtubeUrl: b.youtube_url,
       hasStream: !!(b.twitch_url || b.youtube_url),
+      backgroundImage: b.background_image || null,
     }));
 
     return NextResponse.json(
