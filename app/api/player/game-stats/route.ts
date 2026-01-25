@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate win streaks per game
-    for (const [gameId, attendances] of gameAttendanceMap) {
+    for (const [gameId, attendances] of Array.from(gameAttendanceMap.entries())) {
       const stats = gameStatsMap.get(gameId)!;
       
       // Attendances are already sorted by date descending
