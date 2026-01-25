@@ -127,16 +127,18 @@ function GameCard({
   const rankProgress = Math.min((game.xp % 500) / 500 * 100, 100);
   const xpToNextRank = 500 - (game.xp % 500);
 
-  // Placeholder stats - will be replaced with real data later
+  // Use real stats from API, fallback to placeholder values
   const stats = {
-    eventsAttended: game.monthlyAttendance || 0,
-    winRate: 65,
-    matches: 24,
-    wins: 16,
-    losses: 8,
-    currentStreak: 3,
-    bestPlacement: '2nd',
-    firstPlayed: 'Oct 2025',
+    eventsAttended: game.stats?.monthlyEvents ?? game.monthlyAttendance ?? 0,
+    totalEvents: game.stats?.totalEvents ?? 0,
+    winRate: game.stats?.winRate ?? 0,
+    matches: (game.stats?.totalWins ?? 0) + (game.stats?.totalLosses ?? 0),
+    wins: game.stats?.totalWins ?? 0,
+    losses: game.stats?.totalLosses ?? 0,
+    currentStreak: game.stats?.currentStreak ?? 0,
+    bestPlacement: game.stats?.bestPlacement ? formatPlacement(game.stats.bestPlacement) : '—',
+    firstPlayed: game.stats?.playingSince ? formatPlayingSince(game.stats.playingSince) : '—',
+    undefeatedCount: game.stats?.undefeatedCount ?? 0,
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -368,6 +370,20 @@ function GameCard({
   );
 }
 
+// Helper function to format placement (1 -> "1st", 2 -> "2nd", etc.)
+function formatPlacement(placement: number): string {
+  const suffixes = ['th', 'st', 'nd', 'rd'];
+  const v = placement % 100;
+  return placement + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
+}
+
+// Helper function to format "playing since" date
+function formatPlayingSince(dateStr: string): string {
+  const date = new Date(dateStr);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
 // Game icons and colors for display
 const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   one_piece: { icon: '🏴‍☠️', color: '#E63946' },
@@ -406,6 +422,19 @@ interface GameDisplay {
   monthlyBonus?: number;
   earnedMonthlyBonus?: boolean;
   achievementName?: string;
+  // Stats from API
+  stats?: {
+    totalEvents: number;
+    totalWins: number;
+    totalLosses: number;
+    winRate: number;
+    bestPlacement: number | null;
+    undefeatedCount: number;
+    currentStreak: number;
+    playingSince: string | null;
+    monthlyEvents: number;
+    monthlyXp: number;
+  };
 }
 
 export default function DesktopDashboard() {
@@ -419,6 +448,7 @@ export default function DesktopDashboard() {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
+  const [gameStats, setGameStats] = useState<Record<string, any>>({});
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -540,6 +570,32 @@ export default function DesktopDashboard() {
     loadDailyStatus();
   }, [playerData, user]);
 
+  // Load game stats for flippable cards
+  useEffect(() => {
+    async function loadGameStats() {
+      if (!playerData || !user) return;
+
+      try {
+        const response = await fetch('/api/player/game-stats');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.stats) {
+            // Convert array to map by gameId
+            const statsMap: Record<string, any> = {};
+            for (const stat of data.stats) {
+              statsMap[stat.gameId] = stat;
+            }
+            setGameStats(statsMap);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading game stats:', error);
+      }
+    }
+
+    loadGameStats();
+  }, [playerData, user]);
+
   // Load banners
   useEffect(() => {
     async function loadBanners() {
@@ -582,6 +638,7 @@ export default function DesktopDashboard() {
       const slug = gxp.game_id || 'unknown';
       const config = GAME_CONFIG[slug] || { icon: '🎮', color: '#64748b' };
       const xpValue = gxp.game_xp || gxp.total_xp || gxp.xp || 0;
+      const stats = gameStats[slug]; // Get stats for this game
       return {
         id: slug,
         name: slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
@@ -595,6 +652,19 @@ export default function DesktopDashboard() {
         monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 6 : 3),
         earnedMonthlyBonus: gxp.earnedMonthlyBonus || false,
         achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'Hyperlife'),
+        // Include stats from API
+        stats: stats ? {
+          totalEvents: stats.totalEvents,
+          totalWins: stats.totalWins,
+          totalLosses: stats.totalLosses,
+          winRate: stats.winRate,
+          bestPlacement: stats.bestPlacement,
+          undefeatedCount: stats.undefeatedCount,
+          currentStreak: stats.currentStreak,
+          playingSince: stats.playingSince,
+          monthlyEvents: stats.monthlyEvents,
+          monthlyXp: stats.monthlyXp,
+        } : undefined,
       };
     })
     .sort((a: GameDisplay, b: GameDisplay) => b.xp - a.xp);
