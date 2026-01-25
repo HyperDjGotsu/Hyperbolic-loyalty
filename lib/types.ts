@@ -137,6 +137,7 @@ export interface Banner {
   hasStream?: boolean;
   twitchUrl?: string;
   youtubeUrl?: string;
+  backgroundImage?: string;  // URL to background image for the banner
 }
 
 // ========== ACTIVITY TYPES ==========
