@@ -136,10 +136,13 @@ function GameCard({
     wins: game.stats?.totalWins ?? 0,
     losses: game.stats?.totalLosses ?? 0,
     currentStreak: game.stats?.currentStreak ?? 0,
-    bestPlacement: game.stats?.bestPlacement ? formatPlacement(game.stats.bestPlacement) : '—',
-    firstPlayed: game.stats?.playingSince ? formatPlayingSince(game.stats.playingSince) : '—',
+    bestPlacement: game.stats?.bestPlacement ? formatPlacement(game.stats.bestPlacement) : null,
+    firstPlayed: game.stats?.playingSince ? formatPlayingSince(game.stats.playingSince) : null,
     undefeatedCount: game.stats?.undefeatedCount ?? 0,
   };
+
+  // Determine if we have "rich" stats worth expanding for
+  const hasRichStats = stats.matches > 0 || stats.bestPlacement !== null || stats.wins > 0;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -156,7 +159,7 @@ function GameCard({
 
   return (
     <div 
-      className={`relative transition-all duration-700 ease-in-out ${isExpanded ? 'col-span-2 row-span-2' : ''}`}
+      className={`relative transition-all duration-700 ease-in-out ${isExpanded && hasRichStats ? 'col-span-2 row-span-2' : ''}`}
       style={{ perspective: '1500px' }}
     >
       <div
@@ -260,7 +263,7 @@ function GameCard({
           </div>
         </div>
 
-        {/* Back of card - expanded stats view */}
+        {/* Back of card - conditional layout based on stats */}
         <div
           className="absolute inset-0 bg-[#07070b] border border-[#1e1e2e] rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
           style={{ 
@@ -296,51 +299,74 @@ function GameCard({
             </button>
           </div>
 
-          {/* Stats Grid - fits in 2x2 card */}
-          <div className="grid grid-cols-4 gap-2 mb-3">
-            <div className="bg-[#111118] rounded-lg p-2.5">
-              <div className="text-[9px] text-slate-500 uppercase mb-1">XP</div>
-              <div className="text-base font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
-            </div>
-            <div className="bg-[#111118] rounded-lg p-2.5">
-              <div className="text-[9px] text-slate-500 uppercase mb-1">Events</div>
-              <div className="text-base font-bold text-cyan-400">{stats.eventsAttended}</div>
-            </div>
-            <div className="bg-[#111118] rounded-lg p-2.5">
-              <div className="text-[9px] text-slate-500 uppercase mb-1">Win Rate</div>
-              <div className="text-base font-bold text-green-400">{stats.winRate}%</div>
-            </div>
-            <div className="bg-[#111118] rounded-lg p-2.5">
-              <div className="text-[9px] text-slate-500 uppercase mb-1">Streak</div>
-              <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
-            </div>
-          </div>
+          {hasRichStats ? (
+            // Full stats layout for players with match history
+            <>
+              {/* Stats Grid - fits in 2x2 card */}
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                <div className="bg-[#111118] rounded-lg p-2.5">
+                  <div className="text-[9px] text-slate-500 uppercase mb-1">XP</div>
+                  <div className="text-base font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
+                </div>
+                <div className="bg-[#111118] rounded-lg p-2.5">
+                  <div className="text-[9px] text-slate-500 uppercase mb-1">Events</div>
+                  <div className="text-base font-bold text-cyan-400">{stats.totalEvents}</div>
+                </div>
+                <div className="bg-[#111118] rounded-lg p-2.5">
+                  <div className="text-[9px] text-slate-500 uppercase mb-1">Win Rate</div>
+                  <div className="text-base font-bold text-green-400">{stats.winRate}%</div>
+                </div>
+                <div className="bg-[#111118] rounded-lg p-2.5">
+                  <div className="text-[9px] text-slate-500 uppercase mb-1">Streak</div>
+                  <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
+                </div>
+              </div>
 
-          {/* Secondary stats row */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
-              <span className="text-[10px] text-slate-500">Matches</span>
-              <span className="text-sm font-bold">{stats.matches}</span>
-            </div>
-            <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
-              <span className="text-[10px] text-slate-500">Best</span>
-              <span className="text-sm font-bold">🏆 {stats.bestPlacement}</span>
-            </div>
-            <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
-              <span className="text-[10px] text-slate-500">Since</span>
-              <span className="text-sm font-bold">{stats.firstPlayed}</span>
-            </div>
-          </div>
+              {/* Secondary stats row */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                  <span className="text-[10px] text-slate-500">Matches</span>
+                  <span className="text-sm font-bold">{stats.matches}</span>
+                </div>
+                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                  <span className="text-[10px] text-slate-500">Best</span>
+                  <span className="text-sm font-bold">🏆 {stats.bestPlacement || '—'}</span>
+                </div>
+                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                  <span className="text-[10px] text-slate-500">Since</span>
+                  <span className="text-sm font-bold">{stats.firstPlayed || '—'}</span>
+                </div>
+              </div>
 
-          {/* W/L Record */}
-          <div className="bg-[#111118] rounded-lg p-2.5 mb-3 flex justify-between items-center">
-            <span className="text-[10px] text-slate-500">Record</span>
-            <span className="text-sm">
-              <span className="text-green-400 font-bold">{stats.wins}W</span>
-              <span className="text-slate-500 mx-1">-</span>
-              <span className="text-red-400 font-bold">{stats.losses}L</span>
-            </span>
-          </div>
+              {/* W/L Record */}
+              <div className="bg-[#111118] rounded-lg p-2.5 mb-3 flex justify-between items-center">
+                <span className="text-[10px] text-slate-500">Record</span>
+                <span className="text-sm">
+                  <span className="text-green-400 font-bold">{stats.wins}W</span>
+                  <span className="text-slate-500 mx-1">-</span>
+                  <span className="text-red-400 font-bold">{stats.losses}L</span>
+                </span>
+              </div>
+            </>
+          ) : (
+            // Compact layout for new players with minimal stats
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-[#111118] rounded-lg p-3">
+                  <div className="text-[10px] text-slate-500 uppercase mb-1">Total XP</div>
+                  <div className="text-xl font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
+                </div>
+                <div className="bg-[#111118] rounded-lg p-3">
+                  <div className="text-[10px] text-slate-500 uppercase mb-1">Events</div>
+                  <div className="text-xl font-bold text-cyan-400">{stats.totalEvents}</div>
+                </div>
+              </div>
+              
+              <div className="bg-[#111118]/50 rounded-lg p-3 mb-4 text-center">
+                <div className="text-slate-500 text-xs">Play in tournaments to unlock detailed stats!</div>
+              </div>
+            </>
+          )}
 
           {/* View Leaderboard button - pushed to bottom */}
           <button 
