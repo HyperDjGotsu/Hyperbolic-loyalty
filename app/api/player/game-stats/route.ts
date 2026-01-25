@@ -213,7 +213,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate win rates
-    for (const stats of gameStatsMap.values()) {
+    for (const stats of Array.from(gameStatsMap.values())) {
       const totalMatches = stats.totalWins + stats.totalLosses;
       if (totalMatches > 0) {
         stats.winRate = Math.round((stats.totalWins / totalMatches) * 100);
