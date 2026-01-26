@@ -92,8 +92,9 @@ export async function GET(
       interestedCount: interestedCount || 0,
       attendanceXp: event.attendance_xp || 5,
       winXp: event.win_xp || 10,
+      prizing: event.prizing || [], // Array of prize types: ['pack-per-win', '1-3-5', 'promo']
       location: 'Games of Martinez',
-      address: '608 Ferry St, Martinez, CA 94553',
+      address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',
     };
 
     return NextResponse.json({ event: publicEvent });

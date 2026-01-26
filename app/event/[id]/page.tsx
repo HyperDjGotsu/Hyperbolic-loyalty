@@ -29,6 +29,7 @@ interface PublicEvent {
   interestedCount: number;
   attendanceXp: number;
   winXp: number;
+  prizing: string[];
   location: string;
   address: string;
 }
@@ -224,6 +225,58 @@ export default function PublicEventPage() {
           </div>
         </div>
 
+        {/* Prizing Structure */}
+        {event.prizing && event.prizing.length > 0 && (
+          <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/20 mb-6">
+            <div className="text-white font-bold mb-3">🏆 Prizes</div>
+            <div className="space-y-3">
+              {event.prizing.map((prize, index) => {
+                // Map prize codes to display info
+                const prizeInfo: Record<string, { icon: string; title: string; description: string }> = {
+                  'pack-per-win': {
+                    icon: '🎁',
+                    title: 'Pack Per Win',
+                    description: 'Win a booster pack for each match victory'
+                  },
+                  'packperwin': {
+                    icon: '🎁',
+                    title: 'Pack Per Win',
+                    description: 'Win a booster pack for each match victory'
+                  },
+                  '1-3-5': {
+                    icon: '🏆',
+                    title: '1-3-5 Packs',
+                    description: '1 win = 1 pack • 2 wins = 3 packs • 3 wins = 5 packs'
+                  },
+                  'promo': {
+                    icon: '🌟',
+                    title: 'Promo Card',
+                    description: 'All participants receive a promo card (while supplies last)'
+                  },
+                };
+
+                const info = prizeInfo[prize.toLowerCase().replace(/\s+/g, '')] || {
+                  icon: '🎁',
+                  title: prize,
+                  description: ''
+                };
+
+                return (
+                  <div key={index} className="flex items-start gap-3">
+                    <span className="text-2xl">{info.icon}</span>
+                    <div>
+                      <div className="text-white font-medium">{info.title}</div>
+                      {info.description && (
+                        <div className="text-slate-400 text-sm">{info.description}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Description */}
         {event.description && (
           <div className="mb-6">
@@ -297,7 +350,7 @@ export default function PublicEventPage() {
       <footer className="bg-slate-900 border-t border-slate-800 mt-12">
         <div className="max-w-2xl mx-auto px-4 py-8 text-center">
           <div className="text-slate-400 text-sm mb-2">
-            Games of Martinez • 608 Ferry St, Martinez, CA
+            Games of Martinez • 1155 Arnold Dr Ste E & F, Martinez, CA
           </div>
           <div className="text-slate-500 text-xs">
             Powered by Hyperbolic XP

@@ -63,6 +63,7 @@ interface ParsedEvent {
   attendance_xp: number;
   win_xp: number;
   status: string;
+  prizing: string[] | null;
 }
 
 // Parse iCal date format with timezone support
@@ -161,6 +162,35 @@ function parseMaxPlayers(text: string): number | null {
   return null;
 }
 
+// Parse prizing from description
+// Matches: "Prizing: Pack per win", "Prizing: 1-3-5, Promo", "Prizes: pack per win"
+function parsePrizing(text: string): string[] | null {
+  // Look for "Prizing:" or "Prizes:" line
+  const prizingMatch = text.match(/(?:prizing|prizes?)\s*(?::|is|-)\s*(.+?)(?:\n|$)/i);
+  
+  if (prizingMatch) {
+    const prizingText = prizingMatch[1].trim();
+    
+    // Split by comma or "and"
+    const prizes = prizingText
+      .split(/,|\band\b/i)
+      .map(p => p.trim().toLowerCase())
+      .filter(p => p.length > 0)
+      .map(p => {
+        // Normalize prize names
+        if (/pack\s*per\s*win|ppw/i.test(p)) return 'pack-per-win';
+        if (/1-3-5|1\s*3\s*5/i.test(p)) return '1-3-5';
+        if (/promo/i.test(p)) return 'promo';
+        // Return as-is if not a known type (allows custom prizes)
+        return p;
+      });
+    
+    return prizes.length > 0 ? prizes : null;
+  }
+  
+  return null;
+}
+
 // Expand recurring events into individual instances
 // Supports WEEKLY recurrence for the next 4 weeks
 function expandRecurringEvent(
@@ -238,9 +268,8 @@ function expandRecurringEvent(
   } else if (freq === 'DAILY') {
     let currentDate = new Date(startDate);
     let count = 0;
-    const twoWeeksFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
     
-    while (currentDate <= twoWeeksFromNow && count < maxCount) {
+    while (currentDate <= fourWeeksFromNow && count < maxCount) {
       if (untilDate && currentDate > untilDate) break;
       
       const cutoff = new Date();
@@ -262,74 +291,29 @@ function expandRecurringEvent(
       count++;
     }
   } else {
-    // Unknown frequency, just return the base event
-    events.push(baseEvent);
+    // For non-recurring or unsupported patterns, just return the base event if it's in the future
+    const cutoff = new Date();
+    cutoff.setHours(cutoff.getHours() - 2);
+    
+    if (startDate >= cutoff) {
+      events.push(baseEvent);
+    }
   }
   
   return events;
 }
 
-interface ParsedEvent {
-  gcal_uid: string;
-  name: string;
-  game_id: string | null;
-  description: string | null;
-  scheduled_at: string;
-  ends_at: string | null;
-  entry_fee: number | null;
-  max_players: number | null;
-  has_stream: boolean;
-  attendance_xp: number;
-  win_xp: number;
-  status: string;
-}
-
-// Get overrides for event
-function getOverrides(title: string, description?: string | null): { entryFee?: number; maxPlayers?: number; attendanceXp?: number; winXp?: number; hasStream?: boolean } {
-  const result: { entryFee?: number; maxPlayers?: number; attendanceXp?: number; winXp?: number; hasStream?: boolean } = {};
-  
-  // First check for explicit price in title or description
-  const explicitPrice = parseExplicitPrice(title) ?? (description ? parseExplicitPrice(description) : null);
-  if (explicitPrice !== null) {
-    result.entryFee = explicitPrice;
-  }
-  
-  // Check for explicit max players in title or description
-  const explicitMaxPlayers = parseMaxPlayers(title) ?? (description ? parseMaxPlayers(description) : null);
-  if (explicitMaxPlayers !== null) {
-    result.maxPlayers = explicitMaxPlayers;
-  }
-  
-  // Then apply keyword-based overrides (won't override explicit values)
-  for (const override of EVENT_OVERRIDES) {
-    if (override.pattern.test(title)) {
-      if (result.entryFee === undefined && override.entryFee !== undefined) {
-        result.entryFee = override.entryFee;
-      }
-      if (result.maxPlayers === undefined && override.maxPlayers !== undefined) {
-        result.maxPlayers = override.maxPlayers;
-      }
-      if (override.attendanceXp !== undefined) result.attendanceXp = override.attendanceXp;
-      if (override.winXp !== undefined) result.winXp = override.winXp;
-      if (override.hasStream !== undefined) result.hasStream = override.hasStream;
-      break;
-    }
-  }
-  
-  return result;
-}
-
-// Parse iCal feed into events
+// Parse iCal format
 function parseICal(icalData: string): ParsedEvent[] {
   const events: ParsedEvent[] = [];
   const lines = icalData.split(/\r?\n/);
   
-  let currentEvent: Record<string, string> = {};
   let inEvent = false;
+  let currentEvent: Record<string, string> = {};
   let currentKey = '';
   
   for (const line of lines) {
-    // Handle line continuations
+    // Handle folded lines (continuation lines start with space or tab)
     if (line.startsWith(' ') || line.startsWith('\t')) {
       if (currentKey && currentEvent[currentKey]) {
         currentEvent[currentKey] += line.slice(1);
@@ -340,101 +324,116 @@ function parseICal(icalData: string): ParsedEvent[] {
     if (line === 'BEGIN:VEVENT') {
       inEvent = true;
       currentEvent = {};
-    } else if (line === 'END:VEVENT') {
+      currentKey = '';
+      continue;
+    }
+    
+    if (line === 'END:VEVENT') {
       inEvent = false;
       
-      if (currentEvent['SUMMARY'] && currentEvent['DTSTART']) {
-        const title = (currentEvent['SUMMARY'] || '').replace(/\\,/g, ',');
-        
-        // Skip non-game events like "Store Open Hours"
-        const shouldSkip = SKIP_PATTERNS.some(pattern => pattern.test(title));
-        
-        if (!shouldSkip) {
-          const gameId = detectGameId(title);
-          
-          // Get description (parse early so we can check for price)
-          const description = (currentEvent['DESCRIPTION'] || '')
-            .replace(/\\,/g, ',')
-            .replace(/\\n/g, '\n')
-            .replace(/\\;/g, ';')
-            .trim() || null;
-          
-          const overrides = getOverrides(title, description);
-          
-          // Parse start date with timezone
-          const startRaw = currentEvent['DTSTART_RAW'] || currentEvent['DTSTART'] || '';
-          let startTzid: string | undefined;
-          let startDateStr = currentEvent['DTSTART'] || '';
-          
-          // Extract TZID if present (e.g., "TZID=America/Los_Angeles:20250117T173000")
-          const tzMatch = startRaw.match(/TZID=([^:;]+)/i);
-          if (tzMatch) {
-            startTzid = tzMatch[1];
-          }
-          if (startDateStr.includes(':')) {
-            startDateStr = startDateStr.split(':').pop() || startDateStr;
-          }
-          const startDate = parseICalDate(startDateStr, startTzid);
-          
-          // Parse end date with timezone
-          const endRaw = currentEvent['DTEND_RAW'] || currentEvent['DTEND'] || '';
-          let endTzid: string | undefined;
-          let endDateStr = currentEvent['DTEND'] || '';
-          
-          const endTzMatch = endRaw.match(/TZID=([^:;]+)/i);
-          if (endTzMatch) {
-            endTzid = endTzMatch[1];
-          }
-          if (endDateStr.includes(':')) {
-            endDateStr = endDateStr.split(':').pop() || endDateStr;
-          }
-          const endDate = endDateStr ? parseICalDate(endDateStr, endTzid) : null;
-          
-          // Get UID
-          const uid = currentEvent['UID'] || `gcal-${startDate.getTime()}-${title.slice(0, 20)}`;
-          
-          // Clean up title (remove "GoM" prefix)
-          const cleanName = title.replace(/^GoM\s*/i, '').trim();
-          
-          // Build base event
-          const baseEvent: ParsedEvent = {
-            gcal_uid: uid,
-            name: cleanName,
-            game_id: gameId,
-            description: description,
-            scheduled_at: startDate.toISOString(),
-            ends_at: endDate ? endDate.toISOString() : null,
-            entry_fee: overrides.entryFee ?? null,
-            max_players: overrides.maxPlayers ?? null,
-            has_stream: overrides.hasStream ?? false,
-            attendance_xp: overrides.attendanceXp ?? 20,
-            win_xp: overrides.winXp ?? 10,
-            status: 'scheduled',
-          };
-          
-          // Check for recurrence rule
-          const rrule = currentEvent['RRULE'];
-          
-          if (rrule) {
-            // Expand recurring event into instances
-            const instances = expandRecurringEvent(baseEvent, rrule, startDate, endDate);
-            events.push(...instances);
-          } else {
-            // Single event
-            events.push(baseEvent);
-          }
+      // Process the event
+      const summary = currentEvent['SUMMARY'] || '';
+      const description = currentEvent['DESCRIPTION'] || '';
+      const uid = currentEvent['UID'] || `unknown_${Date.now()}`;
+      const dtstart = currentEvent['DTSTART'];
+      const dtend = currentEvent['DTEND'];
+      const rrule = currentEvent['RRULE'];
+      
+      // Skip events matching skip patterns
+      const shouldSkip = SKIP_PATTERNS.some(pattern => pattern.test(summary));
+      if (shouldSkip || !dtstart) {
+        continue;
+      }
+      
+      // Get timezone from DTSTART
+      const dtstartRaw = currentEvent['DTSTART_RAW'] || '';
+      const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
+      const tzid = tzidMatch ? tzidMatch[1] : undefined;
+      
+      // Parse dates
+      const startDate = parseICalDate(dtstart, tzid);
+      const endDate = dtend ? parseICalDate(dtend, tzid) : null;
+      
+      // Detect game
+      const gameId = detectGameId(summary);
+      
+      // Parse price and players from description (or title)
+      const combinedText = `${summary}\n${description}`;
+      let entryFee = parseExplicitPrice(combinedText);
+      let maxPlayers = parseMaxPlayers(combinedText);
+      let attendanceXp = 5;
+      let winXp = 10;
+      let hasStream = false;
+      
+      // Parse prizing from description
+      const prizing = parsePrizing(combinedText);
+      
+      // Apply overrides based on event title
+      for (const override of EVENT_OVERRIDES) {
+        if (override.pattern.test(summary)) {
+          if (entryFee === null && override.entryFee !== undefined) entryFee = override.entryFee;
+          if (maxPlayers === null && override.maxPlayers !== undefined) maxPlayers = override.maxPlayers;
+          if (override.attendanceXp !== undefined) attendanceXp = override.attendanceXp;
+          if (override.winXp !== undefined) winXp = override.winXp;
+          if (override.hasStream !== undefined) hasStream = override.hasStream;
+          break; // Use first matching override
         }
       }
-    } else if (inEvent && line.includes(':')) {
+      
+      // Clean up description (remove parsed fields for display)
+      let cleanDescription = description
+        .replace(/\\n/g, '\n')
+        .replace(/\\,/g, ',')
+        .replace(/\\;/g, ';')
+        .replace(/price\s*(?:is|:|-)\s*\$\d+(?:\.\d{2})?/gi, '')
+        .replace(/players?\s*(?::|is)?\s*\d+/gi, '')
+        .replace(/prizing\s*(?::|is|-)\s*.+?(?:\n|$)/gi, '')
+        .trim();
+      
+      // Create base event
+      const baseEvent: ParsedEvent = {
+        gcal_uid: uid,
+        name: summary,
+        game_id: gameId,
+        description: cleanDescription || null,
+        scheduled_at: startDate.toISOString(),
+        ends_at: endDate?.toISOString() || null,
+        entry_fee: entryFee,
+        max_players: maxPlayers,
+        has_stream: hasStream,
+        attendance_xp: attendanceXp,
+        win_xp: winXp,
+        status: 'scheduled',
+        prizing: prizing,
+      };
+      
+      // Handle recurring events
+      if (rrule) {
+        const expandedEvents = expandRecurringEvent(baseEvent, rrule, startDate, endDate);
+        events.push(...expandedEvents);
+      } else {
+        // Non-recurring event - check if it's in the future
+        const cutoff = new Date();
+        cutoff.setHours(cutoff.getHours() - 2);
+        
+        if (startDate >= cutoff) {
+          events.push(baseEvent);
+        }
+      }
+      
+      continue;
+    }
+    
+    if (inEvent) {
+      // Parse key:value or key;params:value
       const colonIndex = line.indexOf(':');
+      if (colonIndex === -1) continue;
+      
       const fullKey = line.slice(0, colonIndex);
       const value = line.slice(colonIndex + 1);
       
-      // Extract base key (without parameters like TZID)
-      let key = fullKey;
-      if (fullKey.includes(';')) {
-        key = fullKey.split(';')[0];
-      }
+      // Extract base key (remove parameters like TZID)
+      const key = fullKey.split(';')[0];
       
       currentEvent[key] = value;
       currentKey = key;
@@ -547,6 +546,7 @@ export async function POST(request: Request) {
               has_stream: event.has_stream,
               attendance_xp: event.attendance_xp,
               win_xp: event.win_xp,
+              prizing: event.prizing,
             })
             .eq('id', existing.id);
           
@@ -573,6 +573,7 @@ export async function POST(request: Request) {
             win_xp: event.win_xp,
             status: 'scheduled' as const,
             current_players: 0,
+            prizing: event.prizing,
           };
           const { error } = await supabaseAdmin
             .from('events')
@@ -658,6 +659,7 @@ export async function GET(request: Request) {
         game: e.game_id,
         date: new Date(e.scheduled_at).toLocaleDateString(),
         time: new Date(e.scheduled_at).toLocaleTimeString(),
+        prizing: e.prizing,
         isNew: !existingUids.has(e.gcal_uid),
       })),
     });
