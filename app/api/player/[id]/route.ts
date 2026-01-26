@@ -80,7 +80,7 @@ export async function GET(
       realName: player.real_name,
       discord: player.discord_username,
       avatar: {
-        emoji: player.avatar_emoji,
+        emoji: player.avatar_base,
         background: player.avatar_background,
         frame: player.avatar_frame,
         badge: player.avatar_badge,
