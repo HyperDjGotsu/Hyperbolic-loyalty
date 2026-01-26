@@ -98,7 +98,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Desktop Header - Hidden on mobile */}
-        <header className="hidden lg:flex bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-6 sticky top-0 z-40 items-center justify-between">
+        <header className="hidden lg:flex bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-8 sticky top-0 z-40 items-center justify-between">
           <div>
             <h1 className="text-white text-xl font-bold">
               {navItems.find(item => isActive(item.path))?.label || 'Dashboard'}
@@ -118,10 +118,9 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content - Full width on desktop */}
         <main className="flex-1">
-          {/* Mobile: constrained width for app feel | Desktop: full width with max for readability */}
-          <div className="lg:max-w-6xl lg:mx-auto lg:px-6 lg:py-6">
+          <div className="h-full">
             {children}
           </div>
         </main>

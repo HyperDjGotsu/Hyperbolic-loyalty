@@ -888,10 +888,10 @@ function EventsPageContent() {
 
   // Render
   return (
-    <div className="min-h-screen bg-[#07070b]">
+    <div className="min-h-screen bg-[#07070b] w-full max-w-none">
       {/* Header */}
-      <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10">
-        <div className="px-6 lg:px-12 py-4">
+      <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10 w-full">
+        <div className="px-6 lg:px-12 py-4 w-full">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-white">Events</h1>
