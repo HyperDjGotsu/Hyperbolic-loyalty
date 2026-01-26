@@ -208,7 +208,7 @@ export default function PublicEventPage() {
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
             <div className="text-slate-400 text-sm mb-1">Interested</div>
-            <div className="text-white font-medium text-2xl">{event.interestedCount}</div>
+            <div className="text-white font-bold text-4xl">{event.interestedCount}</div>
           </div>
         </div>
 
