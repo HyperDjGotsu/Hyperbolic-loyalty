@@ -361,7 +361,7 @@ function parseICal(icalData: string): ParsedEvent[] {
       const combinedText = `${summary}\n${description}`;
       let entryFee = parseExplicitPrice(combinedText);
       let maxPlayers = parseMaxPlayers(combinedText);
-      let attendanceXp = 5;
+      let attendanceXp = 10;
       let winXp = 10;
       let hasStream = false;
       
