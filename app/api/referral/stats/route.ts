@@ -13,8 +13,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Get current player
-    const { data: player } = await supabaseAdmin
+    // Get current player (cast to any due to missing types)
+    const { data: player } = await (supabaseAdmin as any)
       .from('players')
       .select('id, referral_code, display_name')
       .eq('clerk_user_id', userId)
@@ -28,27 +28,27 @@ export async function GET() {
     let referralCode = player.referral_code;
     if (!referralCode) {
       referralCode = `REF-${player.id.substring(0, 8).toUpperCase()}`;
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('players')
         .update({ referral_code: referralCode })
         .eq('id', player.id);
     }
 
     // Count how many players this user has referred
-    const { count: referralCount } = await supabaseAdmin
+    const { count: referralCount } = await (supabaseAdmin as any)
       .from('players')
       .select('id', { count: 'exact', head: true })
       .eq('referred_by', player.id);
 
     // Count how many referrals have attended (bonus paid)
-    const { count: attendedCount } = await supabaseAdmin
+    const { count: attendedCount } = await (supabaseAdmin as any)
       .from('players')
       .select('id', { count: 'exact', head: true })
       .eq('referred_by', player.id)
       .eq('referral_bonus_paid', true);
 
     // Get list of referred players with their status
-    const { data: referrals } = await supabaseAdmin
+    const { data: referrals } = await (supabaseAdmin as any)
       .from('players')
       .select('id, display_name, referral_bonus_paid, created_at')
       .eq('referred_by', player.id)
@@ -57,8 +57,6 @@ export async function GET() {
 
     // Calculate total XP earned from referrals
     const totalReferralXp = (referralCount || 0) * 0 + (attendedCount || 0) * 50;
-    // Note: The +30 goes to the NEW player, not the referrer
-    // Referrer only gets +50 when referral attends first event
 
     return NextResponse.json({
       referralCode,
@@ -69,7 +67,7 @@ export async function GET() {
         pendingAttendance: (referralCount || 0) - (attendedCount || 0),
         totalXpEarned: totalReferralXp,
       },
-      referrals: referrals?.map(r => ({
+      referrals: referrals?.map((r: any) => ({
         id: r.id,
         name: r.display_name,
         hasAttended: r.referral_bonus_paid,
