@@ -891,7 +891,7 @@ function EventsPageContent() {
     <div className="min-h-screen bg-[#07070b]">
       {/* Header */}
       <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-4">
+        <div className="px-6 lg:px-12 py-4">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-white">Events</h1>
@@ -935,7 +935,7 @@ function EventsPageContent() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+      <div className="px-6 lg:px-12 py-6">
         {loading ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4 animate-bounce">📅</div>
@@ -1039,8 +1039,8 @@ function EventsPageContent() {
 // Loading fallback
 function EventsLoading() {
   return (
-    <div className="min-h-screen bg-[#07070b] p-4">
-      <div className="animate-pulse max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#07070b] p-6 lg:p-12">
+      <div className="animate-pulse">
         <div className="h-8 bg-slate-800 rounded w-48 mb-4"></div>
         <div className="h-10 bg-slate-800 rounded mb-4"></div>
         <div className="flex gap-6">
