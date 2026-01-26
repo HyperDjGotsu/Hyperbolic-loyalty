@@ -35,12 +35,12 @@ export async function GET(
   try {
     const eventId = params.id;
 
-    // Fetch event details using shared supabaseAdmin
-    const { data: event, error } = await supabaseAdmin
+    // Fetch event details using shared supabaseAdmin - cast to any to bypass types
+    const { data: event, error } = await (supabaseAdmin
       .from('events')
       .select('*')
       .eq('id', eventId)
-      .single();
+      .single() as any);
 
     if (error || !event) {
       return NextResponse.json(
@@ -92,11 +92,17 @@ export async function GET(
       twitchUrl: event.twitch_url,
       youtubeUrl: event.youtube_url,
       interestedCount: interestedCount || 0,
-      attendanceXp: 777,
+      attendanceXp: event.attendance_xp ?? 10,
       winXp: event.win_xp ?? 10,
       prizing: event.prizing || [],
       location: 'Games of Martinez',
       address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',
+      // DEBUG - raw values from database
+      _debug_raw: {
+        attendance_xp: event.attendance_xp,
+        win_xp: event.win_xp,
+        typeof_attendance: typeof event.attendance_xp,
+      }
     };
 
     return NextResponse.json({ event: publicEvent });
