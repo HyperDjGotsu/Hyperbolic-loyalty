@@ -85,14 +85,17 @@ export async function GET(
     // Format the event for public display
     const gameConfig = GAME_CONFIG[event.game_id || ''] || GAME_CONFIG.general;
     
+    // Format in Pacific timezone (store timezone)
     const scheduledAt = new Date(event.scheduled_at);
     const formattedDate = scheduledAt.toLocaleDateString('en-US', {
+      timeZone: 'America/Los_Angeles',
       weekday: 'long',
       month: 'long',
       day: 'numeric',
       year: 'numeric',
     });
     const formattedTime = scheduledAt.toLocaleTimeString('en-US', {
+      timeZone: 'America/Los_Angeles',
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,

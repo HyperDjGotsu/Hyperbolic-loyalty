@@ -207,12 +207,8 @@ export default function PublicEventPage() {
             <div className="text-slate-400 text-sm">{event.address}</div>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <div className="text-slate-400 text-sm mb-1">Community</div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-yellow-400 text-lg">⭐</span>
-              <span className="text-white font-bold text-2xl">{event.interestedCount}</span>
-              <span className="text-slate-400 text-sm">interested</span>
-            </div>
+            <div className="text-slate-400 text-sm mb-1">Interested</div>
+            <div className="text-white font-medium text-2xl">{event.interestedCount}</div>
           </div>
         </div>
 
