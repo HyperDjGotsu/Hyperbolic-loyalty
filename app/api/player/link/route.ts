@@ -170,7 +170,7 @@ export async function POST(request: Request) {
           allow_friend_requests: true,
           allow_messages: 'friends',
           pass_tier: 'none',
-          pass_status: 'inactive',
+          // Removed pass_status as 'inactive' is not a valid enum value
         })
         .select()
         .single();
