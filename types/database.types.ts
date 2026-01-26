@@ -404,7 +404,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["event_status"] | null
           twitch_url?: string | null
           updated_at?: string | null
-          win_xp?: string | null
+          win_xp?: number | null
           youtube_url?: string | null
         }
         Relationships: [
