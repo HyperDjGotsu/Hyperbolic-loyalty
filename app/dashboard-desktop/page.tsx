@@ -234,7 +234,7 @@ function GameCard({
               borderColor: game.earnedMonthlyBonus ? `${game.color}50` : `${game.color}20`
             }}
           >
-            <div className="flex justify-between items-center mb-1.5">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-[11px] font-semibold" style={{ color: game.color }}>
                 {game.achievementName}
               </span>
@@ -244,18 +244,23 @@ function GameCard({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-[5px] bg-[#07070b] rounded overflow-hidden bar-shine-on-hover">
-                <div 
-                  className="h-full rounded"
-                  style={{ 
-                    background: game.earnedMonthlyBonus ? '#22c55e' : game.color,
-                    width: `${Math.min((game.monthlyAttendance || 0) / (game.monthlyThreshold || 4) * 100, 100)}%`
-                  }}
-                />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                {/* Dot tracker */}
+                {Array.from({ length: game.monthlyThreshold || 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-2.5 h-2.5 rounded-full transition-colors"
+                    style={{
+                      background: i < (game.monthlyAttendance || 0)
+                        ? (game.earnedMonthlyBonus ? '#22c55e' : game.color)
+                        : '#1e1e2e'
+                    }}
+                  />
+                ))}
               </div>
               <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
-                {game.monthlyAttendance || 0}/{game.monthlyThreshold || 4}
+                {game.monthlyAttendance || 0}/{game.monthlyThreshold || 4} Jan
               </span>
             </div>
           </div>

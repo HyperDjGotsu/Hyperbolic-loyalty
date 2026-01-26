@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { FloatingParticles } from '@/components/ui';
 
 interface GameInfo {
   id: string;
@@ -96,7 +95,6 @@ const FriendsInterested = ({ friends, totalCount }: { friends: FriendInterest[];
   
   const otherCount = totalCount - friends.length;
   
-  // Build display text
   let text = '';
   if (friends.length === 1) {
     text = friends[0].name;
@@ -113,8 +111,7 @@ const FriendsInterested = ({ friends, totalCount }: { friends: FriendInterest[];
   }
   
   return (
-    <div className="flex items-center gap-2 mt-2">
-      {/* Friend avatars (max 3) */}
+    <div className="flex items-center gap-2">
       {friends.length > 0 && (
         <div className="flex -space-x-2">
           {friends.slice(0, 3).map(friend => (
@@ -183,7 +180,6 @@ const ShareModal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <div className="relative bg-slate-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-slate-700">
-        {/* Header */}
         <div className="p-4 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-white">Share Event</h3>
@@ -200,7 +196,6 @@ const ShareModal = ({
           </div>
         </div>
 
-        {/* Friend list */}
         <div className="p-4 overflow-y-auto max-h-[50vh]">
           {loading ? (
             <div className="text-center py-8 text-slate-400">Loading friends...</div>
@@ -234,7 +229,6 @@ const ShareModal = ({
           )}
         </div>
 
-        {/* Actions */}
         <div className="p-4 border-t border-slate-800">
           <button
             onClick={handleShare}
@@ -249,6 +243,173 @@ const ShareModal = ({
   );
 };
 
+// Mini Calendar component for desktop
+const MiniCalendar = ({ 
+  events,
+  selectedDate,
+  onSelectDate 
+}: { 
+  events: CalendarEvent[];
+  selectedDate: Date | null;
+  onSelectDate: (date: Date | null) => void;
+}) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  // Get events for each day
+  const getEventsForDay = (day: number) => {
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return events.filter(e => e.date === dateStr || e.date.includes(`${monthNames[currentMonth.getMonth()].slice(0,3)} ${day}`));
+  };
+
+  const isToday = (day: number) => {
+    const today = new Date();
+    return today.getDate() === day && 
+           today.getMonth() === currentMonth.getMonth() && 
+           today.getFullYear() === currentMonth.getFullYear();
+  };
+
+  const isSelected = (day: number) => {
+    if (!selectedDate) return false;
+    return selectedDate.getDate() === day && 
+           selectedDate.getMonth() === currentMonth.getMonth() && 
+           selectedDate.getFullYear() === currentMonth.getFullYear();
+  };
+
+  return (
+    <div className="bg-[#0d0d14] border border-[#1e1e2e] rounded-2xl p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <button 
+          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+          className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white"
+        >
+          ←
+        </button>
+        <h3 className="text-white font-bold">
+          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        </h3>
+        <button 
+          onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+          className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white"
+        >
+          →
+        </button>
+      </div>
+
+      {/* Day names */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {dayNames.map(day => (
+          <div key={day} className="text-center text-slate-500 text-xs font-medium py-1">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {/* Empty cells for days before the 1st */}
+        {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+          <div key={`empty-${i}`} className="aspect-square" />
+        ))}
+        
+        {/* Days of the month */}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const dayEvents = getEventsForDay(day);
+          const hasEvents = dayEvents.length > 0;
+          
+          return (
+            <button
+              key={day}
+              onClick={() => {
+                const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                onSelectDate(isSelected(day) ? null : date);
+              }}
+              className={`aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all relative ${
+                isSelected(day)
+                  ? 'bg-cyan-500 text-white'
+                  : isToday(day)
+                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                  : hasEvents
+                  ? 'bg-slate-800 text-white hover:bg-slate-700'
+                  : 'text-slate-500 hover:bg-slate-800/50'
+              }`}
+            >
+              {day}
+              {hasEvents && !isSelected(day) && (
+                <div className="absolute bottom-1 flex gap-0.5">
+                  {dayEvents.slice(0, 3).map((e, idx) => (
+                    <div 
+                      key={idx}
+                      className="w-1 h-1 rounded-full"
+                      style={{ backgroundColor: e.game?.color || '#64748b' }}
+                    />
+                  ))}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Clear filter button */}
+      {selectedDate && (
+        <button
+          onClick={() => onSelectDate(null)}
+          className="w-full mt-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"
+        >
+          Clear date filter
+        </button>
+      )}
+    </div>
+  );
+};
+
+// Stream buttons component
+const StreamButtons = ({ event }: { event: CalendarEvent }) => {
+  if (!event.hasStream) return null;
+  
+  return (
+    <div className="flex gap-2">
+      {event.twitchUrl && (
+        <a 
+          href={event.twitchUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-white rounded-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          📺 Twitch
+          {event.isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+        </a>
+      )}
+      {event.youtubeUrl && (
+        <a 
+          href={event.youtubeUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          ▶️ YouTube
+        </a>
+      )}
+      {!event.twitchUrl && !event.youtubeUrl && (
+        <span className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded-lg">
+          📺 Stream
+        </span>
+      )}
+    </div>
+  );
+};
+
 function EventsPageContent() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -259,9 +420,19 @@ function EventsPageContent() {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [togglingInterest, setTogglingInterest] = useState<string | null>(null);
   const [shareEvent, setShareEvent] = useState<CalendarEvent | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
   const searchParams = useSearchParams();
 
-  // Check for event ID in URL params (from notification click)
+  // Check for desktop
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
+  // Check for event ID in URL params
   useEffect(() => {
     const eventId = searchParams.get('event');
     if (eventId && events.length > 0) {
@@ -281,16 +452,7 @@ function EventsPageContent() {
       const data = await res.json();
       
       if (res.ok) {
-        let filteredEvents = data.events || [];
-        
-        // Client-side game filter
-        if (selectedGame !== 'all') {
-          filteredEvents = filteredEvents.filter(
-            (e: CalendarEvent) => e.game?.id === selectedGame
-          );
-        }
-        
-        setEvents(filteredEvents);
+        setEvents(data.events || []);
       } else {
         setError(data.error || 'Failed to load events');
       }
@@ -304,7 +466,7 @@ function EventsPageContent() {
 
   useEffect(() => {
     loadEvents();
-  }, [selectedGame]);
+  }, []);
 
   // Sync from Google Calendar
   const handleSync = async () => {
@@ -396,8 +558,24 @@ function EventsPageContent() {
     }
   };
 
+  // Filter events
+  const filteredEvents = events.filter(event => {
+    // Game filter
+    if (selectedGame !== 'all' && event.game?.id !== selectedGame) {
+      return false;
+    }
+    // Date filter
+    if (selectedDate) {
+      const eventDate = new Date(event.scheduledAt);
+      if (eventDate.toDateString() !== selectedDate.toDateString()) {
+        return false;
+      }
+    }
+    return true;
+  });
+
   // Group events by date
-  const groupedEvents = events.reduce((groups, event) => {
+  const groupedEvents = filteredEvents.reduce((groups, event) => {
     const date = event.date;
     if (!groups[date]) {
       groups[date] = [];
@@ -406,44 +584,94 @@ function EventsPageContent() {
     return groups;
   }, {} as Record<string, CalendarEvent[]>);
 
-  const StreamButtons = ({ event }: { event: CalendarEvent }) => {
-    if (!event.hasStream) return null;
-    
-    return (
-      <div className="flex gap-2">
-        {event.twitchUrl && (
-          <a 
-            href={event.twitchUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-white rounded-lg"
-            onClick={(e) => e.stopPropagation()}
+  // Desktop Event Card (wider, more info)
+  const DesktopEventCard = ({ event }: { event: CalendarEvent }) => (
+    <div 
+      onClick={() => setSelectedEvent(event)}
+      className={`bg-[#0d0d14] rounded-xl overflow-hidden border cursor-pointer hover:border-slate-600 transition-all ${
+        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-[#1e1e2e]'
+      }`}
+    >
+      <div 
+        className="p-4 border-l-4" 
+        style={{ borderLeftColor: event.game?.color || '#64748b' }}
+      >
+        <div className="flex items-center gap-4">
+          {/* Game Icon */}
+          <div 
+            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0"
+            style={{ backgroundColor: `${event.game?.color || '#64748b'}20` }}
           >
-            📺 Twitch
-            {event.isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
-          </a>
-        )}
-        {event.youtubeUrl && (
-          <a 
-            href={event.youtubeUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            ▶️ YouTube
-          </a>
-        )}
-        {!event.twitchUrl && !event.youtubeUrl && (
-          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded-lg">
-            📺 Stream TBD
-          </span>
-        )}
+            {event.game?.icon || '🎮'}
+          </div>
+          
+          {/* Event Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-white font-bold text-lg">{event.name}</span>
+              {event.isLive && (
+                <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">LIVE</span>
+              )}
+              {event.isStartingSoon && !event.isLive && (
+                <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full">SOON</span>
+              )}
+              {event.hasStream && <StreamButtons event={event} />}
+            </div>
+            <div className="text-slate-400 text-sm">{event.time}</div>
+            
+            {/* Friends interested - inline on desktop */}
+            {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
+              <div className="mt-2">
+                <FriendsInterested 
+                  friends={event.interestedFriends || []} 
+                  totalCount={event.interestedCount} 
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Price & Actions */}
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className={`font-bold text-lg ${event.isFree ? 'text-green-400' : 'text-cyan-400'}`}>
+                {event.entryFee}
+              </div>
+              {event.hasStream && <div className="text-purple-400 text-xs">📺 Streamed</div>}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleInterest(event.id);
+                }}
+                disabled={togglingInterest === event.id}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  event.isInterested
+                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : '⭐ Interested?'}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShareEvent(event);
+                }}
+                className="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-600"
+              >
+                📤 Share
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    );
-  };
+    </div>
+  );
 
-  const EventCard = ({ event }: { event: CalendarEvent }) => (
+  // Mobile Event Card (original)
+  const MobileEventCard = ({ event }: { event: CalendarEvent }) => (
     <div 
       onClick={() => setSelectedEvent(event)}
       className={`bg-slate-800/50 rounded-xl overflow-hidden border cursor-pointer hover:border-slate-600 transition-all ${
@@ -473,7 +701,6 @@ function EventsPageContent() {
             </div>
             <div className="text-slate-400 text-sm">{event.time}</div>
             
-            {/* Friends interested */}
             <FriendsInterested 
               friends={event.interestedFriends || []} 
               totalCount={event.interestedCount} 
@@ -485,7 +712,6 @@ function EventsPageContent() {
           </div>
         </div>
         
-        {/* Quick action buttons */}
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-700/50">
           <button
             onClick={(e) => {
@@ -515,10 +741,11 @@ function EventsPageContent() {
     </div>
   );
 
+  // Event Detail Modal (same for both)
   const EventDetailModal = ({ event, onClose }: { event: CalendarEvent; onClose: () => void }) => (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-slate-900 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
+      <div className="relative bg-slate-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
         {/* Header */}
         <div 
           className="relative p-6 pb-4"
@@ -533,76 +760,45 @@ function EventsPageContent() {
           
           <div className="flex items-center gap-4">
             <div 
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-              style={{ backgroundColor: `${event.game?.color || '#3b82f6'}30` }}
+              className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl"
+              style={{ backgroundColor: `${event.game?.color || '#64748b'}30` }}
             >
               {event.game?.icon || '🎮'}
             </div>
             <div>
-              <div className="text-white font-bold text-xl">{event.name}</div>
-              <div className="text-slate-400">{event.game?.name || 'General'}</div>
-              {event.isLive && (
-                <span className="inline-block mt-1 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">
-                  🔴 LIVE NOW
-                </span>
-              )}
+              <h2 className="text-2xl font-bold text-white">{event.name}</h2>
+              <div className="text-slate-300">{event.game?.name || 'General Event'}</div>
             </div>
           </div>
         </div>
         
-        {/* Details */}
-        <div className="p-4 space-y-4">
+        {/* Content */}
+        <div className="p-6 space-y-4">
           {/* Date & Time */}
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center text-2xl">📅</div>
-              <div>
-                <div className="text-white font-bold">{event.date}</div>
-                <div className="text-slate-400">{event.time}</div>
-              </div>
+          <div className="flex gap-4">
+            <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+              <div className="text-slate-500 text-xs mb-1">DATE</div>
+              <div className="text-white font-bold">{event.date}</div>
+            </div>
+            <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+              <div className="text-slate-500 text-xs mb-1">TIME</div>
+              <div className="text-white font-bold">{event.time}</div>
             </div>
           </div>
           
-          {/* Entry & Spots */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
-              <div className="text-2xl mb-1">💰</div>
-              <div className="text-slate-500 text-xs">Entry Fee</div>
-              <div className="text-white font-bold text-lg">{event.entryFee}</div>
-              {event.passFreeEntry && (
-                <div className="text-yellow-400 text-xs mt-1">👑 Free with Pass</div>
-              )}
+          {/* Entry Fee & Spots */}
+          <div className="flex gap-4">
+            <div className="flex-1 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl p-4 border border-cyan-500/20">
+              <div className="text-slate-500 text-xs mb-1">ENTRY FEE</div>
+              <div className={`text-xl font-bold ${event.isFree ? 'text-green-400' : 'text-cyan-400'}`}>
+                {event.entryFee}
+              </div>
             </div>
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
-              <div className="text-2xl mb-1">👥</div>
-              <div className="text-slate-500 text-xs">Capacity</div>
+            <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+              <div className="text-slate-500 text-xs mb-1">SPOTS</div>
               <div className="text-white font-bold text-lg">{event.maxSpots || 'Open'}</div>
             </div>
           </div>
-          
-          {/* Friends interested */}
-          {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
-            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/20">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">⭐</span>
-                <div className="flex-1">
-                  <div className="text-purple-400 font-bold">{event.interestedCount} Interested</div>
-                  {event.interestedFriends?.length > 0 && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex -space-x-2">
-                        {event.interestedFriends.slice(0, 5).map(friend => (
-                          <MiniAvatar key={friend.id} avatar={friend.avatar} name={friend.name} />
-                        ))}
-                      </div>
-                      <span className="text-slate-400 text-sm">
-                        {event.interestedFriends.map(f => f.name).join(', ')}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
           
           {/* XP Rewards */}
           <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 border border-cyan-500/20">
@@ -618,6 +814,25 @@ function EventsPageContent() {
               </div>
             </div>
           </div>
+          
+          {/* Friends interested */}
+          {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/20">
+              <div className="text-purple-400 font-bold mb-2">⭐ {event.interestedCount} Interested</div>
+              {event.interestedFriends?.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-2">
+                    {event.interestedFriends.slice(0, 5).map(friend => (
+                      <MiniAvatar key={friend.id} avatar={friend.avatar} name={friend.name} />
+                    ))}
+                  </div>
+                  <span className="text-slate-400 text-sm">
+                    {event.interestedFriends.map(f => f.name).join(', ')}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Description */}
           {event.description && (
@@ -642,12 +857,12 @@ function EventsPageContent() {
         </div>
         
         {/* Action Buttons */}
-        <div className="p-4 space-y-2">
+        <div className="p-4 border-t border-slate-800">
           <div className="flex gap-2">
             <button 
               onClick={() => toggleInterest(event.id)}
               disabled={togglingInterest === event.id}
-              className={`flex-1 py-4 rounded-xl font-bold text-lg transition-all ${
+              className={`flex-1 py-3 rounded-xl font-bold transition-all ${
                 event.isInterested
                   ? 'bg-slate-700 text-slate-300 border-2 border-slate-600'
                   : 'text-white'
@@ -660,66 +875,67 @@ function EventsPageContent() {
             </button>
             <button
               onClick={() => setShareEvent(event)}
-              className="px-6 py-4 bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-600"
+              className="px-6 py-3 bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-600"
             >
               📤
             </button>
           </div>
-          <p className="text-slate-500 text-xs text-center">Registration handled in-store</p>
+          <p className="text-slate-500 text-xs text-center mt-2">Registration handled in-store</p>
         </div>
       </div>
     </div>
   );
 
+  // Render
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="min-h-screen bg-[#07070b]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
-        <div className="p-4">
-          <div className="flex items-center justify-between">
+      <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-4">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-white">Events</h1>
+              <h1 className="text-2xl font-bold text-white">Events</h1>
               <p className="text-slate-400 text-sm">Tap to see details</p>
             </div>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 disabled:opacity-50"
+              className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 disabled:opacity-50 flex items-center gap-2"
             >
               {syncing ? '🔄 Syncing...' : '🔄 Sync'}
             </button>
           </div>
           
           {syncMessage && (
-            <div className={`mt-2 p-2 rounded-lg text-sm ${
+            <div className={`mb-4 p-2 rounded-lg text-sm ${
               syncMessage.startsWith('✅') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
             }`}>
               {syncMessage}
             </div>
           )}
-        </div>
-        
-        {/* Game Filter */}
-        <div className="px-4 pb-3 flex gap-2 overflow-x-auto">
-          {GAME_FILTERS.map(game => (
-            <button
-              key={game.id}
-              onClick={() => setSelectedGame(game.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
-                selectedGame === game.id
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
-            >
-              <span>{game.icon}</span>
-              <span>{game.name}</span>
-            </button>
-          ))}
+          
+          {/* Game Filter */}
+          <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:overflow-visible">
+            {GAME_FILTERS.map(game => (
+              <button
+                key={game.id}
+                onClick={() => setSelectedGame(game.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+                  selectedGame === game.id
+                    ? 'bg-cyan-500 text-white'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                <span>{game.icon}</span>
+                <span>{game.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
         {loading ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4 animate-bounce">📅</div>
@@ -739,7 +955,7 @@ function EventsPageContent() {
             <div className="text-4xl mb-4">📭</div>
             <div className="text-white font-bold">No upcoming events</div>
             <div className="text-slate-500 text-sm mt-2">
-              {selectedGame !== 'all' ? 'Try selecting "All Games" to see more events' : 'Tap Sync to pull from Google Calendar'}
+              Tap Sync to pull from Google Calendar
             </div>
             <button
               onClick={handleSync}
@@ -750,20 +966,65 @@ function EventsPageContent() {
             </button>
           </div>
         ) : (
-          <div className="space-y-6">
-            {Object.entries(groupedEvents).map(([date, dateEvents]) => (
-              <div key={date}>
-                <h2 className="text-slate-400 text-sm font-medium mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
-                  {date}
-                </h2>
-                <div className="space-y-3">
-                  {dateEvents.map(event => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
+          <div className={`${isDesktop ? 'flex gap-6' : ''}`}>
+            {/* Calendar sidebar - desktop only */}
+            {isDesktop && (
+              <div className="w-80 shrink-0">
+                <div className="sticky top-32">
+                  <MiniCalendar 
+                    events={events} 
+                    selectedDate={selectedDate}
+                    onSelectDate={setSelectedDate}
+                  />
+                  
+                  {/* Quick stats */}
+                  <div className="mt-4 bg-[#0d0d14] border border-[#1e1e2e] rounded-2xl p-4">
+                    <h3 className="text-white font-bold mb-3">This Week</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-cyan-400">{events.length}</div>
+                        <div className="text-slate-500 text-xs">Events</div>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-purple-400">
+                          {events.filter(e => e.isInterested).length}
+                        </div>
+                        <div className="text-slate-500 text-xs">Interested</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Events list */}
+            <div className="flex-1 space-y-6">
+              {Object.entries(groupedEvents).length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-4xl mb-4">🔍</div>
+                  <div className="text-white font-bold">No events match your filters</div>
+                  <div className="text-slate-500 text-sm mt-2">
+                    Try selecting a different game or clearing the date filter
+                  </div>
+                </div>
+              ) : (
+                Object.entries(groupedEvents).map(([date, dateEvents]) => (
+                  <div key={date}>
+                    <h2 className="text-slate-400 text-sm font-medium mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
+                      {date}
+                    </h2>
+                    <div className="space-y-3">
+                      {dateEvents.map(event => (
+                        isDesktop 
+                          ? <DesktopEventCard key={event.id} event={event} />
+                          : <MobileEventCard key={event.id} event={event} />
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -775,21 +1036,27 @@ function EventsPageContent() {
   );
 }
 
-// Loading fallback for Suspense
+// Loading fallback
 function EventsLoading() {
   return (
-    <div className="min-h-screen bg-slate-950 p-4">
-      <div className="animate-pulse">
+    <div className="min-h-screen bg-[#07070b] p-4">
+      <div className="animate-pulse max-w-7xl mx-auto">
         <div className="h-8 bg-slate-800 rounded w-48 mb-4"></div>
-        <div className="h-32 bg-slate-800 rounded mb-4"></div>
-        <div className="h-32 bg-slate-800 rounded mb-4"></div>
-        <div className="h-32 bg-slate-800 rounded"></div>
+        <div className="h-10 bg-slate-800 rounded mb-4"></div>
+        <div className="flex gap-6">
+          <div className="w-80 h-96 bg-slate-800 rounded-2xl hidden lg:block"></div>
+          <div className="flex-1 space-y-4">
+            <div className="h-24 bg-slate-800 rounded-xl"></div>
+            <div className="h-24 bg-slate-800 rounded-xl"></div>
+            <div className="h-24 bg-slate-800 rounded-xl"></div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// Wrap in Suspense for useSearchParams
+// Wrap in Suspense
 export default function EventsPage() {
   return (
     <Suspense fallback={<EventsLoading />}>
