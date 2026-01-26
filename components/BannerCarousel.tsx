@@ -53,6 +53,9 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
 
   const banner = banners[current];
 
+  // Check for background image
+  const hasBackgroundImage = banner.backgroundImage;
+
   // Support both old format (color class) and new format (colorFrom/colorTo)
   const gradientStyle = banner.colorFrom && banner.colorTo
     ? { background: `linear-gradient(to right, ${banner.colorFrom}, ${banner.colorTo})` }
@@ -67,23 +70,45 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
 
   return (
     <div className="relative mx-4 rounded-2xl overflow-hidden shadow-lg">
-      <div 
-        className={`absolute inset-0 ${gradientClass}`}
-        style={gradientStyle}
-      >
-        <FloatingParticles />
-      </div>
+      {/* Background - either image or gradient */}
+      {hasBackgroundImage ? (
+        <>
+          {/* Background image with overlay */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${banner.backgroundImage})` }}
+          />
+          {/* Dark overlay for readability */}
+          <div className="absolute inset-0 bg-black/40" />
+          {/* Optional gradient overlay for brand colors */}
+          {gradientStyle && (
+            <div 
+              className="absolute inset-0 opacity-30"
+              style={gradientStyle}
+            />
+          )}
+        </>
+      ) : (
+        <div 
+          className={`absolute inset-0 ${gradientClass}`}
+          style={gradientStyle}
+        >
+          <FloatingParticles />
+        </div>
+      )}
+      
+      {/* Content */}
       <div className="relative p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <div className="text-4xl animate-bounce">{banner.icon}</div>
             <div>
-              <div className="font-black text-white text-lg">{banner.title}</div>
-              <div className="text-white/80 text-sm">{banner.subtitle}</div>
+              <div className="font-black text-white text-lg drop-shadow-lg">{banner.title}</div>
+              <div className="text-white/90 text-sm drop-shadow">{banner.subtitle}</div>
             </div>
           </div>
           {banner.badge && (
-            <div className="bg-white/20 px-3 py-1 rounded-full">
+            <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
               <span className="text-white text-xs font-bold">{banner.badge}</span>
             </div>
           )}
@@ -99,6 +124,8 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
           </div>
         )}
       </div>
+      
+      {/* Dot indicators */}
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
         {banners.map((_, i) => (
           <div
