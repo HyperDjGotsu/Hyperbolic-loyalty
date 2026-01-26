@@ -50,11 +50,11 @@ export async function POST(request: NextRequest) {
       .insert({
         player_id: hypId,
         display_name: displayName.trim(),
-        avatar_emoji: avatar?.base || '😎',
+        avatar_base: avatar?.base || '😎',
         avatar_background: avatar?.background || '#3b82f6',
         avatar_frame: avatar?.frame || 'none',
         avatar_badge: avatar?.badge || null,
-        pass_tier: 'free',
+        pass_tier: 'none',
         profile_visibility: 'public',
       })
       .select()
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       hyp_id: player.player_id,
       displayName: player.display_name,
       avatar: {
-        emoji: player.avatar_emoji,
+        emoji: player.avatar_base,
         background: player.avatar_background,
         frame: player.avatar_frame,
         badge: player.avatar_badge,
