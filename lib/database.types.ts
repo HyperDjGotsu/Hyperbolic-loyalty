@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       banners: {
         Row: {
+          background_image: string | null
           badge: string | null
           color_from: string | null
           color_to: string | null
@@ -34,6 +35,7 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          background_image?: string | null
           badge?: string | null
           color_from?: string | null
           color_to?: string | null
@@ -52,6 +54,7 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          background_image?: string | null
           badge?: string | null
           color_from?: string | null
           color_to?: string | null
@@ -423,6 +426,7 @@ export type Database = {
           max_players: number | null
           name: string
           pass_free_entry: boolean | null
+          prizing: string[] | null
           scheduled_at: string
           status: Database["public"]["Enums"]["event_status"] | null
           twitch_url: string | null
@@ -444,6 +448,7 @@ export type Database = {
           max_players?: number | null
           name: string
           pass_free_entry?: boolean | null
+          prizing?: string[] | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["event_status"] | null
           twitch_url?: string | null
@@ -465,6 +470,7 @@ export type Database = {
           max_players?: number | null
           name?: string
           pass_free_entry?: boolean | null
+          prizing?: string[] | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["event_status"] | null
           twitch_url?: string | null
