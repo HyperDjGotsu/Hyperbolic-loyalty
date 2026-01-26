@@ -43,6 +43,7 @@ interface CalendarEvent {
   interestedFriends: FriendInterest[];
   isStartingSoon: boolean;
   isLive: boolean;
+  prizing: string[] | null;
 }
 
 interface Friend {
@@ -706,6 +707,33 @@ function EventsPageContent() {
               </div>
             </div>
           </div>
+          
+          {/* Prizing */}
+          {event.prizing && event.prizing.length > 0 && (
+            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/20">
+              <div className="text-slate-400 text-xs mb-2">PRIZES</div>
+              <div className="space-y-2">
+                {event.prizing.map((prize, index) => {
+                  const prizeInfo: Record<string, { icon: string; title: string; desc: string }> = {
+                    'pack-per-win': { icon: '🎁', title: 'Pack Per Win', desc: 'Win a booster pack for each match victory' },
+                    'packperwin': { icon: '🎁', title: 'Pack Per Win', desc: 'Win a booster pack for each match victory' },
+                    '1-3-5': { icon: '🏆', title: '1-3-5 Packs', desc: '1 win = 1 pack • 2 wins = 3 packs • 3 wins = 5 packs' },
+                    'promo': { icon: '🌟', title: 'Promo Card', desc: 'All participants receive a promo card' },
+                  };
+                  const info = prizeInfo[prize.toLowerCase()] || { icon: '🎁', title: prize, desc: '' };
+                  return (
+                    <div key={index} className="flex items-center gap-3">
+                      <span className="text-xl">{info.icon}</span>
+                      <div>
+                        <div className="text-white font-medium text-sm">{info.title}</div>
+                        {info.desc && <div className="text-slate-500 text-xs">{info.desc}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
           {/* Description */}
           {event.description && (

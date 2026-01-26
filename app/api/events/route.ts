@@ -45,7 +45,8 @@ export async function GET(request: Request) {
         twitch_url,
         youtube_url,
         attendance_xp,
-        win_xp
+        win_xp,
+        prizing
       `)
       .order('scheduled_at', { ascending: true })
       .limit(limit);
@@ -234,6 +235,7 @@ export async function GET(request: Request) {
         interestedFriends: interest.friends,
         isStartingSoon: hoursUntil > 0 && hoursUntil <= 2,
         isLive: event.status === 'active',
+        prizing: event.prizing || null,
       };
     });
 
