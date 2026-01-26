@@ -74,11 +74,13 @@ export async function GET(
       );
     }
 
-    // Get interested count
-    const { count: interestedCount } = await supabase
+    // Get interested count - use explicit column selection
+    const { data: interests, error: interestError } = await supabase
       .from('event_interest')
-      .select('*', { count: 'exact', head: true })
+      .select('id')
       .eq('event_id', eventId);
+    
+    const interestedCount = interests?.length || 0;
 
     // Format the event for public display
     const gameConfig = GAME_CONFIG[event.game_id || ''] || GAME_CONFIG.general;
