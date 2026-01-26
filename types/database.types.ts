@@ -349,11 +349,13 @@ export type Database = {
           ends_at: string | null
           entry_fee: number | null
           game_id: string | null
+          gcal_uid: string | null
           has_stream: boolean | null
           id: string
           max_players: number | null
           name: string
           pass_free_entry: boolean | null
+          prizing: string[] | null
           scheduled_at: string
           status: Database["public"]["Enums"]["event_status"] | null
           twitch_url: string | null
@@ -369,11 +371,13 @@ export type Database = {
           ends_at?: string | null
           entry_fee?: number | null
           game_id?: string | null
+          gcal_uid?: string | null
           has_stream?: boolean | null
           id?: string
           max_players?: number | null
           name: string
           pass_free_entry?: boolean | null
+          prizing?: string[] | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["event_status"] | null
           twitch_url?: string | null
@@ -389,16 +393,18 @@ export type Database = {
           ends_at?: string | null
           entry_fee?: number | null
           game_id?: string | null
+          gcal_uid?: string | null
           has_stream?: boolean | null
           id?: string
           max_players?: number | null
           name?: string
           pass_free_entry?: boolean | null
+          prizing?: string[] | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["event_status"] | null
           twitch_url?: string | null
           updated_at?: string | null
-          win_xp?: number | null
+          win_xp?: string | null
           youtube_url?: string | null
         }
         Relationships: [
