@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,23 +34,29 @@ export async function GET(
 ) {
   try {
     const eventId = params.id;
+    
+    // Create a fresh Supabase client directly in this route
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch event details using shared supabaseAdmin - cast to any to bypass types
-    const { data: event, error } = await (supabaseAdmin
+    // Fetch event details
+    const { data: event, error } = await supabase
       .from('events')
       .select('*')
       .eq('id', eventId)
-      .single() as any);
+      .single();
 
     if (error || !event) {
       return NextResponse.json(
-        { error: 'Event not found' },
+        { error: 'Event not found', details: error },
         { status: 404 }
       );
     }
 
     // Get interested count
-    const { count: interestedCount } = await supabaseAdmin
+    const { count: interestedCount } = await supabase
       .from('event_interest')
       .select('*', { count: 'exact', head: true })
       .eq('event_id', eventId);
@@ -97,11 +103,12 @@ export async function GET(
       prizing: event.prizing || [],
       location: 'Games of Martinez',
       address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',
-      // DEBUG - raw values from database
-      _debug_raw: {
-        attendance_xp: event.attendance_xp,
-        win_xp: event.win_xp,
-        typeof_attendance: typeof event.attendance_xp,
+      // DEBUG INFO
+      _debug: {
+        supabase_url: supabaseUrl,
+        raw_attendance_xp: event.attendance_xp,
+        raw_win_xp: event.win_xp,
+        event_keys: Object.keys(event),
       }
     };
 
