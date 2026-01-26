@@ -15,6 +15,7 @@ const GAME_CONFIG: Record<string, { name: string; icon: string; color: string }>
   pokemon: { name: 'Pokémon', icon: '⚡', color: '#FACC15' },
   mtg: { name: 'Magic: The Gathering', icon: '✨', color: '#8B5CF6' },
   star_wars: { name: 'Star Wars', icon: '🌟', color: '#00d4ff' },
+  star_wars_unlimited: { name: 'Star Wars Unlimited', icon: '🌟', color: '#00d4ff' },
   vanguard: { name: 'Vanguard', icon: '⚔️', color: '#ef4444' },
   uvs: { name: 'UVS', icon: '👊', color: '#f97316' },
   hololive: { name: 'Hololive', icon: '🎤', color: '#ff69b4' },
@@ -24,6 +25,7 @@ const GAME_CONFIG: Record<string, { name: string; icon: string; color: string }>
   union_arena: { name: 'Union Arena', icon: '🛡️', color: '#3b82f6' },
   flesh_and_blood: { name: 'Flesh & Blood', icon: '⚔️', color: '#dc2626' },
   warhammer: { name: 'Warhammer', icon: '🔨', color: '#ca8a04' },
+  sw_legion: { name: 'SW Legion', icon: '🎖️', color: '#65a30d' },
   legion: { name: 'SW Legion', icon: '🎖️', color: '#65a30d' },
   general: { name: 'General', icon: '🎮', color: '#64748b' },
 };
@@ -49,6 +51,14 @@ export async function GET(
       );
     }
 
+    // DEBUG: Log raw database values
+    console.log('RAW EVENT DATA:', {
+      id: event.id,
+      name: event.name,
+      attendance_xp: event.attendance_xp,
+      win_xp: event.win_xp,
+    });
+
     // Get interested count
     const { count: interestedCount } = await supabase
       .from('event_interest')
@@ -71,6 +81,10 @@ export async function GET(
       hour12: true,
     });
 
+    // Use database values directly - they should be 10/10
+    const attendanceXp = event.attendance_xp ?? 10;
+    const winXp = event.win_xp ?? 10;
+
     const publicEvent = {
       id: event.id,
       name: event.name,
@@ -87,14 +101,19 @@ export async function GET(
       },
       entryFee: event.entry_fee ? `$${event.entry_fee}` : 'Free',
       isFree: !event.entry_fee || event.entry_fee === 0,
-      maxSpots: event.max_spots,
+      maxSpots: event.max_players,
       hasStream: event.has_stream || false,
       twitchUrl: event.twitch_url,
       youtubeUrl: event.youtube_url,
       interestedCount: interestedCount || 0,
-      attendanceXp: event.attendance_xp || 10,
-      winXp: event.win_xp || 10,
-      prizing: event.prizing || [], // Array of prize types: ['pack-per-win', '1-3-5', 'promo']
+      attendanceXp,
+      winXp,
+      // DEBUG: Include raw values
+      _debug: {
+        raw_attendance_xp: event.attendance_xp,
+        raw_win_xp: event.win_xp,
+      },
+      prizing: event.prizing || [],
       location: 'Games of Martinez',
       address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',
     };
