@@ -181,8 +181,9 @@ export async function POST(request: Request) {
       }
 
       // Generate and set referral code for the new player (using their UUID)
+      // Note: referral_code exists in DB but not in types - using any cast
       const newReferralCode = generateReferralCode(newPlayer.id);
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('players')
         .update({ referral_code: newReferralCode })
         .eq('id', newPlayer.id);
