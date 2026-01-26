@@ -35,16 +35,35 @@ export async function GET(
   try {
     const eventId = params.id;
     
-    // Create a fresh Supabase client directly in this route
+    // Get environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Create client with service role key
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Fetch event details
+    // Fetch event details - USE EXPLICIT COLUMNS LIKE /api/events DOES
     const { data: event, error } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        id,
+        name,
+        game_id,
+        description,
+        scheduled_at,
+        ends_at,
+        max_players,
+        current_players,
+        entry_fee,
+        pass_free_entry,
+        status,
+        has_stream,
+        twitch_url,
+        youtube_url,
+        attendance_xp,
+        win_xp,
+        prizing
+      `)
       .eq('id', eventId)
       .single();
 
@@ -103,13 +122,6 @@ export async function GET(
       prizing: event.prizing || [],
       location: 'Games of Martinez',
       address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',
-      // DEBUG INFO
-      _debug: {
-        supabase_url: supabaseUrl,
-        raw_attendance_xp: event.attendance_xp,
-        raw_win_xp: event.win_xp,
-        event_keys: Object.keys(event),
-      }
     };
 
     return NextResponse.json({ event: publicEvent });
