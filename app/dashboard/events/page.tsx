@@ -441,7 +441,16 @@ function EventsPageContent() {
         const res = await fetch('/api/player/by-clerk');
         if (res.ok) {
           const data = await res.json();
-          const favorites = data.favorite_games || data.favoriteGames || [];
+          console.log('Player data for favorites:', data);
+          
+          // Try multiple possible field names
+          const favorites = data.favorite_games || 
+                           data.favoriteGames || 
+                           data.player?.favorite_games ||
+                           data.player?.favoriteGames ||
+                           [];
+          
+          console.log('Loaded favorites:', favorites);
           setFavoriteGames(favorites);
           
           // Set favorites as default filter if user has any
@@ -917,14 +926,11 @@ function EventsPageContent() {
   // Render
   return (
     <div className="min-h-screen bg-[#07070b] w-full max-w-none">
-      {/* Header */}
+      {/* Filter Bar */}
       <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10 w-full">
-        <div className="px-6 lg:px-12 py-4 w-full">
+        <div className="px-6 lg:px-8 py-4 w-full">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Events</h1>
-              <p className="text-slate-400 text-sm">Tap to see details</p>
-            </div>
+            <p className="text-slate-400 text-sm">Tap to see details</p>
             <button
               onClick={handleSync}
               disabled={syncing}
