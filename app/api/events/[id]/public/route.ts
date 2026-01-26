@@ -92,7 +92,7 @@ export async function GET(
       twitchUrl: event.twitch_url,
       youtubeUrl: event.youtube_url,
       interestedCount: interestedCount || 0,
-      attendanceXp: event.attendance_xp ?? 10,
+      attendanceXp: 777,
       winXp: event.win_xp ?? 10,
       prizing: event.prizing || [],
       location: 'Games of Martinez',
