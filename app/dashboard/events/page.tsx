@@ -438,24 +438,20 @@ function EventsPageContent() {
   useEffect(() => {
     async function loadFavorites() {
       try {
-        const res = await fetch('/api/player/by-clerk');
+        const res = await fetch('/api/player/favorite-games');
         if (res.ok) {
           const data = await res.json();
-          console.log('Player data for favorites:', data);
+          console.log('Favorites data:', data);
           
-          // Try multiple possible field names
-          const favorites = data.favorite_games || 
-                           data.favoriteGames || 
-                           data.player?.favorite_games ||
-                           data.player?.favoriteGames ||
-                           [];
-          
-          console.log('Loaded favorites:', favorites);
-          setFavoriteGames(favorites);
-          
-          // Set favorites as default filter if user has any
-          if (favorites.length > 0) {
-            setSelectedGames(new Set(favorites));
+          if (data.favorites && data.favorites.length > 0) {
+            // Filter out 'overall' since it's not a real game filter
+            const gamesFavorites = data.favorites.filter((f: string) => f !== 'overall');
+            console.log('Loaded favorites:', gamesFavorites);
+            setFavoriteGames(gamesFavorites);
+            
+            if (gamesFavorites.length > 0) {
+              setSelectedGames(new Set(gamesFavorites));
+            }
           }
         }
       } catch (err) {
