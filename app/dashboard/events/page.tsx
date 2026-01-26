@@ -415,6 +415,7 @@ function EventsPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set(['all']));
+  const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -422,6 +423,7 @@ function EventsPageContent() {
   const [shareEvent, setShareEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [favoritesLoaded, setFavoritesLoaded] = useState(false);
   const searchParams = useSearchParams();
 
   // Check for desktop
@@ -430,6 +432,30 @@ function EventsPageContent() {
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
+  // Load user's favorite games and set as default filter
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        const res = await fetch('/api/player/by-clerk');
+        if (res.ok) {
+          const data = await res.json();
+          const favorites = data.favorite_games || data.favoriteGames || [];
+          setFavoriteGames(favorites);
+          
+          // Set favorites as default filter if user has any
+          if (favorites.length > 0) {
+            setSelectedGames(new Set(favorites));
+          }
+        }
+      } catch (err) {
+        console.error('Error loading favorites:', err);
+      } finally {
+        setFavoritesLoaded(true);
+      }
+    }
+    loadFavorites();
   }, []);
 
   // Check for event ID in URL params
@@ -918,10 +944,38 @@ function EventsPageContent() {
           
           {/* Game Filter - Multi-select */}
           <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:overflow-visible">
-            {GAME_FILTERS.map(game => {
-              const isSelected = game.id === 'all' 
-                ? selectedGames.has('all') 
-                : selectedGames.has(game.id);
+            {/* All Games button */}
+            <button
+              onClick={() => setSelectedGames(new Set(['all']))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+                selectedGames.has('all')
+                  ? 'bg-cyan-500 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              <span>🎮</span>
+              <span>All Games</span>
+            </button>
+
+            {/* My Games button - only show if user has favorites */}
+            {favoriteGames.length > 0 && (
+              <button
+                onClick={() => setSelectedGames(new Set(favoriteGames))}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+                  !selectedGames.has('all') && favoriteGames.every(g => selectedGames.has(g)) && selectedGames.size === favoriteGames.length
+                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-dashed border-slate-600'
+                }`}
+              >
+                <span>⭐</span>
+                <span>My Games</span>
+              </button>
+            )}
+
+            {/* Individual game buttons */}
+            {GAME_FILTERS.filter(g => g.id !== 'all').map(game => {
+              const isSelected = selectedGames.has(game.id);
+              const isFavorite = favoriteGames.includes(game.id);
               
               return (
                 <button
@@ -930,22 +984,17 @@ function EventsPageContent() {
                     setSelectedGames(prev => {
                       const next = new Set(prev);
                       
-                      if (game.id === 'all') {
-                        // Clicking "All Games" clears other selections
-                        return new Set(['all']);
-                      } else {
-                        // Remove 'all' when selecting specific games
-                        next.delete('all');
-                        
-                        if (next.has(game.id)) {
-                          next.delete(game.id);
-                          // If nothing selected, go back to 'all'
-                          if (next.size === 0) {
-                            return new Set(['all']);
-                          }
-                        } else {
-                          next.add(game.id);
+                      // Remove 'all' when selecting specific games
+                      next.delete('all');
+                      
+                      if (next.has(game.id)) {
+                        next.delete(game.id);
+                        // If nothing selected, go back to 'all'
+                        if (next.size === 0) {
+                          return new Set(['all']);
                         }
+                      } else {
+                        next.add(game.id);
                       }
                       
                       return next;
@@ -959,6 +1008,7 @@ function EventsPageContent() {
                 >
                   <span>{game.icon}</span>
                   <span>{game.name}</span>
+                  {isFavorite && !isSelected && <span className="text-yellow-400 text-xs">⭐</span>}
                 </button>
               );
             })}
