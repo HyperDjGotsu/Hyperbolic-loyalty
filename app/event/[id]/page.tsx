@@ -45,7 +45,10 @@ export default function PublicEventPage() {
   useEffect(() => {
     async function loadEvent() {
       try {
-        const res = await fetch(`/api/events/${params.id}/public`);
+        // Add cache busting to ensure fresh data
+        const res = await fetch(`/api/events/${params.id}/public?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
         const data = await res.json();
         
         if (res.ok) {
