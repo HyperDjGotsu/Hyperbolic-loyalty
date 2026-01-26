@@ -141,6 +141,12 @@ const ShareModal = ({
   const [loading, setLoading] = useState(true);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
   const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'link' | 'friends'>('link');
+
+  const publicUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/event/${event.id}`
+    : '';
 
   useEffect(() => {
     async function loadFriends() {
@@ -171,12 +177,34 @@ const ShareModal = ({
     });
   };
 
-  const handleShare = async () => {
+  const handleShareWithFriends = async () => {
     if (selectedFriends.size === 0) return;
     setSharing(true);
     await onShare(Array.from(selectedFriends));
     setSharing(false);
     onClose();
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(publicUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: event.name,
+          text: `Check out this event at Games of Martinez: ${event.name} on ${event.date} @ ${event.time}`,
+          url: publicUrl,
+        });
+      } catch (err) {
+        // User cancelled - do nothing
+      }
+    } else {
+      handleCopyLink();
+    }
   };
 
   return (
@@ -200,50 +228,110 @@ const ShareModal = ({
           </div>
         </div>
 
-        {/* Friend list */}
-        <div className="p-4 overflow-y-auto max-h-[50vh]">
-          {loading ? (
-            <div className="text-center py-8 text-slate-400">Loading friends...</div>
-          ) : friends.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-3xl mb-2">👥</div>
-              <div className="text-slate-400">No friends yet</div>
-              <div className="text-slate-500 text-sm">Add friends in the Community tab</div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="text-slate-400 text-xs mb-3">Select friends to share with:</div>
-              {friends.map(friend => (
-                <button
-                  key={friend.odid}
-                  onClick={() => toggleFriend(friend.odid)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                    selectedFriends.has(friend.odid)
-                      ? 'bg-cyan-500/20 border border-cyan-500/50'
-                      : 'bg-slate-800 border border-slate-700 hover:border-slate-600'
-                  }`}
-                >
-                  <MiniAvatar avatar={friend.avatar} name={friend.name} />
-                  <span className="text-white flex-1 text-left">{friend.name}</span>
-                  {selectedFriends.has(friend.odid) && (
-                    <span className="text-cyan-400">✓</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="p-4 border-t border-slate-800">
+        {/* Tabs */}
+        <div className="flex border-b border-slate-800">
           <button
-            onClick={handleShare}
-            disabled={selectedFriends.size === 0 || sharing}
-            className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => setActiveTab('link')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'link'
+                ? 'text-cyan-400 border-b-2 border-cyan-400'
+                : 'text-slate-400 hover:text-white'
+            }`}
           >
-            {sharing ? 'Sharing...' : `Share with ${selectedFriends.size} friend${selectedFriends.size !== 1 ? 's' : ''}`}
+            🔗 Share Link
+          </button>
+          <button
+            onClick={() => setActiveTab('friends')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'friends'
+                ? 'text-cyan-400 border-b-2 border-cyan-400'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            👥 Share with Friends
           </button>
         </div>
+
+        {/* Tab Content */}
+        {activeTab === 'link' ? (
+          <div className="p-4">
+            <div className="text-slate-400 text-sm mb-3">Share this event with anyone:</div>
+            
+            {/* Link preview */}
+            <div className="bg-slate-800 rounded-lg p-3 mb-4">
+              <div className="text-slate-400 text-xs mb-1">Public Link</div>
+              <div className="text-white text-sm break-all font-mono">{publicUrl}</div>
+            </div>
+
+            {/* Share buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center justify-center gap-2 py-3 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-700 transition-colors"
+              >
+                {copied ? '✅ Copied!' : '📋 Copy Link'}
+              </button>
+              <button
+                onClick={handleNativeShare}
+                className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+              >
+                📤 Share
+              </button>
+            </div>
+
+            {/* Social hints */}
+            <div className="mt-4 text-center text-slate-500 text-xs">
+              Share via text, social media, or any app!
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Friend list */}
+            <div className="p-4 overflow-y-auto max-h-[40vh]">
+              {loading ? (
+                <div className="text-center py-8 text-slate-400">Loading friends...</div>
+              ) : friends.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-3xl mb-2">👥</div>
+                  <div className="text-slate-400">No friends yet</div>
+                  <div className="text-slate-500 text-sm">Add friends in the Community tab</div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-slate-400 text-xs mb-3">Select friends to notify:</div>
+                  {friends.map(friend => (
+                    <button
+                      key={friend.odid}
+                      onClick={() => toggleFriend(friend.odid)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                        selectedFriends.has(friend.odid)
+                          ? 'bg-cyan-500/20 border border-cyan-500/50'
+                          : 'bg-slate-800 border border-slate-700 hover:border-slate-600'
+                      }`}
+                    >
+                      <MiniAvatar avatar={friend.avatar} name={friend.name} />
+                      <span className="text-white flex-1 text-left">{friend.name}</span>
+                      {selectedFriends.has(friend.odid) && (
+                        <span className="text-cyan-400">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="p-4 border-t border-slate-800">
+              <button
+                onClick={handleShareWithFriends}
+                disabled={selectedFriends.size === 0 || sharing}
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sharing ? 'Sharing...' : `Share with ${selectedFriends.size} friend${selectedFriends.size !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
