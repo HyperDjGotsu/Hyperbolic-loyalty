@@ -921,16 +921,16 @@ function EventsPageContent() {
 
   // Render
   return (
-    <div className="min-h-screen bg-[#07070b] w-full max-w-none">
+    <div className="flex-1 overflow-auto">
       {/* Filter Bar */}
-      <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10 w-full">
-        <div className="px-6 lg:px-8 py-4 w-full">
+      <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10">
+        <div className="px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-4">
             <p className="text-slate-400 text-sm">Tap to see details</p>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 disabled:opacity-50 flex items-center gap-2"
             >
               {syncing ? '🔄 Syncing...' : '🔄 Sync'}
             </button>
@@ -1019,7 +1019,7 @@ function EventsPageContent() {
       </div>
 
       {/* Content */}
-      <div className="px-6 lg:px-12 py-6">
+      <div className="p-4 lg:px-8 lg:py-6">
         {loading ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4 animate-bounce">📅</div>
@@ -1050,36 +1050,34 @@ function EventsPageContent() {
             </button>
           </div>
         ) : (
-          <div className={`${isDesktop ? 'flex gap-6' : ''}`}>
-            {/* Calendar sidebar - desktop only */}
-            {isDesktop && (
-              <div className="w-80 shrink-0">
-                <div className="sticky top-32">
-                  <MiniCalendar 
-                    events={events} 
-                    selectedDate={selectedDate}
-                    onSelectDate={setSelectedDate}
-                  />
-                  
-                  {/* Quick stats */}
-                  <div className="mt-4 bg-[#0d0d14] border border-[#1e1e2e] rounded-2xl p-4">
-                    <h3 className="text-white font-bold mb-3">This Week</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-cyan-400">{events.length}</div>
-                        <div className="text-slate-500 text-xs">Events</div>
+          <div className="lg:flex lg:gap-6">
+            {/* Calendar sidebar - desktop only (hidden on mobile via CSS) */}
+            <div className="hidden lg:block w-80 shrink-0">
+              <div className="sticky top-32">
+                <MiniCalendar 
+                  events={events} 
+                  selectedDate={selectedDate}
+                  onSelectDate={setSelectedDate}
+                />
+                
+                {/* Quick stats */}
+                <div className="mt-4 bg-[#0d0d14] border border-[#1e1e2e] rounded-2xl p-4">
+                  <h3 className="text-white font-bold mb-3">This Week</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-cyan-400">{events.length}</div>
+                      <div className="text-slate-500 text-xs">Events</div>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-purple-400">
+                        {events.filter(e => e.isInterested).length}
                       </div>
-                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-purple-400">
-                          {events.filter(e => e.isInterested).length}
-                        </div>
-                        <div className="text-slate-500 text-xs">Interested</div>
-                      </div>
+                      <div className="text-slate-500 text-xs">Interested</div>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Events list */}
             <div className="flex-1 space-y-6">
@@ -1100,9 +1098,16 @@ function EventsPageContent() {
                     </h2>
                     <div className="space-y-3">
                       {dateEvents.map(event => (
-                        isDesktop 
-                          ? <DesktopEventCard key={event.id} event={event} />
-                          : <MobileEventCard key={event.id} event={event} />
+                        <div key={event.id}>
+                          {/* Mobile card - hidden on desktop */}
+                          <div className="lg:hidden">
+                            <MobileEventCard event={event} />
+                          </div>
+                          {/* Desktop card - hidden on mobile */}
+                          <div className="hidden lg:block">
+                            <DesktopEventCard event={event} />
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1123,11 +1128,11 @@ function EventsPageContent() {
 // Loading fallback
 function EventsLoading() {
   return (
-    <div className="min-h-screen bg-[#07070b] p-6 lg:p-12">
+    <div className="flex-1 p-4 lg:p-8">
       <div className="animate-pulse">
         <div className="h-8 bg-slate-800 rounded w-48 mb-4"></div>
         <div className="h-10 bg-slate-800 rounded mb-4"></div>
-        <div className="flex gap-6">
+        <div className="lg:flex lg:gap-6">
           <div className="w-80 h-96 bg-slate-800 rounded-2xl hidden lg:block"></div>
           <div className="flex-1 space-y-4">
             <div className="h-24 bg-slate-800 rounded-xl"></div>
