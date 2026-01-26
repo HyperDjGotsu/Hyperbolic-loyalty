@@ -864,60 +864,9 @@ export default function DesktopDashboard() {
         />
       </div>
 
-      <div className="flex min-h-screen relative z-10">
-        {/* Sidebar */}
-        <aside className="w-[72px] bg-[#0c0c12]/80 backdrop-blur-xl border-r border-[#1e1e2e] flex flex-col items-center py-5 fixed top-0 left-0 bottom-0 z-50">
-          {/* Logo */}
-          <div 
-            className="w-[46px] h-[46px] rounded-[14px] flex items-center justify-center text-[22px] mb-7 animate-logo-pulse"
-            style={{
-              background: 'linear-gradient(135deg, #00d4ff, #a855f7, #ec4899)',
-              boxShadow: '0 0 20px rgba(168, 85, 247, 0.3)'
-            }}
-          >
-            🎮
-          </div>
-
-          {/* Nav Items */}
-          <nav className="flex flex-col gap-1.5 flex-1">
-            {[
-              { icon: '🏠', path: '/dashboard-desktop', active: true },
-              { icon: '📅', path: '/dashboard/events' },
-              { icon: '🛒', path: '/dashboard/shop' },
-              { icon: '👥', path: '/dashboard/community' },
-              { icon: '👤', path: '/dashboard/profile' },
-            ].map((item, i) => (
-              <button
-                key={i}
-                onClick={() => router.push(item.path)}
-                className={`w-[46px] h-[46px] rounded-xl flex items-center justify-center text-xl transition-all duration-300 relative
-                  ${item.active 
-                    ? 'bg-gradient-to-br from-cyan-500/15 to-purple-500/10 text-cyan-400 border border-cyan-500/30 shadow-[0_0_20px_rgba(0,212,255,0.3)]' 
-                    : 'text-slate-500 hover:bg-[#16161f] hover:text-white hover:scale-105'
-                  }`}
-              >
-                {item.active && (
-                  <div className="absolute left-[-13px] top-1/2 -translate-y-1/2 w-[3px] h-5 bg-cyan-400 rounded-r" />
-                )}
-                {item.icon}
-              </button>
-            ))}
-          </nav>
-
-          {/* User Button */}
-          <div 
-            className="w-[42px] h-[42px] rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all hover:scale-110"
-            style={{
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
-            }}
-          >
-            {avatarForComponent.base}
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 ml-[72px]">
+      <div className="min-h-screen relative z-10">
+        {/* Main Content - no sidebar, layout provides it */}
+        <main className="flex-1">
           {/* Hero Section */}
           <section 
             className="px-10 pt-7 pb-10 relative"

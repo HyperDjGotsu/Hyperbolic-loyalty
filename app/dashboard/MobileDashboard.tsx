@@ -293,6 +293,7 @@ export default function MobileDashboard() {
             hasStream: b.hasStream || false,
             twitchUrl: b.twitchUrl,
             youtubeUrl: b.youtubeUrl,
+            backgroundImage: b.backgroundImage || b.background_image || null,
           }));
           setBanners(transformedBanners);
         }
