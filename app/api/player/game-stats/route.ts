@@ -20,6 +20,14 @@ export interface GameStats {
   playingSince: string | null;
   monthlyEvents: number;
   monthlyXp: number;
+  // New fields
+  leaderboardRank: number | null;
+  leaderboardTotal: number | null;
+  nextEvent: {
+    name: string;
+    date: string;
+    time: string;
+  } | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -111,6 +119,9 @@ export async function GET(request: NextRequest) {
           playingSince: null,
           monthlyEvents: 0,
           monthlyXp: 0,
+          leaderboardRank: null,
+          leaderboardTotal: null,
+          nextEvent: null,
         });
       }
     }
@@ -148,6 +159,9 @@ export async function GET(request: NextRequest) {
           playingSince: null,
           monthlyEvents: 0,
           monthlyXp: 0,
+          leaderboardRank: null,
+          leaderboardTotal: null,
+          nextEvent: null,
         });
       }
 
@@ -217,6 +231,62 @@ export async function GET(request: NextRequest) {
       const totalMatches = stats.totalWins + stats.totalLosses;
       if (totalMatches > 0) {
         stats.winRate = Math.round((stats.totalWins / totalMatches) * 100);
+      }
+    }
+
+    // Get leaderboard ranks for each game
+    const gameIds = Array.from(gameStatsMap.keys());
+    
+    for (const gameId of gameIds) {
+      const stats = gameStatsMap.get(gameId)!;
+      
+      // Get all players for this game ordered by XP
+      const { data: leaderboardData, error: lbError } = await supabase
+        .from('player_game_xp')
+        .select('player_id, game_xp')
+        .eq('game_id', gameId)
+        .order('game_xp', { ascending: false });
+
+      if (!lbError && leaderboardData) {
+        const playerIndex = leaderboardData.findIndex(p => p.player_id === playerId);
+        if (playerIndex !== -1) {
+          stats.leaderboardRank = playerIndex + 1;
+          stats.leaderboardTotal = leaderboardData.length;
+        }
+      }
+    }
+
+    // Get next upcoming event for each game
+    const { data: upcomingEvents, error: eventsError } = await supabase
+      .from('events')
+      .select('id, name, game_id, scheduled_at')
+      .in('game_id', gameIds)
+      .gte('scheduled_at', now.toISOString())
+      .order('scheduled_at', { ascending: true });
+
+    if (!eventsError && upcomingEvents) {
+      // Group by game_id and take the first (soonest) event for each
+      const nextEventByGame = new Map<string, typeof upcomingEvents[0]>();
+      for (const event of upcomingEvents) {
+        if (event.game_id && !nextEventByGame.has(event.game_id)) {
+          nextEventByGame.set(event.game_id, event);
+        }
+      }
+
+      // Add next event to stats
+      for (const [gameId, event] of Array.from(nextEventByGame.entries())) {
+        const stats = gameStatsMap.get(gameId);
+        if (stats && event) {
+          const eventDate = new Date(event.scheduled_at);
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          
+          stats.nextEvent = {
+            name: event.name,
+            date: `${days[eventDate.getDay()]}, ${months[eventDate.getMonth()]} ${eventDate.getDate()}`,
+            time: eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+          };
+        }
       }
     }
 

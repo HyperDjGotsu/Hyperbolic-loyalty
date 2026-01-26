@@ -144,6 +144,9 @@ function GameCard({
   // Determine if we have "rich" stats worth expanding for
   const hasRichStats = stats.matches > 0 || stats.bestPlacement !== null || stats.wins > 0;
 
+  // Calculate earned achievements
+  const earnedAchievements = getEarnedAchievements(game.stats);
+
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFlipped(!isFlipped);
@@ -347,6 +350,59 @@ function GameCard({
                   <span className="text-red-400 font-bold">{stats.losses}L</span>
                 </span>
               </div>
+
+              {/* Achievements */}
+              {earnedAchievements.length > 0 && (
+                <div className="mb-3">
+                  <div className="text-[9px] text-slate-500 uppercase mb-2">Achievements</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {earnedAchievements.slice(0, 6).map((achievement) => (
+                      <div 
+                        key={achievement.id}
+                        className="bg-[#111118] rounded-lg px-2 py-1 flex items-center gap-1.5 group relative"
+                        title={achievement.description}
+                      >
+                        <span className="text-sm">{achievement.icon}</span>
+                        <span className="text-[10px] font-medium text-slate-300">{achievement.name}</span>
+                      </div>
+                    ))}
+                    {earnedAchievements.length > 6 && (
+                      <div className="bg-[#111118] rounded-lg px-2 py-1 text-[10px] text-slate-500">
+                        +{earnedAchievements.length - 6} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Leaderboard Rank & Next Event Row */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {/* Leaderboard Rank */}
+                <div className="bg-[#111118] rounded-lg p-2.5">
+                  <div className="text-[9px] text-slate-500 uppercase mb-1">Leaderboard</div>
+                  {game.leaderboardRank ? (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-base font-bold" style={{ color: game.color }}>#{game.leaderboardRank}</span>
+                      <span className="text-[10px] text-slate-500">of {game.leaderboardTotal}</span>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-slate-500">—</div>
+                  )}
+                </div>
+
+                {/* Next Event */}
+                <div className="bg-[#111118] rounded-lg p-2.5">
+                  <div className="text-[9px] text-slate-500 uppercase mb-1">Next Event</div>
+                  {game.nextEvent ? (
+                    <div>
+                      <div className="text-[11px] font-medium text-white truncate">{game.nextEvent.name}</div>
+                      <div className="text-[10px] text-slate-400">{game.nextEvent.date} • {game.nextEvent.time}</div>
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-slate-500">No upcoming events</div>
+                  )}
+                </div>
+              </div>
             </>
           ) : (
             // Compact layout for new players with minimal stats
@@ -461,6 +517,41 @@ interface GameDisplay {
     monthlyEvents: number;
     monthlyXp: number;
   };
+  // Leaderboard position
+  leaderboardRank?: number;
+  leaderboardTotal?: number;
+  // Next event for this game
+  nextEvent?: {
+    name: string;
+    date: string;
+    time: string;
+  };
+}
+
+// Achievement definitions - calculated from stats
+interface Achievement {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  check: (stats: GameDisplay['stats']) => boolean;
+}
+
+const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first_win', name: 'First Win', icon: '🏆', description: 'Win your first match', check: (s) => (s?.totalWins ?? 0) >= 1 },
+  { id: 'hot_streak', name: 'Hot Streak', icon: '🔥', description: '3+ win streak', check: (s) => (s?.currentStreak ?? 0) >= 3 },
+  { id: 'on_fire', name: 'On Fire', icon: '💥', description: '5+ win streak', check: (s) => (s?.currentStreak ?? 0) >= 5 },
+  { id: 'champion', name: 'Champion', icon: '👑', description: 'Win a tournament', check: (s) => s?.bestPlacement === 1 },
+  { id: 'podium', name: 'Podium Finish', icon: '🥈', description: 'Top 3 finish', check: (s) => (s?.bestPlacement ?? 999) <= 3 },
+  { id: 'undefeated', name: 'Undefeated', icon: '💪', description: 'Go undefeated at an event', check: (s) => (s?.undefeatedCount ?? 0) >= 1 },
+  { id: 'sharpshooter', name: 'Sharpshooter', icon: '🎯', description: '70%+ win rate', check: (s) => (s?.winRate ?? 0) >= 70 },
+  { id: 'regular', name: 'Regular', icon: '📅', description: 'Attend 10+ events', check: (s) => (s?.totalEvents ?? 0) >= 10 },
+  { id: 'veteran', name: 'Veteran', icon: '⭐', description: 'Attend 25+ events', check: (s) => (s?.totalEvents ?? 0) >= 25 },
+  { id: 'legend', name: 'Local Legend', icon: '🏠', description: 'Attend 50+ events', check: (s) => (s?.totalEvents ?? 0) >= 50 },
+];
+
+function getEarnedAchievements(stats: GameDisplay['stats']): Achievement[] {
+  return ACHIEVEMENTS.filter(a => a.check(stats));
 }
 
 export default function DesktopDashboard() {
@@ -691,6 +782,10 @@ export default function DesktopDashboard() {
           monthlyEvents: stats.monthlyEvents,
           monthlyXp: stats.monthlyXp,
         } : undefined,
+        // Leaderboard and next event from API
+        leaderboardRank: stats?.leaderboardRank ?? undefined,
+        leaderboardTotal: stats?.leaderboardTotal ?? undefined,
+        nextEvent: stats?.nextEvent ?? undefined,
       };
     })
     .sort((a: GameDisplay, b: GameDisplay) => b.xp - a.xp);
