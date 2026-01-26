@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Game configuration for display
 const GAME_CONFIG: Record<string, { name: string; icon: string; color: string }> = {
@@ -27,6 +22,9 @@ const GAME_CONFIG: Record<string, { name: string; icon: string; color: string }>
   warhammer: { name: 'Warhammer', icon: '🔨', color: '#ca8a04' },
   sw_legion: { name: 'SW Legion', icon: '🎖️', color: '#65a30d' },
   legion: { name: 'SW Legion', icon: '🎖️', color: '#65a30d' },
+  dragonball: { name: 'Dragon Ball', icon: '🐉', color: '#f97316' },
+  digimon: { name: 'Digimon', icon: '🦖', color: '#3b82f6' },
+  yugioh: { name: 'Yu-Gi-Oh!', icon: '👁️', color: '#7c3aed' },
   general: { name: 'General', icon: '🎮', color: '#64748b' },
 };
 
@@ -37,8 +35,8 @@ export async function GET(
   try {
     const eventId = params.id;
 
-    // Fetch event details
-    const { data: event, error } = await supabase
+    // Fetch event details using shared supabaseAdmin
+    const { data: event, error } = await supabaseAdmin
       .from('events')
       .select('*')
       .eq('id', eventId)
@@ -51,22 +49,14 @@ export async function GET(
       );
     }
 
-    // DEBUG: Log raw database values
-    console.log('RAW EVENT DATA:', {
-      id: event.id,
-      name: event.name,
-      attendance_xp: event.attendance_xp,
-      win_xp: event.win_xp,
-    });
-
     // Get interested count
-    const { count: interestedCount } = await supabase
+    const { count: interestedCount } = await supabaseAdmin
       .from('event_interest')
       .select('*', { count: 'exact', head: true })
       .eq('event_id', eventId);
 
     // Format the event for public display
-    const gameConfig = GAME_CONFIG[event.game_id] || GAME_CONFIG.general;
+    const gameConfig = GAME_CONFIG[event.game_id || ''] || GAME_CONFIG.general;
     
     const scheduledAt = new Date(event.scheduled_at);
     const formattedDate = scheduledAt.toLocaleDateString('en-US', {
@@ -80,10 +70,6 @@ export async function GET(
       minute: '2-digit',
       hour12: true,
     });
-
-    // Use database values directly - they should be 10/10
-    const attendanceXp = event.attendance_xp ?? 10;
-    const winXp = event.win_xp ?? 10;
 
     const publicEvent = {
       id: event.id,
@@ -106,13 +92,8 @@ export async function GET(
       twitchUrl: event.twitch_url,
       youtubeUrl: event.youtube_url,
       interestedCount: interestedCount || 0,
-      attendanceXp,
-      winXp,
-      // DEBUG: Include raw values
-      _debug: {
-        raw_attendance_xp: event.attendance_xp,
-        raw_win_xp: event.win_xp,
-      },
+      attendanceXp: event.attendance_xp ?? 10,
+      winXp: event.win_xp ?? 10,
       prizing: event.prizing || [],
       location: 'Games of Martinez',
       address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',
