@@ -414,7 +414,7 @@ function EventsPageContent() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedGame, setSelectedGame] = useState('all');
+  const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set(['all']));
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -560,9 +560,11 @@ function EventsPageContent() {
 
   // Filter events
   const filteredEvents = events.filter(event => {
-    // Game filter
-    if (selectedGame !== 'all' && event.game?.id !== selectedGame) {
-      return false;
+    // Game filter - if 'all' is selected or the set is empty, show all
+    if (!selectedGames.has('all') && selectedGames.size > 0) {
+      if (!event.game?.id || !selectedGames.has(event.game.id)) {
+        return false;
+      }
     }
     // Date filter
     if (selectedDate) {
@@ -914,22 +916,52 @@ function EventsPageContent() {
             </div>
           )}
           
-          {/* Game Filter */}
+          {/* Game Filter - Multi-select */}
           <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:overflow-visible">
-            {GAME_FILTERS.map(game => (
-              <button
-                key={game.id}
-                onClick={() => setSelectedGame(game.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
-                  selectedGame === game.id
-                    ? 'bg-cyan-500 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                }`}
-              >
-                <span>{game.icon}</span>
-                <span>{game.name}</span>
-              </button>
-            ))}
+            {GAME_FILTERS.map(game => {
+              const isSelected = game.id === 'all' 
+                ? selectedGames.has('all') 
+                : selectedGames.has(game.id);
+              
+              return (
+                <button
+                  key={game.id}
+                  onClick={() => {
+                    setSelectedGames(prev => {
+                      const next = new Set(prev);
+                      
+                      if (game.id === 'all') {
+                        // Clicking "All Games" clears other selections
+                        return new Set(['all']);
+                      } else {
+                        // Remove 'all' when selecting specific games
+                        next.delete('all');
+                        
+                        if (next.has(game.id)) {
+                          next.delete(game.id);
+                          // If nothing selected, go back to 'all'
+                          if (next.size === 0) {
+                            return new Set(['all']);
+                          }
+                        } else {
+                          next.add(game.id);
+                        }
+                      }
+                      
+                      return next;
+                    });
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+                    isSelected
+                      ? 'bg-cyan-500 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  }`}
+                >
+                  <span>{game.icon}</span>
+                  <span>{game.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
