@@ -78,15 +78,8 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${banner.backgroundImage})` }}
           />
-          {/* Dark overlay for readability */}
-          <div className="absolute inset-0 bg-black/40" />
-          {/* Optional gradient overlay for brand colors */}
-          {gradientStyle && (
-            <div 
-              className="absolute inset-0 opacity-30"
-              style={gradientStyle}
-            />
-          )}
+          {/* Dark overlay for readability - subtle */}
+          <div className="absolute inset-0 bg-black/30" />
         </>
       ) : (
         <div 
