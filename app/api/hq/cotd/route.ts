@@ -280,7 +280,7 @@ export async function GET(request: Request) {
             }
             
             // Create entry for each unique printing
-            for (const [printing, variant] of printingMap) {
+            printingMap.forEach((variant, printing) => {
               cards.push({
                 id: card.id,
                 variantId: variant.id,
@@ -299,7 +299,7 @@ export async function GET(request: Request) {
                 priceChange7d: variant.priceChange7d || null,
                 priceChange30d: variant.priceChange30d || null,
               });
-            }
+            });
           }
         }
 
