@@ -96,6 +96,36 @@ interface Game {
   xp_name: string;
 }
 
+interface COTDCard {
+  id?: string;
+  variantId?: string | null;
+  name: string;
+  game: string;
+  gameId: string;
+  gameDisplay: string;
+  set: string;
+  number: string;
+  rarity: string;
+  printing?: string | null;
+  condition?: string | null;
+  language?: string;
+  tcgplayerId: string;
+  price: number | null;
+  priceChange7d: number | null;
+  priceChange30d: number | null;
+}
+
+interface ScheduledCard {
+  id: string;
+  featured_date: string;
+  game_id: string;
+  game_display: string;
+  card_number: string;
+  card_name: string;
+  card_data: COTDCard;
+  source: string;
+}
+
 export default function HQPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -146,6 +176,22 @@ export default function HQPage() {
   const [matchLoser, setMatchLoser] = useState('');
   const [matchType, setMatchType] = useState('');
   const [matchRound, setMatchRound] = useState(1);
+  // Card of the Day state
+  const [cotdSearchQuery, setCotdSearchQuery] = useState('');
+  const [cotdSearchNumber, setCotdSearchNumber] = useState(''); // Card number filter
+  const [cotdSearchGame, setCotdSearchGame] = useState('one-piece-card-game');
+  const [cotdSearchResults, setCotdSearchResults] = useState<COTDCard[]>([]);
+  const [cotdSearchLoading, setCotdSearchLoading] = useState(false);
+  const [cotdSelectedCard, setCotdSelectedCard] = useState<COTDCard | null>(null);
+  const [cotdSelectedDate, setCotdSelectedDate] = useState('');
+  const [cotdUpcoming, setCotdUpcoming] = useState<ScheduledCard[]>([]);
+  const [cotdSaving, setCotdSaving] = useState(false);
+  // Voting pool state
+  const [cotdVotingPools, setCotdVotingPools] = useState<Record<string, any[]>>({});
+  const [cotdVotingDate, setCotdVotingDate] = useState('');
+  const [cotdAddingToPool, setCotdAddingToPool] = useState(false);
+  const [cotdFinalizingVote, setCotdFinalizingVote] = useState(false);
+
 
   // Check staff access
   useEffect(() => {
@@ -158,6 +204,14 @@ export default function HQPage() {
     checkStaffAccess();
     loadGames();
   }, [isLoaded, user]);
+
+  // Load COTD data when tab changes
+  useEffect(() => {
+    if (activeTab === 'cotd') {
+      loadUpcomingCOTD();
+      loadVotingPools();
+    }
+  }, [activeTab]);
 
   const checkStaffAccess = async () => {
     try {
@@ -730,6 +784,267 @@ export default function HQPage() {
     setNewOptInCloses('');
   };
 
+
+  // ========== CARD OF THE DAY FUNCTIONS ==========
+  
+  const loadUpcomingCOTD = async () => {
+    try {
+      const res = await fetch('/api/hq/cotd?action=upcoming');
+      const data = await res.json();
+      setCotdUpcoming(data.cards || []);
+    } catch (error) {
+      console.error('Failed to load upcoming COTD:', error);
+    }
+  };
+
+  const searchCOTDCards = async () => {
+    if (!cotdSearchQuery.trim()) return;
+    
+    setCotdSearchLoading(true);
+    setCotdSearchResults([]);
+    
+    try {
+      // Build URL with optional number parameter
+      let url = `/api/hq/cotd?action=search&q=${encodeURIComponent(cotdSearchQuery)}&game=${cotdSearchGame}`;
+      if (cotdSearchNumber.trim()) {
+        url += `&number=${encodeURIComponent(cotdSearchNumber.trim())}`;
+      }
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        setCotdSearchResults(data.cards || []);
+        if (data.cards?.length === 0) {
+          showToast('No cards found', 'error');
+        }
+      }
+    } catch (error) {
+      showToast('Search failed', 'error');
+    } finally {
+      setCotdSearchLoading(false);
+    }
+  };
+
+  const setCOTDCard = async () => {
+    if (!cotdSelectedCard || !cotdSelectedDate) {
+      showToast('Select a card and date', 'error');
+      return;
+    }
+    
+    setCotdSaving(true);
+    
+    try {
+      const res = await fetch('/api/hq/cotd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'set',
+          card: cotdSelectedCard,
+          date: cotdSelectedDate,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast(`Card set for ${cotdSelectedDate}!`, 'success');
+        setCotdSelectedCard(null);
+        setCotdSelectedDate('');
+        setCotdSearchResults([]);
+        setCotdSearchQuery('');
+        loadUpcomingCOTD();
+      }
+    } catch (error) {
+      showToast('Failed to set card', 'error');
+    } finally {
+      setCotdSaving(false);
+    }
+  };
+
+  const deleteCOTDCard = async (date: string) => {
+    if (!confirm(`Remove Card of the Day for ${date}?`)) return;
+    
+    try {
+      const res = await fetch('/api/hq/cotd', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast('Card removed', 'success');
+        loadUpcomingCOTD();
+      }
+    } catch (error) {
+      showToast('Failed to remove card', 'error');
+    }
+  };
+
+  const formatCOTDPrice = (price: number | null) => {
+    if (price === null) return 'N/A';
+    return `$${price.toFixed(2)}`;
+  };
+
+  const getCOTDDateOptions = () => {
+    const options = [];
+    const today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+      const value = date.toISOString().split('T')[0];
+      const label = date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      const isScheduled = cotdUpcoming.some(c => c.featured_date === value);
+      options.push({ value, label, isScheduled });
+    }
+    return options;
+  };
+
+  // ========== VOTING POOL FUNCTIONS ==========
+
+  const loadVotingPools = async () => {
+    try {
+      const res = await fetch('/api/hq/cotd?action=all_pools');
+      const data = await res.json();
+      setCotdVotingPools(data.pools || {});
+    } catch (error) {
+      console.error('Failed to load voting pools:', error);
+    }
+  };
+
+  const addToVotingPool = async () => {
+    if (!cotdSelectedCard || !cotdVotingDate) {
+      showToast('Select a card and date', 'error');
+      return;
+    }
+    
+    setCotdAddingToPool(true);
+    
+    try {
+      const res = await fetch('/api/hq/cotd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'add_to_pool',
+          card: cotdSelectedCard,
+          voteDate: cotdVotingDate,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast(`Added to voting pool for ${cotdVotingDate}!`, 'success');
+        setCotdSelectedCard(null);
+        setCotdSearchResults([]);
+        setCotdSearchQuery('');
+        loadVotingPools();
+      }
+    } catch (error) {
+      showToast('Failed to add to pool', 'error');
+    } finally {
+      setCotdAddingToPool(false);
+    }
+  };
+
+  const removeFromVotingPool = async (poolCardId: string) => {
+    if (!confirm('Remove this card from the voting pool?')) return;
+    
+    try {
+      const res = await fetch('/api/hq/cotd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'remove_from_pool',
+          poolCardId,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast('Removed from pool', 'success');
+        loadVotingPools();
+      }
+    } catch (error) {
+      showToast('Failed to remove', 'error');
+    }
+  };
+
+  const finalizeVoting = async (voteDate: string) => {
+    const pool = cotdVotingPools[voteDate] || [];
+    const totalVotes = pool.reduce((sum: number, c: any) => sum + (c.votes_count || 0), 0);
+    
+    if (totalVotes === 0) {
+      if (!confirm('No votes cast yet. Finalize anyway? The first card will win.')) return;
+    } else {
+      const winner = pool[0];
+      if (!confirm(`Finalize voting? "${winner.card_name}" will win with ${winner.votes_count} votes.`)) return;
+    }
+    
+    setCotdFinalizingVote(true);
+    
+    try {
+      const res = await fetch('/api/hq/cotd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'finalize_voting',
+          voteDate,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        showToast(`🎉 ${data.winner.name} wins! ${data.winnersAwarded} players awarded +10 XP`, 'success');
+        loadVotingPools();
+        loadUpcomingCOTD();
+      }
+    } catch (error) {
+      showToast('Failed to finalize', 'error');
+    } finally {
+      setCotdFinalizingVote(false);
+    }
+  };
+
+  const getVotingDateOptions = () => {
+    const options = [];
+    const today = new Date();
+    // Start from tomorrow (vote today for tomorrow's card)
+    for (let i = 1; i <= 7; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+      const value = date.toISOString().split('T')[0];
+      const label = date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      const hasPool = cotdVotingPools[value]?.length > 0;
+      options.push({ value, label, hasPool });
+    }
+    return options;
+  };
+
   if (loading || isStaff === null) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -777,6 +1092,7 @@ export default function HQPage() {
               { id: 'emperor', label: '👑 Emperor', icon: '👑' },
               { id: 'bounty', label: '🎯 Bounty', icon: '🎯' },
               { id: 'banners', label: '🎨 Banners', icon: '🎨' },
+              { id: 'cotd', label: '🃏 Card of Day', icon: '🃏' },
               { id: 'events', label: '📅 Events', icon: '📅' },
             ].map(tab => (
               <button
@@ -1885,6 +2201,345 @@ export default function HQPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+
+        {/* Card of the Day Tab */}
+        {activeTab === 'cotd' && (
+          <div className="space-y-6">
+            {/* Search Section */}
+            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+              <h2 className="text-xl font-bold mb-4">🃏 Set Card of the Day</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Game</label>
+                  <select
+                    value={cotdSearchGame}
+                    onChange={(e) => setCotdSearchGame(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                  >
+                    <option value="one-piece-card-game">One Piece</option>
+                    <option value="pokemon">Pokémon</option>
+                    <option value="magic-the-gathering">Magic: The Gathering</option>
+                    <option value="disney-lorcana">Disney Lorcana</option>
+                    <option value="digimon-card-game">Digimon</option>
+                    <option value="dragon-ball-super-fusion-world">Dragon Ball Super</option>
+                    <option value="yugioh">Yu-Gi-Oh!</option>
+                    <option value="star-wars-unlimited">Star Wars Unlimited</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm text-slate-400 mb-1">Card Name</label>
+                  <input
+                    type="text"
+                    value={cotdSearchQuery}
+                    onChange={(e) => setCotdSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchCOTDCards()}
+                    placeholder="e.g. Monkey.D.Luffy"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Card # <span className="text-slate-500">(optional)</span></label>
+                  <input
+                    type="text"
+                    value={cotdSearchNumber}
+                    onChange={(e) => setCotdSearchNumber(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchCOTDCards()}
+                    placeholder="e.g. 012"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="flex items-end">
+                  <button
+                    onClick={searchCOTDCards}
+                    disabled={cotdSearchLoading || !cotdSearchQuery.trim()}
+                    className="w-full px-4 py-2 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 rounded-lg font-medium transition-colors"
+                  >
+                    {cotdSearchLoading ? 'Searching...' : '🔍 Search'}
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 mt-2">💡 Tip: Add card number for precise results (API returns max 20)</p>
+
+              {cotdSearchResults.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-sm text-slate-400 mb-2">Found {cotdSearchResults.length} card variants</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-auto">
+                    {cotdSearchResults.map((card, idx) => (
+                      <button
+                        key={`${card.id}-${card.variantId || idx}`}
+                        onClick={() => setCotdSelectedCard(card)}
+                        className={`p-3 rounded-lg border text-left transition-all ${
+                          cotdSelectedCard?.variantId === card.variantId && cotdSelectedCard?.id === card.id
+                            ? 'bg-cyan-500/20 border-cyan-500'
+                            : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                        }`}
+                      >
+                        <div className="font-medium text-sm truncate">{card.name}</div>
+                        <div className="text-xs text-slate-400 mt-1">{card.set} • {card.rarity}</div>
+                        {card.printing && card.printing !== 'Standard' && (
+                          <div className="text-xs text-purple-400 mt-1 font-medium">✨ {card.printing}</div>
+                        )}
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-xs text-slate-500">#{card.number}</span>
+                          <span className="text-xs text-cyan-400 font-medium">{formatCOTDPrice(card.price)}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {cotdSelectedCard && (
+                <div className="mt-6 p-4 bg-slate-800 rounded-lg border border-cyan-500/30">
+                  <h3 className="text-sm text-cyan-400 mb-3">Selected Card</h3>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <div className="text-lg font-bold">{cotdSelectedCard.name}</div>
+                      <div className="text-slate-400 text-sm mt-1">
+                        {cotdSelectedCard.set} • {cotdSelectedCard.rarity} • #{cotdSelectedCard.number}
+                      </div>
+                      {cotdSelectedCard.printing && cotdSelectedCard.printing !== 'Standard' && (
+                        <div className="text-purple-400 text-sm mt-1 font-medium">
+                          ✨ {cotdSelectedCard.printing}
+                        </div>
+                      )}
+                      <div className="text-slate-300 mt-2">
+                        Price: {formatCOTDPrice(cotdSelectedCard.price)}
+                        {cotdSelectedCard.priceChange7d && (
+                          <span className={`ml-2 text-sm ${cotdSelectedCard.priceChange7d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {cotdSelectedCard.priceChange7d >= 0 ? '+' : ''}{cotdSelectedCard.priceChange7d.toFixed(1)}% 7d
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button onClick={() => setCotdSelectedCard(null)} className="text-slate-500 hover:text-red-400">✕</button>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-slate-700">
+                    <label className="block text-sm text-slate-400 mb-2">Feature on Date</label>
+                    <div className="flex flex-wrap gap-2">
+                      {getCOTDDateOptions().map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setCotdSelectedDate(opt.value)}
+                          disabled={opt.isScheduled}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                            cotdSelectedDate === opt.value
+                              ? 'bg-cyan-500 text-white'
+                              : opt.isScheduled
+                              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          }`}
+                        >
+                          {opt.label}{opt.isScheduled && ' ✓'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={setCOTDCard}
+                    disabled={cotdSaving || !cotdSelectedDate}
+                    className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                  >
+                    {cotdSaving ? 'Saving...' : '✨ Set as Card of the Day'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Upcoming Schedule */}
+            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+              <h2 className="text-xl font-bold mb-4">📅 Upcoming Schedule</h2>
+              
+              {cotdUpcoming.length === 0 ? (
+                <div className="text-slate-500 text-center py-8">
+                  <div className="text-4xl mb-2">🃏</div>
+                  <p>No cards scheduled yet</p>
+                  <p className="text-sm mt-1">Search and select a card above to get started</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cotdUpcoming.map(card => (
+                    <div key={card.id} className="flex items-center gap-4 p-4 bg-slate-800 rounded-lg border border-slate-700">
+                      <div className="text-center min-w-[80px]">
+                        <div className="text-xs text-slate-500 uppercase">
+                          {new Date(card.featured_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
+                        </div>
+                        <div className="text-lg font-bold">
+                          {new Date(card.featured_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{card.card_name}</div>
+                        <div className="text-sm text-slate-400">{card.game_display} • #{card.card_number}</div>
+                        {card.card_data?.printing && card.card_data.printing !== 'Standard' && (
+                          <div className="text-xs text-purple-400 mt-0.5">✨ {card.card_data.printing}</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">{formatCOTDPrice(card.card_data?.price)}</div>
+                        <div className={`text-xs px-2 py-0.5 rounded ${
+                          card.source === 'staff_pick' ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-700 text-slate-400'
+                        }`}>
+                          {card.source === 'staff_pick' ? '👤 Staff' : card.source === 'community_vote' ? '🗳️ Vote' : '🤖 Auto'}
+                        </div>
+                      </div>
+                      <button onClick={() => deleteCOTDCard(card.featured_date)} className="text-slate-500 hover:text-red-400 p-2">🗑️</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Voting Pool Management */}
+            <div className="bg-slate-900 rounded-xl p-6 border border-purple-500/30">
+              <h2 className="text-xl font-bold mb-4">🗳️ Community Voting Pools</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                Add 3-4 cards to a voting pool. Players vote and the winner becomes Card of the Day. Voters who pick the winner get <span className="text-cyan-400">+10 XP</span>!
+              </p>
+
+              {/* Add to Pool Section */}
+              {cotdSelectedCard && (
+                <div className="mb-6 p-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                  <h3 className="text-sm text-purple-400 mb-3">Add to Voting Pool</h3>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-1">
+                      <div className="font-medium">{cotdSelectedCard.name}</div>
+                      <div className="text-sm text-slate-400">
+                        #{cotdSelectedCard.number}
+                        {cotdSelectedCard.printing && cotdSelectedCard.printing !== 'Standard' && (
+                          <span className="text-purple-400 ml-1">✨ {cotdSelectedCard.printing}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-cyan-400 font-medium">{formatCOTDPrice(cotdSelectedCard.price)}</div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={cotdVotingDate}
+                      onChange={(e) => setCotdVotingDate(e.target.value)}
+                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="">Select voting date...</option>
+                      {getVotingDateOptions().map(opt => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label} {opt.hasPool ? `(${cotdVotingPools[opt.value]?.length || 0} cards)` : '(empty)'}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={addToVotingPool}
+                      disabled={cotdAddingToPool || !cotdVotingDate}
+                      className="px-4 py-2 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 rounded-lg font-medium text-sm"
+                    >
+                      {cotdAddingToPool ? 'Adding...' : '+ Add to Pool'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Existing Pools */}
+              {Object.keys(cotdVotingPools).length > 0 ? (
+                <div className="space-y-4">
+                  {Object.entries(cotdVotingPools)
+                    .filter(([date]) => date !== 'unscheduled')
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([date, cards]) => {
+                      const totalVotes = cards.reduce((sum: number, c: any) => sum + (c.votes_count || 0), 0);
+                      const dateObj = new Date(date + 'T12:00:00');
+                      const isToday = date === new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      const isTomorrow = date === tomorrow.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+                      
+                      return (
+                        <div key={date} className="p-4 bg-slate-800 rounded-lg border border-slate-700">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <span className="font-medium">
+                                {dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                              </span>
+                              {isTomorrow && <span className="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">Voting Now</span>}
+                              {isToday && <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">Today</span>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-slate-400">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
+                              <button
+                                onClick={() => finalizeVoting(date)}
+                                disabled={cotdFinalizingVote || cards.length < 2}
+                                className="px-3 py-1 bg-green-500 hover:bg-green-600 disabled:opacity-50 rounded text-sm font-medium"
+                                title={cards.length < 2 ? 'Need at least 2 cards to vote' : 'Finalize voting and pick winner'}
+                              >
+                                {cotdFinalizingVote ? '...' : '✓ Finalize'}
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {cards.map((card: any) => (
+                              <div key={card.id} className="flex items-center gap-3 p-2 bg-slate-900/50 rounded">
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium truncate">{card.card_name}</div>
+                                  <div className="text-xs text-slate-400">
+                                    {card.game_display} • #{card.card_number}
+                                    {card.card_data?.printing && card.card_data.printing !== 'Standard' && (
+                                      <span className="text-purple-400 ml-1">✨ {card.card_data.printing}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-sm font-medium text-cyan-400">{card.votes_count || 0} votes</div>
+                                  {totalVotes > 0 && (
+                                    <div className="text-xs text-slate-500">
+                                      {Math.round((card.votes_count || 0) / totalVotes * 100)}%
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => removeFromVotingPool(card.id)}
+                                  className="text-slate-500 hover:text-red-400 p-1"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {cards.length < 2 && (
+                            <p className="text-xs text-yellow-400 mt-2">⚠️ Add at least 2 cards to enable voting</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-slate-500">
+                  <div className="text-3xl mb-2">🗳️</div>
+                  <p>No voting pools yet</p>
+                  <p className="text-sm mt-1">Search for cards above, select one, then add it to a voting pool</p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+              <h3 className="font-medium text-slate-300 mb-2">💡 How it works</h3>
+              <ul className="text-sm text-slate-400 space-y-1">
+                <li>• <strong>Staff Picks:</strong> Set a card directly for any date (overrides voting)</li>
+                <li>• <strong>Community Voting:</strong> Add 3-4 cards to a pool, players vote, winner is featured</li>
+                <li>• Players who vote for the winning card earn <span className="text-cyan-400">+10 XP</span></li>
+                <li>• Voting for tomorrow&apos;s card happens today</li>
+              </ul>
+            </div>
           </div>
         )}
 

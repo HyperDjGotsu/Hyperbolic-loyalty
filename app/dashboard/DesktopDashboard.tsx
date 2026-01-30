@@ -7,6 +7,7 @@ import gsap from 'gsap';
 import { Avatar } from '@/components/ui';
 import { DailyGacha } from '@/components/DailyGacha';
 import { CheckInModal } from '@/components/CheckInModal';
+import { CardOfTheDay } from '@/components/CardOfTheDay';
 import type { Banner } from '@/lib/types';
 
 // Scouter-style number counting component - only animates on hover trigger
@@ -1123,8 +1124,12 @@ export default function DesktopDashboard() {
                 </div>
               </div>
 
-              {/* Right Column: Recent Activity */}
+              {/* Right Column: Card of the Day + Recent Activity */}
               <div className="flex flex-col gap-6">
+                {/* Card of the Day - Featured at top */}
+                <CardOfTheDay />
+
+                {/* Recent Activity - Near other stats */}
                 <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">

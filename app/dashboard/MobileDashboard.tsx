@@ -14,6 +14,7 @@ import {
 import { BannerCarousel } from '@/components/BannerCarousel';
 import { DailyGacha } from '@/components/DailyGacha';
 import { CheckInModal } from '@/components/CheckInModal';
+import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import type { Player, ActivityItem, Banner } from '@/lib/types';
 
 // Type for displayed game data
@@ -483,6 +484,11 @@ export default function MobileDashboard() {
           <BannerCarousel banners={banners} />
         </div>
       )}
+
+      {/* Card of the Day */}
+      <div className="mx-4 mt-4">
+        <CardOfTheDayCompact />
+      </div>
 
       {/* Battle Pass Banner */}
       {playerData?.passTier && playerData.passTier !== 'none' && (
