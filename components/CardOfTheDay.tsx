@@ -71,8 +71,13 @@ export function CardOfTheDay() {
       const cotdData = await cotdRes.json();
       const voteData = await voteRes.json();
 
-      if (cotdData.card) {
-        setCotd(cotdData);
+      // API returns card data at root level with source field
+      if (cotdData.name && !cotdData.error) {
+        setCotd({
+          card: cotdData,
+          source: cotdData.source || 'auto',
+          featured_date: cotdData.fetchedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        });
       }
 
       if (voteData.votingActive && voteData.pool?.length > 0) {
@@ -307,7 +312,14 @@ export function CardOfTheDayCompact() {
       const cotdData = await cotdRes.json();
       const voteData = await voteRes.json();
 
-      if (cotdData.card) setCotd(cotdData);
+      // API returns card data at root level
+      if (cotdData.name && !cotdData.error) {
+        setCotd({
+          card: cotdData,
+          source: cotdData.source || 'auto',
+          featured_date: cotdData.fetchedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        });
+      }
       if (voteData.votingActive && voteData.pool?.length > 0) setVoting(voteData);
     } catch (error) {
       console.error('Failed to load COTD:', error);
