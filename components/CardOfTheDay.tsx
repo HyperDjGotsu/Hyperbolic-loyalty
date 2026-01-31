@@ -220,7 +220,8 @@ function useCardImage(game: string | undefined, cardNumber: string | undefined, 
       setImageError(false);
 
       try {
-        const params = new URLSearchParams({ game });
+        const params = new URLSearchParams();
+        if (game) params.set('game', game);
         if (cardNumber) params.set('cardNumber', cardNumber);
         if (cardName) params.set('cardName', cardName);
 
