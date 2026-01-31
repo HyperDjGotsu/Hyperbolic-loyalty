@@ -6,17 +6,27 @@ import { useState, useEffect } from 'react';
 // TYPES
 // =============================================================================
 
-interface CardData {
+interface CardOfTheDayData {
   name: string;
-  number: string;
-  set: string;
-  rarity: string;
   game: string;
   gameDisplay: string;
+  set: string;
+  rarity: string;
+  number: string;
   price: number | null;
   priceChange7d: number | null;
-  printing?: string;
-  imageUrl?: string;
+  priceChange30d: number | null;
+  tcgplayerId: string;
+  tcgplayerUrl: string;
+  fetchedAt: string;
+  source?: string;
+  cached?: boolean;
+}
+
+interface CardImageResponse {
+  imageUrl: string | null;
+  source: string;
+  cached: boolean;
 }
 
 interface PoolCard {
@@ -25,7 +35,10 @@ interface PoolCard {
   number: string;
   game: string;
   gameId: string;
-  cardData: CardData;
+  cardData: {
+    price?: number;
+    printing?: string;
+  };
   votes: number;
   percentage: number;
 }
@@ -39,57 +52,240 @@ interface VotingData {
   voteDate: string;
 }
 
-interface COTDData {
-  card: CardData;
-  source: string;
-  featured_date: string;
+// =============================================================================
+// THEME CONFIGURATION - Easy to extend for new games
+// =============================================================================
+
+interface GameTheme {
+  gradient: string;
+  accent: string;
+  icon: string;
+  border: string;
+}
+
+const GAME_THEMES: Record<string, GameTheme> = {
+  'One Piece': {
+    gradient: 'from-red-600/20 to-orange-500/20',
+    accent: 'text-red-400',
+    icon: '🏴‍☠️',
+    border: 'border-red-500/30',
+  },
+  'Pokémon': {
+    gradient: 'from-yellow-500/20 to-amber-500/20',
+    accent: 'text-yellow-400',
+    icon: '⚡',
+    border: 'border-yellow-500/30',
+  },
+  'Magic: The Gathering': {
+    gradient: 'from-purple-600/20 to-indigo-500/20',
+    accent: 'text-purple-400',
+    icon: '🔮',
+    border: 'border-purple-500/30',
+  },
+  'Disney Lorcana': {
+    gradient: 'from-blue-500/20 to-cyan-500/20',
+    accent: 'text-blue-400',
+    icon: '✨',
+    border: 'border-blue-500/30',
+  },
+  'Digimon': {
+    gradient: 'from-orange-500/20 to-yellow-500/20',
+    accent: 'text-orange-400',
+    icon: '🦖',
+    border: 'border-orange-500/30',
+  },
+  'Dragon Ball Super': {
+    gradient: 'from-orange-600/20 to-yellow-400/20',
+    accent: 'text-orange-400',
+    icon: '🐉',
+    border: 'border-orange-500/30',
+  },
+  'Gundam': {
+    gradient: 'from-blue-600/20 to-red-500/20',
+    accent: 'text-blue-400',
+    icon: '🤖',
+    border: 'border-blue-500/30',
+  },
+  'Hololive': {
+    gradient: 'from-cyan-500/20 to-blue-500/20',
+    accent: 'text-cyan-400',
+    icon: '🎤',
+    border: 'border-cyan-500/30',
+  },
+  'Yu-Gi-Oh!': {
+    gradient: 'from-indigo-600/20 to-purple-500/20',
+    accent: 'text-indigo-400',
+    icon: '🃏',
+    border: 'border-indigo-500/30',
+  },
+  'Union Arena': {
+    gradient: 'from-teal-500/20 to-emerald-500/20',
+    accent: 'text-teal-400',
+    icon: '🏟️',
+    border: 'border-teal-500/30',
+  },
+  'Star Wars Unlimited': {
+    gradient: 'from-yellow-500/20 to-black/20',
+    accent: 'text-yellow-400',
+    icon: '⭐',
+    border: 'border-yellow-500/30',
+  },
+};
+
+const DEFAULT_THEME: GameTheme = {
+  gradient: 'from-zinc-700/20 to-zinc-600/20',
+  accent: 'text-cyan-400',
+  icon: '🎴',
+  border: 'border-zinc-700',
+};
+
+function getTheme(gameDisplay: string): GameTheme {
+  return GAME_THEMES[gameDisplay] || DEFAULT_THEME;
 }
 
 // =============================================================================
-// MAIN CARD OF THE DAY COMPONENT (Desktop)
+// HOOKS - Reusable data fetching
 // =============================================================================
 
-export function CardOfTheDay() {
-  const [cotd, setCotd] = useState<COTDData | null>(null);
-  const [voting, setVoting] = useState<VotingData | null>(null);
+function useCardOfTheDay() {
+  const [card, setCard] = useState<CardOfTheDayData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [castingVote, setCastingVote] = useState(false);
-  const [showVoting, setShowVoting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData();
+    async function fetchCard() {
+      try {
+        const response = await fetch('/api/card-of-the-day');
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch card');
+        }
+
+        setCard(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCard();
   }, []);
 
-  const loadData = async () => {
+  return { card, loading, error };
+}
+
+function useVoting() {
+  const [voting, setVoting] = useState<VotingData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchVoting = async () => {
     try {
-      // Load both COTD and voting data in parallel
-      const [cotdRes, voteRes] = await Promise.all([
-        fetch('/api/card-of-the-day'),
-        fetch('/api/cotd/vote'),
-      ]);
-
-      const cotdData = await cotdRes.json();
-      const voteData = await voteRes.json();
-
-      // API returns card data at root level with source field
-      if (cotdData.name && !cotdData.error) {
-        setCotd({
-          card: cotdData,
-          source: cotdData.source || 'auto',
-          featured_date: cotdData.fetchedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-        });
+      const response = await fetch('/api/cotd/vote');
+      const data = await response.json();
+      if (data.votingActive && data.pool?.length > 0) {
+        setVoting(data);
+      } else {
+        setVoting(null);
       }
-
-      if (voteData.votingActive && voteData.pool?.length > 0) {
-        setVoting(voteData);
-        setShowVoting(true); // Auto-show voting if active
-      }
-    } catch (error) {
-      console.error('Failed to load COTD:', error);
+    } catch (err) {
+      console.error('Failed to fetch voting:', err);
+      setVoting(null);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchVoting();
+  }, []);
+
+  return { voting, loading, refetch: fetchVoting };
+}
+
+function useCardImage(game: string | undefined, cardNumber: string | undefined, cardName: string | undefined) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    if (!game || (!cardNumber && !cardName)) {
+      setImageUrl(null);
+      return;
+    }
+
+    async function fetchImage() {
+      setImageLoading(true);
+      setImageError(false);
+
+      try {
+        const params = new URLSearchParams({ game });
+        if (cardNumber) params.set('cardNumber', cardNumber);
+        if (cardName) params.set('cardName', cardName);
+
+        const response = await fetch(`/api/card-image?${params.toString()}`);
+
+        if (response.ok) {
+          const data: CardImageResponse = await response.json();
+          setImageUrl(data.imageUrl);
+        } else {
+          setImageUrl(null);
+        }
+      } catch {
+        setImageUrl(null);
+        setImageError(true);
+      } finally {
+        setImageLoading(false);
+      }
+    }
+
+    fetchImage();
+  }, [game, cardNumber, cardName]);
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageUrl(null);
+  };
+
+  return { imageUrl, imageLoading, imageError, handleImageError };
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+function formatPriceChange(change: number | null): string | null {
+  if (change === null) return null;
+  const sign = change >= 0 ? '+' : '';
+  return `${sign}${change.toFixed(1)}%`;
+}
+
+function formatPrice(price: number | null): string {
+  return price ? `$${price.toFixed(2)}` : 'N/A';
+}
+
+// =============================================================================
+// DESKTOP COMPONENT - Full card for sidebar
+// =============================================================================
+
+export function CardOfTheDay() {
+  const { card, loading, error } = useCardOfTheDay();
+  const { voting, loading: votingLoading, refetch: refetchVoting } = useVoting();
+  const { imageUrl, handleImageError } = useCardImage(
+    card?.gameDisplay,
+    card?.number,
+    card?.name
+  );
+  const [showVoting, setShowVoting] = useState(false);
+  const [castingVote, setCastingVote] = useState(false);
+
+  // Auto-show voting if active and user hasn't voted
+  useEffect(() => {
+    if (voting && !voting.hasVoted) {
+      setShowVoting(true);
+    }
+  }, [voting]);
 
   const castVote = async (cardId: string) => {
     if (castingVote) return;
@@ -102,12 +298,8 @@ export function CardOfTheDay() {
         body: JSON.stringify({ poolCardId: cardId }),
       });
 
-      const data = await res.json();
-      if (!data.error) {
-        // Reload voting data
-        const voteRes = await fetch('/api/cotd/vote');
-        const voteData = await voteRes.json();
-        setVoting(voteData);
+      if ((await res.json()).error === undefined) {
+        await refetchVoting();
       }
     } catch (error) {
       console.error('Vote failed:', error);
@@ -116,65 +308,63 @@ export function CardOfTheDay() {
     }
   };
 
-  const formatPrice = (price: number | null) => {
-    if (price === null) return null;
-    return `$${price.toFixed(2)}`;
-  };
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6">
-        <div className="animate-pulse">
-          <div className="h-5 bg-slate-700 rounded w-1/2 mb-4"></div>
-          <div className="h-32 bg-slate-800 rounded"></div>
-        </div>
-      </div>
-    );
+  if (loading || votingLoading) {
+    return <CardOfTheDaySkeleton />;
   }
 
-  // No data
-  if (!cotd && !voting) {
-    return null;
+  if (error || !card) {
+    return null; // Silently fail - don't break the dashboard
   }
+
+  const theme = getTheme(card.gameDisplay);
+  const priceChange7d = formatPriceChange(card.priceChange7d);
+  const priceChange30d = formatPriceChange(card.priceChange30d);
+  const isPositive7d = card.priceChange7d !== null && card.priceChange7d >= 0;
+  const isPositive30d = card.priceChange30d !== null && card.priceChange30d >= 0;
 
   return (
-    <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
-      {/* Header with toggle if voting is active */}
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[15px] font-semibold flex items-center gap-2">
-          🃏 Card of the Day
-        </h3>
-        {voting && voting.votingActive && cotd && (
-          <button
-            onClick={() => setShowVoting(!showVoting)}
-            className={`text-xs px-3 py-1 rounded-full transition-colors ${
-              showVoting
-                ? 'bg-purple-500/20 text-purple-400'
-                : 'bg-slate-700 text-slate-400 hover:text-white'
-            }`}
-          >
-            {showVoting ? '📊 Today' : '🗳️ Vote'}
-          </button>
-        )}
+    <div className="bg-[#111118] border border-[#1e1e2e] rounded-2xl overflow-hidden transition-all hover:border-white/10">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{theme.icon}</span>
+          <span className="text-[15px] font-semibold">Card of the Day</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {voting && (
+            <button
+              onClick={() => setShowVoting(!showVoting)}
+              className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                showVoting
+                  ? 'bg-purple-500/20 text-purple-400'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+              }`}
+            >
+              {showVoting ? '📊 Today' : '🗳️ Vote'}
+            </button>
+          )}
+          <span className={`text-xs font-medium ${theme.accent}`}>
+            {card.gameDisplay}
+          </span>
+        </div>
       </div>
 
       {/* Voting UI */}
-      {showVoting && voting && voting.votingActive ? (
-        <div>
-          <p className="text-xs text-slate-400 mb-3">
-            Vote for tomorrow&apos;s card! Winners get <span className="text-cyan-400">+10 XP</span>
+      {showVoting && voting ? (
+        <div className="p-6">
+          <p className="text-zinc-400 text-sm mb-4">
+            Vote for tomorrow&apos;s card! Winners get <span className="text-cyan-400 font-medium">+10 XP</span>
           </p>
 
           <div className="space-y-2">
-            {voting.pool.map((card) => {
-              const isVoted = voting.playerVote?.cardId === card.id;
-              const isLeading = card.votes === Math.max(...voting.pool.map(c => c.votes)) && card.votes > 0;
+            {voting.pool.map((poolCard) => {
+              const isVoted = voting.playerVote?.cardId === poolCard.id;
+              const isLeading = poolCard.votes === Math.max(...voting.pool.map(c => c.votes)) && poolCard.votes > 0;
 
               return (
                 <button
-                  key={card.id}
-                  onClick={() => castVote(card.id)}
+                  key={poolCard.id}
+                  onClick={() => castVote(poolCard.id)}
                   disabled={castingVote}
                   className={`w-full p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
                     isVoted
@@ -186,16 +376,16 @@ export function CardOfTheDay() {
                   {voting.totalVotes > 0 && (
                     <div
                       className={`absolute left-0 top-0 bottom-0 ${isVoted ? 'bg-purple-500/20' : 'bg-cyan-500/10'}`}
-                      style={{ width: `${card.percentage}%` }}
+                      style={{ width: `${poolCard.percentage}%` }}
                     />
                   )}
 
                   <div className="relative flex items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{card.name}</div>
-                      <div className="text-xs text-slate-500">
-                        {card.game} • #{card.number}
-                        {card.cardData?.printing && card.cardData.printing !== 'Standard' && (
+                      <div className="font-medium text-sm truncate">{poolCard.name}</div>
+                      <div className="text-xs text-zinc-500">
+                        {poolCard.game} • #{poolCard.number}
+                        {poolCard.cardData?.printing && poolCard.cardData.printing !== 'Standard' && (
                           <span className="text-purple-400 ml-1">✨</span>
                         )}
                       </div>
@@ -203,10 +393,10 @@ export function CardOfTheDay() {
 
                     <div className="text-right min-w-[50px]">
                       <div className={`text-sm font-bold ${isLeading ? 'text-yellow-400' : 'text-white'}`}>
-                        {card.percentage}%
+                        {poolCard.percentage}%
                       </div>
-                      <div className="text-[10px] text-slate-500">
-                        {card.votes} vote{card.votes !== 1 ? 's' : ''}
+                      <div className="text-[10px] text-zinc-500">
+                        {poolCard.votes} vote{poolCard.votes !== 1 ? 's' : ''}
                       </div>
                     </div>
 
@@ -217,7 +407,7 @@ export function CardOfTheDay() {
             })}
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
             <span>{voting.totalVotes} total votes</span>
             <span>
               For {new Date(voting.voteDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -234,99 +424,122 @@ export function CardOfTheDay() {
             </div>
           )}
         </div>
-      ) : cotd ? (
-        /* Today's Card Display */
-        <div>
-          <div className="bg-[#07070b] rounded-xl p-4">
-            <div className="flex items-start gap-4">
-              {/* Card Info */}
-              <div className="flex-1 min-w-0">
-                <div className="text-lg font-bold truncate">{cotd.card.name}</div>
-                <div className="text-sm text-slate-400 mt-1">
-                  {cotd.card.set} • {cotd.card.rarity}
-                </div>
-                {cotd.card.printing && cotd.card.printing !== 'Standard' && (
-                  <div className="text-sm text-purple-400 mt-1">✨ {cotd.card.printing}</div>
-                )}
-                <div className="text-xs text-slate-500 mt-2">#{cotd.card.number}</div>
-              </div>
-
-              {/* Price */}
-              {cotd.card.price && (
-                <div className="text-right">
-                  <div className="text-xl font-bold text-cyan-400">
-                    {formatPrice(cotd.card.price)}
+      ) : (
+        /* Original Card Display */
+        <div className={`p-6 bg-gradient-to-br ${theme.gradient}`}>
+          <div className="flex gap-4">
+            {/* Card image or placeholder */}
+            <div className="shrink-0">
+              <div className="w-[100px] h-[140px] rounded-lg overflow-hidden bg-[#07070b] shadow-lg">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={card.name}
+                    className="w-full h-full object-cover"
+                    onError={handleImageError}
+                  />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br ${theme.gradient} border ${theme.border}`}>
+                    {theme.icon}
                   </div>
-                  {cotd.card.priceChange7d && (
-                    <div className={`text-xs ${cotd.card.priceChange7d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {cotd.card.priceChange7d >= 0 ? '↑' : '↓'} {Math.abs(cotd.card.priceChange7d).toFixed(1)}% 7d
-                    </div>
-                  )}
+                )}
+              </div>
+            </div>
+
+            {/* Card info */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-white font-semibold text-lg leading-tight mb-1 line-clamp-2">
+                {card.name}
+              </h3>
+              <p className="text-zinc-500 text-sm mb-4">
+                {card.set} • {card.rarity}
+              </p>
+
+              {/* Price section */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-end justify-between gap-2">
+                  <div>
+                    <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-0.5">
+                      Market Price
+                    </p>
+                    <p className="text-white text-2xl font-bold">
+                      {formatPrice(card.price)}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    {priceChange7d && (
+                      <div className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                        isPositive7d
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {priceChange7d} <span className="opacity-80">7d</span>
+                      </div>
+                    )}
+                    {priceChange30d && (
+                      <div className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                        isPositive30d
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {priceChange30d} <span className="opacity-80">30d</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
+          {/* TCGPlayer link */}
+          <a
+            href={card.tcgplayerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`mt-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#07070b] hover:bg-[#0d0d12] transition-colors ${theme.accent} text-sm font-medium`}
+          >
+            View on TCGPlayer
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+
           {/* Source badge */}
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-slate-500">{cotd.card.gameDisplay}</span>
-            <span className={`text-[10px] px-2 py-0.5 rounded ${
-              cotd.source === 'staff_pick'
-                ? 'bg-purple-500/20 text-purple-400'
-                : cotd.source === 'community_vote'
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-slate-700 text-slate-400'
-            }`}>
-              {cotd.source === 'staff_pick' ? '👤 Staff Pick' :
-               cotd.source === 'community_vote' ? '🗳️ Community Choice' : '🤖 Featured'}
-            </span>
-          </div>
+          {card.source && (
+            <div className="mt-3 text-center">
+              <span className={`text-[10px] px-2 py-0.5 rounded ${
+                card.source === 'staff_pick'
+                  ? 'bg-purple-500/20 text-purple-400'
+                  : card.source === 'community_vote'
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-zinc-800 text-zinc-400'
+              }`}>
+                {card.source === 'staff_pick' ? '👤 Staff Pick' :
+                 card.source === 'community_vote' ? '🗳️ Community Choice' : '🤖 Featured'}
+              </span>
+            </div>
+          )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
 
 // =============================================================================
-// COMPACT VERSION (Mobile)
+// MOBILE COMPONENT - Compact card with image
 // =============================================================================
 
 export function CardOfTheDayCompact() {
-  const [cotd, setCotd] = useState<COTDData | null>(null);
-  const [voting, setVoting] = useState<VotingData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { card, loading } = useCardOfTheDay();
+  const { voting, loading: votingLoading, refetch: refetchVoting } = useVoting();
+  const { imageUrl, handleImageError } = useCardImage(
+    card?.gameDisplay,
+    card?.number,
+    card?.name
+  );
   const [castingVote, setCastingVote] = useState(false);
   const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const [cotdRes, voteRes] = await Promise.all([
-        fetch('/api/card-of-the-day'),
-        fetch('/api/cotd/vote'),
-      ]);
-
-      const cotdData = await cotdRes.json();
-      const voteData = await voteRes.json();
-
-      // API returns card data at root level
-      if (cotdData.name && !cotdData.error) {
-        setCotd({
-          card: cotdData,
-          source: cotdData.source || 'auto',
-          featured_date: cotdData.fetchedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-        });
-      }
-      if (voteData.votingActive && voteData.pool?.length > 0) setVoting(voteData);
-    } catch (error) {
-      console.error('Failed to load COTD:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const castVote = async (cardId: string) => {
     if (castingVote) return;
@@ -339,9 +552,8 @@ export function CardOfTheDayCompact() {
         body: JSON.stringify({ poolCardId: cardId }),
       });
 
-      if (!(await res.json()).error) {
-        const voteRes = await fetch('/api/cotd/vote');
-        setVoting(await voteRes.json());
+      if ((await res.json()).error === undefined) {
+        await refetchVoting();
       }
     } catch (error) {
       console.error('Vote failed:', error);
@@ -350,99 +562,176 @@ export function CardOfTheDayCompact() {
     }
   };
 
-  if (loading) {
+  if (loading || votingLoading) {
     return (
-      <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800 animate-pulse">
-        <div className="h-4 bg-slate-700 rounded w-1/2 mb-3"></div>
-        <div className="h-16 bg-slate-800 rounded"></div>
+      <div className="bg-slate-800/50 rounded-xl p-3 animate-pulse border border-slate-700/50">
+        <div className="flex items-center gap-3">
+          <div className="w-14 h-20 bg-slate-700 rounded-lg" />
+          <div className="flex-1">
+            <div className="h-4 bg-slate-700 rounded w-3/4 mb-2" />
+            <div className="h-3 bg-slate-700 rounded w-1/2 mb-2" />
+            <div className="h-3 bg-slate-700 rounded w-1/3" />
+          </div>
+          <div className="text-right">
+            <div className="h-5 bg-slate-700 rounded w-16 mb-1" />
+            <div className="h-4 bg-slate-700 rounded w-12" />
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!cotd && !voting) return null;
+  if (!card) return null;
 
-  // If voting is active, prioritize showing voting UI
-  const showVotingUI = voting && voting.votingActive && !voting.hasVoted;
+  const theme = getTheme(card.gameDisplay);
+  const isPositive7d = card.priceChange7d !== null && card.priceChange7d >= 0;
 
-  return (
-    <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          🃏 Card of the Day
-        </h3>
-        {voting && voting.votingActive && (
-          <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">
-            {voting.hasVoted ? '✓ Voted' : '🗳️ Vote!'}
-          </span>
+  // Show voting UI if active and user hasn't voted
+  const showVotingUI = voting && !voting.hasVoted;
+
+  if (showVotingUI) {
+    return (
+      <div className="bg-slate-800/50 rounded-xl p-3 border border-purple-500/30">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium">🗳️ Vote for Tomorrow</span>
+          <span className="text-[10px] text-cyan-400">+10 XP if you win!</span>
+        </div>
+        <div className="space-y-1.5">
+          {voting.pool.slice(0, expanded ? undefined : 3).map((poolCard) => {
+            const isVoted = voting.playerVote?.cardId === poolCard.id;
+
+            return (
+              <button
+                key={poolCard.id}
+                onClick={() => castVote(poolCard.id)}
+                disabled={castingVote}
+                className={`w-full p-2 rounded-lg text-left text-xs transition-all ${
+                  isVoted
+                    ? 'bg-purple-500/20 border border-purple-500'
+                    : 'bg-slate-800/50 border border-transparent hover:border-purple-500/50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate flex-1">{poolCard.name}</span>
+                  <span className="text-slate-400 ml-2">{poolCard.percentage}%</span>
+                  {isVoted && <span className="text-purple-400 ml-1">✓</span>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {voting.pool.length > 3 && !expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="w-full mt-2 text-[10px] text-cyan-400 hover:underline"
+          >
+            +{voting.pool.length - 3} more options
+          </button>
         )}
       </div>
+    );
+  }
 
-      {/* Voting UI (compact) */}
-      {showVotingUI ? (
-        <div>
-          <p className="text-[10px] text-slate-400 mb-2">
-            Pick tomorrow&apos;s card for <span className="text-cyan-400">+10 XP</span>
+  return (
+    <a
+      href={card.tcgplayerUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 hover:bg-slate-800/70 transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        {/* Card image or icon */}
+        <div className="w-14 h-20 rounded-lg overflow-hidden bg-slate-700 shrink-0 shadow-lg">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={card.name}
+              className="w-full h-full object-cover"
+              onError={handleImageError}
+            />
+          ) : (
+            <div className={`w-full h-full flex items-center justify-center text-2xl bg-gradient-to-br ${theme.gradient} border ${theme.border}`}>
+              {theme.icon}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-medium line-clamp-2 leading-tight">
+            {card.name}
           </p>
-          <div className="space-y-1.5">
-            {voting.pool.slice(0, expanded ? undefined : 3).map((card) => {
-              const isVoted = voting.playerVote?.cardId === card.id;
+          <p className="text-slate-500 text-xs mt-1">
+            Card of the Day
+          </p>
+          <p className={`text-xs mt-0.5 ${theme.accent}`}>
+            {card.gameDisplay}
+          </p>
+        </div>
 
-              return (
-                <button
-                  key={card.id}
-                  onClick={() => castVote(card.id)}
-                  disabled={castingVote}
-                  className={`w-full p-2 rounded-lg text-left text-xs transition-all ${
-                    isVoted
-                      ? 'bg-purple-500/20 border border-purple-500'
-                      : 'bg-slate-800/50 border border-transparent hover:border-purple-500/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="truncate flex-1">{card.name}</span>
-                    <span className="text-slate-400 ml-2">{card.percentage}%</span>
-                    {isVoted && <span className="text-purple-400 ml-1">✓</span>}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          {voting.pool.length > 3 && !expanded && (
-            <button
-              onClick={() => setExpanded(true)}
-              className="w-full mt-2 text-[10px] text-cyan-400 hover:underline"
-            >
-              +{voting.pool.length - 3} more options
-            </button>
+        {/* Price */}
+        <div className="text-right shrink-0">
+          <p className="text-white font-bold text-base">
+            {formatPrice(card.price)}
+          </p>
+          {card.priceChange7d !== null && (
+            <p className={`text-xs font-medium ${isPositive7d ? 'text-green-400' : 'text-red-400'}`}>
+              {formatPriceChange(card.priceChange7d)}
+            </p>
           )}
         </div>
-      ) : cotd ? (
-        /* Today's card (compact) */
-        <div className="flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm truncate">{cotd.card.name}</div>
-            <div className="text-[10px] text-slate-400">
-              {cotd.card.gameDisplay} • #{cotd.card.number}
-            </div>
-          </div>
-          {cotd.card.price && (
-            <div className="text-cyan-400 font-bold text-sm">
-              ${cotd.card.price.toFixed(2)}
-            </div>
-          )}
-        </div>
-      ) : null}
+      </div>
 
-      {/* Voted confirmation */}
-      {voting?.hasVoted && !showVotingUI && (
+      {/* Show voted indicator */}
+      {voting?.hasVoted && (
         <div className="mt-2 text-[10px] text-green-400 text-center">
           ✓ Vote cast for tomorrow
         </div>
       )}
+    </a>
+  );
+}
+
+// =============================================================================
+// SKELETON - Loading state
+// =============================================================================
+
+function CardOfTheDaySkeleton() {
+  return (
+    <div className="bg-[#111118] border border-[#1e1e2e] rounded-2xl overflow-hidden animate-pulse">
+      <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-zinc-800 rounded" />
+          <div className="h-5 bg-zinc-800 rounded w-28" />
+        </div>
+        <div className="h-4 bg-zinc-800 rounded w-20" />
+      </div>
+      <div className="p-6">
+        <div className="flex gap-4">
+          <div className="w-[100px] h-[140px] bg-zinc-800 rounded-lg shrink-0" />
+          <div className="flex-1">
+            <div className="h-6 bg-zinc-800 rounded w-3/4 mb-2" />
+            <div className="h-4 bg-zinc-800 rounded w-1/2 mb-6" />
+            <div className="flex justify-between items-end">
+              <div>
+                <div className="h-3 bg-zinc-800 rounded w-20 mb-2" />
+                <div className="h-8 bg-zinc-800 rounded w-24" />
+              </div>
+              <div className="flex gap-2">
+                <div className="h-8 bg-zinc-800 rounded w-16" />
+                <div className="h-8 bg-zinc-800 rounded w-16" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="h-10 bg-zinc-800 rounded-xl mt-4" />
+      </div>
     </div>
   );
 }
 
-// Default export for backward compatibility
+// =============================================================================
+// DEFAULT EXPORT
+// =============================================================================
+
 export default CardOfTheDay;
