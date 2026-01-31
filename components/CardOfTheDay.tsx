@@ -330,6 +330,16 @@ export function CardOfTheDay() {
         <div className="flex items-center gap-2">
           <span className="text-lg">{theme.icon}</span>
           <span className="text-[15px] font-semibold">Card of the Day</span>
+          {/* Source badge - only show for staff pick or community vote */}
+          {card.source && card.source !== 'auto' && (
+            <span className={`text-[10px] px-2 py-0.5 rounded ${
+              card.source === 'staff_pick'
+                ? 'bg-purple-500/20 text-purple-400'
+                : 'bg-green-500/20 text-green-400'
+            }`}>
+              {card.source === 'staff_pick' ? '👤 Staff Pick' : '🗳️ Community'}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {voting && (
@@ -505,22 +515,6 @@ export function CardOfTheDay() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
           </a>
-
-          {/* Source badge */}
-          {card.source && (
-            <div className="mt-3 text-center">
-              <span className={`text-[10px] px-2 py-0.5 rounded ${
-                card.source === 'staff_pick'
-                  ? 'bg-purple-500/20 text-purple-400'
-                  : card.source === 'community_vote'
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-zinc-800 text-zinc-400'
-              }`}>
-                {card.source === 'staff_pick' ? '👤 Staff Pick' :
-                 card.source === 'community_vote' ? '🗳️ Community Choice' : '🤖 Featured'}
-              </span>
-            </div>
-          )}
         </div>
       )}
     </div>
