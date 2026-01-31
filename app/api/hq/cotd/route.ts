@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import https from 'https';
 import dns from 'dns';
 
+// Force dynamic rendering (not static)
+export const dynamic = 'force-dynamic';
+
 // Force IPv4 for Windows compatibility
 dns.setDefaultResultOrder('ipv4first');
 
@@ -280,7 +283,7 @@ export async function GET(request: Request) {
             }
             
             // Create entry for each unique printing
-            printingMap.forEach((variant, printing) => {
+            for (const [printing, variant] of printingMap) {
               cards.push({
                 id: card.id,
                 variantId: variant.id,
@@ -299,7 +302,7 @@ export async function GET(request: Request) {
                 priceChange7d: variant.priceChange7d || null,
                 priceChange30d: variant.priceChange30d || null,
               });
-            });
+            }
           }
         }
 

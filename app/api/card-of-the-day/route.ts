@@ -4,6 +4,9 @@ import https from 'https';
 import dns from 'dns';
 import { lookup } from 'dns/promises';
 
+// Force dynamic rendering (not static)
+export const dynamic = 'force-dynamic';
+
 // Force Node to use IPv4 (fixes many Windows DNS issues)
 dns.setDefaultResultOrder('ipv4first');
 

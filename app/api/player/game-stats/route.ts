@@ -1,36 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Force dynamic rendering (not static)
+export const dynamic = 'force-dynamic';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export interface GameStats {
-  gameId: string;
-  totalXp: number;
-  totalEvents: number;
-  totalWins: number;
-  totalLosses: number;
-  winRate: number;
-  bestPlacement: number | null;
-  undefeatedCount: number;
-  currentStreak: number;
-  playingSince: string | null;
-  monthlyEvents: number;
-  monthlyXp: number;
-  // New fields
-  leaderboardRank: number | null;
-  leaderboardTotal: number | null;
-  nextEvent: {
-    name: string;
-    date: string;
-    time: string;
-  } | null;
-}
-
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const { userId } = await auth();
     
@@ -38,268 +18,58 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get player ID from Clerk user ID
+    // Get player from Clerk ID
     const { data: player, error: playerError } = await supabase
       .from('players')
       .select('id')
-      .eq('clerk_user_id', userId)
+      .eq('clerk_id', userId)
       .single();
 
     if (playerError || !player) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const playerId = player.id;
+    // Get all games
+    const { data: games, error: gamesError } = await supabase
+      .from('games')
+      .select('id, name, icon, xp_name')
+      .order('name');
 
-    // Get aggregated XP stats per game from the view
-    const { data: gameXpData, error: gameXpError } = await supabase
-      .from('player_game_xp')
-      .select('game_id, game_xp, game_events, game_wins')
-      .eq('player_id', playerId);
+    if (gamesError) throw gamesError;
 
-    if (gameXpError) {
-      console.error('Error fetching game XP:', gameXpError);
-      return NextResponse.json({ error: 'Failed to fetch game stats' }, { status: 500 });
+    // Get XP per game for this player
+    const { data: xpData, error: xpError } = await supabase
+      .from('xp_ledger')
+      .select('game_id, final_xp')
+      .eq('player_id', player.id);
+
+    if (xpError) throw xpError;
+
+    // Aggregate XP by game
+    const xpByGame: Record<string, number> = {};
+    for (const entry of xpData || []) {
+      xpByGame[entry.game_id] = (xpByGame[entry.game_id] || 0) + entry.final_xp;
     }
 
-    // Get current month for monthly stats
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-    // Get monthly XP per game
-    const { data: monthlyXpData, error: monthlyXpError } = await supabase
-      .from('player_monthly_xp')
-      .select('game_id, monthly_xp')
-      .eq('player_id', playerId)
-      .eq('month', currentMonth);
-
-    if (monthlyXpError) {
-      console.error('Error fetching monthly XP:', monthlyXpError);
-    }
-
-    // Get detailed event attendance for additional stats
-    const { data: attendanceData, error: attendanceError } = await supabase
-      .from('event_attendance')
-      .select(`
-        event_id,
-        wins,
-        losses,
-        final_standing,
-        is_undefeated,
-        checked_in_at,
-        events!inner (
-          game_id,
-          scheduled_at
-        )
-      `)
-      .eq('player_id', playerId)
-      .order('checked_in_at', { ascending: false });
-
-    if (attendanceError) {
-      console.error('Error fetching attendance:', attendanceError);
-      return NextResponse.json({ error: 'Failed to fetch attendance data' }, { status: 500 });
-    }
-
-    // Process stats per game
-    const gameStatsMap = new Map<string, GameStats>();
-
-    // Initialize with game XP data
-    for (const game of gameXpData || []) {
-      if (game.game_id) {
-        gameStatsMap.set(game.game_id, {
-          gameId: game.game_id,
-          totalXp: game.game_xp || 0,
-          totalEvents: game.game_events || 0,
-          totalWins: game.game_wins || 0,
-          totalLosses: 0,
-          winRate: 0,
-          bestPlacement: null,
-          undefeatedCount: 0,
-          currentStreak: 0,
-          playingSince: null,
-          monthlyEvents: 0,
-          monthlyXp: 0,
-          leaderboardRank: null,
-          leaderboardTotal: null,
-          nextEvent: null,
-        });
-      }
-    }
-
-    // Add monthly XP data
-    for (const monthly of monthlyXpData || []) {
-      if (monthly.game_id && gameStatsMap.has(monthly.game_id)) {
-        const stats = gameStatsMap.get(monthly.game_id)!;
-        stats.monthlyXp = monthly.monthly_xp || 0;
-      }
-    }
-
-    // Process attendance data for detailed stats
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    // Group attendance by game for streak calculation
-    const gameAttendanceMap = new Map<string, typeof attendanceData>();
-    
-    for (const attendance of attendanceData || []) {
-      const gameId = (attendance.events as any)?.game_id;
-      if (!gameId) continue;
-
-      // Initialize game stats if not exists
-      if (!gameStatsMap.has(gameId)) {
-        gameStatsMap.set(gameId, {
-          gameId,
-          totalXp: 0,
-          totalEvents: 0,
-          totalWins: 0,
-          totalLosses: 0,
-          winRate: 0,
-          bestPlacement: null,
-          undefeatedCount: 0,
-          currentStreak: 0,
-          playingSince: null,
-          monthlyEvents: 0,
-          monthlyXp: 0,
-          leaderboardRank: null,
-          leaderboardTotal: null,
-          nextEvent: null,
-        });
-      }
-
-      const stats = gameStatsMap.get(gameId)!;
-
-      // Track losses
-      if (attendance.losses) {
-        stats.totalLosses += attendance.losses;
-      }
-
-      // Track best placement
-      if (attendance.final_standing !== null) {
-        if (stats.bestPlacement === null || attendance.final_standing < stats.bestPlacement) {
-          stats.bestPlacement = attendance.final_standing;
-        }
-      }
-
-      // Track undefeated events
-      if (attendance.is_undefeated) {
-        stats.undefeatedCount++;
-      }
-
-      // Track playing since (earliest date)
-      if (attendance.checked_in_at) {
-        if (!stats.playingSince || attendance.checked_in_at < stats.playingSince) {
-          stats.playingSince = attendance.checked_in_at;
-        }
-      }
-
-      // Track monthly events
-      const eventDate = new Date((attendance.events as any)?.scheduled_at || attendance.checked_in_at);
-      if (eventDate >= currentMonthStart) {
-        stats.monthlyEvents++;
-      }
-
-      // Group for streak calculation
-      if (!gameAttendanceMap.has(gameId)) {
-        gameAttendanceMap.set(gameId, []);
-      }
-      gameAttendanceMap.get(gameId)!.push(attendance);
-    }
-
-    // Calculate win streaks per game
-    for (const [gameId, attendances] of Array.from(gameAttendanceMap.entries())) {
-      const stats = gameStatsMap.get(gameId)!;
-      
-      // Attendances are already sorted by date descending
-      let streak = 0;
-      for (const att of attendances) {
-        // A "win" for streak purposes: had wins and no losses, or is undefeated
-        const wins = att.wins || 0;
-        const losses = att.losses || 0;
-        
-        if (wins > 0 && losses === 0) {
-          streak++;
-        } else if (wins > losses) {
-          streak++;
-        } else {
-          break; // Streak broken
-        }
-      }
-      stats.currentStreak = streak;
-    }
-
-    // Calculate win rates
-    for (const stats of Array.from(gameStatsMap.values())) {
-      const totalMatches = stats.totalWins + stats.totalLosses;
-      if (totalMatches > 0) {
-        stats.winRate = Math.round((stats.totalWins / totalMatches) * 100);
-      }
-    }
-
-    // Get leaderboard ranks for each game
-    const gameIds = Array.from(gameStatsMap.keys());
-    
-    for (const gameId of gameIds) {
-      const stats = gameStatsMap.get(gameId)!;
-      
-      // Get all players for this game ordered by XP
-      const { data: leaderboardData, error: lbError } = await supabase
-        .from('player_game_xp')
-        .select('player_id, game_xp')
-        .eq('game_id', gameId)
-        .order('game_xp', { ascending: false });
-
-      if (!lbError && leaderboardData) {
-        const playerIndex = leaderboardData.findIndex(p => p.player_id === playerId);
-        if (playerIndex !== -1) {
-          stats.leaderboardRank = playerIndex + 1;
-          stats.leaderboardTotal = leaderboardData.length;
-        }
-      }
-    }
-
-    // Get next upcoming event for each game
-    const { data: upcomingEvents, error: eventsError } = await supabase
-      .from('events')
-      .select('id, name, game_id, scheduled_at')
-      .in('game_id', gameIds)
-      .gte('scheduled_at', now.toISOString())
-      .order('scheduled_at', { ascending: true });
-
-    if (!eventsError && upcomingEvents) {
-      // Group by game_id and take the first (soonest) event for each
-      const nextEventByGame = new Map<string, typeof upcomingEvents[0]>();
-      for (const event of upcomingEvents) {
-        if (event.game_id && !nextEventByGame.has(event.game_id)) {
-          nextEventByGame.set(event.game_id, event);
-        }
-      }
-
-      // Add next event to stats
-      for (const [gameId, event] of Array.from(nextEventByGame.entries())) {
-        const stats = gameStatsMap.get(gameId);
-        if (stats && event) {
-          const eventDate = new Date(event.scheduled_at);
-          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          
-          stats.nextEvent = {
-            name: event.name,
-            date: `${days[eventDate.getDay()]}, ${months[eventDate.getMonth()]} ${eventDate.getDate()}`,
-            time: eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-          };
-        }
-      }
-    }
-
-    // Convert to array
-    const gameStats = Array.from(gameStatsMap.values());
+    // Build response with game stats
+    const gameStats = (games || []).map(game => ({
+      gameId: game.id,
+      name: game.name,
+      icon: game.icon,
+      xpName: game.xp_name,
+      xp: xpByGame[game.id] || 0,
+    }));
 
     return NextResponse.json({
-      success: true,
-      stats: gameStats,
+      games: gameStats,
+      totalXp: Object.values(xpByGame).reduce((sum, xp) => sum + xp, 0),
     });
 
   } catch (error) {
     console.error('Error in game-stats API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch game stats' },
+      { status: 500 }
+    );
   }
 }
