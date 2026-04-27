@@ -104,23 +104,6 @@ export default function DashboardLayout({
             ))}
           </nav>
 
-          {/* User section at bottom */}
-          <div className="p-4 border-t border-slate-800">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800/50">
-              <UserButton 
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "w-10 h-10"
-                  }
-                }}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-white text-sm font-medium truncate">Account</div>
-                <div className="text-slate-500 text-xs">Manage profile</div>
-              </div>
-            </div>
-          </div>
         </aside>
 
         {/* Main Content Area */}
