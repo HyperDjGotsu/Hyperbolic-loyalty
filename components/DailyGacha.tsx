@@ -1,187 +1,212 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FloatingParticles, GlowButton, rarityColors } from '@/components/ui';
-import type { GachaReward } from '@/lib/types';
+import { rarityColors } from '@/components/ui';
 
-const gachaRewards: GachaReward[] = [
-  { name: '5 XP', rarity: 'common', probability: 0.35, icon: '⚪', xp: 5 },
-  { name: '15 XP', rarity: 'uncommon', probability: 0.25, icon: '💚', xp: 15 },
-  { name: '25 XP', rarity: 'rare', probability: 0.18, icon: '💙', xp: 25 },
-  { name: '50 XP', rarity: 'epic', probability: 0.12, icon: '💎', xp: 50 },
-  { name: '100 XP JACKPOT', rarity: 'legendary', probability: 0.04, icon: '🌟', xp: 100 },
-  { name: 'Free Booster Pack', rarity: 'epic', probability: 0.06, icon: '📦', xp: 0 },
-];
+interface SpinPrize {
+  xp: number;
+  label: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+}
 
 interface DailyGachaProps {
-  onComplete: (result: GachaReward) => void;
+  onComplete: () => void;
   onClose: () => void;
 }
 
 export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
-  const [phase, setPhase] = useState<'ready' | 'spinning' | 'result' | 'claiming' | 'error'>('ready');
-  const [result, setResult] = useState<GachaReward | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [phase, setPhase] = useState<'ready' | 'spinning' | 'result' | 'error'>('ready');
+  const [prize, setPrize] = useState<SpinPrize | null>(null);
+  const [newTotalXp, setNewTotalXp] = useState<number | null>(null);
+  const [nextSpinAt, setNextSpinAt] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const pullGacha = (): GachaReward => {
-    const r = Math.random();
-    let cumulative = 0;
-    for (const reward of gachaRewards) {
-      cumulative += reward.probability;
-      if (r <= cumulative) return reward;
-    }
-    return gachaRewards[0];
-  };
-
-  const startPull = () => {
-    const pulled = pullGacha();
-    setResult(pulled);
+  const spin = async () => {
     setPhase('spinning');
-    setTimeout(() => setPhase('result'), 2000);
-  };
 
-  const claimReward = async () => {
-    if (!result) return;
-    
-    setPhase('claiming');
-    
     try {
-      const response = await fetch('/api/xp/daily-spin', {
+      const res = await fetch('/api/xp/daily-spin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          xp: result.xp,
-          rewardName: result.name,
-        }),
       });
-      
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        onComplete(result);
-      } else if (data.alreadySpun) {
+
+      const data = await res.json();
+
+      if (data.alreadySpun) {
         setErrorMessage('Already spun today!');
         setPhase('error');
-      } else {
-        setErrorMessage(data.error || 'Failed to claim reward');
-        setPhase('error');
+        return;
       }
-    } catch (error) {
-      console.error('Claim error:', error);
-      setErrorMessage('Network error');
+
+      if (!res.ok || !data.success) {
+        setErrorMessage(data.error || 'Spin failed — try again');
+        setPhase('error');
+        return;
+      }
+
+      setPrize(data.prize);
+      setNewTotalXp(data.newTotalXp);
+      setNextSpinAt(data.nextSpinAt);
+
+      // Brief spin animation before showing result
+      setTimeout(() => setPhase('result'), 1800);
+    } catch {
+      setErrorMessage('Network error — try again');
       setPhase('error');
     }
   };
 
-  const rarityColor = result ? rarityColors[result.rarity] : rarityColors.common;
+  const handleClaim = () => {
+    onComplete();
+  };
+
+  const rarityColor = prize ? rarityColors[prize.rarity] : rarityColors.common;
+
+  const formatNextSpin = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/Los_Angeles',
+      timeZoneName: 'short',
+    });
+  };
 
   return (
-    <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50">
-      <FloatingParticles />
-      
-      {phase === 'result' && (
+    <div className="fixed inset-0 bg-[#080810]/95 backdrop-blur-sm flex items-center justify-center z-50">
+
+      {phase === 'result' && prize && (
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            background: `radial-gradient(circle, ${rarityColor.glow} 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse at 50% 40%, ${rarityColor.glow}18 0%, transparent 65%)`,
           }}
         />
       )}
 
       <div className="relative w-full max-w-sm mx-4 text-center">
-        <div className="mb-6">
-          <div className="text-3xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
+
+        {/* Header */}
+        <div className="mb-8">
+          <p className="font-orbitron text-[10px] tracking-[0.3em] uppercase text-[#00c8ea]/60 mb-2">
+            {phase === 'ready' && 'Daily Reward'}
+            {phase === 'spinning' && 'Rolling...'}
+            {phase === 'result' && rarityColor.name}
+            {phase === 'error' && 'Error'}
+          </p>
+          <h2 className="font-orbitron font-black text-2xl text-white tracking-tight">
             {phase === 'ready' && 'DAILY SPIN'}
-            {phase === 'spinning' && 'SPINNING...'}
-            {phase === 'result' && `${rarityColor.name.toUpperCase()}!`}
-            {phase === 'claiming' && 'CLAIMING...'}
-            {phase === 'error' && 'ERROR'}
-          </div>
+            {phase === 'spinning' && 'SPINNING'}
+            {phase === 'result' && prize && `${prize.xp} XP`}
+            {phase === 'error' && 'FAILED'}
+          </h2>
         </div>
 
-        {phase === 'ready' && <div className="text-8xl mb-8 animate-bounce">⏳</div>}
-
-        {phase === 'spinning' && (
-          <div
-            className="text-8xl mb-8"
-            style={{ animation: 'spin 0.5s linear infinite' }}
-          >
-            ⏳
+        {/* Spinner orb */}
+        {(phase === 'ready' || phase === 'spinning') && (
+          <div className="flex items-center justify-center mb-10">
+            <div
+              className="w-28 h-28 rounded-full border border-[#00c8ea]/20 flex items-center justify-center"
+              style={{
+                background: 'radial-gradient(circle, rgba(0,200,234,0.08) 0%, transparent 70%)',
+                animation: phase === 'spinning' ? 'spin 0.7s linear infinite' : undefined,
+              }}
+            >
+              <div
+                className="w-16 h-16 rounded-full border border-[#00c8ea]/30"
+                style={{
+                  background: phase === 'spinning'
+                    ? 'radial-gradient(circle, rgba(0,200,234,0.2) 0%, transparent 70%)'
+                    : 'radial-gradient(circle, rgba(0,200,234,0.1) 0%, transparent 70%)',
+                }}
+              />
+            </div>
           </div>
         )}
 
-        {phase === 'claiming' && (
-          <div className="text-8xl mb-8 animate-pulse">✨</div>
+        {/* Result card */}
+        {phase === 'result' && prize && (
+          <div className="mb-8">
+            <div
+              className="inline-block rounded-2xl p-px mb-6"
+              style={{ background: `linear-gradient(135deg, ${rarityColor.primary}60, ${rarityColor.glow}40)` }}
+            >
+              <div className="bg-[#0f0f1a] rounded-2xl px-10 py-8">
+                <div
+                  className="font-orbitron font-black text-5xl mb-2"
+                  style={{ color: rarityColor.primary }}
+                >
+                  +{prize.xp}
+                </div>
+                <div className="text-white/40 text-xs uppercase tracking-widest font-orbitron">XP</div>
+                <div className="mt-4 text-white/70 text-sm">{prize.label}</div>
+              </div>
+            </div>
+
+            {newTotalXp !== null && (
+              <p className="text-white/30 text-xs font-mono mb-1">
+                Total XP: <span className="text-[#00c8ea]/70">{newTotalXp.toLocaleString()}</span>
+              </p>
+            )}
+            {nextSpinAt && (
+              <p className="text-white/20 text-xs">
+                Next spin available at {formatNextSpin(nextSpinAt)}
+              </p>
+            )}
+          </div>
         )}
 
+        {/* Error state */}
         {phase === 'error' && (
-          <div>
-            <div className="text-8xl mb-8">❌</div>
-            <p className="text-red-400 mb-4">{errorMessage}</p>
-            <button onClick={onClose} className="text-slate-500">
+          <div className="mb-8">
+            <div className="bg-red-500/[0.08] border border-red-500/20 rounded-xl p-6 mb-4">
+              <p className="text-red-400 text-sm">{errorMessage}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/30 text-sm hover:text-white/60 transition-colors"
+            >
               Close
             </button>
           </div>
         )}
 
-        {phase === 'result' && result && (
-          <div>
-            <div
-              className="inline-block p-1 rounded-2xl"
-              style={{
-                background: `linear-gradient(135deg, ${rarityColor.primary}, ${rarityColor.glow})`,
-                padding: '3px',
-              }}
-            >
-              <div className="bg-slate-900 rounded-xl p-8">
-                <div className="text-6xl mb-4">{result.icon}</div>
-                <div
-                  className="text-2xl font-bold"
-                  style={{ color: rarityColor.primary }}
-                >
-                  {result.name}
-                </div>
-                <div className="text-slate-500 uppercase tracking-wider text-sm mt-2">
-                  {result.rarity}
-                </div>
-              </div>
-            </div>
-            <div className="mt-8">
-              <GlowButton
-                color={result.rarity === 'legendary' ? 'orange' : 'cyan'}
-                onClick={claimReward}
-                className="w-full py-4 text-lg"
-              >
-                ⏳ CLAIM REWARD ⏳
-              </GlowButton>
-            </div>
-          </div>
-        )}
-
+        {/* Actions */}
         {phase === 'ready' && (
-          <div className="mt-8">
-            <GlowButton
-              color="purple"
-              onClick={startPull}
-              className="w-full py-5 text-xl"
+          <div className="space-y-3">
+            <button
+              onClick={spin}
+              className="w-full bg-[#00c8ea] text-[#080810] font-orbitron font-bold uppercase tracking-wider py-4 rounded-xl hover:bg-[#00f0ff] active:scale-[0.98] transition-all"
             >
-              ⏳ FLIP THE HOURGLASS ⏳
-            </GlowButton>
-            <button onClick={onClose} className="mt-4 text-slate-500">
+              Spin
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full text-white/30 text-sm hover:text-white/60 transition-colors py-2"
+            >
               Cancel
             </button>
           </div>
+        )}
+
+        {phase === 'result' && (
+          <button
+            onClick={handleClaim}
+            className="w-full bg-[#00c8ea] text-[#080810] font-orbitron font-bold uppercase tracking-wider py-4 rounded-xl hover:bg-[#00f0ff] active:scale-[0.98] transition-all"
+          >
+            Claim
+          </button>
+        )}
+
+        {phase === 'spinning' && (
+          <p className="text-white/20 text-xs font-mono animate-pulse">Rolling prize...</p>
         )}
       </div>
 
       <style jsx>{`
         @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

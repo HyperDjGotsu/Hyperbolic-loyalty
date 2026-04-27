@@ -358,10 +358,8 @@ export default function MobileDashboard() {
   }));
 
   // Handle gacha completion
-  const handleGachaComplete = (result: { xp: number; rarity: string }) => {
+  const handleGachaComplete = () => {
     setHasSpunToday(true);
-    // Optionally refresh player data to show new XP
-    // You could re-fetch here or optimistically update
   };
 
   // Handle check-in completion
