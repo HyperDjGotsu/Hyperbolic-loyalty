@@ -23,11 +23,6 @@ interface CardOfTheDayData {
   cached?: boolean;
 }
 
-interface CardImageResponse {
-  imageUrl: string | null;
-  source: string;
-  cached: boolean;
-}
 
 interface PoolCard {
   id: string;
@@ -204,52 +199,26 @@ function useVoting() {
   return { voting, loading, refetch: fetchVoting };
 }
 
-function useCardImage(game: string | undefined, cardNumber: string | undefined, cardName: string | undefined) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageLoading, setImageLoading] = useState(false);
+function useCardImage(game: string | undefined, cardNumber: string | undefined, _cardName: string | undefined) {
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    if (!game || (!cardNumber && !cardName)) {
-      setImageUrl(null);
-      return;
-    }
+    setImageError(false);
+  }, [game, cardNumber]);
 
-    async function fetchImage() {
-      setImageLoading(true);
-      setImageError(false);
+  const isOnePiece = game && (
+    game === 'one-piece-card-game' ||
+    game === 'One Piece' ||
+    game.toLowerCase().includes('one piece')
+  );
 
-      try {
-        const params = new URLSearchParams();
-        if (game) params.set('game', game);
-        if (cardNumber) params.set('cardNumber', cardNumber);
-        if (cardName) params.set('cardName', cardName);
+  const imageUrl = (isOnePiece && cardNumber && !imageError)
+    ? `/api/card-image?game=${encodeURIComponent(game!)}&cardNumber=${encodeURIComponent(cardNumber)}`
+    : null;
 
-        const response = await fetch(`/api/card-image?${params.toString()}`);
+  const handleImageError = () => setImageError(true);
 
-        if (response.ok) {
-          const data: CardImageResponse = await response.json();
-          setImageUrl(data.imageUrl);
-        } else {
-          setImageUrl(null);
-        }
-      } catch {
-        setImageUrl(null);
-        setImageError(true);
-      } finally {
-        setImageLoading(false);
-      }
-    }
-
-    fetchImage();
-  }, [game, cardNumber, cardName]);
-
-  const handleImageError = () => {
-    setImageError(true);
-    setImageUrl(null);
-  };
-
-  return { imageUrl, imageLoading, imageError, handleImageError };
+  return { imageUrl, imageLoading: false, imageError, handleImageError };
 }
 
 // =============================================================================
