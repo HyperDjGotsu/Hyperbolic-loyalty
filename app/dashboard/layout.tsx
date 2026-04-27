@@ -32,7 +32,7 @@ export default function DashboardLayout({
       {/* ============ MOBILE LAYOUT (below lg) ============ */}
       <div className="lg:hidden w-full max-w-md mx-auto h-screen bg-slate-950 flex flex-col overflow-hidden">
         {/* Status Bar (mock) */}
-        <div className="bg-slate-900 text-white text-xs py-2 px-4 flex justify-between items-center border-b border-slate-800">
+        <div className="bg-[#0a0a14] text-white/60 text-xs py-2 px-4 flex justify-between items-center border-b border-white/[0.06]">
           <span className="font-mono">9:41</span>
           <div className="flex gap-2 items-center">
             <NotificationBell />
@@ -53,15 +53,15 @@ export default function DashboardLayout({
         </main>
 
         {/* Bottom Navigation */}
-        <nav className="bg-slate-900 border-t border-slate-800 py-2 px-2 flex justify-around items-center safe-area-inset-bottom">
+        <nav className="bg-[#0a0a14] border-t border-white/[0.06] py-2 px-2 flex justify-around items-center safe-area-inset-bottom">
           {navItems.map((tab) => (
             <button
               key={tab.id}
               onClick={() => router.push(tab.path)}
               className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all ${
                 isActive(tab.path)
-                  ? 'text-cyan-400 bg-cyan-500/10'
-                  : 'text-slate-500 hover:text-slate-400'
+                  ? 'text-[#00c8ea] bg-[#00c8ea]/10'
+                  : 'text-white/30 hover:text-white/60'
               }`}
             >
               <span className="text-xl">{tab.icon}</span>
@@ -74,9 +74,9 @@ export default function DashboardLayout({
       {/* ============ DESKTOP LAYOUT (lg and above) ============ */}
       <div className="hidden lg:flex min-h-screen bg-slate-950">
         {/* Desktop Sidebar */}
-        <aside className="flex flex-col w-64 fixed inset-y-0 bg-slate-900 border-r border-slate-800">
+        <aside className="flex flex-col w-64 fixed inset-y-0 bg-[#0a0a14] border-r border-white/[0.06]">
           {/* Logo */}
-          <div className="p-6 border-b border-slate-800">
+          <div className="p-6 border-b border-white/[0.06]">
             <div className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
               HYPERBOLIC
             </div>
@@ -91,14 +91,14 @@ export default function DashboardLayout({
                 onClick={() => router.push(item.path)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   isActive(item.path)
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-white border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                    ? 'bg-[#00c8ea]/10 text-white border border-[#00c8ea]/20'
+                    : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
                 }`}
               >
                 <span className="text-xl">{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
                 {isActive(item.path) && (
-                  <div className="ml-auto w-2 h-2 rounded-full bg-cyan-400" />
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#00c8ea]" />
                 )}
               </button>
             ))}
@@ -109,12 +109,12 @@ export default function DashboardLayout({
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col ml-64">
           {/* Desktop Header */}
-          <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-8 sticky top-0 z-40 flex items-center justify-between">
+          <header className="bg-[#0a0a14]/80 backdrop-blur-sm border-b border-white/[0.06] py-4 px-8 sticky top-0 z-40 flex items-center justify-between">
             <div>
               <h1 className="text-white text-xl font-bold">
                 {navItems.find(item => isActive(item.path))?.label || 'Dashboard'}
               </h1>
-              <p className="text-slate-500 text-sm">Welcome back to Hyperbolic Games</p>
+              <p className="text-white/30 text-sm">Welcome back to Hyperbolic Games</p>
             </div>
             <div className="flex items-center gap-4">
               <NotificationBell />

@@ -95,15 +95,8 @@ function HeroStatCard({
   label: string;
 }) {
   return (
-    <div className="bg-[#07070b] border border-[#1e1e2e] rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-cyan-500/30 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
-      <div 
-        className="text-[28px] font-extrabold"
-        style={{
-          background: 'linear-gradient(135deg, #00d4ff, #a855f7, #ec4899)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}
-      >
+    <div className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-[#00c8ea]/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
+      <div className="text-[28px] font-extrabold text-[#00c8ea]">
         {value.toLocaleString()}
       </div>
       <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-0.5">{label}</div>
@@ -175,7 +168,7 @@ function GameCard({
       >
         {/* Front of card */}
         <div
-          className="bg-[#07070b] border border-[#1e1e2e] rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.3)] relative overflow-hidden group h-full"
+          className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:border-white/[0.12] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden group h-full"
           style={{ backfaceVisibility: 'hidden' }}
           onClick={handleClick}
           onMouseEnter={() => setHoverCount(c => c + 1)}
@@ -274,7 +267,7 @@ function GameCard({
 
         {/* Back of card - conditional layout based on stats */}
         <div
-          className="absolute inset-0 bg-[#07070b] border border-[#1e1e2e] rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
+          className="absolute inset-0 bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
