@@ -24,11 +24,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Check for check-in today (using any cast for source value not in enum)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { data: checkinToday } = await (supabaseAdmin as any)
+    const { data: checkinToday } = await supabaseAdmin
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
@@ -69,7 +68,7 @@ export async function POST() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { data: existingCheckin } = await (supabaseAdmin as any)
+    const { data: existingCheckin } = await supabaseAdmin
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
@@ -84,10 +83,9 @@ export async function POST() {
       }, { status: 400 });
     }
 
-    // Award check-in XP (using any cast for source value not in enum)
     const CHECK_IN_XP = 20;
     
-    const { error: insertError } = await (supabaseAdmin as any)
+    const { error: insertError } = await supabaseAdmin
       .from('xp_ledger')
       .insert({
         player_id: player.id,

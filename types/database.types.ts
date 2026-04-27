@@ -672,6 +672,9 @@ export type Database = {
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
           real_name: string | null
+          referral_bonus_paid: boolean | null
+          referral_code: string | null
+          referred_by: string | null
           shopify_customer_id: string | null
           show_activity: boolean | null
           show_games: boolean | null
@@ -729,6 +732,9 @@ export type Database = {
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
           real_name?: string | null
+          referral_bonus_paid?: boolean | null
+          referral_code?: string | null
+          referred_by?: string | null
           shopify_customer_id?: string | null
           show_activity?: boolean | null
           show_games?: boolean | null
@@ -786,6 +792,9 @@ export type Database = {
             | Database["public"]["Enums"]["privacy_visibility"]
             | null
           real_name?: string | null
+          referral_bonus_paid?: boolean | null
+          referral_code?: string | null
+          referred_by?: string | null
           shopify_customer_id?: string | null
           show_activity?: boolean | null
           show_games?: boolean | null
@@ -1222,6 +1231,7 @@ export type Database = {
         | "manual_adjustment"
         | "bonus_event"
         | "community_contribution"
+        | "check_in"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1365,6 +1375,7 @@ export const Constants = {
         "manual_adjustment",
         "bonus_event",
         "community_contribution",
+        "check_in",
       ],
     },
   },

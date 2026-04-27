@@ -180,10 +180,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Failed to create player' }, { status: 500 });
       }
 
-      // Generate and set referral code for the new player (using their UUID)
-      // Note: referral_code exists in DB but not in types - using any cast
       const newReferralCode = generateReferralCode(newPlayer.id);
-      await (supabaseAdmin as any)
+      await supabaseAdmin
         .from('players')
         .update({ referral_code: newReferralCode })
         .eq('id', newPlayer.id);
