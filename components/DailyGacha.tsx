@@ -127,7 +127,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
   const activeColor = spinning ? rarityColors[tickerRarity] : prize ? rarityColors[prize.rarity] : rarityColors.common;
 
   return (
-    <div className="fixed inset-0 bg-[#080810]/96 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-[#080810] flex items-center justify-center z-50">
 
       {/* Ambient glow — shifts with ticker color during spin */}
       <div
@@ -161,10 +161,10 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
         {/* ── READY orb ── */}
         {phase === 'ready' && (
           <div className="flex items-center justify-center mb-10">
-            <div className="w-36 h-36 rounded-full border border-[#00c8ea]/20 flex items-center justify-center"
-              style={{ background: 'radial-gradient(circle, rgba(0,200,234,0.05) 0%, transparent 70%)' }}>
-              <div className="w-20 h-20 rounded-full border border-[#00c8ea]/30"
-                style={{ background: 'radial-gradient(circle, rgba(0,200,234,0.08) 0%, transparent 70%)' }} />
+            <div className="w-36 h-36 rounded-full border border-[#00c8ea]/30 flex items-center justify-center"
+              style={{ background: 'radial-gradient(circle, rgba(0,200,234,0.12) 0%, transparent 70%)' }}>
+              <div className="w-20 h-20 rounded-full border border-[#00c8ea]/50"
+                style={{ background: 'radial-gradient(circle, rgba(0,200,234,0.18) 0%, transparent 70%)' }} />
             </div>
           </div>
         )}
