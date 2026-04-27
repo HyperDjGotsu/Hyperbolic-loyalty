@@ -294,7 +294,7 @@ function GameCard({
               </div>
             </div>
             <button 
-              className="text-xs text-slate-500 hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.07)] hover:bg-[#2e2e3e]"
+              className="text-xs text-slate-500 hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-[#2e2e3e]"
               onClick={handleClick}
             >
               ✕ Close
@@ -960,7 +960,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowCheckIn(true)}
                     disabled={hasCheckedInToday}
-                    className="bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(34,197,94,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -979,7 +979,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowGacha(true)}
                     disabled={hasSpunToday}
-                    className="bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -1083,7 +1083,7 @@ export default function DesktopDashboard() {
                 )}
 
                 {/* My Games - Enhanced Tiles */}
-                <div className="animate-card bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 transition-all hover:border-white/10">
+                <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       🎮 My Games
@@ -1116,7 +1116,7 @@ export default function DesktopDashboard() {
                 <CardOfTheDay />
 
                 {/* Recent Activity - Near other stats */}
-                <div className="animate-card bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 transition-all hover:border-white/10">
+                <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       📋 Recent Activity
@@ -1163,7 +1163,7 @@ export default function DesktopDashboard() {
             {/* Bottom Sections - Full Width */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Overall Stats Summary */}
-              <div className="animate-card bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
                   📊 Your Stats
                 </h3>
@@ -1188,7 +1188,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Upcoming Events You're Interested In */}
-              <div className="animate-card bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     📅 Your Upcoming Events
@@ -1232,7 +1232,7 @@ export default function DesktopDashboard() {
             {/* Second Row */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Highlights */}
-              <div className="animate-card bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     🛒 Store Highlights
@@ -1265,7 +1265,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Friends Activity */}
-              <div className="animate-card bg-[#0f0f1a] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     👥 Friends Activity
