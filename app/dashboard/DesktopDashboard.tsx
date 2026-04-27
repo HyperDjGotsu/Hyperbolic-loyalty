@@ -1168,19 +1168,19 @@ export default function DesktopDashboard() {
                   📊 Your Stats
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-[#0f0f1a] rounded-xl p-4 text-center">
+                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-cyan-400">{games.length}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Games Played</div>
                   </div>
-                  <div className="bg-[#0f0f1a] rounded-xl p-4 text-center">
+                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-green-400">{playerData?.totalEventsAttended || 0}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Events Attended</div>
                   </div>
-                  <div className="bg-[#0f0f1a] rounded-xl p-4 text-center">
+                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-[#00c8ea]">{totalXp.toLocaleString()}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Total XP</div>
                   </div>
-                  <div className="bg-[#0f0f1a] rounded-xl p-4 text-center">
+                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Week Streak</div>
                   </div>
@@ -1202,7 +1202,7 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="space-y-3">
                   {/* Placeholder events - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-[#0f0f1a] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/[0.06] rounded-xl">
                     <div className="w-10 h-10 bg-[#E63946]/20 rounded-lg flex items-center justify-center text-lg">🏴‍☠️</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">One Piece Local</div>
@@ -1210,7 +1210,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">Registered</div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-[#0f0f1a] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/[0.06] rounded-xl">
                     <div className="w-10 h-10 bg-[#8B5CF6]/20 rounded-lg flex items-center justify-center text-lg">✨</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">MTG Commander Night</div>
@@ -1246,17 +1246,17 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {/* Placeholder items - will be replaced with real data */}
-                  <div className="bg-[#0f0f1a] rounded-xl p-3 text-center cursor-pointer hover:bg-[#0a0a10] transition-colors">
+                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center cursor-pointer hover:bg-white/[0.07] transition-colors">
                     <div className="text-3xl mb-2">🎨</div>
                     <div className="text-xs font-medium">Custom Avatar Frame</div>
                     <div className="text-[10px] text-cyan-400 mt-1">500 XP</div>
                   </div>
-                  <div className="bg-[#0f0f1a] rounded-xl p-3 text-center cursor-pointer hover:bg-[#0a0a10] transition-colors">
+                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center cursor-pointer hover:bg-white/[0.07] transition-colors">
                     <div className="text-3xl mb-2">✨</div>
                     <div className="text-xs font-medium">Name Glow Effect</div>
                     <div className="text-[10px] text-cyan-400 mt-1">750 XP</div>
                   </div>
-                  <div className="bg-[#0f0f1a] rounded-xl p-3 text-center cursor-pointer hover:bg-[#0a0a10] transition-colors">
+                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center cursor-pointer hover:bg-white/[0.07] transition-colors">
                     <div className="text-3xl mb-2">🏆</div>
                     <div className="text-xs font-medium">Trophy Badge</div>
                     <div className="text-[10px] text-cyan-400 mt-1">1,000 XP</div>
@@ -1279,21 +1279,21 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="space-y-3">
                   {/* Placeholder friends - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-2">
+                  <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
                     <div className="w-8 h-8 bg-[#00c8ea]/20 border border-[#00c8ea]/30 rounded-full flex items-center justify-center text-xs font-bold text-[#00c8ea]">JM</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">JMoney</span> <span className="text-slate-500">ranked up to</span> <span className="text-yellow-400">Warlord</span></div>
                       <div className="text-[10px] text-slate-500">2 hours ago</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-2">
+                  <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
                     <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold">SK</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">SailorKing</span> <span className="text-slate-500">won</span> <span className="text-green-400">3 matches</span> <span className="text-slate-500">in One Piece</span></div>
                       <div className="text-[10px] text-slate-500">5 hours ago</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-2">
+                  <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
                     <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-xs font-bold">TC</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">TCGMaster</span> <span className="text-slate-500">earned</span> <span className="text-cyan-400">+150 XP</span></div>
