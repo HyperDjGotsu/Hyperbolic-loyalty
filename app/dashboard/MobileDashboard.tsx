@@ -395,12 +395,12 @@ export default function MobileDashboard() {
   return (
     <div ref={containerRef} className="min-h-full pb-4">
       {/* Header with Player Card */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 pt-4 pb-6">
+      <div className="relative bg-[#0a0a14] pt-4 pb-6" style={{ backgroundImage: 'radial-gradient(ellipse at 60% 0%, rgba(0,200,234,0.07) 0%, transparent 70%)' }}>
         <FloatingParticles />
         
         {/* Logo */}
         <div className="text-center mb-4">
-          <div className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
+          <div className="text-2xl font-black text-[#00c8ea] font-orbitron">
             HYPERBOLIC
           </div>
           <div className="text-orange-400 text-xs font-bold tracking-widest">— GAMES —</div>
@@ -421,11 +421,11 @@ export default function MobileDashboard() {
                   <h1 className="text-white text-lg font-bold">{playerData?.displayName || 'Player'}</h1>
                   <span className="text-cyan-400 text-xs font-mono">{playerData?.hyp_id}</span>
                 </div>
-                <div className="text-purple-400 text-sm">Level {level} Player</div>
+                <div className="text-[#00c8ea]/70 text-sm">Level {level} Player</div>
                 <div className="mt-2">
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full transition-all duration-1000 ease-out"
+                      className="h-full bg-[#00c8ea] rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${levelProgress}%` }}
                     />
                   </div>
@@ -541,10 +541,10 @@ export default function MobileDashboard() {
             <p>No game XP yet - attend events to start earning!</p>
           </div>
         )}
-        <div className="mt-3 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-xl p-3 border border-cyan-500/20">
+        <div className="mt-3 bg-[#00c8ea]/[0.06] rounded-xl p-3 border border-[#00c8ea]/20">
           <div className="flex justify-between items-center">
-            <span className="text-slate-400 text-sm">Total Combined XP</span>
-            <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <span className="text-white/40 text-sm">Total Combined XP</span>
+            <span className="text-xl font-bold text-[#00c8ea]">
               <AnimatedCounter value={totalXp} duration={2} />
             </span>
           </div>
