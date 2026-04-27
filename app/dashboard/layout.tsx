@@ -77,10 +77,8 @@ export default function DashboardLayout({
         <aside className="flex flex-col w-64 fixed inset-y-0 bg-[#0a0a14] border-r border-white/[0.06]">
           {/* Logo */}
           <div className="p-6 border-b border-white/[0.06]">
-            <div className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
-              HYPERBOLIC
-            </div>
-            <div className="text-orange-400 text-xs font-bold tracking-widest mt-1">— GAMES —</div>
+            <div className="font-orbitron font-black text-xl text-[#00c8ea] tracking-wider">HYPERBOLIC</div>
+            <div className="font-orbitron font-black text-xl text-white/40 tracking-wider">GAMES</div>
           </div>
 
           {/* Navigation */}
