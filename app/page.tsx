@@ -63,7 +63,7 @@ export default function HomePage() {
       <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
         <div>
           <span className="font-orbitron font-black text-xl text-[#00c8ea] tracking-wider">HYPERBOLIC</span>
-          <span className="font-orbitron text-amber-400 text-xs tracking-[0.3em] ml-2">GAMES</span>
+          <span className="font-orbitron font-black text-xl text-white/40 tracking-wider ml-2">GAMES</span>
         </div>
         <div className="flex items-center gap-4">
           <SignedOut>
@@ -96,11 +96,6 @@ export default function HomePage() {
 
         {/* Left: Text */}
         <div>
-          <div className="inline-flex items-center gap-2 bg-[#00c8ea]/10 border border-[#00c8ea]/20 rounded-full px-4 py-1.5 mb-8">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00c8ea] animate-pulse" />
-            <span className="text-[#00c8ea] text-sm font-medium tracking-wide">Games of Martinez — Benicia, CA</span>
-          </div>
-
           <h1 className="font-orbitron font-black text-5xl lg:text-6xl leading-none tracking-tight mb-6">
             <span className="text-white">LEVEL UP</span>
             <br />
@@ -110,7 +105,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-white/50 text-lg leading-relaxed mb-10 max-w-md">
-            Earn XP at every event. Climb the ranks. Compete for Emperor status across 10+ card games — all in one loyalty system built for your local game store.
+            Earn XP at every event. Climb the ranks. Compete for Emperor status across 10+ card games — all in one loyalty system built for TCG players.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
