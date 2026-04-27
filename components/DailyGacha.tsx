@@ -58,6 +58,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
 
   const handleClaim = () => {
     onComplete();
+    onClose();
   };
 
   const rarityColor = prize ? rarityColors[prize.rarity] : rarityColors.common;
