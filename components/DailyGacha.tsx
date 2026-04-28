@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 
@@ -9,18 +9,10 @@ import gsap from 'gsap';
 type Phase = 'loading' | 'idle' | 'awakened' | 'shuffle' | 'spread' | 'reveal' | 'error' | 'already_spun';
 type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
-interface SpinPrize {
-  xp: number;
-  label: string;
-  rarity: Rarity;
-}
+interface SpinPrize { xp: number; label: string; rarity: Rarity; }
+interface DailyGachaProps { onComplete: () => void; onClose: () => void; }
 
-interface DailyGachaProps {
-  onComplete: () => void;
-  onClose: () => void;
-}
-
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Layout constants ─────────────────────────────────────────────────────────
 
 const CARD_W = 112;
 const CARD_H = 157;
@@ -40,76 +32,355 @@ const SPREAD_POS = [
   { x:  120, y: 20,  rotation:  18 },
 ] as const;
 
-const TIER: Record<Rarity, { color: string; bg: string; border: string; glow: string; pulse: string; label: string }> = {
-  common:    { color: '#8899bb', bg: '#111120', border: '#2a2a48', glow: 'rgba(136,153,187,0.28)', pulse: 'rgba(136,153,187,0.10)', label: 'Common'    },
-  uncommon:  { color: '#52a8c0', bg: '#09141e', border: '#164455', glow: 'rgba(82,168,192,0.38)',  pulse: 'rgba(82,168,192,0.12)',  label: 'Uncommon'  },
-  rare:      { color: '#4878c8', bg: '#08101c', border: '#0c2e82', glow: 'rgba(72,120,200,0.45)',  pulse: 'rgba(72,120,200,0.14)',  label: 'Rare'      },
-  epic:      { color: '#8838b8', bg: '#0e0818', border: '#320666', glow: 'rgba(136,56,184,0.48)',  pulse: 'rgba(136,56,184,0.14)',  label: 'Epic'      },
-  legendary: { color: '#c89e1a', bg: '#160e00', border: '#5c3e00', glow: 'rgba(200,158,26,0.55)',  pulse: 'rgba(200,158,26,0.18)',  label: 'Legendary' },
+// ─── Brand accent ─────────────────────────────────────────────────────────────
+
+const GOLD = '#c9a84c';
+
+// ─── Tier visual definitions ──────────────────────────────────────────────────
+
+interface TierDef {
+  rank: string; label: string; color: string; stroke: string;
+  bg: string; glow: string; aura: string | null; pulse: string;
+  borderGrad: string;
+  bottomFill: number; topFill: number; animDuration: number;
+}
+
+const TIER: Record<Rarity, TierDef> = {
+  common: {
+    rank: 'E', label: 'E-TIER', bottomFill: 0, topFill: 0, animDuration: 0,
+    color: '#8ca0b0', stroke: '#aabccc',
+    bg: 'radial-gradient(ellipse at 50% 40%, #354050 0%, #121820 100%)',
+    glow: 'rgba(140,160,176,0.38)', aura: null, pulse: 'rgba(136,153,187,0.08)',
+    borderGrad: `linear-gradient(135deg, #506070 0%, ${GOLD}55 35%, #9ab0c0 50%, ${GOLD}55 65%, #506070 100%)`,
+  },
+  uncommon: {
+    rank: 'D', label: 'D-TIER', bottomFill: 0.18, topFill: 0, animDuration: 350,
+    color: '#00b8d8', stroke: '#00c8ea',
+    bg: 'radial-gradient(ellipse at 50% 40%, #005870 0%, #011820 100%)',
+    glow: 'rgba(0,184,216,0.52)', aura: 'rgba(0,184,216,0.20)', pulse: 'rgba(0,184,216,0.10)',
+    borderGrad: `linear-gradient(135deg, #00b8d8 0%, ${GOLD}55 38%, #00c8ea 55%, #00b8d8 100%)`,
+  },
+  rare: {
+    rank: 'C', label: 'C-TIER', bottomFill: 0.50, topFill: 0.22, animDuration: 500,
+    color: '#9b72cf', stroke: '#b899e0',
+    bg: 'radial-gradient(ellipse at 50% 40%, #3d1e6e 0%, #120830 100%)',
+    glow: 'rgba(155,114,207,0.54)', aura: 'rgba(155,114,207,0.26)', pulse: 'rgba(155,114,207,0.12)',
+    borderGrad: `linear-gradient(135deg, #7c3aed 0%, ${GOLD}65 35%, #b899e0 55%, #7c3aed 100%)`,
+  },
+  epic: {
+    rank: 'B', label: 'B-TIER', bottomFill: 0.80, topFill: 0.08, animDuration: 650,
+    color: '#c45680', stroke: '#e07099',
+    bg: 'radial-gradient(ellipse at 50% 40%, #6e1838 0%, #280010 100%)',
+    glow: 'rgba(196,86,128,0.56)', aura: 'rgba(196,86,128,0.30)', pulse: 'rgba(196,86,128,0.12)',
+    borderGrad: `linear-gradient(135deg, #be185d 0%, ${GOLD}75 35%, #e07099 55%, #be185d 100%)`,
+  },
+  // LOCKED: #ffcc33 / #d4a017 / #8b6914 — warm amber gold, no green channel
+  legendary: {
+    rank: 'A', label: 'A-TIER', bottomFill: 1.0, topFill: 1.0, animDuration: 1000,
+    color: '#d4a017', stroke: '#ffcc33',
+    bg: 'radial-gradient(ellipse at 50% 40%, #ffcc33 0%, #d4a017 50%, #8b6914 100%)',
+    glow: 'rgba(212,160,23,0.75)', aura: 'rgba(212,160,23,0.45)', pulse: 'rgba(212,160,23,0.16)',
+    borderGrad: 'linear-gradient(135deg, #ffcc33 0%, #d4a017 30%, #ffcc33 50%, #8b6914 70%, #d4a017 100%)',
+  },
 };
 
-// ─── CardBack — sacred geometry on navy ──────────────────────────────────────
+// ─── Hourglass geometry ────────────────────────────────────────────────────────
 
-function CardBack({ shimmer = false }: { shimmer?: boolean }) {
+interface HGP { cx: number; cy: number; w: number; h: number; nw: number; nh: number; }
+
+function hgOutline({ cx, cy, w, h, nw, nh }: HGP): string {
+  const hw = w/2, hh = h/2, hnw = nw/2, hnh = nh/2;
+  return `M${cx-hw},${cy-hh} L${cx+hw},${cy-hh} L${cx+hnw},${cy-hnh} ` +
+         `L${cx+hnw},${cy+hnh} L${cx+hw},${cy+hh} L${cx-hw},${cy+hh} ` +
+         `L${cx-hnw},${cy+hnh} L${cx-hnw},${cy-hnh} Z`;
+}
+
+function hgSandBottom({ cx, cy, w, h, nw, nh }: HGP, fill: number): string | null {
+  if (fill <= 0) return null;
+  const hw = w/2, hh = h/2, hnw = nw/2, hnh = nh/2;
+  const botY = cy + hh, neckBotY = cy + hnh, chamberH = hh - hnh;
+  const sandTopY = botY - chamberH * fill;
+  const t = (sandTopY - neckBotY) / chamberH;
+  const sandLx = (cx - hnw) + ((cx - hw) - (cx - hnw)) * t;
+  const sandRx = (cx + hnw) + ((cx + hw) - (cx + hnw)) * t;
+  return `${sandLx},${sandTopY} ${sandRx},${sandTopY} ${cx+hw},${botY} ${cx-hw},${botY}`;
+}
+
+function hgNeckFill({ cx, cy, nw, nh }: HGP): string {
+  const hnw = nw/2, hnh = nh/2;
+  return `${cx-hnw},${cy-hnh} ${cx+hnw},${cy-hnh} ${cx+hnw},${cy+hnh} ${cx-hnw},${cy+hnh}`;
+}
+
+function hgSandTop({ cx, cy, w, h, nw, nh }: HGP, topFill: number): string | null {
+  if (topFill <= 0) return null;
+  const hw = w/2, hh = h/2, hnw = nw/2, hnh = nh/2;
+  const topY = cy - hh, neckTopY = cy - hnh, chamberH = hh - hnh;
+  const sandTopY = neckTopY - chamberH * topFill;
+  const t = (sandTopY - topY) / chamberH;
+  const sandLx = (cx - hw) + ((cx - hnw) - (cx - hw)) * t;
+  const sandRx = (cx + hw) + ((cx + hnw) - (cx + hw)) * t;
+  return `${sandLx},${sandTopY} ${sandRx},${sandTopY} ${cx+hnw},${neckTopY} ${cx-hnw},${neckTopY}`;
+}
+
+// Small symbol (27×37 viewBox) — scaled from preview's 40×54 at 0.667×
+const SYM: HGP = { cx: 13, cy: 18, w: 24, h: 34, nw: 4, nh: 5 };
+// Center mark on card back — centered in CARD_W × CARD_H space
+const MARK: HGP = { cx: CARD_W / 2, cy: CARD_H / 2, w: 36, h: 50, nw: 7, nh: 7 };
+
+// ─── Hourglass rarity symbol ──────────────────────────────────────────────────
+
+function HourglassSymbol({ uid, bottomFill, topFill, color, animated = false, animDuration = 400 }: {
+  uid: string; bottomFill: number; topFill: number; color: string;
+  animated?: boolean; animDuration?: number;
+}) {
+  const filtId = `sf-${uid}`;
+  const gradId = `sg-${uid}`;
+  const outline = hgOutline(SYM);
+  const sandBot = hgSandBottom(SYM, bottomFill);
+  const neck    = bottomFill >= 0.8 ? hgNeckFill(SYM) : null;
+  const sandTop = topFill > 0 ? hgSandTop(SYM, topFill) : null;
+  const isE     = bottomFill === 0;
+
+  const overflow = bottomFill >= 1.0 ? [
+    { x: 7,  y: 1, r: 1.0, delay: '0s'    },
+    { x: 20, y: 2, r: 0.8, delay: '0.65s' },
+    { x: 4,  y: 5, r: 0.7, delay: '1.25s' },
+    { x: 23, y: 4, r: 0.9, delay: '0.30s' },
+  ] : [];
+
+  const sandAnim = (dur: number): React.CSSProperties => ({
+    transformBox: 'fill-box', transformOrigin: 'center bottom',
+    transform: 'scaleY(0)',
+    animation: `sandReveal ${dur}ms ease-out forwards`,
+  });
+  const topAnim = (dur: number, delay: number): React.CSSProperties => ({
+    transformBox: 'fill-box', transformOrigin: 'center bottom',
+    transform: 'scaleY(0)', opacity: 0,
+    animation: `topSandAppear ${Math.round(dur * 0.55)}ms ease-out ${delay}ms forwards`,
+  });
+
+  return (
+    <svg width="27" height="37" viewBox="0 0 27 37" style={{ overflow: 'visible' }}>
+      <defs>
+        <filter id={filtId} x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5"/>
+        </filter>
+        <radialGradient id={gradId} cx="45%" cy="25%" r="75%" gradientUnits="objectBoundingBox">
+          <stop offset="0%"   stopColor="white" stopOpacity="0.60"/>
+          <stop offset="100%" stopColor={color} stopOpacity="1"/>
+        </radialGradient>
+      </defs>
+
+      <path d={outline} fill="none" stroke={color} strokeWidth="5" opacity="0.18"
+        filter={`url(#${filtId})`}
+        style={animated && isE ? { animation: 'ePulse 1.8s ease-in-out infinite' } : undefined}/>
+      <path d={outline} fill="none" stroke={color} strokeWidth="2" opacity="0.88"
+        style={animated && isE ? { animation: 'ePulse 1.8s ease-in-out infinite' } : undefined}/>
+
+      {sandBot && <polygon points={sandBot} fill={color} opacity="0.28" filter={`url(#${filtId})`}
+        style={animated ? sandAnim(animDuration) : undefined}/>}
+      {sandBot && <polygon points={sandBot} fill={`url(#${gradId})`} opacity="1"
+        style={animated ? sandAnim(animDuration) : undefined}/>}
+
+      {neck && <polygon points={neck} fill={color} opacity="1"
+        style={animated ? { animation: 'neckPulse 1.1s ease-in-out infinite' } as React.CSSProperties : undefined}/>}
+
+      {sandTop && <polygon points={sandTop} fill={color} opacity="0.88"
+        style={animated ? topAnim(animDuration, Math.round(animDuration * 0.65)) : undefined}/>}
+
+      {overflow.map((d, i) => (
+        <circle key={i} cx={d.x} cy={d.y} r={d.r} fill={color} opacity="0.9"
+          style={{ animation: animated
+            ? `overflowBurst 1.1s ${d.delay} ease-out infinite`
+            : `sandFloat 2.2s ${d.delay} ease-in-out infinite` }}/>
+      ))}
+    </svg>
+  );
+}
+
+// ─── Corner pip diamonds ──────────────────────────────────────────────────────
+
+function CornerPips({ uid, color }: { uid: string; color: string }) {
+  const gemId = `cgm-${uid}`;
+  const pips: [number, number][] = [[9, 12], [103, 145]];
+  return (
+    <svg width={CARD_W} height={CARD_H} viewBox={`0 0 ${CARD_W} ${CARD_H}`}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <defs>
+        <radialGradient id={gemId} cx="35%" cy="28%" r="70%" gradientUnits="objectBoundingBox">
+          <stop offset="0%"   stopColor="#e8f4ff"/>
+          <stop offset="60%"  stopColor={color}/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.5"/>
+        </radialGradient>
+      </defs>
+      {pips.map(([px, py], i) => (
+        <polygon key={i}
+          points={`${px},${py-4} ${px+4},${py} ${px},${py+4} ${px-4},${py}`}
+          fill={`url(#${gemId})`}
+          style={{
+            animation: `gemPulse ${3.0 + i * 0.9}s ease-in-out ${i * 0.7}s infinite`,
+            filter: `drop-shadow(0 0 3px ${color})`,
+          }}/>
+      ))}
+    </svg>
+  );
+}
+
+// ─── Card back SVG mark ───────────────────────────────────────────────────────
+
+function CardMarkSVG({ uid, sandColor, bottomFill = 0.4, topFill = 0 }: {
+  uid: string; sandColor: string; bottomFill?: number; topFill?: number;
+}) {
+  const filtId  = `cmf-${uid}`;
+  const sandGId = `csg-${uid}`;
+  const gemId   = `cgm-back-${uid}`;
+  const outline = hgOutline(MARK);
+  const sandBot = hgSandBottom(MARK, bottomFill);
+  const neck    = bottomFill >= 0.8 ? hgNeckFill(MARK) : null;
+  const sandTop = topFill > 0 ? hgSandTop(MARK, topFill) : null;
+  const pips: [number, number][] = [[9, 12], [103, 145]];
+
+  return (
+    <svg width={CARD_W} height={CARD_H} viewBox={`0 0 ${CARD_W} ${CARD_H}`}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <defs>
+        <filter id={filtId} x="-70%" y="-70%" width="240%" height="240%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="5"/>
+        </filter>
+        <radialGradient id={sandGId} cx="45%" cy="25%" r="75%" gradientUnits="objectBoundingBox">
+          <stop offset="0%"   stopColor="white"     stopOpacity="0.50"/>
+          <stop offset="100%" stopColor={sandColor} stopOpacity="1"/>
+        </radialGradient>
+        <radialGradient id={gemId} cx="35%" cy="28%" r="70%" gradientUnits="objectBoundingBox">
+          <stop offset="0%"   stopColor="#e8f4ff"/>
+          <stop offset="60%"  stopColor={sandColor}/>
+          <stop offset="100%" stopColor={sandColor} stopOpacity="0.5"/>
+        </radialGradient>
+      </defs>
+
+      <path d={outline} fill="none" stroke={sandColor} strokeWidth="10"
+        opacity="0.09" filter={`url(#${filtId})`}/>
+      <path d={outline} fill="none" stroke={sandColor} strokeWidth="2" opacity="0.65"/>
+
+      {sandBot && <polygon points={sandBot} fill={sandColor} opacity="0.12" filter={`url(#${filtId})`}/>}
+      {sandBot && <polygon points={sandBot} fill={`url(#${sandGId})`} opacity="0.80"/>}
+      {neck    && <polygon points={neck}    fill={sandColor} opacity="0.85"/>}
+      {sandTop && <polygon points={sandTop} fill={sandColor} opacity="0.60"/>}
+
+      {pips.map(([px, py], i) => (
+        <polygon key={i}
+          points={`${px},${py-4} ${px+4},${py} ${px},${py+4} ${px-4},${py}`}
+          fill={`url(#${gemId})`}
+          style={{
+            animation: `gemPulse ${3.0 + i * 0.9}s ease-in-out ${i * 0.7}s infinite`,
+            filter: `drop-shadow(0 0 3px ${sandColor})`,
+          }}/>
+      ))}
+    </svg>
+  );
+}
+
+// ─── Film grain ───────────────────────────────────────────────────────────────
+
+function GrainOverlay() {
   return (
     <div style={{
-      width: CARD_W, height: CARD_H,
-      background: '#0e0e1c',
-      border: '1px solid rgba(0,200,234,0.24)',
+      position: 'absolute', inset: 0, borderRadius: 9,
+      opacity: 0.038, pointerEvents: 'none',
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+      backgroundSize: '200px 200px',
+    }}/>
+  );
+}
+
+// ─── Card Back ────────────────────────────────────────────────────────────────
+
+function CardBack() {
+  const borderGrad = `linear-gradient(135deg, #00b4d8 0%, #9d4edd 38%, ${GOLD} 50%, #9d4edd 62%, #00b4d8 100%)`;
+  return (
+    <div style={{
+      width: CARD_W, height: CARD_H, boxSizing: 'border-box',
+      backgroundImage: `radial-gradient(ellipse at 50% 40%, #1e1040 0%, #070810 100%), ${borderGrad}`,
+      backgroundOrigin: 'padding-box, border-box',
+      backgroundClip: 'padding-box, border-box',
+      border: '1.5px solid transparent',
       borderRadius: 10,
-      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
       position: 'relative', overflow: 'hidden', userSelect: 'none',
     }}>
-      <div style={{ position: 'absolute', inset: 5, border: '1px solid rgba(0,200,234,0.09)', borderRadius: 6 }} />
-      {([[9,9],[9,CARD_H-14],[CARD_W-14,9],[CARD_W-14,CARD_H-14]] as [number,number][]).map(([lx,ly],i) => (
-        <div key={i} style={{ position: 'absolute', left: lx, top: ly, width: 5, height: 5, background: 'rgba(0,200,234,0.38)', transform: 'rotate(45deg)' }} />
-      ))}
-      <svg width={84} height={84} viewBox="0 0 84 84"
-        style={{ position: 'absolute', left: (CARD_W-84)/2, top: (CARD_H-84)/2, overflow: 'visible' }}>
-        <polygon points="42,3 76,21.5 76,62.5 42,81 8,62.5 8,21.5"
-          fill="none" stroke="rgba(0,200,234,0.26)" strokeWidth="0.9" />
-        <circle cx="34" cy="42" r="15" fill="none" stroke="rgba(0,200,234,0.26)" strokeWidth="0.9" />
-        <circle cx="50" cy="42" r="15" fill="none" stroke="rgba(0,200,234,0.26)" strokeWidth="0.9" />
-        <circle cx="42" cy="42" r="1.8" fill="rgba(0,200,234,0.48)" />
-      </svg>
-      {shimmer && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(135deg, transparent 20%, rgba(200,158,26,0.12) 50%, transparent 80%)',
-          animation: 'legBack 2.5s ease-in-out infinite',
-        }} />
-      )}
+      <CardMarkSVG uid="back" sandColor="#2060a8" bottomFill={0.40} topFill={0}/>
+      <GrainOverlay/>
     </div>
   );
 }
 
-// ─── CardFace ─────────────────────────────────────────────────────────────────
+// ─── Prize Card Face ──────────────────────────────────────────────────────────
 
-function CardFace({ prize }: { prize: SpinPrize }) {
-  const t = TIER[prize.rarity];
+function CardFace({ prize, animated, animKey }: {
+  prize: SpinPrize; animated: boolean; animKey: number;
+}) {
+  const t   = TIER[prize.rarity];
+  const uid = `face-${prize.rarity}-${animKey}`;
+  const xpFontSize = prize.xp < 10 ? 46 : prize.xp < 100 ? 38 : 32;
+
   return (
     <div style={{
-      width: CARD_W, height: CARD_H,
-      background: t.bg,
-      border: `1px solid ${t.border}`,
+      width: CARD_W, height: CARD_H, boxSizing: 'border-box',
+      backgroundImage: `${t.bg}, ${t.borderGrad}`,
+      backgroundOrigin: 'padding-box, border-box',
+      backgroundClip: 'padding-box, border-box',
+      border: '1.5px solid transparent',
       borderRadius: 10,
-      boxShadow: `0 0 ${prize.rarity === 'legendary' ? 20 : 8}px ${t.glow}, inset 0 1px 0 ${t.color}20`,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      position: 'relative', overflow: 'hidden', gap: 3,
+      boxShadow: t.aura
+        ? `0 0 0 0.5px rgba(255,255,255,0.14), 0 0 22px 7px ${t.aura}`
+        : '0 0 0 0.5px rgba(255,255,255,0.10)',
+      position: 'relative', overflow: 'hidden', userSelect: 'none',
     }}>
-      <div style={{ color: `${t.color}55`, fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', fontFamily: 'var(--font-orbitron)' }}>
-        {t.label}
+      <CornerPips uid={uid} color={t.stroke}/>
+      <GrainOverlay/>
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 2,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        gap: 0, paddingTop: 3,
+      }}>
+        <HourglassSymbol
+          key={`hg-${animKey}`}
+          uid={`sym-${uid}`}
+          bottomFill={t.bottomFill}
+          topFill={t.topFill}
+          color={t.color}
+          animated={animated}
+          animDuration={t.animDuration || 320}
+        />
+        <div style={{
+          fontSize: 8, letterSpacing: '0.22em',
+          color: 'rgba(255,255,255,0.90)',
+          textShadow: '0 1px 3px rgba(0,0,0,0.85)',
+          fontFamily: 'var(--font-orbitron, monospace)',
+          fontWeight: 600, marginTop: 5,
+        }}>
+          {t.label}
+        </div>
+        <div style={{
+          width: 22, height: 1, margin: '7px 0',
+          background: `linear-gradient(90deg, transparent, ${GOLD}95, transparent)`,
+        }}/>
+        <div style={{
+          lineHeight: 1,
+          fontFamily: 'var(--font-orbitron, monospace)',
+          fontWeight: 900, fontSize: xpFontSize,
+          color: 'white',
+          textShadow: `0 0 18px ${t.glow}, 0 3px 12px rgba(0,0,0,0.88)`,
+        }}>
+          +{prize.xp}
+        </div>
+        <div style={{
+          fontSize: 8, letterSpacing: '0.30em',
+          color: 'rgba(255,255,255,0.55)',
+          fontFamily: 'var(--font-orbitron, monospace)',
+          marginTop: 3,
+        }}>XP</div>
       </div>
-      <div style={{ color: t.color, fontSize: 42, fontWeight: 900, lineHeight: 1, fontFamily: 'var(--font-orbitron)' }}>
-        +{prize.xp}
-      </div>
-      <div style={{ color: `${t.color}60`, fontSize: 9, letterSpacing: '0.35em', fontFamily: 'var(--font-orbitron)' }}>XP</div>
-      <div style={{ color: `${t.color}80`, fontSize: 10, textAlign: 'center', padding: '0 10px', fontFamily: 'var(--font-rajdhani)', fontWeight: 600, marginTop: 4 }}>
-        {prize.label}
-      </div>
-      {prize.rarity === 'legendary' && (
-        <div className="holo-card" style={{ position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none' }} />
-      )}
     </div>
   );
 }
@@ -124,27 +395,22 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
   const [countdown,   setCountdown]   = useState('');
   const [errorMsg,    setErrorMsg]    = useState('');
   const [isDevUser,   setIsDevUser]   = useState(false);
+  const [fillAnimKey, setFillAnimKey] = useState(0);
 
-  // Synchronous refs — bypass stale closure issues in async animation callbacks
   const phaseRef = useRef<Phase>('loading');
   const prizeRef = useRef<SpinPrize | null>(null);
   const busyRef  = useRef(false);
+  const forceTierRef = useRef<Rarity | null>(null);
 
   function setPhase(p: Phase) { phaseRef.current = p; _setPhase(p); }
 
-  // Card element refs
   const shuffleRefs = useRef<(HTMLDivElement | null)[]>(Array(6).fill(null));
   const spreadRefs  = useRef<(HTMLDivElement | null)[]>(Array(3).fill(null));
   const innerRefs   = useRef<(HTMLDivElement | null)[]>(Array(3).fill(null));
 
-  // Swipe gesture state
   const gestureRef = useRef({ active: false, startX: 0, dx: 0 });
-
-  // GSAP quickTo handles (created when phase becomes 'awakened')
   const qX   = useRef<((v: number) => void) | null>(null);
   const qRot = useRef<((v: number) => void) | null>(null);
-
-  // Float tween kill handle
   const floatRef = useRef<gsap.core.Tween | null>(null);
 
   const reducedMotion = typeof window !== 'undefined'
@@ -155,7 +421,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
     typeof window !== 'undefined' && localStorage.getItem('hgx_gacha_tutorial_seen') === '1'
   );
 
-  // ── Initial card positions ─────────────────────────────────────────────────
+  // ── Initial positions ──────────────────────────────────────────────────────
 
   useLayoutEffect(() => {
     INIT_POS.forEach((pos, i) => { const el = shuffleRefs.current[i]; if (el) gsap.set(el, pos); });
@@ -163,13 +429,20 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
     innerRefs.current.forEach(el => { if (el) gsap.set(el, { rotateY: 0 }); });
   }, []);
 
-  // ── GET on mount ───────────────────────────────────────────────────────────
+  // ── GET on mount (supports ?force=rarity for testing) ─────────────────────
 
   useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get('force') as Rarity | null;
+    const validRarities: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+    if (param && validRarities.includes(param)) {
+      forceTierRef.current = param;
+      setPhase('idle');
+      return;
+    }
     fetch('/api/xp/daily-spin')
       .then(r => r.json())
       .then(d => {
-        if (d.canSpin) { setPhase('idle'); }
+        if (d.canSpin) setPhase('idle');
         else { setNextSpinAt(d.nextSpinAt); setPhase('already_spun'); }
       })
       .catch(() => { setErrorMsg('Could not connect. Please try again.'); setPhase('error'); });
@@ -216,6 +489,16 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
   // ── POST ───────────────────────────────────────────────────────────────────
 
   async function firePost(): Promise<boolean> {
+    // Force-tier mode: return mock prize without hitting the API
+    if (forceTierRef.current) {
+      const FORCE_XP: Record<Rarity, number> = { common: 5, uncommon: 10, rare: 25, epic: 50, legendary: 100 };
+      const rarity = forceTierRef.current;
+      const p: SpinPrize = { xp: FORCE_XP[rarity], label: TIER[rarity].label, rarity };
+      prizeRef.current = p;
+      setPrize(p);
+      setNextSpinAt(new Date(Date.now() + 86400000).toISOString());
+      return true;
+    }
     try {
       const res  = await fetch('/api/xp/daily-spin', { method: 'POST' });
       const data = await res.json();
@@ -313,7 +596,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
     if (!gestureRef.current.active) return;
     gestureRef.current.active = false;
     const { dx } = gestureRef.current;
-    if (Math.abs(dx) >= 80) { commitSwipe(dx); } else { snapBack(); }
+    if (Math.abs(dx) >= 80) commitSwipe(dx); else snapBack();
   }
 
   function snapBack() {
@@ -339,9 +622,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
     const ok = await postPromise;
     if (!ok) { busyRef.current = false; return; }
 
-    // Give React one frame to render CardFace into the hidden front faces
     await new Promise(r => requestAnimationFrame(r));
-
     await runSpread();
     setPhase('spread');
     busyRef.current = false;
@@ -367,6 +648,9 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
       const el = innerRefs.current[index];
       if (el) gsap.set(el, { rotateY: 180 });
     }
+
+    // Flip complete — trigger hourglass fill cascade
+    setFillAnimKey(k => k + 1);
     busyRef.current = false;
   }
 
@@ -382,6 +666,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
     const inner = innerRefs.current[1];
     if (inner) gsap.set(inner, { rotateY: 180 });
     setPickedIndex(1);
+    setFillAnimKey(k => k + 1);
     setPhase('reveal');
     busyRef.current = false;
   }
@@ -396,7 +681,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
 
       {phase === 'reveal' && t && (
         <div className="absolute inset-0 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse at 50% 45%, ${t.pulse} 0%, transparent 62%)` }} />
+          style={{ background: `radial-gradient(ellipse at 50% 45%, ${t.pulse} 0%, transparent 62%)` }}/>
       )}
 
       <button onClick={onClose}
@@ -405,12 +690,12 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
         ×
       </button>
 
-      {/* ── Loading ── */}
+      {/* Loading */}
       {phase === 'loading' && (
         <div className="text-white/20 text-xs font-mono animate-pulse tracking-widest">LOADING</div>
       )}
 
-      {/* ── Already spun ── */}
+      {/* Already spun */}
       {phase === 'already_spun' && (
         <div className="text-center">
           <p className="font-orbitron text-[10px] tracking-[0.3em] uppercase text-white/25 mb-3">Next spin in</p>
@@ -422,11 +707,10 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
         </div>
       )}
 
-      {/* ── Ritual ── */}
+      {/* Ritual */}
       {showRitual && (
         <div className="relative w-full max-w-xs mx-4 flex flex-col items-center">
 
-          {/* Prompt */}
           <div className="mb-6 h-8 flex items-center justify-center">
             <p className="font-orbitron uppercase transition-all duration-300"
               style={{
@@ -435,15 +719,14 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
                 color:         phase === 'reveal' && t ? t.color : 'rgba(255,255,255,0.28)',
                 letterSpacing: phase === 'reveal' ? '0.05em' : '0.25em',
               }}>
-              {phase === 'idle'    && 'Tap the deck'}
-              {phase === 'awakened'&& 'Swipe to shuffle'}
-              {phase === 'shuffle' && '· · ·'}
-              {phase === 'spread'  && 'Choose a card'}
-              {phase === 'reveal'  && prize && `+${prize.xp} XP`}
+              {phase === 'idle'     && 'Tap the deck'}
+              {phase === 'awakened' && 'Swipe to shuffle'}
+              {phase === 'shuffle'  && '· · ·'}
+              {phase === 'spread'   && 'Choose a card'}
+              {phase === 'reveal'   && prize && `+${prize.xp} XP`}
             </p>
           </div>
 
-          {/* Swipe arrow */}
           {phase === 'awakened' && (
             <div className="absolute font-orbitron text-[10px] tracking-[0.2em] text-[#00c8ea]/55"
               style={{ top: 28, animation: 'swipeArrow 1.4s ease-in-out infinite' }}>
@@ -451,10 +734,9 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
             </div>
           )}
 
-          {/* Card interaction area */}
           <div style={{ position: 'relative', width: 380, height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
-            {/* Deck — tap target in idle, swipe target in awakened */}
+            {/* Deck — tap + swipe target */}
             <div
               onPointerDown={e => {
                 if (phaseRef.current === 'idle') handleTap();
@@ -484,12 +766,12 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
               {Array.from({ length: 6 }, (_, i) => (
                 <div key={i} ref={el => { shuffleRefs.current[i] = el; }}
                   style={{ position: 'absolute', inset: 0, willChange: 'transform' }}>
-                  <CardBack />
+                  <CardBack/>
                 </div>
               ))}
             </div>
 
-            {/* 3 spread cards — face-down, all carry the same prize */}
+            {/* 3 spread cards */}
             {[0, 1, 2].map(i => (
               <div
                 key={`s${i}`}
@@ -512,17 +794,23 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
                 <div ref={el => { innerRefs.current[i] = el; }}
                   style={{ width: CARD_W, height: CARD_H, transformStyle: 'preserve-3d', position: 'relative' }}>
                   <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
-                    <CardBack shimmer={prize?.rarity === 'legendary'} />
+                    <CardBack/>
                   </div>
                   <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-                    {prize && <CardFace prize={prize} />}
+                    {prize && (
+                      <CardFace
+                        prize={prize}
+                        animated={fillAnimKey > 0 && pickedIndex === i}
+                        animKey={fillAnimKey}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Reveal claim */}
+          {/* Reveal — claim */}
           {phase === 'reveal' && prize && t && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -533,7 +821,11 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
               <button
                 onClick={() => { onComplete(); onClose(); }}
                 className="w-full font-orbitron font-bold uppercase tracking-wider py-4 rounded-xl active:scale-[0.98] transition-all"
-                style={{ background: t.border, color: t.color, border: `1px solid ${t.color}50` }}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  color: t.color,
+                  border: `1px solid ${t.stroke}60`,
+                }}
               >
                 Claim +{prize.xp} XP
               </button>
@@ -548,7 +840,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
             </motion.div>
           )}
 
-          {/* Skip (only after first session) */}
+          {/* Skip */}
           {phase === 'idle' && tutorialSeen.current && (
             <button onClick={handleSkip}
               className="mt-5 text-white/20 text-[11px] hover:text-white/40 transition-colors">
@@ -556,14 +848,14 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
             </button>
           )}
 
-          {/* Shuffle loading hint */}
+          {/* Shuffle hint */}
           {phase === 'shuffle' && (
             <p className="mt-5 text-white/15 text-[11px] font-mono animate-pulse">Drawing fate…</p>
           )}
         </div>
       )}
 
-      {/* ── Error ── */}
+      {/* Error */}
       {phase === 'error' && (
         <div className="text-center max-w-xs mx-4">
           <div className="bg-red-500/[0.07] border border-red-500/20 rounded-xl p-5 mb-4">
@@ -576,6 +868,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
         </div>
       )}
 
+      {/* Dev reset */}
       {isDevUser && (
         <button
           onClick={() => {
@@ -595,25 +888,40 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
           0%,100% { opacity: 0.3; transform: translateX(-8px); }
           50%      { opacity: 0.85; transform: translateX(8px); }
         }
-        @keyframes legBack {
-          0%,100% { opacity: 0.35; }
-          50%      { opacity: 1; }
+        @keyframes gemPulse {
+          0%, 100% { opacity: 0.50; }
+          50%       { opacity: 0.95; }
         }
-        .holo-card::after {
-          content: ''; position: absolute; inset: 0; border-radius: 10px;
-          background: linear-gradient(135deg,
-            rgba(251,191,36,0.12) 0%,  rgba(168,85,247,0.10) 20%,
-            rgba(59,130,246,0.10) 40%, rgba(34,197,94,0.08)  60%,
-            rgba(251,191,36,0.12) 80%, rgba(192,132,252,0.10) 100%
-          );
-          background-size: 400% 400%;
-          animation: holo-sweep 3s ease infinite;
-          pointer-events: none;
+        @keyframes borderHue {
+          0%, 100% { filter: hue-rotate(0deg); }
+          50%       { filter: hue-rotate(6deg); }
         }
-        @keyframes holo-sweep {
-          0%   { background-position: 0%   50%; }
-          50%  { background-position: 100% 50%; }
-          100% { background-position: 0%   50%; }
+        @keyframes sandReveal {
+          from { transform: scaleY(0); }
+          to   { transform: scaleY(1); }
+        }
+        @keyframes topSandAppear {
+          from { transform: scaleY(0); opacity: 0;    }
+          to   { transform: scaleY(1); opacity: 0.88; }
+        }
+        @keyframes neckPulse {
+          0%, 100% { opacity: 0.55; }
+          50%       { opacity: 1.00; }
+        }
+        @keyframes ePulse {
+          0%, 100% { opacity: 0.32; }
+          50%       { opacity: 0.78; }
+        }
+        @keyframes sandFloat {
+          0%, 100% { transform: translateY(0px);  opacity: 0.85; }
+          50%       { transform: translateY(-6px); opacity: 0;    }
+        }
+        @keyframes overflowBurst {
+          0%   { transform: translateY(0px);   opacity: 0.90; }
+          100% { transform: translateY(-10px); opacity: 0;    }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
         }
       `}</style>
     </div>
