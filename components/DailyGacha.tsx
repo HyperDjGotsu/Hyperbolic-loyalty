@@ -43,6 +43,7 @@ interface TierDef {
   bg: string; glow: string; aura: string | null; pulse: string;
   borderGrad: string;
   bottomFill: number; topFill: number; animDuration: number;
+  hgGlass?: string; hgStrokePx?: number; glowRadius?: number;
 }
 
 const TIER: Record<Rarity, TierDef> = {
@@ -74,13 +75,15 @@ const TIER: Record<Rarity, TierDef> = {
     glow: 'rgba(196,86,128,0.56)', aura: 'rgba(196,86,128,0.30)', pulse: 'rgba(196,86,128,0.12)',
     borderGrad: `linear-gradient(135deg, #be185d 0%, ${GOLD}75 35%, #e07099 55%, #be185d 100%)`,
   },
-  // LOCKED: #ffcc33 / #d4a017 / #8b6914 — warm amber gold, no green channel
+  // LOCKED gold: #ffcc33 / #d4a017 / #8b6914 — warm amber, no green channel
+  // Glass: #2d1810 deep warm brown — "antique hourglass on treasure" contrast
   legendary: {
     rank: 'A', label: 'A-TIER', bottomFill: 1.0, topFill: 1.0, animDuration: 1000,
-    color: '#d4a017', stroke: '#ffcc33',
-    bg: 'radial-gradient(ellipse at 50% 40%, #ffcc33 0%, #d4a017 50%, #8b6914 100%)',
-    glow: 'rgba(212,160,23,0.75)', aura: 'rgba(212,160,23,0.45)', pulse: 'rgba(212,160,23,0.16)',
+    color: '#ffcc33', stroke: '#ffcc33',
+    bg: 'radial-gradient(ellipse at 50% 40%, #a07a10 0%, #d4a017 50%, #ffcc33 100%)',
+    glow: 'rgba(212,160,23,0.88)', aura: 'rgba(212,160,23,0.55)', pulse: 'rgba(212,160,23,0.16)',
     borderGrad: 'linear-gradient(135deg, #ffcc33 0%, #d4a017 30%, #ffcc33 50%, #8b6914 70%, #d4a017 100%)',
+    hgGlass: '#2d1810', hgStrokePx: 2.5, glowRadius: 55,
   },
 };
 
@@ -129,10 +132,11 @@ const MARK: HGP = { cx: CARD_W / 2, cy: CARD_H / 2, w: 36, h: 50, nw: 7, nh: 7 }
 
 // ─── Hourglass rarity symbol ──────────────────────────────────────────────────
 
-function HourglassSymbol({ uid, bottomFill, topFill, color, animated = false, animDuration = 400 }: {
+function HourglassSymbol({ uid, bottomFill, topFill, color, animated = false, animDuration = 400, glassColor, strokePx = 2 }: {
   uid: string; bottomFill: number; topFill: number; color: string;
-  animated?: boolean; animDuration?: number;
+  animated?: boolean; animDuration?: number; glassColor?: string; strokePx?: number;
 }) {
+  const gc = glassColor ?? color;
   const filtId = `sf-${uid}`;
   const gradId = `sg-${uid}`;
   const outline = hgOutline(SYM);
@@ -171,10 +175,10 @@ function HourglassSymbol({ uid, bottomFill, topFill, color, animated = false, an
         </radialGradient>
       </defs>
 
-      <path d={outline} fill="none" stroke={color} strokeWidth="5" opacity="0.18"
+      <path d={outline} fill="none" stroke={gc} strokeWidth={strokePx * 2.5} opacity="0.18"
         filter={`url(#${filtId})`}
         style={animated && isE ? { animation: 'ePulse 1.8s ease-in-out infinite' } : undefined}/>
-      <path d={outline} fill="none" stroke={color} strokeWidth="2" opacity="0.88"
+      <path d={outline} fill="none" stroke={gc} strokeWidth={strokePx} opacity="0.88"
         style={animated && isE ? { animation: 'ePulse 1.8s ease-in-out infinite' } : undefined}/>
 
       {sandBot && <polygon points={sandBot} fill={color} opacity="0.28" filter={`url(#${filtId})`}
@@ -321,6 +325,8 @@ function CardFace({ prize, animated, animKey }: {
   const t   = TIER[prize.rarity];
   const uid = `face-${prize.rarity}-${animKey}`;
   const xpFontSize = prize.xp < 10 ? 46 : prize.xp < 100 ? 38 : 32;
+  const glowR = t.glowRadius ?? 22;
+  const glowSpread = Math.round(glowR / 3);
 
   return (
     <div style={{
@@ -331,7 +337,7 @@ function CardFace({ prize, animated, animKey }: {
       border: '1.5px solid transparent',
       borderRadius: 10,
       boxShadow: t.aura
-        ? `0 0 0 0.5px rgba(255,255,255,0.14), 0 0 22px 7px ${t.aura}`
+        ? `0 0 0 0.5px rgba(255,255,255,0.14), 0 0 ${glowR}px ${glowSpread}px ${t.aura}`
         : '0 0 0 0.5px rgba(255,255,255,0.10)',
       position: 'relative', overflow: 'hidden', userSelect: 'none',
     }}>
@@ -351,6 +357,8 @@ function CardFace({ prize, animated, animKey }: {
           color={t.color}
           animated={animated}
           animDuration={t.animDuration || 320}
+          glassColor={t.hgGlass}
+          strokePx={t.hgStrokePx}
         />
         <div style={{
           fontSize: 8, letterSpacing: '0.22em',
@@ -658,16 +666,41 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
     if (phaseRef.current !== 'idle' || busyRef.current) return;
     busyRef.current = true;
     setPhase('shuffle');
+
     const ok = await firePost();
     if (!ok) { busyRef.current = false; return; }
+
+    // Kill all in-flight animations before manipulating DOM state
+    gsap.killTweensOf([
+      ...shuffleRefs.current,
+      ...spreadRefs.current,
+      ...innerRefs.current,
+    ].filter(Boolean));
+
     await new Promise(r => requestAnimationFrame(r));
+
+    // Hide deck cards
+    shuffleRefs.current.forEach(el => { if (el) gsap.set(el, { opacity: 0 }); });
+
+    // Hide unchosen spread cards
+    [0, 2].forEach(i => {
+      const el = spreadRefs.current[i];
+      if (el) gsap.set(el, { opacity: 0, scale: 0.84 });
+    });
+
+    // Reveal card at final position, face up, starts transparent for crossfade
     const el = spreadRefs.current[1];
-    if (el) gsap.set(el, { x: 0, y: -22, rotation: 0, opacity: 1, scale: 1 });
     const inner = innerRefs.current[1];
+    if (el) gsap.set(el, { x: 0, y: -22, rotation: 0, opacity: 0, scale: 1 });
     if (inner) gsap.set(inner, { rotateY: 180 });
+
     setPickedIndex(1);
-    setFillAnimKey(k => k + 1);
+    // No fillAnimKey increment → animated=false → hourglass renders static final fill
     setPhase('reveal');
+
+    // 150ms crossfade in
+    if (el) gsap.to(el, { opacity: 1, duration: 0.15, ease: 'power2.out' });
+
     busyRef.current = false;
   }
 
