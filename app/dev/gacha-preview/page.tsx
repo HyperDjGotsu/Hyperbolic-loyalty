@@ -513,7 +513,7 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
         width: CW, height: CH, background: t.bg,
         borderRadius: 8, position: 'relative', overflow: 'hidden', userSelect: 'none',
       }}>
-        <HoloOverlay opacity={t.holo} speed={isLeg ? 1.8 : 7} legendary={isLeg}/>
+        {isLeg && <HoloOverlay opacity={t.holo} speed={1.8} legendary/>}
         <CornerPips uid={uid} color={t.stroke}/>
         <GrainOverlay/>
 
