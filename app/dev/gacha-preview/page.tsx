@@ -285,9 +285,42 @@ function HourglassSymbol({ uid, bottomFill, topFill, color, animated = false, an
   );
 }
 
-// ─── Card background SVG — hourglass center mark + two diagonal corner pips ──
+// ─── Corner pip diamonds — used on all cards ──────────────────────────────────
 //
-// Hexagon removed. Clean hourglass only.
+// Two diagonal diamond pips (top-left + bottom-right).
+// This is the only shared background element on prize cards.
+
+function CornerPips({ uid, color }: { uid: string; color: string }) {
+  const gemId = `cgm-${uid}`;
+  const pips: [number, number][] = [[14, 18], [154, 217]];
+  return (
+    <svg width={CW} height={CH} viewBox={`0 0 ${CW} ${CH}`}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <defs>
+        <radialGradient id={gemId} cx="35%" cy="28%" r="70%" gradientUnits="objectBoundingBox">
+          <stop offset="0%"   stopColor="#e8f4ff"/>
+          <stop offset="60%"  stopColor={color}/>
+          <stop offset="100%" stopColor={color} stopOpacity="0.5"/>
+        </radialGradient>
+      </defs>
+      {pips.map(([px, py], i) => (
+        <polygon key={i}
+          points={`${px},${py-6} ${px+6},${py} ${px},${py+6} ${px-6},${py}`}
+          fill={`url(#${gemId})`}
+          style={{
+            animation: `gemPulse ${3.0 + i * 0.9}s ease-in-out ${i * 0.7}s infinite`,
+            filter: `drop-shadow(0 0 4px ${color})`,
+          }}
+        />
+      ))}
+    </svg>
+  );
+}
+
+// ─── Card back SVG — hourglass center mark + corner pips ─────────────────────
+//
+// The large center hourglass mark is CARD BACK ONLY.
+// Prize cards use CornerPips only — clean gradient background.
 
 function CardMarkSVG({ uid, sandColor, bottomFill = 0.4, topFill = 0 }: {
   uid: string; sandColor: string; bottomFill?: number; topFill?: number;
@@ -481,7 +514,7 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
         borderRadius: 8, position: 'relative', overflow: 'hidden', userSelect: 'none',
       }}>
         <HoloOverlay opacity={t.holo} speed={isLeg ? 1.8 : 7} legendary={isLeg}/>
-        <CardMarkSVG uid={uid} sandColor={t.stroke} bottomFill={t.bottomFill} topFill={t.topFill}/>
+        <CornerPips uid={uid} color={t.stroke}/>
         <GrainOverlay/>
 
         {/* Card content — above background SVG */}
