@@ -123,6 +123,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
   const [pickedIndex, setPickedIndex] = useState<number | null>(null);
   const [countdown,   setCountdown]   = useState('');
   const [errorMsg,    setErrorMsg]    = useState('');
+  const [isDevUser,   setIsDevUser]   = useState(false);
 
   // Synchronous refs — bypass stale closure issues in async animation callbacks
   const phaseRef = useRef<Phase>('loading');
@@ -173,6 +174,13 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
       })
       .catch(() => { setErrorMsg('Could not connect. Please try again.'); setPhase('error'); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/dev/reset-spin')
+      .then(r => r.json())
+      .then(d => { if (d.isWhitelisted) setIsDevUser(true); })
+      .catch(() => {});
   }, []);
 
   // ── Countdown timer ────────────────────────────────────────────────────────
@@ -566,6 +574,20 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
             Retry
           </button>
         </div>
+      )}
+
+      {isDevUser && (
+        <button
+          onClick={() => {
+            fetch('/api/dev/reset-spin', { method: 'POST' })
+              .then(() => window.location.reload())
+              .catch(() => window.location.reload());
+          }}
+          className="absolute bottom-3 right-3 opacity-30 hover:opacity-70 transition-opacity"
+          style={{ fontSize: 10, fontFamily: 'monospace', color: '#00c8ea', letterSpacing: '0.05em' }}
+        >
+          reset spin [dev]
+        </button>
       )}
 
       <style>{`
