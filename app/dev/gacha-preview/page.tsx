@@ -489,7 +489,6 @@ function CardBack({ uid }: { uid: string }) {
         background: 'radial-gradient(ellipse at 50% 40%, #1e1040 0%, #070810 100%)',
         borderRadius: 8, position: 'relative', overflow: 'hidden', userSelect: 'none',
       }}>
-        <HoloOverlay opacity={0.15} speed={10}/>
         <CardMarkSVG uid={uid} sandColor="#2060a8" bottomFill={0.40} topFill={0}/>
         <GrainOverlay/>
       </div>
