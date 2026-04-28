@@ -2,7 +2,7 @@
 // PREVIEW ONLY — visual approval before DailyGacha integration
 // Route: /dev/gacha-preview
 
-import React from 'react';
+import React, { useState } from 'react';
 
 // ─── Dimensions ───────────────────────────────────────────────────────────────
 
@@ -11,7 +11,6 @@ const CH = 235;
 const CX = CW / 2;   // 84
 const CY = CH / 2;   // 117.5
 
-// Brand gold — threads through every tier as accent
 const GOLD = '#c9a84c';
 
 // ─── Types / data ─────────────────────────────────────────────────────────────
@@ -27,60 +26,61 @@ const PRIZES: Record<Rarity, { xp: number }> = {
 interface TierDef {
   rank: string; label: string; color: string; stroke: string;
   bg: string; holo: number; glow: string; aura: string | null;
-  borderGrad: string; sandFill: number;
+  borderGrad: string;
+  bottomFill: number;   // 0–1, bottom chamber fill level
+  topFill: number;      // 0–1, top chamber fill level (pools at neck, grows toward ceiling)
+  animDuration: number; // ms for sand cascade reveal
 }
 
 const TIERS: Record<Rarity, TierDef> = {
-  // E — empty hourglass. Silver. Premium-but-modest.
+  // E — empty hourglass. Time hasn't started. Silver.
   common: {
-    rank: 'E', label: 'E-TIER', sandFill: 0,
+    rank: 'E', label: 'E-TIER', bottomFill: 0, topFill: 0, animDuration: 0,
     color: '#8ca0b0', stroke: '#aabccc',
     bg: 'radial-gradient(ellipse at 50% 40%, #354050 0%, #121820 100%)',
-    holo: 0.18, glow: 'rgba(140,160,176,0.38)', aura: null,
+    holo: 0.20, glow: 'rgba(140,160,176,0.42)', aura: null,
     borderGrad: `linear-gradient(135deg, #506070 0%, ${GOLD}55 35%, #9ab0c0 50%, ${GOLD}55 65%, #506070 100%)`,
   },
-  // D — a few grains at the bottom. Cyan.
+  // D — a few grains in the bottom. Cyan.
   uncommon: {
-    rank: 'D', label: 'D-TIER', sandFill: 0.2,
+    rank: 'D', label: 'D-TIER', bottomFill: 0.18, topFill: 0, animDuration: 350,
     color: '#00b8d8', stroke: '#00c8ea',
     bg: 'radial-gradient(ellipse at 50% 40%, #005870 0%, #011820 100%)',
-    holo: 0.18, glow: 'rgba(0,184,216,0.48)', aura: 'rgba(0,184,216,0.18)',
+    holo: 0.22, glow: 'rgba(0,184,216,0.52)', aura: 'rgba(0,184,216,0.20)',
     borderGrad: `linear-gradient(135deg, #00b8d8 0%, ${GOLD}55 38%, #00c8ea 55%, #00b8d8 100%)`,
   },
-  // C — half filled. Amethyst.
+  // C — half full bottom + small pool just above neck in top. Amethyst.
   rare: {
-    rank: 'C', label: 'C-TIER', sandFill: 0.5,
+    rank: 'C', label: 'C-TIER', bottomFill: 0.50, topFill: 0.22, animDuration: 500,
     color: '#9b72cf', stroke: '#b899e0',
     bg: 'radial-gradient(ellipse at 50% 40%, #3d1e6e 0%, #120830 100%)',
-    holo: 0.26, glow: 'rgba(155,114,207,0.52)', aura: 'rgba(155,114,207,0.25)',
+    holo: 0.28, glow: 'rgba(155,114,207,0.54)', aura: 'rgba(155,114,207,0.26)',
     borderGrad: `linear-gradient(135deg, #7c3aed 0%, ${GOLD}65 35%, #b899e0 55%, #7c3aed 100%)`,
   },
-  // B — mostly full, sand falling through neck. Rose.
+  // B — mostly full + neck flowing + thin top pool. Rose.
   epic: {
-    rank: 'B', label: 'B-TIER', sandFill: 0.8,
+    rank: 'B', label: 'B-TIER', bottomFill: 0.80, topFill: 0.08, animDuration: 650,
     color: '#c45680', stroke: '#e07099',
     bg: 'radial-gradient(ellipse at 50% 40%, #6e1838 0%, #280010 100%)',
-    holo: 0.34, glow: 'rgba(196,86,128,0.54)', aura: 'rgba(196,86,128,0.28)',
+    holo: 0.36, glow: 'rgba(196,86,128,0.56)', aura: 'rgba(196,86,128,0.30)',
     borderGrad: `linear-gradient(135deg, #be185d 0%, ${GOLD}75 35%, #e07099 55%, #be185d 100%)`,
   },
-  // A — overflowing cosmic sand. Gold.
+  // A — both chambers full + overflowing cosmic sand. Gold.
   legendary: {
-    rank: 'A', label: 'A-TIER', sandFill: 1.0,
+    rank: 'A', label: 'A-TIER', bottomFill: 1.0, topFill: 1.0, animDuration: 1000,
     color: GOLD, stroke: '#dfc070',
     bg: 'radial-gradient(ellipse at 50% 40%, #7a5010 0%, #2a1400 100%)',
-    holo: 0.55, glow: 'rgba(201,168,76,0.62)', aura: 'rgba(201,168,76,0.35)',
+    holo: 0.58, glow: 'rgba(201,168,76,0.72)', aura: 'rgba(201,168,76,0.45)',
     borderGrad: `linear-gradient(135deg, ${GOLD} 0%, #dfc070 30%, ${GOLD} 50%, #ffcc44 70%, ${GOLD} 100%)`,
   },
 };
 
 // ─── Hourglass geometry ────────────────────────────────────────────────────────
 //
-// Parameterized so the same math works for both the small symbol (~40×54px)
-// and the large center mark (~54×74px in card SVG space).
+// Same parametric math for the small rarity symbol and the large card mark.
 
 interface HGP { cx: number; cy: number; w: number; h: number; nw: number; nh: number; }
 
-// Outline path (closed polygon, classic hourglass silhouette)
 function hgOutline({ cx, cy, w, h, nw, nh }: HGP): string {
   const hw = w/2, hh = h/2, hnw = nw/2, hnh = nh/2;
   return `M${cx-hw},${cy-hh} L${cx+hw},${cy-hh} L${cx+hnw},${cy-hnh} ` +
@@ -88,7 +88,6 @@ function hgOutline({ cx, cy, w, h, nw, nh }: HGP): string {
          `L${cx-hnw},${cy+hnh} L${cx-hnw},${cy-hnh} Z`;
 }
 
-// Sand in bottom chamber at fill 0–1
 function hgSandBottom({ cx, cy, w, h, nw, nh }: HGP, fill: number): string | null {
   if (fill <= 0) return null;
   const hw = w/2, hh = h/2, hnw = nw/2, hnh = nh/2;
@@ -100,13 +99,12 @@ function hgSandBottom({ cx, cy, w, h, nw, nh }: HGP, fill: number): string | nul
   return `${sandLx},${sandTopY} ${sandRx},${sandTopY} ${cx+hw},${botY} ${cx-hw},${botY}`;
 }
 
-// Sand filling the neck (B and A tiers)
 function hgNeckFill({ cx, cy, nw, nh }: HGP): string {
   const hnw = nw/2, hnh = nh/2;
   return `${cx-hnw},${cy-hnh} ${cx+hnw},${cy-hnh} ${cx+hnw},${cy+hnh} ${cx-hnw},${cy+hnh}`;
 }
 
-// Sand pooling at the bottom of the top chamber (A tier)
+// Top chamber sand: pools at neck bottom (neckTopY) and grows upward toward ceiling.
 function hgSandTop({ cx, cy, w, h, nw, nh }: HGP, topFill: number): string | null {
   if (topFill <= 0) return null;
   const hw = w/2, hh = h/2, hnw = nw/2, hnh = nh/2;
@@ -118,10 +116,9 @@ function hgSandTop({ cx, cy, w, h, nw, nh }: HGP, topFill: number): string | nul
   return `${sandLx},${sandTopY} ${sandRx},${sandTopY} ${cx+hnw},${neckTopY} ${cx-hnw},${neckTopY}`;
 }
 
-// Params for the small rarity indicator symbol (in its own 40×54 SVG)
+// Small symbol (40×54 SVG)
 const SYM: HGP = { cx: 20, cy: 27, w: 36, h: 50, nw: 6, nh: 8 };
-
-// Params for the large center mark (in the full 168×235 card SVG)
+// Large card center mark (in 168×235 card SVG)
 const MARK: HGP = { cx: CX, cy: CY, w: 54, h: 74, nw: 10, nh: 10 };
 
 // ─── Keyframes ────────────────────────────────────────────────────────────────
@@ -148,32 +145,76 @@ const KEYFRAMES = `
     50%       { opacity: 0.90; transform: translate(-50%,-50%) scale(1.12); }
   }
   @keyframes sandFloat {
-    0%, 100% { transform: translateY(0px);  opacity: 0.75; }
+    0%, 100% { transform: translateY(0px);  opacity: 0.85; }
     50%       { transform: translateY(-9px); opacity: 0;    }
+  }
+  @keyframes sandReveal {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+  }
+  @keyframes topSandAppear {
+    from { transform: scaleY(0); opacity: 0;    }
+    to   { transform: scaleY(1); opacity: 0.88; }
+  }
+  @keyframes neckPulse {
+    0%, 100% { opacity: 0.55; }
+    50%       { opacity: 1.00; }
+  }
+  @keyframes ePulse {
+    0%, 100% { opacity: 0.32; }
+    50%       { opacity: 0.78; }
+  }
+  @keyframes overflowBurst {
+    0%   { transform: translateY(0px);  opacity: 0.90; }
+    100% { transform: translateY(-14px); opacity: 0;   }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
   }
 `;
 
 // ─── Hourglass rarity symbol ──────────────────────────────────────────────────
 //
-// Small SVG (40×54) placed at the top of each prize card.
-// The sand fill tells the E → A story.
+// 40×54 SVG. The fill story tells E → A at a glance.
+// When animated=true, sand cascades in on mount (for the demo section).
 
-function HourglassSymbol({ uid, fill, color }: { uid: string; fill: number; color: string }) {
+function HourglassSymbol({ uid, bottomFill, topFill, color, animated = false, animDuration = 400 }: {
+  uid: string; bottomFill: number; topFill: number; color: string;
+  animated?: boolean; animDuration?: number;
+}) {
   const filtId = `sf-${uid}`;
   const gradId = `sg-${uid}`;
 
-  const outline  = hgOutline(SYM);
-  const sandBot  = hgSandBottom(SYM, fill);
-  const neck     = fill >= 0.8 ? hgNeckFill(SYM) : null;
-  const sandTop  = fill >= 1.0 ? hgSandTop(SYM, 0.28) : null;
+  const outline = hgOutline(SYM);
+  const sandBot = hgSandBottom(SYM, bottomFill);
+  const neck    = bottomFill >= 0.8 ? hgNeckFill(SYM) : null;
+  const sandTop = topFill > 0 ? hgSandTop(SYM, topFill) : null;
 
-  // Overflow particles — A tier only, restrained count
-  const overflow = fill >= 1.0 ? [
-    { x: 10, y: 1, r: 1.4, delay: '0s'    },
-    { x: 30, y: 2, r: 1.1, delay: '0.7s'  },
-    { x: 5,  y: 7, r: 0.9, delay: '1.3s'  },
-    { x: 35, y: 6, r: 1.2, delay: '0.35s' },
+  const overflow = bottomFill >= 1.0 ? [
+    { x: 10, y: 1, r: 1.5, delay: '0s'    },
+    { x: 30, y: 2, r: 1.2, delay: '0.65s' },
+    { x: 5,  y: 7, r: 1.0, delay: '1.25s' },
+    { x: 35, y: 6, r: 1.3, delay: '0.30s' },
   ] : [];
+
+  // Sand animation: scaleY from bottom of bounding box
+  const sandAnim = (dur: number, delay = 0): React.CSSProperties => ({
+    transformBox: 'fill-box',
+    transformOrigin: 'center bottom',
+    transform: 'scaleY(0)',
+    animation: `sandReveal ${dur}ms ease-out ${delay}ms forwards`,
+  });
+
+  // Top sand animation: same but with delay and opacity transition
+  const topAnim = (dur: number, delay: number): React.CSSProperties => ({
+    transformBox: 'fill-box',
+    transformOrigin: 'center bottom',
+    transform: 'scaleY(0)',
+    opacity: 0,
+    animation: `topSandAppear ${Math.round(dur * 0.55)}ms ease-out ${delay}ms forwards`,
+  });
+
+  const isE = bottomFill === 0;
 
   return (
     <svg width="40" height="54" viewBox="0 0 40 54" style={{ overflow: 'visible' }}>
@@ -182,60 +223,84 @@ function HourglassSymbol({ uid, fill, color }: { uid: string; fill: number; colo
           <feGaussianBlur in="SourceGraphic" stdDeviation="3.5"/>
         </filter>
         <radialGradient id={gradId} cx="45%" cy="25%" r="75%" gradientUnits="objectBoundingBox">
-          <stop offset="0%"   stopColor="white"  stopOpacity="0.55"/>
+          <stop offset="0%"   stopColor="white"  stopOpacity="0.60"/>
           <stop offset="100%" stopColor={color}  stopOpacity="1"/>
         </radialGradient>
       </defs>
 
-      {/* Soft glow bloom behind outline */}
+      {/* Glow bloom behind outline */}
       <path d={outline} fill="none" stroke={color} strokeWidth="7"
-        opacity="0.14" filter={`url(#${filtId})`}/>
+        opacity="0.18" filter={`url(#${filtId})`}
+        style={animated && isE ? { animation: 'ePulse 1.8s ease-in-out infinite' } : undefined}
+      />
 
-      {/* Outline */}
-      <path d={outline} fill="none" stroke={color} strokeWidth="1.5" opacity="0.82"/>
+      {/* Outline — 2.5px weight */}
+      <path d={outline} fill="none" stroke={color} strokeWidth="2.5" opacity="0.88"
+        style={animated && isE ? { animation: 'ePulse 1.8s ease-in-out infinite' } : undefined}
+      />
 
-      {/* Sand — glow pass */}
+      {/* Bottom sand — glow pass */}
       {sandBot && (
-        <polygon points={sandBot} fill={color} opacity="0.18" filter={`url(#${filtId})`}/>
+        <polygon points={sandBot} fill={color} opacity="0.28" filter={`url(#${filtId})`}
+          style={animated ? sandAnim(animDuration) as React.CSSProperties : undefined}
+        />
       )}
-      {/* Sand — solid fill */}
+      {/* Bottom sand — solid fill */}
       {sandBot && (
-        <polygon points={sandBot} fill={`url(#${gradId})`} opacity="0.88"/>
+        <polygon points={sandBot} fill={`url(#${gradId})`} opacity="1"
+          style={animated ? sandAnim(animDuration) as React.CSSProperties : undefined}
+        />
       )}
 
-      {/* Neck sand */}
-      {neck && <polygon points={neck} fill={color} opacity="0.90"/>}
+      {/* Neck fill */}
+      {neck && (
+        <polygon points={neck} fill={color} opacity="1"
+          style={animated ? {
+            animation: `neckPulse 1.1s ease-in-out infinite`,
+          } as React.CSSProperties : undefined}
+        />
+      )}
 
-      {/* Top chamber pooling (A tier) */}
-      {sandTop && <polygon points={sandTop} fill={color} opacity="0.72"/>}
+      {/* Top chamber sand */}
+      {sandTop && (
+        <polygon points={sandTop} fill={color} opacity="0.88"
+          style={animated
+            ? topAnim(animDuration, Math.round(animDuration * 0.65)) as React.CSSProperties
+            : undefined}
+        />
+      )}
 
-      {/* Overflow particles (A tier) */}
+      {/* Overflow particles — A tier */}
       {overflow.map((d, i) => (
-        <circle key={i} cx={d.x} cy={d.y} r={d.r} fill={color} opacity="0.85"
-          style={{ animation: `sandFloat 2.2s ${d.delay} ease-in-out infinite` }}/>
+        <circle key={i} cx={d.x} cy={d.y} r={d.r} fill={color}
+          style={{
+            animation: animated
+              ? `overflowBurst 1.1s ${d.delay} ease-out infinite`
+              : `sandFloat 2.2s ${d.delay} ease-in-out infinite`,
+            opacity: 0.9,
+          }}
+        />
       ))}
     </svg>
   );
 }
 
-// ─── Card background SVG (hexagon frame + hourglass center mark) ──────────────
+// ─── Card background SVG — hourglass center mark + two diagonal corner pips ──
 //
-// Replaces GeometrySVG. Vesica Piscis is gone.
-// Two diagonal corner pips (top-left + bottom-right only).
+// Hexagon removed. Clean hourglass only.
 
-function CardMarkSVG({ uid, sandColor, sandFill = 0.4 }: {
-  uid: string; sandColor: string; sandFill?: number;
+function CardMarkSVG({ uid, sandColor, bottomFill = 0.4, topFill = 0 }: {
+  uid: string; sandColor: string; bottomFill?: number; topFill?: number;
 }) {
   const filtId  = `cmf-${uid}`;
   const sandGId = `csg-${uid}`;
   const gemId   = `cgm-${uid}`;
 
   const outline = hgOutline(MARK);
-  const sandBot = hgSandBottom(MARK, sandFill);
-  const neck    = sandFill >= 0.8 ? hgNeckFill(MARK) : null;
-  const sandTop = sandFill >= 1.0 ? hgSandTop(MARK, 0.28) : null;
+  const sandBot = hgSandBottom(MARK, bottomFill);
+  const neck    = bottomFill >= 0.8 ? hgNeckFill(MARK) : null;
+  const sandTop = topFill > 0 ? hgSandTop(MARK, topFill) : null;
 
-  // Diagonal pip pair (top-left + bottom-right)
   const pips: [number, number][] = [[14, 18], [154, 217]];
 
   return (
@@ -246,7 +311,7 @@ function CardMarkSVG({ uid, sandColor, sandFill = 0.4 }: {
           <feGaussianBlur in="SourceGraphic" stdDeviation="7"/>
         </filter>
         <radialGradient id={sandGId} cx="45%" cy="25%" r="75%" gradientUnits="objectBoundingBox">
-          <stop offset="0%"   stopColor="white"     stopOpacity="0.35"/>
+          <stop offset="0%"   stopColor="white"     stopOpacity="0.50"/>
           <stop offset="100%" stopColor={sandColor} stopOpacity="1"/>
         </radialGradient>
         <radialGradient id={gemId} cx="35%" cy="28%" r="70%" gradientUnits="objectBoundingBox">
@@ -256,32 +321,27 @@ function CardMarkSVG({ uid, sandColor, sandFill = 0.4 }: {
         </radialGradient>
       </defs>
 
-      {/* Hexagon — structural frame, recedes into background */}
-      <polygon
-        points="144,117.5 114,169.5 54,169.5 24,117.5 54,65.5 114,65.5"
-        fill="none" stroke={sandColor} strokeWidth="1" opacity="0.30"/>
+      {/* Hourglass glow bloom */}
+      <path d={outline} fill="none" stroke={sandColor} strokeWidth="14"
+        opacity="0.09" filter={`url(#${filtId})`}/>
 
-      {/* Hourglass — glow bloom (behind outline) */}
-      <path d={outline} fill="none" stroke={sandColor} strokeWidth="12"
-        opacity="0.07" filter={`url(#${filtId})`}/>
+      {/* Hourglass outline — 2.5px */}
+      <path d={outline} fill="none" stroke={sandColor} strokeWidth="2.5" opacity="0.65"/>
 
-      {/* Hourglass — outline */}
-      <path d={outline} fill="none" stroke={sandColor} strokeWidth="1.4" opacity="0.60"/>
-
-      {/* Sand — glow pass */}
+      {/* Bottom sand — glow pass */}
       {sandBot && (
-        <polygon points={sandBot} fill={sandColor} opacity="0.07" filter={`url(#${filtId})`}/>
+        <polygon points={sandBot} fill={sandColor} opacity="0.12" filter={`url(#${filtId})`}/>
       )}
-      {/* Sand — fill */}
+      {/* Bottom sand — solid fill */}
       {sandBot && (
-        <polygon points={sandBot} fill={`url(#${sandGId})`} opacity="0.38"/>
+        <polygon points={sandBot} fill={`url(#${sandGId})`} opacity="0.80"/>
       )}
 
       {/* Neck sand */}
-      {neck && <polygon points={neck} fill={sandColor} opacity="0.42"/>}
+      {neck && <polygon points={neck} fill={sandColor} opacity="0.85"/>}
 
       {/* Top chamber sand */}
-      {sandTop && <polygon points={sandTop} fill={sandColor} opacity="0.32"/>}
+      {sandTop && <polygon points={sandTop} fill={sandColor} opacity="0.60"/>}
 
       {/* Diagonal pip pair */}
       {pips.map(([px, py], i) => (
@@ -298,7 +358,7 @@ function CardMarkSVG({ uid, sandColor, sandFill = 0.4 }: {
   );
 }
 
-// ─── Holographic foil ─────────────────────────────────────────────────────────
+// ─── Holographic foil overlay ──────────────────────────────────────────────────
 
 function HoloOverlay({ opacity, speed = 9, legendary = false }: {
   opacity: number; speed?: number; legendary?: boolean;
@@ -326,31 +386,45 @@ function HoloOverlay({ opacity, speed = 9, legendary = false }: {
   );
 }
 
-// ─── Grain texture ────────────────────────────────────────────────────────────
+// ─── Film grain ───────────────────────────────────────────────────────────────
 
 function GrainOverlay() {
   return (
     <div style={{
       position: 'absolute', inset: 0, borderRadius: 8,
-      opacity: 0.035, pointerEvents: 'none',
+      opacity: 0.038, pointerEvents: 'none',
       backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
       backgroundSize: '200px 200px',
     }}/>
   );
 }
 
-// ─── Border system: white edge → gradient border → inner frame ────────────────
+// ─── Three-layer border system ─────────────────────────────────────────────────
+//
+// white catchlight → animated gradient border → inset inner frame
+// A-tier gets a triple-layer glow aura.
 
-function CardBorder({ children, aura, borderGrad }: {
-  children: React.ReactNode; aura?: string | null; borderGrad: string;
+function CardBorder({ children, aura, borderGrad, legendary = false }: {
+  children: React.ReactNode; aura?: string | null; borderGrad: string; legendary?: boolean;
 }) {
+  let boxShadow: string;
+  if (legendary && aura) {
+    boxShadow = [
+      `0 0 28px 9px ${aura}`,
+      `0 0 65px 24px ${aura}80`,
+      `0 0 120px 55px ${aura}38`,
+    ].join(', ');
+  } else if (aura) {
+    boxShadow = `0 0 50px 14px ${aura}, 0 0 90px 36px ${aura}50`;
+  } else {
+    boxShadow = '0 0 16px 5px rgba(0,160,200,0.16)';
+  }
+
   return (
     <div style={{
       display: 'inline-block', padding: 1, borderRadius: 15,
       background: 'rgba(255,255,255,0.22)',
-      boxShadow: aura
-        ? `0 0 50px 14px ${aura}, 0 0 90px 36px ${aura}50`
-        : '0 0 16px 5px rgba(0,160,200,0.16)',
+      boxShadow,
     }}>
       <div style={{
         padding: 1, borderRadius: 14, background: borderGrad,
@@ -383,8 +457,7 @@ function CardBack({ uid }: { uid: string }) {
         borderRadius: 8, position: 'relative', overflow: 'hidden', userSelect: 'none',
       }}>
         <HoloOverlay opacity={0.15} speed={10}/>
-        {/* Card back: neutral cosmic blue sand, ~40% fill */}
-        <CardMarkSVG uid={uid} sandColor="#2060a8" sandFill={0.4}/>
+        <CardMarkSVG uid={uid} sandColor="#2060a8" bottomFill={0.40} topFill={0}/>
         <GrainOverlay/>
       </div>
     </CardBorder>
@@ -398,17 +471,20 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
   const p = PRIZES[rarity];
   const isLeg = rarity === 'legendary';
 
+  // Scale XP font so "+100" stays inside the card width
+  const xpFontSize = p.xp < 10 ? 72 : p.xp < 100 ? 62 : 52;
+
   return (
-    <CardBorder borderGrad={t.borderGrad} aura={t.aura}>
+    <CardBorder borderGrad={t.borderGrad} aura={t.aura} legendary={isLeg}>
       <div style={{
         width: CW, height: CH, background: t.bg,
         borderRadius: 8, position: 'relative', overflow: 'hidden', userSelect: 'none',
       }}>
         <HoloOverlay opacity={t.holo} speed={isLeg ? 1.8 : 7} legendary={isLeg}/>
-        <CardMarkSVG uid={uid} sandColor={t.stroke} sandFill={t.sandFill}/>
+        <CardMarkSVG uid={uid} sandColor={t.stroke} bottomFill={t.bottomFill} topFill={t.topFill}/>
         <GrainOverlay/>
 
-        {/* Content — centered column, zIndex above background */}
+        {/* Card content — above background SVG */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 2,
           display: 'flex', flexDirection: 'column',
@@ -416,13 +492,19 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
           gap: 0, paddingTop: 4,
         }}>
 
-          {/* Rarity symbol — indicator, not hero */}
-          <HourglassSymbol uid={`sym-${uid}`} fill={t.sandFill} color={t.color}/>
+          {/* Rarity symbol */}
+          <HourglassSymbol
+            uid={`sym-${uid}`}
+            bottomFill={t.bottomFill}
+            topFill={t.topFill}
+            color={t.color}
+          />
 
-          {/* Tier label */}
+          {/* Tier label — solid white, readable */}
           <div style={{
             fontSize: 11, letterSpacing: '0.22em',
-            color: 'rgba(255,255,255,0.72)',
+            color: 'rgba(255,255,255,0.90)',
+            textShadow: '0 1px 4px rgba(0,0,0,0.85)',
             fontFamily: 'var(--font-orbitron, monospace)',
             fontWeight: 600, marginTop: 7,
           }}>
@@ -435,21 +517,19 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
             background: `linear-gradient(90deg, transparent, ${GOLD}95, transparent)`,
           }}/>
 
-          {/* XP — the hero */}
-          <div style={{ lineHeight: 1, fontFamily: 'var(--font-orbitron, monospace)', fontWeight: 900 }}>
-            <span style={{
-              fontSize: 24, color: t.color,
-              textShadow: `0 0 14px ${t.glow}`,
-              verticalAlign: 'middle',
-            }}>+</span>
-            <span style={{
-              fontSize: 72, color: 'white',
-              textShadow: `0 0 32px ${t.glow}, 0 4px 22px rgba(0,0,0,0.88)`,
-              verticalAlign: 'middle',
-            }}>{p.xp}</span>
+          {/* XP — the hero. Single unit, one color, one size. */}
+          <div style={{
+            lineHeight: 1,
+            fontFamily: 'var(--font-orbitron, monospace)',
+            fontWeight: 900,
+            fontSize: xpFontSize,
+            color: 'white',
+            textShadow: `0 0 32px ${t.glow}, 0 4px 22px rgba(0,0,0,0.88)`,
+          }}>
+            +{p.xp}
           </div>
 
-          {/* XP unit */}
+          {/* XP unit label */}
           <div style={{
             fontSize: 13, letterSpacing: '0.30em',
             color: 'rgba(255,255,255,0.58)',
@@ -463,7 +543,76 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
   );
 }
 
-// ─── Backdrop ─────────────────────────────────────────────────────────────────
+// ─── Fill Animation Demo ───────────────────────────────────────────────────────
+//
+// Shows each tier's hourglass cascade on mount. Remounting via key forces replay.
+
+function AnimatedHourglassDemo() {
+  const [animKey, setAnimKey] = useState(0);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 36, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 28 }}>
+        {RARITIES.map(r => {
+          const t = TIERS[r];
+          return (
+            <div key={r} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <HourglassSymbol
+                key={`${r}-${animKey}`}
+                uid={`anim-${r}-${animKey}`}
+                bottomFill={t.bottomFill}
+                topFill={t.topFill}
+                color={t.color}
+                animated
+                animDuration={t.animDuration || 320}
+              />
+              <div style={{ fontSize: 9, color: t.color, letterSpacing: '0.18em', fontFamily: 'monospace' }}>
+                {t.rank}
+              </div>
+              <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', fontFamily: 'monospace', letterSpacing: '0.08em', textAlign: 'center' }}>
+                {t.animDuration > 0 ? `${t.animDuration}ms` : 'pulse only'}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={() => setAnimKey(k => k + 1)}
+        style={{
+          fontSize: 10, letterSpacing: '0.18em', fontFamily: 'monospace',
+          color: GOLD, background: 'none', border: `1px solid ${GOLD}55`,
+          padding: '6px 18px', borderRadius: 4, cursor: 'pointer', opacity: 0.75,
+          transition: 'opacity 120ms',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '0.75')}
+      >
+        REPLAY ↺
+      </button>
+
+      {/* Timing reference */}
+      <div style={{ marginTop: 20, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+        {RARITIES.map(r => {
+          const t = TIERS[r];
+          const dur = t.animDuration;
+          return (
+            <div key={r} style={{ fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.22)', lineHeight: 1.7 }}>
+              <span style={{ color: t.color }}>{t.rank}</span>{' '}
+              {dur > 0 ? (
+                <>
+                  sand ↑ {dur}ms{t.topFill > 0 ? ` · top +${Math.round(dur * 0.65)}ms delay` : ''}{t.bottomFill >= 0.8 ? ' · neck pulse' : ''}
+                </>
+              ) : 'outline pulse'}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Backdrop atmosphere preview ──────────────────────────────────────────────
 
 function BackdropPreview() {
   return (
@@ -472,7 +621,7 @@ function BackdropPreview() {
       overflow: 'hidden', borderRadius: 16,
       background: 'radial-gradient(ellipse at 50% 55%, #160a38 0%, #04040e 100%)',
     }}>
-      {/* Breathing cyan aura — single layer, restrained */}
+      {/* Breathing aura */}
       <div style={{
         position: 'absolute', width: 300, height: 300,
         left: '50%', top: '50%',
@@ -489,7 +638,7 @@ function BackdropPreview() {
         background: 'radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(2,2,10,0.82) 100%)',
       }}/>
 
-      {/* Card */}
+      {/* Card centered */}
       <div style={{
         position: 'absolute', left: '50%', top: '50%',
         transform: 'translate(-50%, -50%)', zIndex: 1,
@@ -508,26 +657,26 @@ export default function GachaPreviewPage() {
       <style>{KEYFRAMES}</style>
 
       <div style={{ fontSize: 10, color: GOLD, letterSpacing: '0.22em', fontFamily: 'monospace', marginBottom: 6 }}>
-        PREVIEW — BRAND REVISION 3
+        PREVIEW — BRAND REVISION 4
       </div>
       <h1 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6, letterSpacing: '0.08em', fontFamily: 'var(--font-orbitron, monospace)' }}>
         Hyperbolic Daily Spin
       </h1>
-      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.30)', marginBottom: 52, fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginBottom: 52, fontFamily: 'monospace', letterSpacing: '0.05em' }}>
         Time dilates when you&rsquo;re having fun.
       </p>
 
-      {/* Hourglass progression — show the story first */}
+      {/* Section 1 — Rarity symbol progression */}
       <section style={{ marginBottom: 60 }}>
         <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.18em', marginBottom: 28, fontFamily: 'monospace', textTransform: 'uppercase' }}>
           Rarity Symbol Progression — E → A
         </div>
-        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           {RARITIES.map(r => {
             const t = TIERS[r];
             return (
               <div key={r} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                <HourglassSymbol uid={`prog-${r}`} fill={t.sandFill} color={t.color}/>
+                <HourglassSymbol uid={`prog-${r}`} bottomFill={t.bottomFill} topFill={t.topFill} color={t.color}/>
                 <div style={{ fontSize: 9, color: t.color, letterSpacing: '0.18em', fontFamily: 'monospace' }}>
                   {t.rank}
                 </div>
@@ -540,7 +689,15 @@ export default function GachaPreviewPage() {
         </div>
       </section>
 
-      {/* Card back */}
+      {/* Section 2 — Fill animation demo */}
+      <section style={{ marginBottom: 64 }}>
+        <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.18em', marginBottom: 24, fontFamily: 'monospace', textTransform: 'uppercase' }}>
+          Fill Animation Demo — Sand Cascade on Reveal
+        </div>
+        <AnimatedHourglassDemo/>
+      </section>
+
+      {/* Section 3 — Card back */}
       <section style={{ marginBottom: 64 }}>
         <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.18em', marginBottom: 24, fontFamily: 'monospace', textTransform: 'uppercase' }}>
           Card Back — Idle
@@ -548,7 +705,7 @@ export default function GachaPreviewPage() {
         <CardBack uid="preview-back"/>
       </section>
 
-      {/* Prize tiers */}
+      {/* Section 4 — All five prize tiers */}
       <section style={{ marginBottom: 64 }}>
         <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.18em', marginBottom: 24, fontFamily: 'monospace', textTransform: 'uppercase' }}>
           Prize Tiers — All Five
@@ -565,7 +722,7 @@ export default function GachaPreviewPage() {
         </div>
       </section>
 
-      {/* Backdrop */}
+      {/* Section 5 — Backdrop atmosphere */}
       <section>
         <div style={{ fontSize: 10, color: '#555', letterSpacing: '0.18em', marginBottom: 24, fontFamily: 'monospace', textTransform: 'uppercase' }}>
           Backdrop Atmosphere
