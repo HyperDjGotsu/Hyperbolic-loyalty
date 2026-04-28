@@ -82,7 +82,7 @@ const TIER: Record<Rarity, TierDef> = {
     color: '#ffcc33', stroke: '#ffcc33',
     bg: 'radial-gradient(ellipse at 50% 40%, #a07a10 0%, #d4a017 50%, #ffcc33 100%)',
     glow: 'rgba(212,160,23,0.88)', aura: 'rgba(212,160,23,0.55)', pulse: 'rgba(212,160,23,0.16)',
-    borderGrad: 'linear-gradient(135deg, #ffcc33 0%, #d4a017 30%, #ffcc33 50%, #8b6914 70%, #d4a017 100%)',
+    borderGrad: 'linear-gradient(135deg, #fff8c0 0%, #ffe066 30%, #fffbe0 55%, #d4a017 70%, #ffe066 100%)',
     hgGlass: '#2d1810', hgStrokePx: 2.5, glowRadius: 55,
   },
 };
