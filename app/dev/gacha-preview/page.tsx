@@ -16,51 +16,61 @@ const CY = CH / 2;   // 117.5
 type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 
-const PRIZES: Record<Rarity, { xp: number; label: string }> = {
-  common:    { xp: 5,   label: 'Rusty Anchor'    },
-  uncommon:  { xp: 10,  label: "Navigator's Log" },
-  rare:      { xp: 25,  label: 'Rare Find'        },
-  epic:      { xp: 50,  label: 'Treasure Chest'   },
-  legendary: { xp: 100, label: 'JACKPOT'          },
+const PRIZES: Record<Rarity, { xp: number }> = {
+  common:    { xp: 5   },
+  uncommon:  { xp: 10  },
+  rare:      { xp: 25  },
+  epic:      { xp: 50  },
+  legendary: { xp: 100 },
 };
 
 interface TierDef {
   color: string; bg: string; holo: number;
   glow: string;  aura: string | null;
-  label: string; stroke: string;
+  rank: string;  label: string; stroke: string;
   borderGrad: string;
 }
 
 const TIERS: Record<Rarity, TierDef> = {
+  // E-Tier: silver/grey — bumped holo so it doesn't read as broken
   common: {
-    color: '#9ab0c8',  stroke: '#9ab0c8',   label: 'COMMON',
-    bg:    'radial-gradient(ellipse at 50% 35%, #4a5568 0%, #1a1a2e 100%)',
-    holo: 0.08, glow: 'rgba(154,176,200,0.28)', aura: null,
-    borderGrad: 'linear-gradient(135deg, #00b4d8 0%, #9ab0c8 50%, #00b4d8 100%)',
+    rank: 'E', label: 'E-TIER',
+    color: '#c8d8e8', stroke: '#c8d8e8',
+    bg:    'radial-gradient(ellipse at 50% 35%, #5a6a7a 0%, #1a1a28 100%)',
+    holo: 0.22, glow: 'rgba(200,216,232,0.35)', aura: null,
+    borderGrad: 'linear-gradient(135deg, #7090a8 0%, #c8d8e8 50%, #7090a8 100%)',
   },
+  // D-Tier: cyan
   uncommon: {
-    color: '#00c8ea',  stroke: '#00c8ea',   label: 'UNCOMMON',
+    rank: 'D', label: 'D-TIER',
+    color: '#00c8ea', stroke: '#00c8ea',
     bg:    'radial-gradient(ellipse at 50% 35%, #0094b0 0%, #023047 100%)',
-    holo: 0.15, glow: 'rgba(0,200,234,0.45)', aura: 'rgba(0,200,234,0.18)',
+    holo: 0.18, glow: 'rgba(0,200,234,0.50)', aura: 'rgba(0,200,234,0.18)',
     borderGrad: 'linear-gradient(135deg, #00b4d8 0%, #00c8ea 50%, #00b4d8 100%)',
   },
+  // C-Tier: purple (not blue)
   rare: {
-    color: '#5a9eff',  stroke: '#5a9eff',   label: 'RARE',
-    bg:    'radial-gradient(ellipse at 50% 35%, #2a6ed8 0%, #001845 100%)',
-    holo: 0.25, glow: 'rgba(90,158,255,0.50)', aura: 'rgba(58,134,255,0.28)',
-    borderGrad: 'linear-gradient(135deg, #00b4d8 0%, #3a86ff 50%, #00b4d8 100%)',
+    rank: 'C', label: 'C-TIER',
+    color: '#c084fc', stroke: '#c084fc',
+    bg:    'radial-gradient(ellipse at 50% 35%, #7c3aed 0%, #2e1065 100%)',
+    holo: 0.28, glow: 'rgba(192,132,252,0.55)', aura: 'rgba(168,85,247,0.28)',
+    borderGrad: 'linear-gradient(135deg, #7c3aed 0%, #c084fc 50%, #7c3aed 100%)',
   },
+  // B-Tier: pink/magenta
   epic: {
-    color: '#c77dff',  stroke: '#c77dff',   label: 'EPIC',
-    bg:    'radial-gradient(ellipse at 50% 35%, #7b2ecc 0%, #240046 100%)',
-    holo: 0.35, glow: 'rgba(199,125,255,0.55)', aura: 'rgba(157,78,221,0.32)',
-    borderGrad: 'linear-gradient(135deg, #00b4d8 0%, #9d4edd 50%, #00b4d8 100%)',
+    rank: 'B', label: 'B-TIER',
+    color: '#f472b6', stroke: '#f472b6',
+    bg:    'radial-gradient(ellipse at 50% 35%, #be185d 0%, #4a0025 100%)',
+    holo: 0.38, glow: 'rgba(244,114,182,0.58)', aura: 'rgba(244,114,182,0.35)',
+    borderGrad: 'linear-gradient(135deg, #c850c0 0%, #f472b6 50%, #c850c0 100%)',
   },
+  // A-Tier: gold + rainbow holo (no lime green)
   legendary: {
-    color: '#ffd166',  stroke: '#ffd166',   label: 'LEGENDARY',
+    rank: 'A', label: 'A-TIER',
+    color: '#ffd166', stroke: '#ffd166',
     bg:    'radial-gradient(ellipse at 50% 35%, #cc8800 0%, #4a1c00 100%)',
     holo: 0.60, glow: 'rgba(255,209,102,0.65)', aura: 'rgba(255,183,0,0.40)',
-    borderGrad: 'linear-gradient(135deg, #ffb700 0%, #ff6b00 40%, #ffb700 70%, #ffd700 100%)',
+    borderGrad: 'linear-gradient(135deg, #ffb700 0%, #ff8c00 40%, #ffd700 70%, #ffb700 100%)',
   },
 };
 
@@ -98,7 +108,7 @@ function HoloOverlay({ opacity, speed = 8, legendary = false }: {
     return (
       <div style={{
         position: 'absolute', inset: 0, borderRadius: 8,
-        background: 'linear-gradient(135deg, rgba(0,200,234,1) 0%, rgba(200,80,192,1) 25%, rgba(255,183,0,1) 50%, rgba(34,197,94,1) 75%, rgba(0,200,234,1) 100%)',
+        background: 'linear-gradient(135deg, rgba(0,200,234,1) 0%, rgba(200,80,192,1) 25%, rgba(255,183,0,1) 50%, rgba(255,80,120,1) 75%, rgba(0,200,234,1) 100%)',
         backgroundSize: '200% 200%',
         opacity, pointerEvents: 'none',
         mixBlendMode: 'screen',
@@ -110,7 +120,7 @@ function HoloOverlay({ opacity, speed = 8, legendary = false }: {
   return (
     <div style={{
       position: 'absolute', inset: 0, borderRadius: 8,
-      background: 'conic-gradient(from 0deg at 50% 50%, rgba(0,180,216,1), rgba(157,78,221,1), rgba(255,183,0,1), rgba(34,197,94,1), rgba(0,180,216,1))',
+      background: 'conic-gradient(from 0deg at 50% 50%, rgba(0,180,216,1), rgba(157,78,221,1), rgba(255,183,0,1), rgba(255,80,120,1), rgba(0,180,216,1))',
       opacity, pointerEvents: 'none',
       mixBlendMode: 'screen',
       animation: `holoSpin ${speed}s linear infinite`,
@@ -300,61 +310,67 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
         <GeometrySVG uid={uid} strokeColor={t.stroke}/>
         <GrainOverlay/>
 
-        {/* Tier label — top of card */}
-        <div style={{
-          position: 'absolute', top: 14, left: 0, right: 0,
-          textAlign: 'center', zIndex: 2,
-        }}>
-          <span style={{
-            fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase',
-            color: t.color, fontFamily: 'var(--font-orbitron, monospace)', fontWeight: 700,
-          }}>
-            ◆ {t.label} ◆
-          </span>
-        </div>
-
-        {/* XP + prize name — center */}
+        {/* All content — vertically centered column */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 2,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
           gap: 0,
         }}>
-          {/* Massive XP number */}
+
+          {/* Letter rank — the hero */}
+          <div style={{
+            fontSize: 78, lineHeight: 1,
+            fontFamily: 'var(--font-orbitron, monospace)',
+            fontWeight: 900, color: 'white',
+            textShadow: `0 0 32px ${t.glow}, 0 0 8px ${t.color}88, 0 4px 24px rgba(0,0,0,0.85)`,
+            letterSpacing: '-0.02em',
+          }}>
+            [{t.rank}]
+          </div>
+
+          {/* Tier label */}
+          <div style={{
+            fontSize: 13, letterSpacing: '0.22em',
+            color: 'rgba(255,255,255,0.80)',
+            fontFamily: 'var(--font-orbitron, monospace)',
+            fontWeight: 600, marginTop: 6,
+          }}>
+            {t.label}
+          </div>
+
+          {/* Divider */}
+          <div style={{
+            width: 48, height: 1, margin: '14px 0',
+            background: `linear-gradient(90deg, transparent, ${t.color}90, transparent)`,
+          }}/>
+
+          {/* XP value */}
           <div style={{
             lineHeight: 1,
             fontFamily: 'var(--font-orbitron, monospace)',
             fontWeight: 900,
           }}>
             <span style={{
-              fontSize: 34, color: t.color,
-              textShadow: `0 0 18px ${t.glow}`,
+              fontSize: 30, color: t.color,
+              textShadow: `0 0 16px ${t.glow}`,
               verticalAlign: 'middle',
             }}>+</span>
             <span style={{
-              fontSize: 62, color: 'white',
-              textShadow: `0 0 28px ${t.glow}, 0 4px 20px rgba(0,0,0,0.90)`,
+              fontSize: 54, color: 'white',
+              textShadow: `0 0 24px ${t.glow}, 0 3px 16px rgba(0,0,0,0.90)`,
               verticalAlign: 'middle',
             }}>{p.xp}</span>
           </div>
 
           {/* XP unit */}
           <div style={{
-            fontSize: 9, letterSpacing: '0.32em',
-            color: t.color + '88',
+            fontSize: 13, letterSpacing: '0.30em',
+            color: 'rgba(255,255,255,0.65)',
             fontFamily: 'var(--font-orbitron, monospace)',
-            marginTop: 3,
+            marginTop: 4,
           }}>XP</div>
 
-          {/* Prize name */}
-          <div style={{
-            fontSize: 11, letterSpacing: '0.06em',
-            color: t.color + 'cc',
-            fontFamily: 'var(--font-rajdhani, sans-serif)',
-            fontWeight: 600, marginTop: 8,
-            textAlign: 'center', padding: '0 14px',
-          }}>
-            {p.label}
-          </div>
         </div>
 
         {/* Bottom accent line */}
