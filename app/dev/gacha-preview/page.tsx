@@ -65,13 +65,14 @@ const TIERS: Record<Rarity, TierDef> = {
     holo: 0.36, glow: 'rgba(196,86,128,0.56)', aura: 'rgba(196,86,128,0.30)',
     borderGrad: `linear-gradient(135deg, #be185d 0%, ${GOLD}75 35%, #e07099 55%, #be185d 100%)`,
   },
-  // A — both chambers full + overflowing cosmic sand. Gold.
+  // A — both chambers full + overflowing cosmic sand. Warm amber gold.
+  // LOCKED: #ffcc33 / #d4a017 / #8b6914 — pirate-treasure gold, no green channel boost.
   legendary: {
     rank: 'A', label: 'A-TIER', bottomFill: 1.0, topFill: 1.0, animDuration: 1000,
-    color: GOLD, stroke: '#dfc070',
-    bg: 'radial-gradient(ellipse at 50% 40%, #7a5010 0%, #2a1400 100%)',
-    holo: 0.58, glow: 'rgba(201,168,76,0.72)', aura: 'rgba(201,168,76,0.45)',
-    borderGrad: `linear-gradient(135deg, ${GOLD} 0%, #dfc070 30%, ${GOLD} 50%, #ffcc44 70%, ${GOLD} 100%)`,
+    color: '#d4a017', stroke: '#ffcc33',
+    bg: 'radial-gradient(ellipse at 50% 40%, #ffcc33 0%, #d4a017 50%, #8b6914 100%)',
+    holo: 0, glow: 'rgba(212,160,23,0.75)', aura: 'rgba(212,160,23,0.45)',
+    borderGrad: 'linear-gradient(135deg, #ffcc33 0%, #d4a017 30%, #ffcc33 50%, #8b6914 70%, #d4a017 100%)',
   },
 };
 
@@ -125,8 +126,8 @@ const MARK: HGP = { cx: CX, cy: CY, w: 54, h: 74, nw: 10, nh: 10 };
 
 const KEYFRAMES = `
   @keyframes borderHue {
-    0%, 100% { filter: hue-rotate(0deg);  }
-    50%       { filter: hue-rotate(28deg); }
+    0%, 100% { filter: hue-rotate(0deg); }
+    50%       { filter: hue-rotate(6deg); }
   }
   @keyframes gemPulse {
     0%, 100% { opacity: 0.50; }
@@ -512,7 +513,6 @@ function PrizeCard({ rarity, uid }: { rarity: Rarity; uid: string }) {
         width: CW, height: CH, background: t.bg,
         borderRadius: 8, position: 'relative', overflow: 'hidden', userSelect: 'none',
       }}>
-        {isLeg && <HoloOverlay opacity={t.holo} speed={1.8} legendary/>}
         <CornerPips uid={uid} color={t.stroke}/>
         <GrainOverlay/>
 
