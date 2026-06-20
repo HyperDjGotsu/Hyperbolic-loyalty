@@ -174,7 +174,7 @@ export default function ShopPage() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl animate-bounce mb-4">🛍️</div>
+          <div className="text-4xl mb-4">🛍️</div>
           <div className="text-slate-400">Loading shop...</div>
         </div>
       </div>
