@@ -4,6 +4,9 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // Debug: which Supabase URL is this route using?
+  const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(-20) ?? 'missing';
+
   // Debug: dump what the DB actually has
   const { data: allStatuses } = await supabaseAdmin
     .from('events')
@@ -22,11 +25,11 @@ export async function GET() {
 
   if (eventError) {
     console.error('Active event query error:', eventError);
-    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message, _statuses: allStatuses });
+    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message, _statuses: allStatuses, _url: _supabaseUrl });
   }
 
   if (!event) {
-    return NextResponse.json({ event: null, _debug: 'no_active_event', _statuses: allStatuses });
+    return NextResponse.json({ event: null, _debug: 'no_active_event', _statuses: allStatuses, _url: _supabaseUrl });
   }
 
   // Step 2: game info (non-critical)
