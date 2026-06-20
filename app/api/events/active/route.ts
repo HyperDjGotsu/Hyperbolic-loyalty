@@ -14,14 +14,14 @@ export async function GET() {
     .order('scheduled_at', { ascending: true })
     .limit(5);
 
-  // Step 1: find the active event — if this fails, nothing to return
-  const { data: event, error: eventError } = await supabaseAdmin
+  // Step 1: find the active event — use .in() to match how /api/events works
+  const { data: activeEvents, error: eventError } = await supabaseAdmin
     .from('events')
     .select('id, name, game_id, attendance_xp, scheduled_at, status')
-    .eq('status', 'active')
+    .in('status', ['active'])
     .order('scheduled_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+  const event = activeEvents?.[0] ?? null;
 
   if (eventError) {
     console.error('Active event query error:', eventError);
