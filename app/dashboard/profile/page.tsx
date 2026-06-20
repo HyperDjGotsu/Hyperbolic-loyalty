@@ -90,7 +90,7 @@ const frameStyles: Record<string, string> = {
 
 const defaultAvatarConfig: AvatarConfig = {
   base: '😎',
-  background: '#3b82f6',
+  background: 'var(--bg-elevated)',
   frame: 'none',
   badge: null,
   photo_url: null,
