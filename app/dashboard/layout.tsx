@@ -1,138 +1,135 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { UserButton } from '@clerk/nextjs';
-import NotificationBell from '@/components/NotificationBell';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ThemeToggle } from '@/components/ui';
 
 const navItems = [
-  { id: 'home', path: '/dashboard', icon: '🏠', label: 'Home' },
-  { id: 'events', path: '/dashboard/events', icon: '📅', label: 'Events' },
-  { id: 'shop', path: '/dashboard/shop', icon: '🛒', label: 'Shop' },
-  { id: 'community', path: '/dashboard/community', icon: '👥', label: 'Community' },
-  { id: 'profile', path: '/dashboard/profile', icon: '👤', label: 'Profile' },
+  {
+    href: '/dashboard',
+    label: 'Home',
+    exact: true,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/dashboard/events',
+    label: 'Events',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/dashboard/community',
+    label: 'Community',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/dashboard/shop',
+    label: 'Shop',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/dashboard/profile',
+    label: 'Profile',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+    ),
+  },
 ];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const router = useRouter();
+function NavItem({ item, pathname }: { item: typeof navItems[0]; pathname: string }) {
+  const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  return (
+    <Link
+      href={item.href}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+        ${isActive
+          ? 'bg-elevated text-primary border-l-2 border-accent pl-[10px]'
+          : 'text-secondary hover:text-primary hover:bg-elevated/50'
+        }`}
+    >
+      {item.icon}
+      {item.label}
+    </Link>
+  );
+}
 
-  const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return pathname === '/dashboard';
-    }
-    return pathname.startsWith(path);
-  };
+function MobileNavItem({ item, pathname }: { item: typeof navItems[0]; pathname: string }) {
+  const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  return (
+    <Link
+      href={item.href}
+      className={`flex flex-col items-center gap-1 py-2 px-3 flex-1 transition-colors
+        ${isActive ? 'text-primary' : 'text-tertiary hover:text-secondary'}`}
+    >
+      {item.icon}
+      <span className="text-[10px] font-medium">{item.label}</span>
+      {isActive && <span className="absolute bottom-0 h-0.5 w-6 bg-accent rounded-full" />}
+    </Link>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
 
   return (
-    <>
-      {/* ============ MOBILE LAYOUT (below lg) ============ */}
-      <div className="lg:hidden w-full max-w-md mx-auto h-screen bg-slate-950 flex flex-col overflow-hidden">
-        {/* Status Bar (mock) */}
-        <div className="bg-[#0a0a14] text-white/60 text-xs py-2 px-4 flex justify-between items-center border-b border-white/[0.06]">
-          <span className="font-mono">9:41</span>
-          <div className="flex gap-2 items-center">
-            <NotificationBell />
-            <UserButton 
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "w-7 h-7"
-                }
-              }}
-            />
-          </div>
+    <div className="min-h-screen bg-base text-primary">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-56 bg-surface border-r border-token z-30">
+        <div className="px-4 py-5 border-b border-token flex items-center justify-between">
+          <span className="font-display font-bold text-lg text-primary">Hyperbolic XP</span>
+          <ThemeToggle />
         </div>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          {children}
-        </main>
-
-        {/* Bottom Navigation */}
-        <nav className="bg-[#0a0a14] border-t border-white/[0.06] py-2 px-2 flex justify-around items-center safe-area-inset-bottom">
-          {navItems.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => router.push(tab.path)}
-              className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all ${
-                isActive(tab.path)
-                  ? 'text-[#00c8ea] bg-[#00c8ea]/10'
-                  : 'text-white/30 hover:text-white/60'
-              }`}
-            >
-              <span className="text-xl">{tab.icon}</span>
-              <span className="text-xs mt-0.5">{tab.label}</span>
-            </button>
+        <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
+          {navItems.map((item) => (
+            <NavItem key={item.href} item={item} pathname={pathname} />
           ))}
         </nav>
-      </div>
-
-      {/* ============ DESKTOP LAYOUT (lg and above) ============ */}
-      <div className="hidden lg:flex min-h-screen bg-slate-950">
-        {/* Desktop Sidebar */}
-        <aside className="flex flex-col w-64 fixed inset-y-0 bg-[#0a0a14] border-r border-white/[0.06]">
-          {/* Logo */}
-          <div className="p-6 border-b border-white/[0.06]">
-            <div className="font-orbitron font-black text-xl text-[#00c8ea] tracking-wider">HYPERBOLIC</div>
-            <div className="font-orbitron font-black text-xl text-white/40 tracking-wider">GAMES</div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => router.push(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  isActive(item.path)
-                    ? 'bg-[#00c8ea]/10 text-white border border-[#00c8ea]/20'
-                    : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
-                {isActive(item.path) && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#00c8ea]" />
-                )}
-              </button>
-            ))}
-          </nav>
-
-        </aside>
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col ml-64">
-          {/* Desktop Header */}
-          <header className="bg-[#0a0a14]/80 backdrop-blur-sm border-b border-white/[0.06] py-4 px-8 sticky top-0 z-40 flex items-center justify-between">
-            <div>
-              <h1 className="text-white text-xl font-bold">
-                {navItems.find(item => isActive(item.path))?.label || 'Dashboard'}
-              </h1>
-              <p className="text-white/30 text-sm">Welcome back to Hyperbolic Games</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <NotificationBell />
-              <UserButton 
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "w-9 h-9"
-                  }
-                }}
-              />
-            </div>
-          </header>
-
-          {/* Page Content */}
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
+        <div className="p-4 border-t border-token">
+          <Link
+            href="/hq"
+            className="text-xs text-tertiary hover:text-secondary transition-colors"
+          >
+            Staff HQ →
+          </Link>
         </div>
-      </div>
-    </>
+      </aside>
+
+      {/* Main content */}
+      <main className="lg:ml-56 pb-20 lg:pb-0">
+        {/* Desktop header */}
+        <div className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-token sticky top-0 bg-base/95 backdrop-blur-sm z-20">
+          <h1 className="text-base font-semibold text-primary capitalize">
+            {pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
+          </h1>
+        </div>
+        {children}
+      </main>
+
+      {/* Mobile bottom nav */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-token z-30">
+        <div className="flex items-center relative">
+          {navItems.map((item) => (
+            <MobileNavItem key={item.href} item={item} pathname={pathname} />
+          ))}
+        </div>
+      </nav>
+    </div>
   );
 }
