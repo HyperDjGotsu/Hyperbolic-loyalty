@@ -15,11 +15,11 @@ export async function GET() {
 
   if (eventError) {
     console.error('Active event query error:', eventError);
-    return NextResponse.json({ event: null });
+    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message });
   }
 
   if (!event) {
-    return NextResponse.json({ event: null });
+    return NextResponse.json({ event: null, _debug: 'no_active_event' });
   }
 
   // Step 2: game info (non-critical)
