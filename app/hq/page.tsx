@@ -126,6 +126,17 @@ interface ScheduledCard {
   source: string;
 }
 
+interface HQEvent {
+  id: string;
+  name: string;
+  game_id: string | null;
+  scheduled_at: string;
+  status: string;
+  attendance_xp: number;
+  game?: { name: string; icon: string } | null;
+  attendanceCount?: number;
+}
+
 export default function HQPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -169,6 +180,11 @@ export default function HQPage() {
   const [newOptInOpens, setNewOptInOpens] = useState('');
   const [newOptInCloses, setNewOptInCloses] = useState('');
 
+  // Event management state
+  const [hqEvents, setHqEvents] = useState<HQEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [activatingEventId, setActivatingEventId] = useState<string | null>(null);
+
   // Match recording state
   const [matches, setMatches] = useState<any[]>([]);
   const [recordingMatch, setRecordingMatch] = useState(false);
@@ -211,6 +227,9 @@ export default function HQPage() {
       loadUpcomingCOTD();
       loadVotingPools();
     }
+    if (activeTab === 'events') {
+      loadHQEvents();
+    }
   }, [activeTab]);
 
   const checkStaffAccess = async () => {
@@ -238,6 +257,78 @@ export default function HQPage() {
       setGames(data.games || []);
     } catch (error) {
       console.error('Failed to load games:', error);
+    }
+  };
+
+  const loadHQEvents = async () => {
+    setEventsLoading(true);
+    try {
+      // Load upcoming + active events for the next 48 hours
+      const [eventsRes, activeRes] = await Promise.all([
+        fetch('/api/events?status=upcoming&limit=20'),
+        fetch('/api/events/active'),
+      ]);
+      const eventsData = await eventsRes.json();
+      const activeData = await activeRes.json();
+
+      const events: HQEvent[] = (eventsData.events || []).map((e: any) => ({
+        id: e.id,
+        name: e.name,
+        game_id: e.game?.id || null,
+        scheduled_at: e.scheduledAt,
+        status: e.status,
+        attendance_xp: e.attendanceXp || 20,
+        game: e.game ? { name: e.game.name, icon: e.game.icon } : null,
+      }));
+
+      // Also include any active event that may not appear in "upcoming"
+      if (activeData.event) {
+        const activeId = activeData.event.id;
+        const exists = events.find(e => e.id === activeId);
+        if (!exists) {
+          events.unshift({
+            id: activeData.event.id,
+            name: activeData.event.name,
+            game_id: activeData.event.gameId,
+            scheduled_at: activeData.event.scheduledAt,
+            status: 'active',
+            attendance_xp: activeData.event.attendanceXp,
+            game: activeData.event.game,
+            attendanceCount: activeData.event.attendanceCount,
+          });
+        } else {
+          exists.status = 'active';
+          exists.attendanceCount = activeData.event.attendanceCount;
+        }
+      }
+
+      setHqEvents(events);
+    } catch (error) {
+      console.error('Failed to load events:', error);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  const activateEvent = async (eventId: string, action: 'start' | 'end') => {
+    setActivatingEventId(eventId);
+    try {
+      const res = await fetch(`/api/events/${eventId}/activate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(action === 'start' ? 'Event started!' : 'Event ended', 'success');
+        loadHQEvents();
+      } else {
+        showToast(data.error || 'Failed', 'error');
+      }
+    } catch {
+      showToast('Network error', 'error');
+    } finally {
+      setActivatingEventId(null);
     }
   };
 
@@ -2545,35 +2636,124 @@ export default function HQPage() {
 
         {/* Events Tab */}
         {activeTab === 'events' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
+            {/* Kiosk link */}
+            <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-white">Door Kiosk</div>
+                <div className="text-slate-500 text-sm">Open on the Android device at the door</div>
+              </div>
+              <a
+                href="/kiosk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 text-sm font-medium"
+              >
+                Open Kiosk →
+              </a>
+            </div>
+
+            {/* Event list */}
             <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-              <h2 className="text-xl font-bold mb-2">Event Management</h2>
-              <p className="text-slate-500 mb-4">
-                Events sync from Google Calendar. Use the sync button on the Events page to pull updates.
-              </p>
-              <div className="bg-slate-800 rounded-lg p-4">
-                <h3 className="font-medium mb-2">📋 Calendar Format Guide</h3>
-                <div className="text-slate-400 text-sm space-y-2">
-                  <p><strong>Title:</strong> Include game name (One Piece, Gundam, MTG, etc.)</p>
-                  <p><strong>Description:</strong> Add <code className="bg-slate-700 px-1 rounded">Price: $X</code> and <code className="bg-slate-700 px-1 rounded">Players: X</code></p>
-                  <p><strong>Example:</strong></p>
-                  <pre className="bg-slate-700 p-2 rounded mt-1">
-{`Title: One Piece Monday Weekly
-Description:
-Price: $15
-Players: 32
-Come enjoy a night of One Piece!`}
-                  </pre>
-                </div>
-              </div>
-              <div className="mt-4">
-                <a
-                  href="/dashboard/events"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30"
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold">Upcoming Events</h2>
+                <button
+                  onClick={loadHQEvents}
+                  disabled={eventsLoading}
+                  className="text-slate-500 hover:text-slate-300 text-sm px-3 py-1 rounded-lg hover:bg-slate-800 transition-colors"
                 >
-                  📅 Go to Events Page →
-                </a>
+                  {eventsLoading ? 'Loading...' : '↻ Refresh'}
+                </button>
               </div>
+
+              {eventsLoading && hqEvents.length === 0 ? (
+                <p className="text-slate-600 text-center py-8">Loading events...</p>
+              ) : hqEvents.length === 0 ? (
+                <p className="text-slate-600 text-center py-8">No upcoming events. Sync from the Events page first.</p>
+              ) : (
+                <div className="space-y-3">
+                  {hqEvents.map(event => {
+                    const isActive = event.status === 'active';
+                    const isActivating = activatingEventId === event.id;
+                    const eventTime = new Date(event.scheduled_at).toLocaleString('en-US', {
+                      timeZone: 'America/Los_Angeles',
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    });
+
+                    return (
+                      <div
+                        key={event.id}
+                        className={`rounded-xl p-4 border flex items-center justify-between gap-4 ${
+                          isActive
+                            ? 'bg-emerald-950/40 border-emerald-500/40'
+                            : 'bg-slate-800 border-slate-700'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {isActive && (
+                              <span className="flex items-center gap-1 text-xs text-emerald-400 font-semibold">
+                                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                                LIVE
+                              </span>
+                            )}
+                            <span className="text-xs text-slate-500">{event.game?.icon} {event.game?.name}</span>
+                          </div>
+                          <div className="font-semibold text-white truncate">{event.name}</div>
+                          <div className="text-slate-500 text-xs mt-0.5">{eventTime} · +{event.attendance_xp} XP</div>
+                          {isActive && event.attendanceCount !== undefined && (
+                            <div className="text-emerald-400 text-xs mt-1">{event.attendanceCount} checked in</div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {isActive ? (
+                            <>
+                              <a
+                                href={`/checkin?event_id=${event.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg text-xs hover:bg-slate-600 transition-colors"
+                              >
+                                QR Preview
+                              </a>
+                              <button
+                                onClick={() => activateEvent(event.id, 'end')}
+                                disabled={isActivating}
+                                className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                              >
+                                {isActivating ? '...' : 'End Event'}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => activateEvent(event.id, 'start')}
+                              disabled={isActivating}
+                              className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-semibold hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
+                            >
+                              {isActivating ? '...' : 'Start Event'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Calendar sync reminder */}
+            <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
+              <p className="text-slate-600 text-sm">
+                Events sync from Google Calendar.{' '}
+                <a href="/dashboard/events" className="text-cyan-600 hover:text-cyan-400">
+                  Go to Events page →
+                </a>{' '}
+                to pull updates.
+              </p>
             </div>
           </div>
         )}
