@@ -64,7 +64,7 @@ export async function POST(
     }
 
     // Deduplicate
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await (supabaseAdmin as any)
       .from('event_attendances')
       .select('id')
       .eq('event_id', eventId)
@@ -77,14 +77,14 @@ export async function POST(
 
     const xpAwarded = event.attendance_xp || 20;
 
-    const { error: attendanceError } = await supabaseAdmin
+    const { error: attendanceError } = await (supabaseAdmin as any)
       .from('event_attendances')
       .insert({
         event_id: eventId,
         player_id: playerId,
         game_id: event.game_id,
         xp_awarded: xpAwarded,
-      } as any);
+      });
 
     if (attendanceError) {
       console.error('Attendance insert error:', attendanceError);

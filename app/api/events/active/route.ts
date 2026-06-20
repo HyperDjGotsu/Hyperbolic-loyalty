@@ -20,15 +20,17 @@ export async function GET() {
     const { data: game } = await supabaseAdmin
       .from('games')
       .select('id, name, icon, color')
-      .eq('id', event.game_id)
+      .eq('id', event.game_id ?? '')
       .maybeSingle();
 
-    const { count } = await supabaseAdmin
+    const db = supabaseAdmin as any;
+
+    const { count } = await db
       .from('event_attendances')
       .select('id', { count: 'exact', head: true })
       .eq('event_id', event.id);
 
-    const { data: recentRaw } = await supabaseAdmin
+    const { data: recentRaw } = await db
       .from('event_attendances')
       .select('player_id, checked_in_at, xp_awarded')
       .eq('event_id', event.id)
@@ -38,7 +40,7 @@ export async function GET() {
     const recentCheckIns: Array<{ playerName: string; hypId: string; xpAwarded: number; checkedInAt: string }> = [];
 
     if (recentRaw && recentRaw.length > 0) {
-      const playerIds = recentRaw.map(r => r.player_id);
+      const playerIds = (recentRaw as any[]).map((r: any) => r.player_id);
       const { data: players } = await supabaseAdmin
         .from('players')
         .select('id, display_name, player_id')
@@ -46,7 +48,7 @@ export async function GET() {
 
       const playerMap = new Map(players?.map(p => [p.id, p]) || []);
 
-      for (const r of recentRaw) {
+      for (const r of recentRaw as any[]) {
         const player = playerMap.get(r.player_id);
         recentCheckIns.push({
           playerName: player?.display_name || 'Player',
