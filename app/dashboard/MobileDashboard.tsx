@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import gsap from 'gsap';
 import {
   Avatar,
   GlowButton,
@@ -61,35 +60,15 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
 function LoadingSkeleton() {
   return (
     <div className="animate-pulse">
-      <div className="h-8 bg-slate-700 rounded w-32 mb-2"></div>
-      <div className="h-4 bg-slate-700 rounded w-24"></div>
+      <div className="h-8 bg-elevated rounded w-32 mb-2"></div>
+      <div className="h-4 bg-elevated rounded w-24"></div>
     </div>
   );
 }
 
-// Animated counter component
-function AnimatedCounter({ value, duration = 1.5 }: { value: number; duration?: number }) {
-  const counterRef = useRef<HTMLSpanElement>(null);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    if (!counterRef.current || hasAnimated.current) return;
-    hasAnimated.current = true;
-
-    const target = { val: 0 };
-    gsap.to(target, {
-      val: value,
-      duration,
-      ease: 'power2.out',
-      onUpdate: () => {
-        if (counterRef.current) {
-          counterRef.current.textContent = Math.floor(target.val).toLocaleString();
-        }
-      },
-    });
-  }, [value, duration]);
-
-  return <span ref={counterRef}>0</span>;
+// Static counter component (replaces GSAP animated counter)
+function StaticCounter({ value }: { value: number }) {
+  return <span>{value.toLocaleString()}</span>;
 }
 
 export default function MobileDashboard() {
@@ -106,65 +85,8 @@ export default function MobileDashboard() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
 
-  // Animation refs
-  const containerRef = useRef<HTMLDivElement>(null);
-  const playerCardRef = useRef<HTMLDivElement>(null);
   const gamesContainerRef = useRef<HTMLDivElement>(null);
   const activityContainerRef = useRef<HTMLDivElement>(null);
-  const hasAnimated = useRef(false);
-
-  // Run entrance animations after data loads
-  useEffect(() => {
-    if (loading || !playerData || hasAnimated.current) return;
-    hasAnimated.current = true;
-
-    const ctx = gsap.context(() => {
-      // Player card entrance
-      if (playerCardRef.current) {
-        gsap.fromTo(
-          playerCardRef.current,
-          { y: -30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }
-        );
-      }
-
-      // Game cards staggered entrance
-      if (gamesContainerRef.current) {
-        const gameCards = gamesContainerRef.current.querySelectorAll('.game-card');
-        gsap.fromTo(
-          gameCards,
-          { x: -50, opacity: 0 },
-          {
-            x: 0,
-            opacity: 1,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'power2.out',
-            delay: 0.3,
-          }
-        );
-      }
-
-      // Activity items staggered entrance
-      if (activityContainerRef.current) {
-        const activityItems = activityContainerRef.current.querySelectorAll('.activity-item');
-        gsap.fromTo(
-          activityItems,
-          { x: 50, opacity: 0 },
-          {
-            x: 0,
-            opacity: 1,
-            duration: 0.4,
-            stagger: 0.08,
-            ease: 'power2.out',
-            delay: 0.5,
-          }
-        );
-      }
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, [loading, playerData]);
 
   // Load favorite games
   useEffect(() => {
@@ -390,20 +312,20 @@ export default function MobileDashboard() {
   };
 
   return (
-    <div ref={containerRef} className="min-h-full pb-4">
+    <div className="min-h-full pb-4">
       {/* Header with Player Card */}
-      <div className="relative bg-[#0a0a14] pt-4 pb-6" style={{ backgroundImage: 'radial-gradient(ellipse at 60% 0%, rgba(0,200,234,0.07) 0%, transparent 70%)' }}>
+      <div className="relative bg-base pt-4 pb-6">
         {/* Logo */}
         <div className="text-center mb-4">
-          <div className="text-2xl font-black text-[#00c8ea] font-orbitron">
+          <div className="text-2xl font-black text-secondary font-display">
             HYPERBOLIC
           </div>
           <div className="text-orange-400 text-xs font-bold tracking-widest">— GAMES —</div>
         </div>
 
         {/* Player Card */}
-        <div className="mx-4" ref={playerCardRef}>
-          <div className="bg-slate-800/90 rounded-2xl p-4 border border-cyan-500/30 shadow-xl">
+        <div className="mx-4">
+          <div className="card p-4 shadow-xl">
             <div className="flex items-start gap-3">
               <div className="relative">
                 <Avatar avatar={avatarForComponent} size="md" />
@@ -414,20 +336,20 @@ export default function MobileDashboard() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h1 className="text-white text-lg font-bold">{playerData?.displayName || 'Player'}</h1>
-                  <span className="text-cyan-400 text-xs font-mono">{playerData?.hyp_id}</span>
+                  <span className="text-secondary text-xs font-mono">{playerData?.hyp_id}</span>
                 </div>
-                <div className="text-[#00c8ea]/70 text-sm">Level {level} Player</div>
+                <div className="text-secondary text-sm">Level {level} Player</div>
                 <div className="mt-2">
-                  <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+                  <div className="h-2 bg-border-token rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#00c8ea] rounded-full transition-all duration-1000 ease-out"
+                      className="h-full bg-accent rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${levelProgress}%` }}
                     />
                   </div>
                   <div className="flex justify-between mt-1 text-xs">
-                    <span className="text-slate-500">XP to next level</span>
-                    <span className="text-cyan-400 font-mono">
-                      <AnimatedCounter value={totalXp} /> / {nextLevelXp.toLocaleString()}
+                    <span className="text-tertiary">XP to next level</span>
+                    <span className="text-secondary font-mono">
+                      <StaticCounter value={totalXp} /> / {nextLevelXp.toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -435,7 +357,7 @@ export default function MobileDashboard() {
             </div>
 
             {/* Quick Stats */}
-            <div className="flex gap-3 mt-4 pt-3 border-t border-slate-700/50">
+            <div className="flex gap-3 mt-4 pt-3 border-t border-token">
               <StatCard icon="🎮" label="Games" value={games.length} />
               <StatCard icon="📋" label="Activity" value={recentActivity.length} />
               <StatCard icon="⭐" label="Level" value={level} color="text-orange-400" />
@@ -512,7 +434,7 @@ export default function MobileDashboard() {
           {totalGamesCount > 3 && (
             <button
               onClick={() => setShowAllGames(!showAllGames)}
-              className="text-cyan-400 text-sm"
+              className="text-secondary text-sm"
             >
               {showAllGames ? 'Show Less' : `View All (${totalGamesCount})`}
             </button>
@@ -536,11 +458,11 @@ export default function MobileDashboard() {
             <p>No game XP yet - attend events to start earning!</p>
           </div>
         )}
-        <div className="mt-3 bg-[#00c8ea]/[0.06] rounded-xl p-3 border border-[#00c8ea]/20">
+        <div className="mt-3 card p-3">
           <div className="flex justify-between items-center">
-            <span className="text-white/40 text-sm">Total Combined XP</span>
-            <span className="text-xl font-bold text-[#00c8ea]">
-              <AnimatedCounter value={totalXp} duration={2} />
+            <span className="text-tertiary text-sm">Total Combined XP</span>
+            <span className="xp-number text-xl">
+              <StaticCounter value={totalXp} />
             </span>
           </div>
         </div>
@@ -556,16 +478,16 @@ export default function MobileDashboard() {
             {recentActivity.map((a: any) => (
               <div
                 key={a.id}
-                className="activity-item bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700/50"
+                className="activity-item card p-3 flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center text-xl">
+                <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center text-xl">
                   {a.icon}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-sm truncate">{a.text}</div>
                   <div className="text-slate-500 text-xs">{a.time}</div>
                 </div>
-                <div className={`font-bold text-sm ${a.xp >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
+                <div className={`font-bold text-sm ${a.xp >= 0 ? 'text-xp' : 'text-danger'}`}>
                   {a.xp >= 0 ? '+' : ''}{a.xp}
                 </div>
               </div>
