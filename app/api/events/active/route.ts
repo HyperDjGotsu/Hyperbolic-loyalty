@@ -7,7 +7,14 @@ export async function GET() {
   // Debug: which Supabase URL is this route using?
   const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(-20) ?? 'missing';
 
-  // Debug: dump what the DB actually has
+  // Debug: fetch the known-active event by UUID directly
+  const { data: knownEvent } = await supabaseAdmin
+    .from('events')
+    .select('id, name, status')
+    .eq('id', 'cbc7edad-c6cd-42d3-ac3b-3a102d7b9329')
+    .maybeSingle();
+
+  // Debug: dump oldest 5 events by scheduled_at
   const { data: allStatuses } = await supabaseAdmin
     .from('events')
     .select('id, name, status')
@@ -25,11 +32,11 @@ export async function GET() {
 
   if (eventError) {
     console.error('Active event query error:', eventError);
-    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message, _statuses: allStatuses, _url: _supabaseUrl });
+    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message, _statuses: allStatuses, _url: _supabaseUrl, _knownEvent: knownEvent });
   }
 
   if (!event) {
-    return NextResponse.json({ event: null, _debug: 'no_active_event', _statuses: allStatuses, _url: _supabaseUrl });
+    return NextResponse.json({ event: null, _debug: 'no_active_event', _statuses: allStatuses, _url: _supabaseUrl, _knownEvent: knownEvent });
   }
 
   // Step 2: game info (non-critical)
