@@ -4,49 +4,32 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  // Debug: which Supabase URL is this route using?
-  const _supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(-20) ?? 'missing';
-
-  // Debug: fetch the known-active event by UUID directly
-  const { data: knownEvent } = await supabaseAdmin
-    .from('events')
-    .select('id, name, status')
-    .eq('id', 'cbc7edad-c6cd-42d3-ac3b-3a102d7b9329')
-    .maybeSingle();
-
-  // Debug: dump oldest 5 events by scheduled_at
-  const { data: allStatuses } = await supabaseAdmin
-    .from('events')
-    .select('id, name, status')
-    .order('scheduled_at', { ascending: true })
-    .limit(5);
-
-  // Step 1: find the active event — use .in() to match how /api/events works
+  // Find the active event — use .in() to match the working pattern in /api/events
   const { data: activeEvents, error: eventError } = await supabaseAdmin
     .from('events')
     .select('id, name, game_id, attendance_xp, scheduled_at, status')
     .in('status', ['active'])
     .order('scheduled_at', { ascending: true })
     .limit(1);
-  const event = activeEvents?.[0] ?? null;
 
   if (eventError) {
     console.error('Active event query error:', eventError);
-    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message, _statuses: allStatuses, _url: _supabaseUrl, _knownEvent: knownEvent });
+    return NextResponse.json({ event: null });
   }
+
+  const event = activeEvents?.[0] ?? null;
 
   if (!event) {
-    return NextResponse.json({ event: null, _debug: 'no_active_event', _statuses: allStatuses, _url: _supabaseUrl, _knownEvent: knownEvent });
+    return NextResponse.json({ event: null });
   }
 
-  // Step 2: game info (non-critical)
   const { data: game } = await supabaseAdmin
     .from('games')
     .select('id, name, icon, color')
     .eq('id', event.game_id ?? '')
     .maybeSingle();
 
-  // Step 3: attendance data — isolated so a missing table never kills the response
+  // Attendance data — isolated so a missing table never kills the response
   let attendanceCount = 0;
   const recentCheckIns: Array<{ playerName: string; hypId: string; xpAwarded: number; checkedInAt: string }> = [];
 
@@ -87,7 +70,7 @@ export async function GET() {
       }
     }
   } catch (attendanceError) {
-    console.error('event_attendances query failed (table may not exist yet):', attendanceError);
+    console.error('event_attendances query failed:', attendanceError);
   }
 
   return NextResponse.json({
