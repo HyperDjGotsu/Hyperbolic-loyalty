@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import { dark } from '@clerk/themes';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Hyperbolic XP - Hyperbolic Creative',
+  title: 'Hyperbolic XP',
   description: 'Level up your TCG journey. Earn XP, unlock rewards, and compete with the community.',
-  keywords: ['TCG', 'One Piece', 'Pokemon', 'MTG', 'loyalty', 'gaming'],
+  keywords: ['TCG', 'loyalty', 'gaming', 'One Piece', 'Pokemon', 'MTG'],
   authors: [{ name: 'Hyperbolic Games' }],
   openGraph: {
     title: 'Hyperbolic XP',
@@ -19,29 +18,34 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#0a0a0f',
+  themeColor: '#111009',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       appearance={{
-        baseTheme: dark,
         variables: {
-          colorPrimary: '#00f0ff',
-          colorBackground: '#12121a',
-          colorInputBackground: '#1a1a24',
-          colorText: '#ffffff',
-          colorTextSecondary: '#8888aa',
+          colorPrimary:          '#c4b5fd',
+          colorBackground:       '#1a1810',
+          colorInputBackground:  '#1e1c14',
+          colorText:             '#f2efe8',
+          colorTextSecondary:    '#8a8070',
+          borderRadius:          '10px',
+          fontFamily:            'Plus Jakarta Sans, sans-serif',
         },
       }}
     >
-      <html lang="en" className="dark">
-        <body className="font-rajdhani antialiased">
+      <html lang="en" data-theme="dark" data-tone="warm">
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+          />
+        </head>
+        <body>
           {children}
         </body>
       </html>
