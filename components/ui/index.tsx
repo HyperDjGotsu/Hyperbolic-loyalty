@@ -2,79 +2,171 @@
 
 import React from 'react';
 
-// ========== FLOATING PARTICLES ==========
-export const FloatingParticles = () => {
-  const [particles, setParticles] = React.useState<Array<{
-    left: string;
-    top: string;
-    width: string;
-    height: string;
-    background: string;
-    animationDelay: string;
-    animationDuration: string;
-  }>>([]);
+// ── Button ─────────────────────────────────────────────────────────────────
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type ButtonSize    = 'sm' | 'md' | 'lg';
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?:    ButtonSize;
+  loading?: boolean;
+}
+
+const buttonBase = 'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed select-none';
+
+const buttonVariants: Record<ButtonVariant, string> = {
+  primary:   'bg-accent text-accent-fg hover:opacity-90 active:opacity-80',
+  secondary: 'border border-strong bg-transparent text-primary hover:bg-elevated active:bg-surface',
+  ghost:     'bg-transparent text-secondary hover:text-primary active:text-primary',
+  danger:    'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20',
+};
+
+const buttonSizes: Record<ButtonSize, string> = {
+  sm: 'text-sm px-3 py-1.5',
+  md: 'text-sm px-4 py-2',
+  lg: 'text-base px-5 py-2.5',
+};
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = 'primary', size = 'md', loading, children, className = '', disabled, ...props }, ref) => (
+    <button
+      ref={ref}
+      disabled={disabled || loading}
+      className={`${buttonBase} ${buttonVariants[variant]} ${buttonSizes[size]} ${className}`}
+      {...props}
+    >
+      {loading && (
+        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+        </svg>
+      )}
+      {children}
+    </button>
+  )
+);
+Button.displayName = 'Button';
+
+// ── Card ───────────────────────────────────────────────────────────────────
+
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  elevated?: boolean;
+}
+
+export const Card: React.FC<CardProps> = ({ elevated, className = '', children, ...props }) => (
+  <div
+    className={`${elevated ? 'card-elevated' : 'card'} ${className}`}
+    {...props}
+  >
+    {children}
+  </div>
+);
+
+// ── Badge ──────────────────────────────────────────────────────────────────
+
+type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'accent' | 'xp';
+
+const badgeColors: Record<BadgeVariant, string> = {
+  default: 'bg-[var(--border-strong)] text-secondary',
+  success: 'bg-success/10 text-success',
+  warning: 'bg-warning/10 text-warning',
+  danger:  'bg-danger/10 text-danger',
+  accent:  'bg-accent/10 text-accent',
+  xp:      'bg-xp/10 text-xp',
+};
+
+interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: BadgeVariant;
+}
+
+export const Badge: React.FC<BadgeProps> = ({ variant = 'default', className = '', children, ...props }) => (
+  <span
+    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeColors[variant]} ${className}`}
+    {...props}
+  >
+    {children}
+  </span>
+);
+
+// ── Input ──────────────────────────────────────────────────────────────────
+
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+}
+
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ label, error, className = '', ...props }, ref) => (
+    <div className="flex flex-col gap-1.5">
+      {label && (
+        <label className="text-sm font-medium text-secondary">{label}</label>
+      )}
+      <input
+        ref={ref}
+        className={`w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder:text-tertiary
+          focus:outline-none focus:border-accent transition-colors duration-150 ${className}`}
+        {...props}
+      />
+      {error && <p className="text-xs text-danger">{error}</p>}
+    </div>
+  )
+);
+Input.displayName = 'Input';
+
+// ── Divider ────────────────────────────────────────────────────────────────
+
+export const Divider: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div className={`border-t border-token ${className}`} />
+);
+
+// ── ThemeToggle ────────────────────────────────────────────────────────────
+
+export const ThemeToggle: React.FC = () => {
+  const [theme, setTheme] = React.useState<'dark' | 'light'>('dark');
 
   React.useEffect(() => {
-    const colors = ['#22d3ee', '#a855f7', '#ec4899', '#f97316'];
-    setParticles(
-      [...Array(20)].map(() => ({
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        width: `${Math.random() * 4 + 2}px`,
-        height: `${Math.random() * 4 + 2}px`,
-        background: colors[Math.floor(Math.random() * 4)],
-        animationDelay: `${Math.random() * 5}s`,
-        animationDuration: `${Math.random() * 3 + 4}s`,
-      }))
-    );
+    const saved = localStorage.getItem('theme') as 'dark' | 'light' | null;
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.setAttribute('data-theme', saved);
+    }
   }, []);
 
+  const toggle = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    const tone = next === 'light' ? 'paper' : 'warm';
+    setTheme(next);
+    localStorage.setItem('theme', next);
+    document.documentElement.setAttribute('data-theme', next);
+    document.documentElement.setAttribute('data-tone', tone);
+  };
+
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((particle, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full animate-float"
-          style={particle}
-        />
-      ))}
-    </div>
+    <button
+      onClick={toggle}
+      aria-label="Toggle theme"
+      className="flex items-center justify-center w-8 h-8 rounded-lg text-secondary hover:text-primary hover:bg-elevated transition-colors"
+    >
+      {theme === 'dark' ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      )}
+    </button>
   );
 };
 
-// ========== AVATAR OPTIONS ==========
-export const avatarOptions = {
-  bases: ['😎', '🥷', '🧙', '👽', '🤖', '🦊', '🐲', '👾', '🎭', '🦁', '🐺', '🦅'],
-  backgrounds: [
-    { id: 'blue', color: '#3b82f6' },
-    { id: 'purple', color: '#8b5cf6' },
-    { id: 'pink', color: '#ec4899' },
-    { id: 'red', color: '#ef4444' },
-    { id: 'orange', color: '#f97316' },
-    { id: 'green', color: '#22c55e' },
-    { id: 'cyan', color: '#22d3ee' },
-    { id: 'slate', color: '#64748b' },
-  ],
-  frames: [
-    { id: 'none', name: 'None', style: 'border-transparent', cost: 0 },
-    { id: 'silver', name: 'Silver', style: 'border-slate-400', cost: 100 },
-    { id: 'gold', name: 'Gold', style: 'border-yellow-500', cost: 250 },
-    { id: 'diamond', name: 'Diamond', style: 'border-cyan-400', cost: 500 },
-  ],
-  badges: ['🏴‍☠️', '⚡', '🔥', '💎', '👑', '🌟', '🎮', '🏆', '🎯', '💀', '🐉', '✨'],
-};
+// ── Avatar (preserved — dashboard tasks will refactor this) ───────────────
 
-// ========== AVATAR TYPES ==========
-export interface AvatarData {
-  type: 'emoji' | 'photo';
-  base: string;
-  photoUrl?: string | null;
-  background: string;
-  frame: string;
-  badge?: string | null;
-}
-
-// ========== AVATAR COMPONENT ==========
 interface AvatarProps {
   avatar: AvatarData;
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -96,7 +188,7 @@ export const Avatar = ({
     lg: 'w-20 h-20 text-3xl',
     xl: 'w-28 h-28 text-4xl',
   };
-  
+
   const frameStyles = avatarOptions.frames.find((f) => f.id === avatar.frame)?.style || '';
 
   return (
@@ -125,7 +217,7 @@ export const Avatar = ({
       {isOnline !== null && (
         <div
           className={`absolute top-0 right-0 w-3 h-3 rounded-full border-2 border-slate-900 ${
-            isOnline ? 'bg-green-500 animate-online' : 'bg-slate-600'
+            isOnline ? 'bg-green-500' : 'bg-slate-600'
           }`}
         />
       )}
@@ -133,46 +225,29 @@ export const Avatar = ({
   );
 };
 
-// ========== GLOW BUTTON ==========
-interface GlowButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  color?: 'cyan' | 'purple' | 'green' | 'orange';
-  disabled?: boolean;
+// ── GlowButton (deprecated alias — use Button variant="primary") ───────────
+export const GlowButton = Button;
+
+// ── StatCard ───────────────────────────────────────────────────────────────
+
+export const StatCard: React.FC<{
+  label: string;
+  value: string | number;
+  sublabel?: string;
+  icon?: string;
+  color?: string;
   className?: string;
-  type?: 'button' | 'submit';
-}
+}> = ({ label, value, sublabel, icon, color, className = '' }) => (
+  <Card className={`p-4 ${className}`}>
+    {icon && <p className="text-lg mb-1">{icon}</p>}
+    <p className="text-xs font-medium text-tertiary uppercase tracking-wide mb-1">{label}</p>
+    <p className={`font-display text-3xl font-black ${color || 'text-primary'}`}>{value}</p>
+    {sublabel && <p className="text-xs text-secondary mt-0.5">{sublabel}</p>}
+  </Card>
+);
 
-export const GlowButton = ({
-  children,
-  onClick,
-  color = 'cyan',
-  disabled = false,
-  className = '',
-  type = 'button',
-}: GlowButtonProps) => {
-  const colors = {
-    cyan: 'from-cyan-500 to-cyan-600',
-    purple: 'from-purple-500 to-pink-600',
-    green: 'from-emerald-500 to-cyan-500',
-    orange: 'from-orange-500 to-yellow-500',
-  };
+// ── GameXpCard (preserved) ─────────────────────────────────────────────────
 
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={`relative bg-gradient-to-r ${colors[color]} text-white font-bold rounded-xl shadow-lg ${
-        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'
-      } transition-all ${className}`}
-    >
-      <div className="relative">{children}</div>
-    </button>
-  );
-};
-
-// ========== GAME XP CARD ==========
 interface Game {
   id: string;
   name: string;
@@ -182,7 +257,6 @@ interface Game {
   level: number;
   color: string;
   rank: string;
-  // Monthly attendance tracking (Pirate's Life / Hyperlife)
   monthlyAttendance?: number;
   monthlyThreshold?: number;
   monthlyBonus?: number;
@@ -197,15 +271,12 @@ interface GameXpCardProps {
 }
 
 export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
-  // Monthly achievement tracking
   const attendance = game.monthlyAttendance || 0;
   const threshold = game.monthlyThreshold || (game.id === 'one_piece' ? 6 : 3);
   const achievementName = game.achievementName || (game.id === 'one_piece' ? "Pirate's Life" : 'Hyperlife');
   const earned = game.earnedMonthlyBonus || false;
   const progress = Math.min(attendance, threshold);
   const isComplete = attendance >= threshold;
-  
-  // Get current month name
   const currentMonth = new Date().toLocaleString('en-US', { month: 'short' });
 
   return (
@@ -239,8 +310,6 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
             </div>
             <span className="text-xs text-slate-400 font-mono">{(game.xp || 0).toLocaleString()}</span>
           </div>
-          
-          {/* Pirate's Life / Hyperlife Progress */}
           <div className="mt-2 flex items-center gap-2">
             <span className="text-xs">{game.id === 'one_piece' ? '🏴' : '⏳'}</span>
             <div className="flex gap-0.5">
@@ -265,7 +334,7 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
           </div>
         </div>
       </div>
-      
+
       {isExpanded && (
         <div className="px-3 pb-3 pt-1 border-t border-slate-700/50 space-y-2">
           <div className="flex justify-between text-sm">
@@ -276,8 +345,6 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
               {game.xpName}: <span style={{ color: game.color }}>{(game.xp || 0).toLocaleString()}</span>
             </span>
           </div>
-          
-          {/* Achievement details when expanded */}
           <div className="bg-slate-900/50 rounded-lg p-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -302,52 +369,36 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
   );
 };
 
-// ========== STREAM BUTTONS ==========
-interface StreamButtonsProps {
-  hasStream: boolean;
-  streamStarting?: boolean;
-  size?: 'sm' | 'md';
-}
+// ── avatarOptions (preserved for backward compat) ──────────────────────────
 
-export const StreamButtons = ({ hasStream, streamStarting, size = 'sm' }: StreamButtonsProps) => {
-  if (!hasStream) return null;
-  const cls = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
-  return (
-    <div className="flex gap-2">
-      <button className={`flex items-center gap-1 ${cls} bg-purple-600 text-white rounded-lg`}>
-        📺 Twitch{' '}
-        {streamStarting && <span className="w-2 h-2 bg-red-500 rounded-full animate-live" />}
-      </button>
-      <button className={`flex items-center gap-1 ${cls} bg-red-600 text-white rounded-lg`}>
-        ▶️ YouTube
-      </button>
-    </div>
-  );
+export const avatarOptions = {
+  bases: ['😎', '🥷', '🧙', '👽', '🤖', '🦊', '🐲', '👾', '🎭', '🦁', '🐺', '🦅'],
+  backgrounds: [
+    { id: 'blue',   color: '#3b82f6' },
+    { id: 'purple', color: '#8b5cf6' },
+    { id: 'pink',   color: '#ec4899' },
+    { id: 'red',    color: '#ef4444' },
+    { id: 'orange', color: '#f97316' },
+    { id: 'green',  color: '#22c55e' },
+    { id: 'cyan',   color: '#22d3ee' },
+    { id: 'slate',  color: '#64748b' },
+  ],
+  frames: [
+    { id: 'none',    name: 'None',    style: 'border-transparent', cost: 0 },
+    { id: 'silver',  name: 'Silver',  style: 'border-slate-400',   cost: 100 },
+    { id: 'gold',    name: 'Gold',    style: 'border-yellow-500',  cost: 250 },
+    { id: 'diamond', name: 'Diamond', style: 'border-cyan-400',    cost: 500 },
+  ],
+  badges: ['🏴‍☠️', '⚡', '🔥', '💎', '👑', '🌟', '🎮', '🏆', '🎯', '💀', '🐉', '✨'],
 };
 
-// ========== STAT CARD ==========
-interface StatCardProps {
-  icon: string;
-  label: string;
-  value: string | number;
-  color?: string;
+// ── AvatarData type (preserved for backward compat) ────────────────────────
+
+export interface AvatarData {
+  type: 'emoji' | 'photo';
+  base: string;
+  photoUrl?: string | null;
+  background: string;
+  frame: string;
+  badge?: string | null;
 }
-
-export const StatCard = ({ icon, label, value, color }: StatCardProps) => (
-  <div className="bg-slate-900/50 rounded-xl p-2 flex items-center gap-2">
-    <span className="text-xl">{icon}</span>
-    <div>
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className={`font-bold ${color || 'text-white'}`}>{value}</div>
-    </div>
-  </div>
-);
-
-// ========== RARITY COLORS ==========
-export const rarityColors = {
-  common: { primary: '#64748b', glow: '#94a3b8', name: 'Common' },
-  uncommon: { primary: '#22c55e', glow: '#4ade80', name: 'Uncommon' },
-  rare: { primary: '#3b82f6', glow: '#60a5fa', name: 'Rare' },
-  epic: { primary: '#a855f7', glow: '#c084fc', name: 'Epic' },
-  legendary: { primary: '#fbbf24', glow: '#fcd34d', name: 'Legendary' },
-};

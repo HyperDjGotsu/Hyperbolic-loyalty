@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FloatingParticles } from '@/components/ui';
 import type { Banner } from '@/lib/types';
 
 interface BannerCarouselProps {
@@ -86,7 +85,6 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
           className={`absolute inset-0 ${gradientClass}`}
           style={gradientStyle}
         >
-          <FloatingParticles />
         </div>
       )}
       

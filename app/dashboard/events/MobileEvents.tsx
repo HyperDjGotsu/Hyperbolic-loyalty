@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { FloatingParticles } from '@/components/ui';
 
 interface GameInfo {
   id: string;

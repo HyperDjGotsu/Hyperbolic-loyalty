@@ -5,7 +5,6 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import {
-  FloatingParticles,
   Avatar,
   GlowButton,
   GameXpCard,
@@ -394,8 +393,6 @@ export default function MobileDashboard() {
     <div ref={containerRef} className="min-h-full pb-4">
       {/* Header with Player Card */}
       <div className="relative bg-[#0a0a14] pt-4 pb-6" style={{ backgroundImage: 'radial-gradient(ellipse at 60% 0%, rgba(0,200,234,0.07) 0%, transparent 70%)' }}>
-        <FloatingParticles />
-        
         {/* Logo */}
         <div className="text-center mb-4">
           <div className="text-2xl font-black text-[#00c8ea] font-orbitron">

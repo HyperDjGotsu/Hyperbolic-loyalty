@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { FloatingParticles, Avatar, GlowButton } from '@/components/ui';
+import { Avatar, GlowButton } from '@/components/ui';
 
 // Types
 interface PlayerAvatar {
@@ -852,7 +852,6 @@ export default function CommunityPage() {
     <div className="flex-1 overflow-auto">
       {/* Header */}
       <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 p-4 border-b border-slate-800">
-        <FloatingParticles />
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2 font-orbitron">
@@ -1235,7 +1234,6 @@ export default function CommunityPage() {
           </div>
           <div className="flex-1 overflow-auto">
             <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 pt-6 pb-8">
-              <FloatingParticles />
               <div className="text-center">
                 <Avatar
                   avatar={selectedMember.avatar}
