@@ -4,6 +4,13 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // Debug: dump what the DB actually has
+  const { data: allStatuses } = await supabaseAdmin
+    .from('events')
+    .select('id, name, status')
+    .order('scheduled_at', { ascending: true })
+    .limit(5);
+
   // Step 1: find the active event — if this fails, nothing to return
   const { data: event, error: eventError } = await supabaseAdmin
     .from('events')
@@ -15,11 +22,11 @@ export async function GET() {
 
   if (eventError) {
     console.error('Active event query error:', eventError);
-    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message });
+    return NextResponse.json({ event: null, _debug: 'query_error', _err: eventError.message, _statuses: allStatuses });
   }
 
   if (!event) {
-    return NextResponse.json({ event: null, _debug: 'no_active_event' });
+    return NextResponse.json({ event: null, _debug: 'no_active_event', _statuses: allStatuses });
   }
 
   // Step 2: game info (non-critical)
