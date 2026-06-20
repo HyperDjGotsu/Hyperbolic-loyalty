@@ -611,7 +611,7 @@ export default function CommunityPage() {
             type: 'emoji',
             base: '❓',
             photoUrl: null,
-            background: '#64748b',
+            background: 'var(--bg-elevated)',
             frame: 'none',
             badge: null,
           } : member.avatar}
@@ -658,7 +658,7 @@ export default function CommunityPage() {
         <button onClick={() => setShowPrivacySettings(false)} className="text-slate-400">
           ← Back
         </button>
-        <h2 className="text-white font-bold font-orbitron">Privacy Settings</h2>
+        <h2 className="text-white font-bold font-display">Privacy Settings</h2>
         <div className="w-12" />
       </div>
       <div className="flex-1 overflow-auto p-4 space-y-6">
@@ -854,7 +854,7 @@ export default function CommunityPage() {
       <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 p-4 border-b border-slate-800">
         <div className="relative flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2 font-orbitron">
+            <h1 className="text-xl font-bold text-white flex items-center gap-2 font-display">
               <span>👥</span> Community
             </h1>
             <p className="text-slate-400 text-sm">{leaderboard.length} players ranked</p>
@@ -962,7 +962,7 @@ export default function CommunityPage() {
             {/* Leaderboard List */}
             {leaderboardLoading ? (
               <div className="text-center py-8">
-                <div className="text-4xl mb-4 animate-bounce">🏆</div>
+                <div className="text-4xl mb-4">🏆</div>
                 <div className="text-slate-400">Loading rankings...</div>
               </div>
             ) : leaderboard.length > 0 ? (
@@ -1025,7 +1025,7 @@ export default function CommunityPage() {
             {/* Friends List */}
             {friendsLoading ? (
               <div className="text-center py-8">
-                <div className="text-4xl mb-4 animate-bounce">👥</div>
+                <div className="text-4xl mb-4">👥</div>
                 <div className="text-slate-400">Loading friends...</div>
               </div>
             ) : friends.length > 0 ? (
@@ -1052,7 +1052,7 @@ export default function CommunityPage() {
           <div className="space-y-4">
             {onePieceLoading ? (
               <div className="text-center py-8">
-                <div className="text-4xl mb-4 animate-bounce">🏴‍☠️</div>
+                <div className="text-4xl mb-4">🏴‍☠️</div>
                 <div className="text-slate-400">Loading...</div>
               </div>
             ) : (
@@ -1127,7 +1127,7 @@ export default function CommunityPage() {
                             type: 'emoji',
                             base: '❓',
                             photoUrl: null,
-                            background: '#64748b',
+                            background: 'var(--bg-elevated)',
                             frame: 'none',
                             badge: null,
                           } : entry.avatar} size="sm" />
