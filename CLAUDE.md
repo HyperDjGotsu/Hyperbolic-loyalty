@@ -86,3 +86,14 @@ community and staff from that era — handle with care.
 - Timestamped ledger entries, not point resets
 - Anonymous mode not ghost mode (hide identity, keep leaderboard position)
 - Community-first over extraction
+
+## The Non-Technical Operator Constraint
+The target customer for this as a SaaS product is game store owners and their staff — people who are passionate about games, not technology. Many won't be comfortable with dashboards, settings, or anything that requires troubleshooting.
+
+Design implications:
+- **Players should be able to self-serve wherever possible.** If a staff member forgets to open the kiosk, or doesn't know how, players can still check in via QR code on their phones. The system should function even when staff engagement is minimal or inconsistent.
+- **Staff flows must be zero-training.** One button to start an event, one button to end it. No configuration, no setup steps, no choices that could be made wrong.
+- **Failure states must be invisible to players.** If something breaks on the staff side, players shouldn't see an error — they should see a graceful fallback (e.g., QR self-check-in still works even if NFC kiosk isn't running).
+- **The value is delivered passively.** Points accumulate, leaderboards update, achievements unlock — without staff doing anything beyond showing up and running events normally.
+
+This constraint is also the SaaS pitch: "It works even if your staff isn't technical."
