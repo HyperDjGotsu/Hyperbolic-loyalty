@@ -539,7 +539,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-base pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-b from-slate-900 to-slate-950 pt-8 pb-6 px-4">
+      <div className="bg-surface pt-8 pb-6 px-4">
         <div className="flex flex-col items-center">
           <AvatarPreview 
             config={playerData.avatarConfig} 
@@ -603,7 +603,7 @@ export default function ProfilePage() {
             </div>
           </div>
         ) : referralStats ? (
-          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/20">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
             {/* Referral Code */}
             <div className="mb-4">
               <div className="text-secondary text-xs mb-1">Your Referral Code</div>

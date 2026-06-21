@@ -851,7 +851,7 @@ export default function CommunityPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 p-4 border-b border-token">
+      <div className="relative bg-surface p-4 border-b border-token">
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-primary flex items-center gap-2 font-display">
@@ -889,7 +889,7 @@ export default function CommunityPage() {
             onClick={() => handleTabChange(tab.id)}
             className={`flex-1 py-3 text-sm font-medium relative ${
               activeTab === tab.id
-                ? 'text-accent border-b-2 border-cyan-400'
+                ? 'text-accent border-b-2 border-accent'
                 : 'text-secondary'
             }`}
           >
@@ -922,7 +922,7 @@ export default function CommunityPage() {
                   onClick={() => handleGameChange(game.id)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap transition-all ${
                     leaderboardGame === game.id
-                      ? 'bg-accent text-primary'
+                      ? 'bg-accent text-accent-fg'
                       : 'bg-elevated text-secondary hover:bg-elevated'
                   }`}
                 >
@@ -941,7 +941,7 @@ export default function CommunityPage() {
 
             {/* Current Game Header */}
             {leaderboardGame !== 'overall' && (
-              <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/40 rounded-xl p-3 border border-token">
+              <div className="bg-elevated rounded-xl p-3 border border-token">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon}</span>
@@ -1058,7 +1058,7 @@ export default function CommunityPage() {
             ) : (
               <>
                 {/* Emperor of the Month */}
-                <div className="bg-gradient-to-r from-yellow-600/20 via-orange-500/20 to-red-500/20 border border-yellow-500/40 rounded-xl p-4">
+                <div className="bg-elevated/50 border border-yellow-500/30 rounded-xl p-4">
                   <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-3">
                     👑 Emperor of the Month
                   </h3>
@@ -1100,7 +1100,7 @@ export default function CommunityPage() {
                 )}
 
                 {/* Bounty Hunter Night */}
-                <div className="bg-gradient-to-r from-red-600/20 via-red-500/10 to-slate-800/50 border border-red-500/40 rounded-xl p-4">
+                <div className="bg-elevated/50 border border-red-500/30 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider">
                       🎯 Bounty Hunter Night
@@ -1233,7 +1233,7 @@ export default function CommunityPage() {
             <div className="w-12" />
           </div>
           <div className="flex-1 overflow-auto">
-            <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 pt-6 pb-8">
+            <div className="relative bg-surface pt-6 pb-8">
               <div className="text-center">
                 <Avatar
                   avatar={selectedMember.avatar}

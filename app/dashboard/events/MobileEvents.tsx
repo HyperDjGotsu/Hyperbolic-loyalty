@@ -273,7 +273,7 @@ const ShareModal = ({
               </button>
               <button
                 onClick={handleNativeShare}
-                className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-primary font-medium rounded-xl hover:opacity-90 transition-opacity"
+                className="flex items-center justify-center gap-2 py-3 bg-accent text-accent-fg font-medium rounded-xl hover:opacity-90 transition-opacity"
               >
                 📤 Share
               </button>
@@ -325,7 +325,7 @@ const ShareModal = ({
               <button
                 onClick={handleShareWithFriends}
                 disabled={selectedFriends.size === 0 || sharing}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-primary font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-accent text-accent-fg font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sharing ? 'Sharing...' : `Share with ${selectedFriends.size} friend${selectedFriends.size !== 1 ? 's' : ''}`}
               </button>
@@ -608,10 +608,7 @@ function EventsPageContent() {
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <div className="relative bg-surface rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
         {/* Header */}
-        <div 
-          className="relative p-6 pb-4"
-          style={{ background: `linear-gradient(135deg, ${event.game?.color || '#3b82f6'}40, transparent)` }}
-        >
+        <div className="relative p-6 pb-4">
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 bg-elevated/80 rounded-full flex items-center justify-center text-secondary hover:text-primary"
@@ -670,7 +667,7 @@ function EventsPageContent() {
           
           {/* Friends interested */}
           {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
-            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/20">
+            <div className="bg-elevated/50 rounded-xl p-4 border border-token">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">⭐</span>
                 <div className="flex-1">
@@ -693,7 +690,7 @@ function EventsPageContent() {
           )}
           
           {/* XP Rewards */}
-          <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 border border-accent/20">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
             <div className="text-secondary text-xs mb-2">XP REWARDS</div>
             <div className="flex justify-around">
               <div className="text-center">
@@ -709,7 +706,7 @@ function EventsPageContent() {
           
           {/* Prizing */}
           {event.prizing && event.prizing.length > 0 && (
-            <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/20">
+            <div className="bg-elevated/50 rounded-xl p-4 border border-yellow-500/20">
               <div className="text-secondary text-xs mb-2">PRIZES</div>
               <div className="space-y-2">
                 {event.prizing.map((prize, index) => {
@@ -744,7 +741,7 @@ function EventsPageContent() {
           
           {/* Stream */}
           {event.hasStream && (
-            <div className="bg-gradient-to-r from-purple-600/20 to-red-600/20 rounded-xl p-4 border border-purple-500/30">
+            <div className="bg-elevated/50 rounded-xl p-4 border border-token">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-primary font-bold">Watch Live!</div>
@@ -765,11 +762,8 @@ function EventsPageContent() {
               className={`flex-1 py-4 rounded-xl font-bold text-lg transition-all ${
                 event.isInterested
                   ? 'bg-elevated text-primary border-2 border-token'
-                  : 'text-primary'
+                  : 'bg-accent text-accent-fg'
               }`}
-              style={!event.isInterested ? { 
-                background: `linear-gradient(135deg, ${event.game?.color || '#3b82f6'}, ${event.game?.color || '#3b82f6'}cc)`,
-              } : undefined}
             >
               {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : '⭐ I\'m Interested'}
             </button>
@@ -822,7 +816,7 @@ function EventsPageContent() {
               onClick={() => setSelectedGame(game.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                 selectedGame === game.id
-                  ? 'bg-accent text-primary'
+                  ? 'bg-accent text-accent-fg'
                   : 'bg-elevated text-secondary hover:bg-elevated'
               }`}
             >
