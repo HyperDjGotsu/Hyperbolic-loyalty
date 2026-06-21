@@ -126,10 +126,12 @@ export const ThemeToggle: React.FC = () => {
   const [theme, setTheme] = React.useState<'dark' | 'light'>('dark');
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('theme') as 'dark' | 'light' | null;
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
+    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light' | null;
+    const savedTone  = localStorage.getItem('tone') || (savedTheme === 'light' ? 'paper' : 'warm');
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-tone', savedTone);
     }
   }, []);
 
@@ -138,6 +140,7 @@ export const ThemeToggle: React.FC = () => {
     const tone = next === 'light' ? 'paper' : 'warm';
     setTheme(next);
     localStorage.setItem('theme', next);
+    localStorage.setItem('tone', tone);
     document.documentElement.setAttribute('data-theme', next);
     document.documentElement.setAttribute('data-tone', tone);
   };
