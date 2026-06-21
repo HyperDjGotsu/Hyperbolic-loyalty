@@ -38,11 +38,11 @@ function OnboardingContent() {
   useEffect(() => {
     async function checkExistingLink() {
       if (!isLoaded || !user) return;
-      
+
       try {
         const response = await fetch('/api/player/by-clerk');
         const data = await response.json();
-        
+
         if (data.linked) {
           // User already has a linked player, go to dashboard
           localStorage.setItem('hyperbolic_player_id', data.hyp_id);
@@ -53,7 +53,7 @@ function OnboardingContent() {
       } catch (err) {
         console.error('Error checking link:', err);
       }
-      
+
       setCheckingLink(false);
       // Pre-fill display name from Clerk
       if (user.firstName) {
@@ -61,7 +61,7 @@ function OnboardingContent() {
       } else if (user.username) {
         setDisplayName(user.username);
       }
-      
+
       // Check for referral code in URL (e.g., ?ref=REF-XXXXXXXX)
       const refParam = searchParams.get('ref');
       if (refParam) {
@@ -69,7 +69,7 @@ function OnboardingContent() {
         validateReferralCode(refParam.toUpperCase());
       }
     }
-    
+
     checkExistingLink();
   }, [isLoaded, user, router, searchParams]);
 
@@ -79,7 +79,7 @@ function OnboardingContent() {
       setReferralValid(null);
       return;
     }
-    
+
     setReferralChecking(true);
     try {
       const response = await fetch(`/api/referral/validate?code=${encodeURIComponent(code)}`);
@@ -115,9 +115,9 @@ function OnboardingContent() {
       const response = await fetch('/api/player/link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: 'link_existing',
-          hypId: hypId.trim().toUpperCase() 
+          hypId: hypId.trim().toUpperCase()
         }),
       });
 
@@ -151,7 +151,7 @@ function OnboardingContent() {
       const response = await fetch('/api/player/link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: 'create_new',
           displayName: displayName.trim(),
           discordUsername: discordUsername.trim() || null,
@@ -180,39 +180,39 @@ function OnboardingContent() {
 
   if (!isLoaded || checkingLink) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-base">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading...</p>
+          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-secondary">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4">
+    <div className="min-h-screen bg-base p-4">
       <div className="max-w-md mx-auto pt-8">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-3xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-orbitron">
+          <div className="font-display text-3xl font-black text-accent">
             HYPERBOLIC
           </div>
-          <div className="text-orange-400 text-sm font-bold tracking-widest mt-1">— GAMES —</div>
+          <div className="text-secondary text-sm font-bold tracking-widest mt-1">— GAMES —</div>
         </div>
 
         {/* Welcome */}
-        <div className="bg-slate-900 rounded-2xl border border-slate-700 p-6 mb-6">
-          <h1 className="text-xl font-bold text-white mb-2">
+        <div className="card p-6 mb-6">
+          <h1 className="text-xl font-bold text-primary mb-2">
             Welcome{user?.firstName ? `, ${user.firstName}` : ''}! 👋
           </h1>
-          <p className="text-slate-400">
+          <p className="text-secondary">
             Let's get you set up with your player profile.
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="bg-danger/10 border border-danger/30 rounded-xl p-4 mb-6">
+            <p className="text-danger text-sm">{error}</p>
           </div>
         )}
 
@@ -221,15 +221,15 @@ function OnboardingContent() {
             {/* Already have a card */}
             <button
               onClick={() => setMode('link')}
-              className="w-full bg-slate-900 rounded-2xl border border-slate-700 p-6 text-left hover:border-cyan-500/50 transition-colors"
+              className="w-full card p-6 text-left hover:border-accent/50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-xl flex items-center justify-center text-3xl">
+                <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center text-3xl">
                   💳
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-lg">I have a card</h3>
-                  <p className="text-slate-400 text-sm">Link your existing HYP-ID to this account</p>
+                  <h3 className="text-primary font-bold text-lg">I have a card</h3>
+                  <p className="text-secondary text-sm">Link your existing HYP-ID to this account</p>
                 </div>
               </div>
             </button>
@@ -237,15 +237,15 @@ function OnboardingContent() {
             {/* New player */}
             <button
               onClick={() => setMode('create')}
-              className="w-full bg-slate-900 rounded-2xl border border-slate-700 p-6 text-left hover:border-purple-500/50 transition-colors"
+              className="w-full card p-6 text-left hover:border-accent/50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center text-3xl">
+                <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center text-3xl">
                   ✨
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-lg">I'm new here</h3>
-                  <p className="text-slate-400 text-sm">Create a new player profile</p>
+                  <h3 className="text-primary font-bold text-lg">I'm new here</h3>
+                  <p className="text-secondary text-sm">Create a new player profile</p>
                 </div>
               </div>
             </button>
@@ -253,27 +253,27 @@ function OnboardingContent() {
         )}
 
         {mode === 'link' && (
-          <div className="bg-slate-900 rounded-2xl border border-slate-700 p-6">
+          <div className="card p-6">
             <button
               onClick={() => { setMode('choice'); setError(''); }}
-              className="text-slate-400 text-sm mb-4 hover:text-white"
+              className="text-secondary text-sm mb-4 hover:text-primary"
             >
               ← Back
             </button>
-            
-            <h2 className="text-xl font-bold text-white mb-2">Link Your Card</h2>
-            <p className="text-slate-400 text-sm mb-6">
+
+            <h2 className="text-xl font-bold text-primary mb-2">Link Your Card</h2>
+            <p className="text-secondary text-sm mb-6">
               Enter the HYP-ID from your NFC card or receipt.
             </p>
 
             <div className="mb-6">
-              <label className="block text-slate-400 text-sm mb-2">HYP-ID</label>
+              <label className="block text-secondary text-sm mb-2">HYP-ID</label>
               <input
                 type="text"
                 value={hypId}
                 onChange={(e) => setHypId(e.target.value.toUpperCase())}
                 placeholder="HYP-XXXXXX"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono text-lg tracking-wider"
+                className="w-full bg-input border border-border-token rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent font-mono text-lg tracking-wider"
                 maxLength={10}
               />
             </div>
@@ -281,49 +281,49 @@ function OnboardingContent() {
             <button
               onClick={handleLinkExisting}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-4 rounded-xl disabled:opacity-50 hover:from-cyan-400 hover:to-purple-400 transition-all"
+              className="w-full bg-accent text-accent-fg font-bold py-4 rounded-xl disabled:opacity-50 hover:opacity-90 transition-opacity"
             >
               {loading ? 'Linking...' : 'Link My Card'}
             </button>
 
-            <p className="text-slate-500 text-xs text-center mt-4">
+            <p className="text-tertiary text-xs text-center mt-4">
               Can't find your ID? Ask staff at the store for help.
             </p>
           </div>
         )}
 
         {mode === 'create' && (
-          <div className="bg-slate-900 rounded-2xl border border-slate-700 p-6">
+          <div className="card p-6">
             <button
               onClick={() => { setMode('choice'); setError(''); }}
-              className="text-slate-400 text-sm mb-4 hover:text-white"
+              className="text-secondary text-sm mb-4 hover:text-primary"
             >
               ← Back
             </button>
-            
-            <h2 className="text-xl font-bold text-white mb-2">Create Profile</h2>
-            <p className="text-slate-400 text-sm mb-6">
+
+            <h2 className="text-xl font-bold text-primary mb-2">Create Profile</h2>
+            <p className="text-secondary text-sm mb-6">
               Set up your player profile to start earning XP.
             </p>
 
             {/* Display Name */}
             <div className="mb-4">
-              <label className="block text-slate-400 text-sm mb-2">Display Name *</label>
+              <label className="block text-secondary text-sm mb-2">Display Name *</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your gamer tag"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-input border border-border-token rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
                 maxLength={30}
               />
             </div>
 
             {/* Referral Code */}
             <div className="mb-4">
-              <label className="block text-slate-400 text-sm mb-2">
+              <label className="block text-secondary text-sm mb-2">
                 Referral Code
-                <span className="text-slate-600 ml-2">(optional)</span>
+                <span className="text-tertiary ml-2">(optional)</span>
               </label>
               <div className="relative">
                 <input
@@ -331,76 +331,76 @@ function OnboardingContent() {
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
                   placeholder="REF-XXXXXXXX"
-                  className={`w-full bg-slate-800 border rounded-xl py-3 px-4 pr-10 text-white placeholder-slate-500 focus:outline-none font-mono tracking-wider ${
+                  className={`w-full bg-input border rounded-xl py-3 px-4 pr-10 text-primary placeholder-tertiary focus:outline-none font-mono tracking-wider ${
                     referralValid === true
-                      ? 'border-green-500 focus:border-green-500'
+                      ? 'border-success focus:border-success'
                       : referralValid === false
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-slate-700 focus:border-cyan-500'
+                      ? 'border-danger focus:border-danger'
+                      : 'border-border-token focus:border-accent'
                   }`}
                   maxLength={20}
                 />
                 {/* Validation indicator */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   {referralChecking ? (
-                    <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
                   ) : referralValid === true ? (
-                    <span className="text-green-500 text-lg">✓</span>
+                    <span className="text-success text-lg">✓</span>
                   ) : referralValid === false ? (
-                    <span className="text-red-500 text-lg">✗</span>
+                    <span className="text-danger text-lg">✗</span>
                   ) : null}
                 </div>
               </div>
               {referralValid === true && (
-                <p className="text-green-400 text-xs mt-1">✨ Valid code! You'll get +30 XP bonus</p>
+                <p className="text-success text-xs mt-1">✨ Valid code! You'll get +30 XP bonus</p>
               )}
               {referralValid === false && referralCode && (
-                <p className="text-red-400 text-xs mt-1">Invalid referral code</p>
+                <p className="text-danger text-xs mt-1">Invalid referral code</p>
               )}
               {!referralCode && (
-                <p className="text-slate-600 text-xs mt-1">Got a friend's code? Enter it for bonus XP!</p>
+                <p className="text-tertiary text-xs mt-1">Got a friend's code? Enter it for bonus XP!</p>
               )}
             </div>
 
             {/* Discord Username */}
             <div className="mb-4">
-              <label className="block text-slate-400 text-sm mb-2">
+              <label className="block text-secondary text-sm mb-2">
                 Discord Username
-                <span className="text-slate-600 ml-2">(recommended)</span>
+                <span className="text-tertiary ml-2">(recommended)</span>
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">@</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-tertiary">@</span>
                 <input
                   type="text"
                   value={discordUsername}
                   onChange={(e) => setDiscordUsername(e.target.value.replace('@', ''))}
                   placeholder="username"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 pl-9 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-input border border-border-token rounded-xl py-3 px-4 pl-9 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
                   maxLength={32}
                 />
               </div>
-              <p className="text-slate-600 text-xs mt-1">For tournament announcements & community</p>
+              <p className="text-tertiary text-xs mt-1">For tournament announcements & community</p>
             </div>
 
             {/* Phone Number */}
             <div className="mb-4">
-              <label className="block text-slate-400 text-sm mb-2">
+              <label className="block text-secondary text-sm mb-2">
                 Phone Number
-                <span className="text-slate-600 ml-2">(optional)</span>
+                <span className="text-tertiary ml-2">(optional)</span>
               </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="(555) 123-4567"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-input border border-border-token rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
               />
-              <p className="text-slate-600 text-xs mt-1">For event reminders (we won't spam you)</p>
+              <p className="text-tertiary text-xs mt-1">For event reminders (we won't spam you)</p>
             </div>
 
             {/* Primary Game */}
             <div className="mb-6">
-              <label className="block text-slate-400 text-sm mb-2">Primary Game (optional)</label>
+              <label className="block text-secondary text-sm mb-2">Primary Game (optional)</label>
               <div className="grid grid-cols-3 gap-2">
                 {GAME_OPTIONS.map((game) => (
                   <button
@@ -408,8 +408,8 @@ function OnboardingContent() {
                     onClick={() => setPrimaryGame(primaryGame === game.id ? '' : game.id)}
                     className={`p-3 rounded-xl border text-center transition-all ${
                       primaryGame === game.id
-                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400'
-                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+                        ? 'bg-accent/10 border-accent text-accent'
+                        : 'bg-input border-border-token text-secondary hover:border-border-strong'
                     }`}
                   >
                     <div className="text-xl mb-1">{game.icon}</div>
@@ -422,12 +422,12 @@ function OnboardingContent() {
             <button
               onClick={handleCreateNew}
               disabled={loading || !displayName.trim()}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 rounded-xl disabled:opacity-50 hover:from-purple-400 hover:to-pink-400 transition-all"
+              className="w-full bg-accent text-accent-fg font-bold py-4 rounded-xl disabled:opacity-50 hover:opacity-90 transition-opacity"
             >
               {loading ? 'Creating...' : 'Create Profile'}
             </button>
 
-            <p className="text-slate-500 text-xs text-center mt-4">
+            <p className="text-tertiary text-xs text-center mt-4">
               You can pick up an NFC card at your next store visit!
             </p>
           </div>
@@ -440,10 +440,10 @@ function OnboardingContent() {
 // Loading fallback for Suspense
 function OnboardingLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+    <div className="min-h-screen flex items-center justify-center bg-base">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-slate-400">Loading...</p>
+        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-secondary">Loading...</p>
       </div>
     </div>
   );

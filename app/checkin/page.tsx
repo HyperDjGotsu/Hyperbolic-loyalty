@@ -73,25 +73,25 @@ function CheckInContent() {
   const gameColor = event?.game?.color || '#3b82f6';
 
   if (state === 'loading') return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <div className="text-slate-500 text-lg">Loading...</div>
+    <div className="min-h-screen bg-base flex items-center justify-center">
+      <div className="text-secondary text-lg">Loading...</div>
     </div>
   );
 
   if (state === 'no-auth') {
     const returnUrl = typeof window !== 'undefined' ? window.location.href : '';
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6 p-8 text-center">
+      <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="text-6xl">🔐</div>
-        <h1 className="text-2xl font-bold text-white">Sign In to Check In</h1>
-        <p className="text-slate-400">You need a Hyperbolic account to earn XP</p>
+        <h1 className="text-2xl font-bold text-primary">Sign In to Check In</h1>
+        <p className="text-secondary">You need a Hyperbolic account to earn XP</p>
         <Link
           href={`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`}
-          className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-2xl text-lg transition-colors"
+          className="px-8 py-4 bg-accent text-accent-fg font-bold rounded-2xl text-lg transition-opacity hover:opacity-90"
         >
           Sign In
         </Link>
-        <Link href="/sign-up" className="text-slate-600 hover:text-slate-400 text-sm transition-colors">
+        <Link href="/sign-up" className="text-tertiary hover:text-secondary text-sm transition-colors">
           New player? Create account →
         </Link>
       </div>
@@ -99,30 +99,30 @@ function CheckInContent() {
   }
 
   if (state === 'no-event') return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6 p-8 text-center">
+    <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
       <div className="text-6xl">🎮</div>
-      <h1 className="text-2xl font-bold text-white">No Active Event</h1>
-      <p className="text-slate-400">This event has ended or hasn't started yet</p>
-      <Link href="/dashboard" className="text-cyan-400 hover:text-cyan-300 transition-colors">Go to Dashboard →</Link>
+      <h1 className="text-2xl font-bold text-primary">No Active Event</h1>
+      <p className="text-secondary">This event has ended or hasn't started yet</p>
+      <Link href="/dashboard" className="text-accent hover:opacity-80 transition-opacity">Go to Dashboard →</Link>
     </div>
   );
 
   if (state === 'success') return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6 p-8 text-center">
-      <div className="w-28 h-28 rounded-full bg-emerald-500/20 flex items-center justify-center">
+    <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
+      <div className="w-28 h-28 rounded-full bg-success/10 flex items-center justify-center">
         <span className="text-6xl">✅</span>
       </div>
-      <h1 className="text-3xl font-bold text-emerald-400">Checked In!</h1>
+      <h1 className="font-display text-3xl font-bold text-success">Checked In!</h1>
       {event && (
-        <p className="text-slate-400 text-lg">{event.game?.icon} {event.name}</p>
+        <p className="text-secondary text-lg">{event.game?.icon} {event.name}</p>
       )}
-      <div className="bg-cyan-500/20 border border-cyan-500/30 rounded-2xl px-10 py-6">
-        <span className="text-5xl font-black text-cyan-400">+{xpAwarded}</span>
-        <span className="text-cyan-400/60 text-2xl ml-2">XP</span>
+      <div className="card-elevated rounded-2xl px-10 py-6">
+        <span className="xp-number text-5xl">+{xpAwarded}</span>
+        <span className="text-secondary text-2xl ml-2">XP</span>
       </div>
       <Link
         href="/dashboard"
-        className="mt-2 px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition-colors"
+        className="mt-2 px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token"
       >
         View Dashboard →
       </Link>
@@ -130,24 +130,24 @@ function CheckInContent() {
   );
 
   if (state === 'already') return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6 p-8 text-center">
-      <div className="w-28 h-28 rounded-full bg-amber-500/20 flex items-center justify-center">
+    <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
+      <div className="w-28 h-28 rounded-full bg-warning/10 flex items-center justify-center">
         <span className="text-6xl">⏰</span>
       </div>
-      <h1 className="text-3xl font-bold text-amber-400">Already Checked In!</h1>
-      <p className="text-slate-400">You've already earned XP for this event</p>
-      <Link href="/dashboard" className="px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition-colors">
+      <h1 className="font-display text-3xl font-bold text-warning">Already Checked In!</h1>
+      <p className="text-secondary">You've already earned XP for this event</p>
+      <Link href="/dashboard" className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
         View Dashboard →
       </Link>
     </div>
   );
 
   if (state === 'error') return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6 p-8 text-center">
+    <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
       <div className="text-6xl">❌</div>
-      <h1 className="text-2xl font-bold text-red-400">Check-in Failed</h1>
-      <p className="text-slate-400">{errorMsg}</p>
-      <button onClick={() => setState('ready')} className="px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition-colors">
+      <h1 className="text-2xl font-bold text-danger">Check-in Failed</h1>
+      <p className="text-secondary">{errorMsg}</p>
+      <button onClick={() => setState('ready')} className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
         Try Again
       </button>
     </div>
@@ -155,11 +155,11 @@ function CheckInContent() {
 
   // Ready state
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6 p-8 text-center">
+    <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
       <div className="text-6xl">{event?.game?.icon || '🎮'}</div>
       <div>
-        <h1 className="text-3xl font-bold text-white">{event?.name}</h1>
-        <p className="text-slate-400 mt-1">{event?.game?.name}</p>
+        <h1 className="font-display text-3xl font-bold text-primary">{event?.name}</h1>
+        <p className="text-secondary mt-1">{event?.game?.name}</p>
       </div>
       <div
         className="px-6 py-3 rounded-xl text-lg font-bold"
@@ -167,7 +167,7 @@ function CheckInContent() {
       >
         +{event?.attendanceXp} XP for showing up
       </div>
-      <p className="text-slate-600 text-sm">{event?.attendanceCount} players checked in</p>
+      <p className="text-tertiary text-sm">{event?.attendanceCount} players checked in</p>
       <button
         onClick={handleCheckIn}
         disabled={state === 'checking'}
@@ -176,7 +176,7 @@ function CheckInContent() {
       >
         {state === 'checking' ? 'Checking in...' : 'Check In'}
       </button>
-      <Link href="/dashboard" className="text-slate-700 hover:text-slate-500 text-sm transition-colors">
+      <Link href="/dashboard" className="text-tertiary hover:text-secondary text-sm transition-colors">
         Back to dashboard
       </Link>
     </div>
@@ -186,8 +186,8 @@ function CheckInContent() {
 export default function CheckInPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-500">Loading...</div>
+      <div className="min-h-screen bg-base flex items-center justify-center">
+        <div className="text-secondary">Loading...</div>
       </div>
     }>
       <CheckInContent />
