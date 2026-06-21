@@ -31,21 +31,21 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
     // Simulate NFC scan delay
     setTimeout(async () => {
       setNfcStatus('found');
-      
+
       // Actually call the API
       try {
         const response = await fetch('/api/xp/checkin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
-          setCheckInResult({ 
-            success: true, 
-            xpEarned: data.xpAwarded || 20, 
-            message: 'Welcome back!' 
+          setCheckInResult({
+            success: true,
+            xpEarned: data.xpAwarded || 20,
+            message: 'Welcome back!'
           });
           setNfcStatus('success');
         } else if (data.alreadyCheckedIn) {
@@ -70,14 +70,14 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
     } else {
       onClose();
     }
-    
+
     setNfcStatus('idle');
     setCheckInResult(null);
   };
 
   return (
     <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 rounded-3xl w-full max-w-sm overflow-hidden border border-cyan-500/30">
+      <div className="bg-surface rounded-3xl w-full max-w-sm overflow-hidden border border-accent/30">
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-cyan-600 p-6 text-center">
           <div className="text-2xl font-bold text-white">Check In</div>
@@ -88,7 +88,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
         <div className="p-8 text-center">
           {nfcStatus === 'idle' && (
             <>
-              <div className="w-32 h-32 mx-auto mb-6 bg-slate-800 rounded-full flex items-center justify-center border-2 border-cyan-500/30 border-dashed">
+              <div className="w-32 h-32 mx-auto mb-6 bg-elevated rounded-full flex items-center justify-center border-2 border-accent/30 border-dashed">
                 <span className="text-5xl">📍</span>
               </div>
               <GlowButton color="cyan" onClick={performCheckIn} className="w-full py-4 text-lg">
@@ -99,19 +99,19 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
 
           {nfcStatus === 'scanning' && (
             <>
-              <div className="w-32 h-32 mx-auto mb-6 bg-cyan-500/20 rounded-full flex items-center justify-center animate-pulse">
+              <div className="w-32 h-32 mx-auto mb-6 bg-accent/20 rounded-full flex items-center justify-center animate-pulse">
                 <span className="text-5xl">📡</span>
               </div>
-              <p className="text-cyan-400 font-semibold">Scanning...</p>
+              <p className="text-accent font-semibold">Scanning...</p>
             </>
           )}
 
           {nfcStatus === 'found' && (
             <>
-              <div className="w-32 h-32 mx-auto mb-6 bg-cyan-500/30 rounded-full flex items-center justify-center">
+              <div className="w-32 h-32 mx-auto mb-6 bg-accent/30 rounded-full flex items-center justify-center">
                 <span className="text-5xl">✨</span>
               </div>
-              <p className="text-cyan-400 font-semibold">Card Found!</p>
+              <p className="text-accent font-semibold">Card Found!</p>
             </>
           )}
 
@@ -121,7 +121,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
                 <span className="text-5xl">⏰</span>
               </div>
               <h3 className="text-2xl font-bold text-yellow-400 mb-2">Already Checked In!</h3>
-              <p className="text-slate-400">Come back tomorrow</p>
+              <p className="text-secondary">Come back tomorrow</p>
             </>
           )}
 
@@ -131,7 +131,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
                 <span className="text-5xl">❌</span>
               </div>
               <h3 className="text-2xl font-bold text-red-400 mb-2">Check-in Failed</h3>
-              <p className="text-slate-400">{checkInResult?.message || 'Please try again'}</p>
+              <p className="text-secondary">{checkInResult?.message || 'Please try again'}</p>
             </>
           )}
 
@@ -141,17 +141,17 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
                 <span className="text-5xl">✅</span>
               </div>
               <h3 className="text-2xl font-bold text-emerald-400 mb-2">{checkInResult.message}</h3>
-              <div className="bg-cyan-500/20 rounded-xl p-4 inline-block border border-cyan-500/30">
-                <span className="text-cyan-400 font-bold text-3xl">+{checkInResult.xpEarned}</span>
-                <span className="text-cyan-400/70 ml-2">XP</span>
+              <div className="bg-accent/20 rounded-xl p-4 inline-block border border-accent/30">
+                <span className="text-accent font-bold text-3xl">+{checkInResult.xpEarned}</span>
+                <span className="text-accent/70 ml-2">XP</span>
               </div>
             </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800">
-          <button onClick={handleClose} className="w-full py-3 text-slate-500 font-medium">
+        <div className="p-4 border-t border-token">
+          <button onClick={handleClose} className="w-full py-3 text-tertiary font-medium">
             Close
           </button>
         </div>

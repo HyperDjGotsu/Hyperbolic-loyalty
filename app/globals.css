@@ -58,15 +58,15 @@
 
 /* ── Light / Paper ──────────────────────────────────────── */
 [data-theme="light"][data-tone="paper"] {
-  --bg-base:        #faf8f4;
-  --bg-surface:     #f2efe8;
-  --bg-elevated:    #ffffff;
-  --bg-input:       #f5f2ec;
+  --bg-base:        #e8e3d8;
+  --bg-surface:     #ddd8cc;
+  --bg-elevated:    #ede9e0;
+  --bg-input:       #e4dfd4;
   --text-primary:   #1a1810;
   --text-secondary: #6b6258;
   --text-tertiary:  #9a9288;
-  --border:         rgba(26,24,16,0.08);
-  --border-strong:  rgba(26,24,16,0.14);
+  --border:         rgba(26,24,16,0.12);
+  --border-strong:  rgba(26,24,16,0.20);
   --accent:         #7c3aed;
   --accent-fg:      #ffffff;
 }

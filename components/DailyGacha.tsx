@@ -731,8 +731,8 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
       {/* Already spun */}
       {phase === 'already_spun' && (
         <div className="text-center">
-          <p className="font-orbitron text-[10px] tracking-[0.3em] uppercase text-white/25 mb-3">Next spin in</p>
-          <p className="font-orbitron font-black text-4xl text-[#00c8ea] tabular-nums tracking-tight">{countdown}</p>
+          <p className="font-display text-[10px] tracking-[0.3em] uppercase text-white/25 mb-3">Next spin in</p>
+          <p className="font-display font-black text-4xl text-accent tabular-nums tracking-tight">{countdown}</p>
           <button onClick={onClose}
             className="mt-10 text-white/20 text-sm hover:text-white/45 transition-colors">
             Close
@@ -745,7 +745,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
         <div className="relative w-full max-w-xs mx-4 flex flex-col items-center">
 
           <div className="mb-6 h-8 flex items-center justify-center">
-            <p className="font-orbitron uppercase transition-all duration-300"
+            <p className="font-display uppercase transition-all duration-300"
               style={{
                 fontSize:      phase === 'reveal' ? 18 : 10,
                 fontWeight:    phase === 'reveal' ? 900 : 400,
@@ -761,7 +761,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
           </div>
 
           {phase === 'awakened' && (
-            <div className="absolute font-orbitron text-[10px] tracking-[0.2em] text-[#00c8ea]/55"
+            <div className="absolute font-display text-[10px] tracking-[0.2em] text-accent/55"
               style={{ top: 28, animation: 'swipeArrow 1.4s ease-in-out infinite' }}>
               ← swipe →
             </div>
@@ -853,7 +853,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
             >
               <button
                 onClick={() => { onComplete(); onClose(); }}
-                className="w-full font-orbitron font-bold uppercase tracking-wider py-4 rounded-xl active:scale-[0.98] transition-all"
+                className="w-full font-display font-bold uppercase tracking-wider py-4 rounded-xl active:scale-[0.98] transition-all"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
                   color: t.color,
@@ -910,7 +910,7 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
               .catch(() => window.location.reload());
           }}
           className="absolute bottom-3 right-3 opacity-30 hover:opacity-70 transition-opacity"
-          style={{ fontSize: 10, fontFamily: 'monospace', color: '#00c8ea', letterSpacing: '0.05em' }}
+          style={{ fontSize: 10, fontFamily: 'monospace', color: 'var(--accent)', letterSpacing: '0.05em' }}
         >
           reset spin [dev]
         </button>

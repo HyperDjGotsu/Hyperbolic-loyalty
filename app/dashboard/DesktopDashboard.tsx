@@ -1032,8 +1032,8 @@ export default function DesktopDashboard() {
                     
                     {/* Title - Top Center */}
                     <div className="absolute top-4 left-1/2 -translate-x-1/2">
-                      <div 
-                        className="text-3xl font-bold"
+                      <div
+                        className="text-3xl font-bold text-white"
                         style={{
                           textShadow: '-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 0 10px rgba(0,0,0,0.8)'
                         }}
@@ -1041,11 +1041,11 @@ export default function DesktopDashboard() {
                         {liveBanner.title}
                       </div>
                     </div>
-                    
+
                     {/* Subtitle - Center of banner */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <div 
-                        className="text-lg font-medium"
+                      <div
+                        className="text-lg font-medium text-white"
                         style={{
                           textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 8px rgba(0,0,0,0.8)'
                         }}
@@ -1062,7 +1062,7 @@ export default function DesktopDashboard() {
                             href={liveBanner.twitchUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#9146ff] text-primary flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
+                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#9146ff] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
                           >
                             📺 Twitch
                           </a>
@@ -1072,7 +1072,7 @@ export default function DesktopDashboard() {
                             href={liveBanner.youtubeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#ff0000] text-primary flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
+                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#ff0000] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
                           >
                             ▶️ YouTube
                           </a>
