@@ -970,7 +970,7 @@ export default function DesktopDashboard() {
                       📍
                     </div>
                     <div className="relative z-10 text-left">
-                      <div className="text-base font-bold">{hasCheckedInToday ? 'Checked In!' : 'Check In'}</div>
+                      <div className="text-base font-bold text-primary">{hasCheckedInToday ? 'Checked In!' : 'Check In'}</div>
                       <div className="text-xs text-secondary">Earn daily XP</div>
                     </div>
                   </button>
@@ -989,7 +989,7 @@ export default function DesktopDashboard() {
                       🎰
                     </div>
                     <div className="relative z-10 text-left">
-                      <div className="text-base font-bold">{hasSpunToday ? 'Claimed!' : 'Daily Spin'}</div>
+                      <div className="text-base font-bold text-primary">{hasSpunToday ? 'Claimed!' : 'Daily Spin'}</div>
                       <div className="text-xs text-secondary">Try your luck!</div>
                     </div>
                   </button>
