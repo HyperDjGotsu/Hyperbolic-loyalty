@@ -294,7 +294,7 @@ export default function MobileDashboard() {
       <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-bounce">🎮</div>
-          <div className="text-slate-400">Loading your profile...</div>
+          <div className="text-secondary">Loading your profile...</div>
         </div>
       </div>
     );
@@ -329,13 +329,13 @@ export default function MobileDashboard() {
             <div className="flex items-start gap-3">
               <div className="relative">
                 <Avatar avatar={avatarForComponent} size="md" />
-                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full border-2 border-slate-800">
+                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-primary text-xs font-bold px-2 py-0.5 rounded-full border-2 border-token">
                   {level}
                 </div>
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-white text-lg font-bold">{playerData?.displayName || 'Player'}</h1>
+                  <h1 className="text-primary text-lg font-bold">{playerData?.displayName || 'Player'}</h1>
                   <span className="text-secondary text-xs font-mono">{playerData?.hyp_id}</span>
                 </div>
                 <div className="text-secondary text-sm">Level {level} Player</div>
@@ -425,10 +425,10 @@ export default function MobileDashboard() {
       {/* My Games */}
       <div className="mx-4 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-white flex items-center gap-2">
+          <h2 className="font-bold text-primary flex items-center gap-2">
             <span className="text-xl">🎮</span> My Games
             {favoriteGames.length > 0 && (
-              <span className="text-xs text-slate-500 font-normal">(Favorites)</span>
+              <span className="text-xs text-secondary font-normal">(Favorites)</span>
             )}
           </h2>
           {totalGamesCount > 3 && (
@@ -453,7 +453,7 @@ export default function MobileDashboard() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-slate-500">
+          <div className="text-center py-8 text-secondary">
             <div className="text-3xl mb-2">🎮</div>
             <p>No game XP yet - attend events to start earning!</p>
           </div>
@@ -470,7 +470,7 @@ export default function MobileDashboard() {
 
       {/* Recent Activity */}
       <div className="mx-4 mt-6 mb-6">
-        <h2 className="font-bold text-white flex items-center gap-2 mb-3">
+        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
           <span className="text-xl">📋</span> Recent Activity
         </h2>
         {recentActivity.length > 0 ? (
@@ -484,8 +484,8 @@ export default function MobileDashboard() {
                   {a.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-white text-sm truncate">{a.text}</div>
-                  <div className="text-slate-500 text-xs">{a.time}</div>
+                  <div className="text-primary text-sm truncate">{a.text}</div>
+                  <div className="text-secondary text-xs">{a.time}</div>
                 </div>
                 <div className={`font-bold text-sm ${a.xp >= 0 ? 'text-xp' : 'text-danger'}`}>
                   {a.xp >= 0 ? '+' : ''}{a.xp}
@@ -494,7 +494,7 @@ export default function MobileDashboard() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-slate-500">
+          <div className="text-center py-8 text-secondary">
             <div className="text-3xl mb-2">📋</div>
             <p>No activity yet - check in to events!</p>
           </div>

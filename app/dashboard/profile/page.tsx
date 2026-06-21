@@ -79,7 +79,7 @@ const ALL_GAMES: Game[] = [
 
 const frameStyles: Record<string, string> = {
   none: 'border-transparent',
-  silver: 'border-slate-400',
+  silver: 'border-border-strong',
   gold: 'border-yellow-500',
   diamond: 'border-cyan-400',
   fire: 'border-orange-500',
@@ -333,12 +333,12 @@ export default function ProfilePage() {
           )}
         </div>
         {config.badge && (
-          <div className="absolute -bottom-1 -right-1 text-lg bg-slate-800 rounded-full w-7 h-7 flex items-center justify-center border-2 border-slate-700">
+          <div className="absolute -bottom-1 -right-1 text-lg bg-elevated rounded-full w-7 h-7 flex items-center justify-center border-2 border-token">
             {config.badge}
           </div>
         )}
         {onClick && (
-          <div className="absolute bottom-0 right-0 bg-cyan-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+          <div className="absolute bottom-0 right-0 bg-accent text-primary text-xs px-2 py-1 rounded-full font-bold">
             ✏️
           </div>
         )}
@@ -374,8 +374,8 @@ export default function ProfilePage() {
         onClick={handleSelect}
         className={`p-3 rounded-xl border-2 transition-all ${
           isSelected 
-            ? 'border-cyan-500 bg-cyan-500/20' 
-            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+            ? 'border-accent bg-accent/10' 
+            : 'border-token bg-elevated/50 hover:border-token'
         }`}
       >
         <div className="text-2xl">
@@ -388,11 +388,11 @@ export default function ProfilePage() {
             />
           )}
           {item.category === 'frame' && (
-            <div className={`w-8 h-8 rounded-full border-4 ${frameStyles[item.assetData?.style] || ''} bg-slate-700 mx-auto`} />
+            <div className={`w-8 h-8 rounded-full border-4 ${frameStyles[item.assetData?.style] || ''} bg-elevated mx-auto`} />
           )}
         </div>
-        <div className="text-white text-xs mt-1 text-center truncate">{item.name}</div>
-        {isSelected && <div className="text-cyan-400 text-xs">✓</div>}
+        <div className="text-primary text-xs mt-1 text-center truncate">{item.name}</div>
+        {isSelected && <div className="text-accent text-xs">✓</div>}
       </button>
     );
   };
@@ -400,23 +400,23 @@ export default function ProfilePage() {
   // Avatar Editor Modal
   const AvatarEditorModal = () => (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-4 border-b border-token flex items-center justify-between">
         <button 
           type="button" 
           onClick={() => {
             setTempAvatar(playerData?.avatarConfig || defaultAvatarConfig);
             setEditingAvatar(false);
           }} 
-          className="text-slate-400"
+          className="text-secondary"
         >
           Cancel
         </button>
-        <h2 className="text-white font-bold">Edit Avatar</h2>
+        <h2 className="text-primary font-bold">Edit Avatar</h2>
         <button 
           type="button" 
           onClick={saveAvatar} 
           disabled={saving}
-          className="text-cyan-400 font-bold disabled:opacity-50"
+          className="text-accent font-bold disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save'}
         </button>
@@ -428,7 +428,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-800">
+      <div className="flex border-b border-token">
         {[
           { id: 'photo', label: '📷' },
           { id: 'base', label: '😎' },
@@ -441,7 +441,7 @@ export default function ProfilePage() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 py-3 text-xl ${
-              activeTab === tab.id ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-500'
+              activeTab === tab.id ? 'text-accent border-b-2 border-cyan-400' : 'text-secondary'
             }`}
           >
             {tab.label}
@@ -463,11 +463,11 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full p-6 border-2 border-dashed border-slate-600 rounded-xl text-center hover:border-cyan-500 transition-colors"
+              className="w-full p-6 border-2 border-dashed border-token rounded-xl text-center hover:border-accent transition-colors"
             >
               <div className="text-4xl mb-2">📷</div>
-              <div className="text-white font-medium">Upload Photo</div>
-              <div className="text-slate-500 text-sm">Tap to select an image</div>
+              <div className="text-primary font-medium">Upload Photo</div>
+              <div className="text-secondary text-sm">Tap to select an image</div>
             </button>
             {tempAvatar.photo_url && (
               <button
@@ -518,26 +518,26 @@ export default function ProfilePage() {
 
   if (loading || !isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-base">
+        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!playerData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-base p-4">
         <div className="text-center">
           <div className="text-4xl mb-4">😕</div>
-          <h2 className="text-white text-xl font-bold mb-2">Profile Not Found</h2>
-          <p className="text-slate-400">Please make sure you're logged in.</p>
+          <h2 className="text-primary text-xl font-bold mb-2">Profile Not Found</h2>
+          <p className="text-secondary">Please make sure you're logged in.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-20">
+    <div className="min-h-screen bg-base pb-20">
       {/* Header */}
       <div className="bg-gradient-to-b from-slate-900 to-slate-950 pt-8 pb-6 px-4">
         <div className="flex flex-col items-center">
@@ -549,8 +549,8 @@ export default function ProfilePage() {
               setEditingAvatar(true);
             }} 
           />
-          <h1 className="text-white text-2xl font-bold mt-4">{playerData.displayName}</h1>
-          <div className="text-slate-500 font-mono text-sm">{playerData.id}</div>
+          <h1 className="text-primary text-2xl font-bold mt-4">{playerData.displayName}</h1>
+          <div className="text-secondary font-mono text-sm">{playerData.id}</div>
           
           {/* Status Badge */}
           <button
@@ -561,7 +561,7 @@ export default function ProfilePage() {
             {playerData.status ? (
               <StatusBadge status={playerData.status} />
             ) : (
-              <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-500 text-sm flex items-center gap-2">
+              <div className="px-4 py-2 rounded-full bg-elevated/50 border border-token text-secondary text-sm flex items-center gap-2">
                 <span>+ Set Status</span>
               </div>
             )}
@@ -572,43 +572,43 @@ export default function ProfilePage() {
       {/* Stats */}
       <div className="px-4 -mt-2">
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 text-center">
+          <div className="bg-elevated/50 rounded-xl p-3 border border-token text-center">
             <div className="text-2xl mb-1">🏆</div>
-            <div className="text-white font-bold text-lg">{playerData.level}</div>
-            <div className="text-slate-500 text-xs">Level</div>
+            <div className="text-primary font-bold text-lg">{playerData.level}</div>
+            <div className="text-secondary text-xs">Level</div>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 text-center">
+          <div className="bg-elevated/50 rounded-xl p-3 border border-token text-center">
             <div className="text-2xl mb-1">⚡</div>
-            <div className="text-cyan-400 font-bold">{playerData.totalXp.toLocaleString()}</div>
-            <div className="text-slate-500 text-xs">Total XP</div>
+            <div className="text-accent font-bold">{playerData.totalXp.toLocaleString()}</div>
+            <div className="text-secondary text-xs">Total XP</div>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 text-center">
+          <div className="bg-elevated/50 rounded-xl p-3 border border-token text-center">
             <div className="text-2xl mb-1">💎</div>
             <div className="text-purple-400 font-bold">{playerData.gems.toLocaleString()}</div>
-            <div className="text-slate-500 text-xs">Gems</div>
+            <div className="text-secondary text-xs">Gems</div>
           </div>
         </div>
       </div>
 
       {/* Referral Section */}
       <div className="px-4 mt-6">
-        <h2 className="font-bold text-white flex items-center gap-2 mb-3">
+        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
           <span className="text-xl">🎁</span> Invite Friends
         </h2>
         
         {referralLoading ? (
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
             <div className="flex items-center justify-center py-4">
-              <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
             </div>
           </div>
         ) : referralStats ? (
           <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl p-4 border border-purple-500/20">
             {/* Referral Code */}
             <div className="mb-4">
-              <div className="text-slate-400 text-xs mb-1">Your Referral Code</div>
+              <div className="text-secondary text-xs mb-1">Your Referral Code</div>
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-slate-800 rounded-lg px-4 py-3 font-mono text-lg text-white tracking-wider">
+                <div className="flex-1 bg-elevated rounded-lg px-4 py-3 font-mono text-lg text-primary tracking-wider">
                   {referralStats.referralCode}
                 </div>
                 <button
@@ -616,8 +616,8 @@ export default function ProfilePage() {
                   onClick={copyReferralCode}
                   className={`px-4 py-3 rounded-lg font-medium transition-all ${
                     copiedCode
-                      ? 'bg-green-500 text-white'
-                      : 'bg-purple-500 hover:bg-purple-400 text-white'
+                      ? 'bg-green-500 text-primary'
+                      : 'bg-purple-500 hover:bg-purple-400 text-primary'
                   }`}
                 >
                   {copiedCode ? '✓' : '📋'}
@@ -627,9 +627,9 @@ export default function ProfilePage() {
 
             {/* Share Link */}
             <div className="mb-4">
-              <div className="text-slate-400 text-xs mb-1">Share Link</div>
+              <div className="text-secondary text-xs mb-1">Share Link</div>
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-slate-800 rounded-lg px-4 py-3 text-sm text-slate-300 truncate">
+                <div className="flex-1 bg-elevated rounded-lg px-4 py-3 text-sm text-primary truncate">
                   {referralStats.shareUrl}
                 </div>
                 <button
@@ -637,8 +637,8 @@ export default function ProfilePage() {
                   onClick={copyShareLink}
                   className={`px-4 py-3 rounded-lg font-medium transition-all ${
                     copiedLink
-                      ? 'bg-green-500 text-white'
-                      : 'bg-cyan-500 hover:bg-cyan-400 text-white'
+                      ? 'bg-green-500 text-primary'
+                      : 'bg-accent hover:opacity-90 text-primary'
                   }`}
                 >
                   {copiedLink ? '✓' : '🔗'}
@@ -648,29 +648,29 @@ export default function ProfilePage() {
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-                <div className="text-white font-bold text-xl">{referralStats.stats.totalReferred}</div>
-                <div className="text-slate-500 text-xs">Invited</div>
+              <div className="bg-elevated/50 rounded-lg p-3 text-center">
+                <div className="text-primary font-bold text-xl">{referralStats.stats.totalReferred}</div>
+                <div className="text-secondary text-xs">Invited</div>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+              <div className="bg-elevated/50 rounded-lg p-3 text-center">
                 <div className="text-green-400 font-bold text-xl">{referralStats.stats.attendedFirstEvent}</div>
-                <div className="text-slate-500 text-xs">Attended</div>
+                <div className="text-secondary text-xs">Attended</div>
               </div>
-              <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-                <div className="text-cyan-400 font-bold text-xl">+{referralStats.stats.totalXpEarned}</div>
-                <div className="text-slate-500 text-xs">XP Earned</div>
+              <div className="bg-elevated/50 rounded-lg p-3 text-center">
+                <div className="text-accent font-bold text-xl">+{referralStats.stats.totalXpEarned}</div>
+                <div className="text-secondary text-xs">XP Earned</div>
               </div>
             </div>
 
             {/* How it works */}
-            <div className="bg-slate-800/30 rounded-lg p-3">
-              <div className="text-slate-400 text-xs mb-2 font-medium">How it works</div>
+            <div className="bg-elevated/30 rounded-lg p-3">
+              <div className="text-secondary text-xs mb-2 font-medium">How it works</div>
               <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2 text-primary">
                   <span className="text-green-400">✓</span>
-                  <span>Friend signs up with your code → They get <span className="text-cyan-400">+30 XP</span></span>
+                  <span>Friend signs up with your code → They get <span className="text-accent">+30 XP</span></span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2 text-primary">
                   <span className="text-green-400">✓</span>
                   <span>They attend their first event → You get <span className="text-purple-400">+50 XP</span></span>
                 </div>
@@ -683,7 +683,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setShowReferralDetails(!showReferralDetails)}
-                  className="w-full flex items-center justify-between text-slate-400 text-sm"
+                  className="w-full flex items-center justify-between text-secondary text-sm"
                 >
                   <span>Your Referrals ({referralStats.referrals.length})</span>
                   <span>{showReferralDetails ? '▲' : '▼'}</span>
@@ -694,10 +694,10 @@ export default function ProfilePage() {
                     {referralStats.referrals.map(referral => (
                       <div
                         key={referral.id}
-                        className="flex items-center justify-between bg-slate-800/50 rounded-lg px-3 py-2"
+                        className="flex items-center justify-between bg-elevated/50 rounded-lg px-3 py-2"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-white text-sm">{referral.name}</span>
+                          <span className="text-primary text-sm">{referral.name}</span>
                         </div>
                         <div className={`text-xs px-2 py-1 rounded-full ${
                           referral.hasAttended
@@ -714,38 +714,38 @@ export default function ProfilePage() {
             )}
           </div>
         ) : (
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
-            <p className="text-slate-400">Unable to load referral info</p>
+          <div className="bg-elevated/50 rounded-xl p-4 border border-token text-center">
+            <p className="text-secondary">Unable to load referral info</p>
           </div>
         )}
       </div>
 
       {/* Inventory Summary */}
       <div className="px-4 mt-6">
-        <h2 className="font-bold text-white flex items-center gap-2 mb-3">
+        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
           <span className="text-xl">🎒</span> Inventory
         </h2>
-        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+        <div className="bg-elevated/50 rounded-xl p-4 border border-token">
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-xl mb-1">😎</div>
-              <div className="text-white font-bold">{(ownedItems.base || []).length}</div>
-              <div className="text-slate-500 text-xs">Bases</div>
+              <div className="text-primary font-bold">{(ownedItems.base || []).length}</div>
+              <div className="text-secondary text-xs">Bases</div>
             </div>
             <div>
               <div className="text-xl mb-1">🎨</div>
-              <div className="text-white font-bold">{(ownedItems.background || []).length}</div>
-              <div className="text-slate-500 text-xs">BGs</div>
+              <div className="text-primary font-bold">{(ownedItems.background || []).length}</div>
+              <div className="text-secondary text-xs">BGs</div>
             </div>
             <div>
               <div className="text-xl mb-1">✨</div>
-              <div className="text-white font-bold">{(ownedItems.frame || []).length}</div>
-              <div className="text-slate-500 text-xs">Frames</div>
+              <div className="text-primary font-bold">{(ownedItems.frame || []).length}</div>
+              <div className="text-secondary text-xs">Frames</div>
             </div>
             <div>
               <div className="text-xl mb-1">🏷️</div>
-              <div className="text-white font-bold">{(ownedItems.badge || []).length}</div>
-              <div className="text-slate-500 text-xs">Badges</div>
+              <div className="text-primary font-bold">{(ownedItems.badge || []).length}</div>
+              <div className="text-secondary text-xs">Badges</div>
             </div>
           </div>
         </div>
@@ -754,20 +754,20 @@ export default function ProfilePage() {
       {/* Favorite Games */}
       <div className="px-4 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-white flex items-center gap-2">
+          <h2 className="font-bold text-primary flex items-center gap-2">
             <span className="text-xl">⭐</span> Favorite Games
           </h2>
           <button
             type="button"
             onClick={startEditingFavorites}
-            className="text-cyan-400 text-sm font-medium"
+            className="text-accent text-sm font-medium"
           >
             Edit
           </button>
         </div>
         
         {favoriteGames.length > 0 ? (
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
             <div className="flex flex-wrap gap-2">
               {favoriteGames.map(gameId => {
                 const game = ALL_GAMES.find(g => g.id === gameId);
@@ -775,25 +775,25 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={gameId}
-                    className="flex items-center gap-2 px-3 py-2 bg-slate-700/50 rounded-lg border border-slate-600/50"
+                    className="flex items-center gap-2 px-3 py-2 bg-elevated/50 rounded-lg border border-token/50"
                   >
                     <span>{game.icon}</span>
-                    <span className="text-white text-sm">{game.name}</span>
+                    <span className="text-primary text-sm">{game.name}</span>
                   </div>
                 );
               })}
             </div>
-            <p className="text-slate-500 text-xs mt-3">
+            <p className="text-secondary text-xs mt-3">
               These games appear on your dashboard and leaderboard tabs
             </p>
           </div>
         ) : (
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
-            <p className="text-slate-400">No favorite games selected</p>
+          <div className="bg-elevated/50 rounded-xl p-4 border border-token text-center">
+            <p className="text-secondary">No favorite games selected</p>
             <button
               type="button"
               onClick={startEditingFavorites}
-              className="mt-2 text-cyan-400 text-sm font-medium"
+              className="mt-2 text-accent text-sm font-medium"
             >
               + Add favorites
             </button>
@@ -803,7 +803,7 @@ export default function ProfilePage() {
 
       {/* Settings placeholder */}
       <div className="px-4 mt-6 mb-6">
-        <h2 className="font-bold text-white flex items-center gap-2 mb-3">
+        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
           <span className="text-xl">⚙️</span> Settings
         </h2>
         <div className="space-y-2">
@@ -814,15 +814,15 @@ export default function ProfilePage() {
           ].map((setting, i) => (
             <div 
               key={i} 
-              className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50"
+              className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-token"
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">{setting.icon}</span>
-                <span className="text-white">{setting.label}</span>
+                <span className="text-primary">{setting.label}</span>
               </div>
-              <div className="text-slate-400 flex items-center gap-2">
+              <div className="text-secondary flex items-center gap-2">
                 {setting.value}
-                <span className="text-slate-600">›</span>
+                <span className="text-tertiary">›</span>
               </div>
             </div>
           ))}
@@ -843,28 +843,28 @@ export default function ProfilePage() {
       {/* Favorite Games Editor Modal */}
       {editingFavorites && (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-4 border-b border-token flex items-center justify-between">
             <button 
               type="button" 
               onClick={() => setEditingFavorites(false)} 
-              className="text-slate-400"
+              className="text-secondary"
             >
               Cancel
             </button>
-            <h2 className="text-white font-bold">Favorite Games</h2>
+            <h2 className="text-primary font-bold">Favorite Games</h2>
             <button 
               type="button" 
               onClick={saveFavoriteGames} 
               disabled={savingFavorites}
-              className="text-cyan-400 font-bold disabled:opacity-50"
+              className="text-accent font-bold disabled:opacity-50"
             >
               {savingFavorites ? 'Saving...' : 'Save'}
             </button>
           </div>
 
-          <div className="p-4 border-b border-slate-800 bg-slate-900/50">
+          <div className="p-4 border-b border-token bg-surface/50">
             <div className="flex items-center justify-between">
-              <span className="text-slate-400 text-sm">Selected: {tempFavorites.length}/8</span>
+              <span className="text-secondary text-sm">Selected: {tempFavorites.length}/8</span>
               {tempFavorites.length >= 8 && (
                 <span className="text-orange-400 text-xs">Maximum reached</span>
               )}
@@ -879,7 +879,7 @@ export default function ProfilePage() {
                       key={gameId}
                       type="button"
                       onClick={() => toggleFavorite(gameId)}
-                      className="flex items-center gap-1 px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm border border-cyan-500/30"
+                      className="flex items-center gap-1 px-2 py-1 bg-accent/10 text-accent rounded-lg text-sm border border-accent/30"
                     >
                       <span>{game.icon}</span>
                       <span>{game.name}</span>
@@ -892,7 +892,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex-1 overflow-auto p-4">
-            <p className="text-slate-400 text-sm mb-4">
+            <p className="text-secondary text-sm mb-4">
               Select up to 8 games. These will appear on your dashboard and in leaderboard tabs.
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -907,16 +907,16 @@ export default function ProfilePage() {
                     disabled={isDisabled}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                       isSelected
-                        ? 'bg-cyan-500/20 border-cyan-500 text-white'
+                        ? 'bg-accent/10 border-accent text-primary'
                         : isDisabled
-                          ? 'bg-slate-800/30 border-slate-700/30 text-slate-600 cursor-not-allowed'
-                          : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:border-slate-600'
+                          ? 'bg-elevated/30 border-token/30 text-tertiary cursor-not-allowed'
+                          : 'bg-elevated/50 border-token text-primary hover:border-token'
                     }`}
                   >
                     <span className="text-2xl">{game.icon}</span>
                     <span className="font-medium">{game.name}</span>
                     {isSelected && (
-                      <span className="ml-auto text-cyan-400">✓</span>
+                      <span className="ml-auto text-accent">✓</span>
                     )}
                   </button>
                 );

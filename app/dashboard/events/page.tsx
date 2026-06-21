@@ -19,12 +19,12 @@ function EventsLoadingSkeleton() {
   return (
     <div className="flex-1 overflow-auto p-4">
       <div className="animate-pulse">
-        <div className="h-8 bg-slate-800 rounded w-48 mb-4"></div>
-        <div className="h-10 bg-slate-800 rounded mb-4"></div>
+        <div className="h-8 bg-elevated rounded w-48 mb-4"></div>
+        <div className="h-10 bg-elevated rounded mb-4"></div>
         <div className="space-y-4">
-          <div className="h-24 bg-slate-800 rounded-xl"></div>
-          <div className="h-24 bg-slate-800 rounded-xl"></div>
-          <div className="h-24 bg-slate-800 rounded-xl"></div>
+          <div className="h-24 bg-elevated rounded-xl"></div>
+          <div className="h-24 bg-elevated rounded-xl"></div>
+          <div className="h-24 bg-elevated rounded-xl"></div>
         </div>
       </div>
     </div>

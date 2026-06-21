@@ -602,8 +602,8 @@ export default function CommunityPage() {
     return (
       <div
         onClick={() => !isAnonymous && setSelectedMember(member)}
-        className={`bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700/50 ${
-          !isAnonymous ? 'cursor-pointer hover:border-cyan-500/50' : ''
+        className={`bg-elevated/50 rounded-xl p-3 flex items-center gap-3 border border-token ${
+          !isAnonymous ? 'cursor-pointer hover:border-accent/50' : ''
         }`}
       >
         <Avatar
@@ -620,29 +620,29 @@ export default function CommunityPage() {
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white truncate">{displayName}</span>
+            <span className="font-bold text-primary truncate">{displayName}</span>
             {'rank' in member && member.rank <= 5 && (
               <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">WANTED</span>
             )}
           </div>
           {memberStatus && (
-            <div className="text-slate-400 text-xs truncate">{memberStatus}</div>
+            <div className="text-secondary text-xs truncate">{memberStatus}</div>
           )}
           <div className="flex items-center gap-2 mt-0.5">
             {'level' in member && member.level && (
-              <span className="text-xs text-slate-500">Lv.{member.level}</span>
+              <span className="text-xs text-secondary">Lv.{member.level}</span>
             )}
             {'totalXp' in member && member.totalXp !== null && (
-              <span className="text-xs text-cyan-400">{member.totalXp?.toLocaleString()} XP</span>
+              <span className="text-xs text-accent">{member.totalXp?.toLocaleString()} XP</span>
             )}
           </div>
         </div>
         {'rank' in member && (
           <div className={`text-2xl font-bold ${
             member.rank === 1 ? 'text-yellow-400' :
-            member.rank === 2 ? 'text-slate-300' :
+            member.rank === 2 ? 'text-primary' :
             member.rank === 3 ? 'text-amber-600' :
-            'text-slate-500'
+            'text-secondary'
           }`}>
             #{member.rank}
           </div>
@@ -654,11 +654,11 @@ export default function CommunityPage() {
   // Privacy Settings Modal
   const PrivacySettingsModal = () => (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-        <button onClick={() => setShowPrivacySettings(false)} className="text-slate-400">
+      <div className="p-4 border-b border-token flex items-center justify-between">
+        <button onClick={() => setShowPrivacySettings(false)} className="text-secondary">
           ← Back
         </button>
-        <h2 className="text-white font-bold font-display">Privacy Settings</h2>
+        <h2 className="text-primary font-bold font-display">Privacy Settings</h2>
         <div className="w-12" />
       </div>
       <div className="flex-1 overflow-auto p-4 space-y-6">
@@ -667,8 +667,8 @@ export default function CommunityPage() {
           <div className="flex items-start gap-3">
             <span className="text-2xl">🛡️</span>
             <div>
-              <div className="font-bold text-white">Your Safety Matters</div>
-              <div className="text-slate-300 text-sm mt-1">
+              <div className="font-bold text-primary">Your Safety Matters</div>
+              <div className="text-primary text-sm mt-1">
                 Control who can see your profile, find you in search, and contact you.
               </div>
             </div>
@@ -677,7 +677,7 @@ export default function CommunityPage() {
 
         {/* Profile Visibility */}
         <div>
-          <h3 className="font-bold text-white mb-3">👁️ Profile Visibility</h3>
+          <h3 className="font-bold text-primary mb-3">👁️ Profile Visibility</h3>
           <div className="space-y-2">
             {privacyOptions.profileVisibility.map((opt) => (
               <button
@@ -685,19 +685,19 @@ export default function CommunityPage() {
                 onClick={() => setPrivacySettings((prev) => ({ ...prev, profileVisibility: opt.id as any }))}
                 className={`w-full p-4 rounded-xl flex items-center justify-between ${
                   privacySettings.profileVisibility === opt.id
-                    ? 'bg-cyan-500/20 border-2 border-cyan-500'
-                    : 'bg-slate-800/50 border-2 border-transparent'
+                    ? 'bg-accent/10 border-2 border-accent'
+                    : 'bg-elevated/50 border-2 border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{opt.icon}</span>
                   <div className="text-left">
-                    <div className="text-white font-medium">{opt.label}</div>
-                    <div className="text-slate-400 text-sm">{opt.description}</div>
+                    <div className="text-primary font-medium">{opt.label}</div>
+                    <div className="text-secondary text-sm">{opt.description}</div>
                   </div>
                 </div>
                 {privacySettings.profileVisibility === opt.id && (
-                  <span className="text-cyan-400">✓</span>
+                  <span className="text-accent">✓</span>
                 )}
               </button>
             ))}
@@ -706,7 +706,7 @@ export default function CommunityPage() {
 
         {/* Leaderboard Settings */}
         <div>
-          <h3 className="font-bold text-white mb-3">🏆 Leaderboard</h3>
+          <h3 className="font-bold text-primary mb-3">🏆 Leaderboard</h3>
           <div className="space-y-2">
             <ToggleSetting
               icon="🎭"
@@ -720,7 +720,7 @@ export default function CommunityPage() {
 
         {/* Discovery Settings */}
         <div>
-          <h3 className="font-bold text-white mb-3">🔍 Discovery</h3>
+          <h3 className="font-bold text-primary mb-3">🔍 Discovery</h3>
           <div className="space-y-2">
             <ToggleSetting
               icon="🚫"
@@ -768,18 +768,18 @@ export default function CommunityPage() {
     value: boolean; 
     onChange: (v: boolean) => void;
   }) => (
-    <div className="bg-slate-800/50 rounded-xl p-4 flex items-center justify-between border border-slate-700/50">
+    <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-token">
       <div className="flex items-center gap-3">
         <span className="text-xl">{icon}</span>
         <div>
-          <span className="text-white text-sm">{label}</span>
-          <div className="text-slate-500 text-xs">{description}</div>
+          <span className="text-primary text-sm">{label}</span>
+          <div className="text-secondary text-xs">{description}</div>
         </div>
       </div>
       <button
         onClick={() => onChange(!value)}
         className={`w-12 h-7 rounded-full transition-colors relative ${
-          value ? 'bg-cyan-500' : 'bg-slate-700'
+          value ? 'bg-accent' : 'bg-elevated'
         }`}
       >
         <div
@@ -794,13 +794,13 @@ export default function CommunityPage() {
   // Search Modal Component
   const SearchModal = () => (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="p-4 border-b border-slate-800">
+      <div className="p-4 border-b border-token">
         <div className="flex items-center gap-3">
           <button onClick={() => {
             setShowSearchModal(false);
             setSearchQuery('');
             setSearchResults([]);
-          }} className="text-slate-400">
+          }} className="text-secondary">
             ← Back
           </button>
           <div className="flex-1 relative">
@@ -810,11 +810,11 @@ export default function CommunityPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
-              className="w-full bg-slate-800/80 border border-slate-700 rounded-xl py-3 px-4 pl-10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              className="w-full bg-elevated/80 border border-token rounded-xl py-3 px-4 pl-10 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">🔍</span>
             {isSearching && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 animate-spin">⏳</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary animate-spin">⏳</span>
             )}
           </div>
         </div>
@@ -823,7 +823,7 @@ export default function CommunityPage() {
         {searchQuery.length >= 2 ? (
           searchResults.length > 0 ? (
             <div className="space-y-3">
-              <h3 className="text-slate-400 text-sm mb-2">
+              <h3 className="text-secondary text-sm mb-2">
                 Results — {searchResults.length}
               </h3>
               {searchResults.map((result) => (
@@ -833,15 +833,15 @@ export default function CommunityPage() {
           ) : !isSearching ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">🔍</div>
-              <div className="text-white font-bold">No players found</div>
-              <div className="text-slate-500 text-sm">Try a different search term</div>
+              <div className="text-primary font-bold">No players found</div>
+              <div className="text-secondary text-sm">Try a different search term</div>
             </div>
           ) : null
         ) : (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🔍</div>
-            <div className="text-white font-bold">Find Players</div>
-            <div className="text-slate-500 text-sm">Search by name or player ID (HYP-XXXXX)</div>
+            <div className="text-primary font-bold">Find Players</div>
+            <div className="text-secondary text-sm">Search by name or player ID (HYP-XXXXX)</div>
           </div>
         )}
       </div>
@@ -851,25 +851,25 @@ export default function CommunityPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 p-4 border-b border-slate-800">
+      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900 p-4 border-b border-token">
         <div className="relative flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2 font-display">
+            <h1 className="text-xl font-bold text-primary flex items-center gap-2 font-display">
               <span>👥</span> Community
             </h1>
-            <p className="text-slate-400 text-sm">{leaderboard.length} players ranked</p>
+            <p className="text-secondary text-sm">{leaderboard.length} players ranked</p>
           </div>
           {/* Header buttons: Search + Privacy */}
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowSearchModal(true)}
-              className="bg-slate-800/80 p-2 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
+              className="bg-elevated/80 p-2 rounded-xl border border-token hover:border-accent/50 transition-colors"
             >
               <span className="text-xl">🔍</span>
             </button>
             <button 
               onClick={() => setShowPrivacySettings(true)}
-              className="bg-slate-800/80 p-2 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
+              className="bg-elevated/80 p-2 rounded-xl border border-token hover:border-accent/50 transition-colors"
             >
               <span className="text-xl">🛡️</span>
             </button>
@@ -878,7 +878,7 @@ export default function CommunityPage() {
       </div>
 
       {/* Tabs - Simplified: Ranks, Friends, One Piece */}
-      <div className="flex border-b border-slate-800">
+      <div className="flex border-b border-token">
         {[
           { id: 'leaderboard' as const, label: '🏆 Ranks', icon: '🏆' },
           { id: 'friends' as const, label: '👥 Friends', count: friends.length, requestCount: friendRequests.length },
@@ -889,14 +889,14 @@ export default function CommunityPage() {
             onClick={() => handleTabChange(tab.id)}
             className={`flex-1 py-3 text-sm font-medium relative ${
               activeTab === tab.id
-                ? 'text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-slate-500'
+                ? 'text-accent border-b-2 border-cyan-400'
+                : 'text-secondary'
             }`}
           >
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
               <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
-                activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800'
+                activeTab === tab.id ? 'bg-accent/10 text-accent' : 'bg-elevated'
               }`}>
                 {tab.count}
               </span>
@@ -922,8 +922,8 @@ export default function CommunityPage() {
                   onClick={() => handleGameChange(game.id)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap transition-all ${
                     leaderboardGame === game.id
-                      ? 'bg-cyan-500 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                      ? 'bg-accent text-primary'
+                      : 'bg-elevated text-secondary hover:bg-elevated'
                   }`}
                 >
                   <span>{game.icon}</span>
@@ -932,7 +932,7 @@ export default function CommunityPage() {
               ))}
               <button
                 onClick={() => setShowFavoritesPicker(true)}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-slate-700/50 text-slate-400 hover:bg-slate-700 hover:text-white transition-all border border-dashed border-slate-600"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-elevated/50 text-secondary hover:bg-elevated hover:text-primary transition-all border border-dashed border-token"
               >
                 <span>⚙️</span>
                 <span className="text-sm">Edit</span>
@@ -941,13 +941,13 @@ export default function CommunityPage() {
 
             {/* Current Game Header */}
             {leaderboardGame !== 'overall' && (
-              <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/40 rounded-xl p-3 border border-slate-700/50">
+              <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/40 rounded-xl p-3 border border-token">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon}</span>
                     <div>
-                      <div className="font-bold text-white">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.name}</div>
-                      <div className="text-xs text-slate-400">Ranked by {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}</div>
+                      <div className="font-bold text-primary">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.name}</div>
+                      <div className="text-xs text-secondary">Ranked by {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}</div>
                     </div>
                   </div>
                   {leaderboardGame === 'one_piece' && (
@@ -963,7 +963,7 @@ export default function CommunityPage() {
             {leaderboardLoading ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏆</div>
-                <div className="text-slate-400">Loading rankings...</div>
+                <div className="text-secondary">Loading rankings...</div>
               </div>
             ) : leaderboard.length > 0 ? (
               leaderboard.map((entry) => (
@@ -972,8 +972,8 @@ export default function CommunityPage() {
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏆</div>
-                <div className="text-white font-bold">No rankings yet</div>
-                <div className="text-slate-500 text-sm">Be the first to earn {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}!</div>
+                <div className="text-primary font-bold">No rankings yet</div>
+                <div className="text-secondary text-sm">Be the first to earn {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}!</div>
               </div>
             )}
           </div>
@@ -996,21 +996,21 @@ export default function CommunityPage() {
                       <div className="flex items-center gap-3">
                         <Avatar avatar={request.avatar} size="sm" />
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-white truncate">{request.name}</div>
-                          <div className="text-slate-500 text-xs">{request.timestamp}</div>
+                          <div className="font-medium text-primary truncate">{request.name}</div>
+                          <div className="text-secondary text-xs">{request.timestamp}</div>
                         </div>
                         <div className="flex gap-2">
                           <button 
                             onClick={() => respondToRequest(request.friendshipId, 'accept')}
                             disabled={respondingTo === request.friendshipId}
-                            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50"
+                            className="p-2 bg-green-600 text-primary rounded-lg hover:bg-green-500 disabled:opacity-50"
                           >
                             ✓
                           </button>
                           <button 
                             onClick={() => respondToRequest(request.friendshipId, 'decline')}
                             disabled={respondingTo === request.friendshipId}
-                            className="p-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 disabled:opacity-50"
+                            className="p-2 bg-elevated text-primary rounded-lg hover:bg-elevated disabled:opacity-50"
                           >
                             ✗
                           </button>
@@ -1026,11 +1026,11 @@ export default function CommunityPage() {
             {friendsLoading ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">👥</div>
-                <div className="text-slate-400">Loading friends...</div>
+                <div className="text-secondary">Loading friends...</div>
               </div>
             ) : friends.length > 0 ? (
               <>
-                <h3 className="text-sm font-medium text-slate-400 mb-2">
+                <h3 className="text-sm font-medium text-secondary mb-2">
                   Friends ({friends.length})
                 </h3>
                 {friends.map((friend) => (
@@ -1040,8 +1040,8 @@ export default function CommunityPage() {
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">👥</div>
-                <div className="text-white font-bold">No friends yet</div>
-                <div className="text-slate-500 text-sm">Use the 🔍 search to find players!</div>
+                <div className="text-primary font-bold">No friends yet</div>
+                <div className="text-secondary text-sm">Use the 🔍 search to find players!</div>
               </div>
             )}
           </div>
@@ -1053,7 +1053,7 @@ export default function CommunityPage() {
             {onePieceLoading ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏴‍☠️</div>
-                <div className="text-slate-400">Loading...</div>
+                <div className="text-secondary">Loading...</div>
               </div>
             ) : (
               <>
@@ -1066,13 +1066,13 @@ export default function CommunityPage() {
                     <div className="flex items-center gap-4">
                       <Avatar avatar={currentEmperor.avatar} size="lg" />
                       <div>
-                        <div className="text-xl font-bold text-white">{currentEmperor.name}</div>
+                        <div className="text-xl font-bold text-primary">{currentEmperor.name}</div>
                         <div className="text-yellow-400">{currentEmperor.month} {currentEmperor.year}</div>
-                        <div className="text-slate-400 text-sm">{(currentEmperor.xp || 0).toLocaleString()} Berries</div>
+                        <div className="text-secondary text-sm">{(currentEmperor.xp || 0).toLocaleString()} Berries</div>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-slate-400 text-center py-4">
+                    <div className="text-secondary text-center py-4">
                       No emperor crowned yet this month
                     </div>
                   )}
@@ -1080,17 +1080,17 @@ export default function CommunityPage() {
 
                 {/* Hall of Fame */}
                 {hallOfFame.length > 0 && (
-                  <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                  <div className="bg-elevated/50 rounded-xl p-4 border border-token">
                     <h3 className="text-sm font-bold text-purple-400 uppercase tracking-wider mb-3">
                       🏆 Hall of Fame
                     </h3>
                     <div className="space-y-2">
                       {hallOfFame.slice(0, 5).map((emperor, i) => (
-                        <div key={emperor.id} className="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg">
+                        <div key={emperor.id} className="flex items-center gap-3 p-2 bg-surface/50 rounded-lg">
                           <Avatar avatar={emperor.avatar} size="sm" />
                           <div className="flex-1">
-                            <div className="text-white text-sm font-medium">{emperor.name}</div>
-                            <div className="text-slate-500 text-xs">{emperor.month} {emperor.year}</div>
+                            <div className="text-primary text-sm font-medium">{emperor.name}</div>
+                            <div className="text-secondary text-xs">{emperor.month} {emperor.year}</div>
                           </div>
                           <div className="text-yellow-400 text-sm">{emperor.xp.toLocaleString()}</div>
                         </div>
@@ -1112,7 +1112,7 @@ export default function CommunityPage() {
                     )}
                   </div>
                   
-                  <p className="text-slate-400 text-sm mb-4">
+                  <p className="text-secondary text-sm mb-4">
                     Monthly high-stakes event! Top 5 are WANTED. Others can opt-in as Hunters to claim their bounties.
                   </p>
 
@@ -1131,7 +1131,7 @@ export default function CommunityPage() {
                             frame: 'none',
                             badge: null,
                           } : entry.avatar} size="sm" />
-                          <span className="text-white text-sm flex-1 truncate">
+                          <span className="text-primary text-sm flex-1 truncate">
                             {entry.hidden ? 'Anonymous' : entry.name}
                           </span>
                           <span className="text-red-400 text-xs">{(entry.totalXp || entry.xp || 0).toLocaleString()}</span>
@@ -1142,8 +1142,8 @@ export default function CommunityPage() {
 
                   {/* Your Status */}
                   {bountyHunterStatus && (
-                    <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
-                      <h4 className="text-xs font-medium text-slate-400 mb-2">Your Status</h4>
+                    <div className="bg-surface/50 rounded-lg p-3 mb-4">
+                      <h4 className="text-xs font-medium text-secondary mb-2">Your Status</h4>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {bountyHunterStatus.isWanted ? (
@@ -1155,7 +1155,7 @@ export default function CommunityPage() {
                               🏹 Hunter
                             </span>
                           ) : (
-                            <span className="px-3 py-1 bg-slate-700 text-slate-400 rounded-full text-sm">
+                            <span className="px-3 py-1 bg-elevated text-secondary rounded-full text-sm">
                               😐 Civilian
                             </span>
                           )}
@@ -1165,7 +1165,7 @@ export default function CommunityPage() {
                           <button
                             onClick={optOutAsHunter}
                             disabled={optingIn}
-                            className="text-xs text-slate-500 hover:text-red-400 transition-colors"
+                            className="text-xs text-secondary hover:text-red-400 transition-colors"
                           >
                             Withdraw
                           </button>
@@ -1173,7 +1173,7 @@ export default function CommunityPage() {
                       </div>
                       {/* Hunter count */}
                       {bountyHunterStatus.hunterCount !== undefined && bountyHunterStatus.hunterCount > 0 && (
-                        <div className="mt-2 text-xs text-slate-500">
+                        <div className="mt-2 text-xs text-secondary">
                           🏹 {bountyHunterStatus.hunterCount} hunter{bountyHunterStatus.hunterCount !== 1 ? 's' : ''} registered
                         </div>
                       )}
@@ -1193,27 +1193,27 @@ export default function CommunityPage() {
                   )}
 
                   {/* Point Stakes Info */}
-                  <div className="mt-4 pt-4 border-t border-slate-700/50">
-                    <h4 className="text-xs font-medium text-slate-400 mb-2">Point Stakes (Round 1)</h4>
+                  <div className="mt-4 pt-4 border-t border-token">
+                    <h4 className="text-xs font-medium text-secondary mb-2">Point Stakes (Round 1)</h4>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-slate-900/50 rounded p-2">
+                      <div className="bg-surface/50 rounded p-2">
                         <div className="text-green-400">Hunter upsets WANTED</div>
-                        <div className="text-white">+30 / -25</div>
+                        <div className="text-primary">+30 / -25</div>
                       </div>
-                      <div className="bg-slate-900/50 rounded p-2">
+                      <div className="bg-surface/50 rounded p-2">
                         <div className="text-red-400">WANTED defends</div>
-                        <div className="text-white">+15 / -20</div>
+                        <div className="text-primary">+15 / -20</div>
                       </div>
-                      <div className="bg-slate-900/50 rounded p-2">
-                        <div className="text-slate-400">Hunter vs Hunter</div>
-                        <div className="text-white">+15 / -15</div>
+                      <div className="bg-surface/50 rounded p-2">
+                        <div className="text-secondary">Hunter vs Hunter</div>
+                        <div className="text-primary">+15 / -15</div>
                       </div>
-                      <div className="bg-slate-900/50 rounded p-2">
+                      <div className="bg-surface/50 rounded p-2">
                         <div className="text-orange-400">WANTED vs WANTED</div>
-                        <div className="text-white">+20 / -20</div>
+                        <div className="text-primary">+20 / -20</div>
                       </div>
                     </div>
-                    <p className="text-slate-500 text-xs mt-2">* Plus normal +10 for match win</p>
+                    <p className="text-secondary text-xs mt-2">* Plus normal +10 for match win</p>
                   </div>
                 </div>
               </>
@@ -1225,11 +1225,11 @@ export default function CommunityPage() {
       {/* Member Profile Modal */}
       {selectedMember && (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-            <button onClick={() => setSelectedMember(null)} className="text-slate-400">
+          <div className="p-4 border-b border-token flex items-center justify-between">
+            <button onClick={() => setSelectedMember(null)} className="text-secondary">
               ← Back
             </button>
-            <h2 className="text-white font-bold">Profile</h2>
+            <h2 className="text-primary font-bold">Profile</h2>
             <div className="w-12" />
           </div>
           <div className="flex-1 overflow-auto">
@@ -1240,25 +1240,25 @@ export default function CommunityPage() {
                   size="xl"
                   isOnline={null}
                 />
-                <h1 className="text-2xl font-bold text-white mt-4">
+                <h1 className="text-2xl font-bold text-primary mt-4">
                   {'hidden' in selectedMember && selectedMember.hidden ? 'Anonymous' : selectedMember.name}
                 </h1>
                 {'status' in selectedMember && selectedMember.status && (
-                  <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-700/50 text-sm text-white">
+                  <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-elevated/50 text-sm text-primary">
                     {selectedMember.status}
                   </div>
                 )}
                 <div className="flex justify-center gap-6 mt-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-white">{selectedMember.level}</div>
-                    <div className="text-slate-500 text-xs">Level</div>
+                    <div className="text-2xl font-bold text-primary">{selectedMember.level}</div>
+                    <div className="text-secondary text-xs">Level</div>
                   </div>
-                  <div className="w-px bg-slate-700" />
+                  <div className="w-px bg-elevated" />
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-cyan-400">
+                    <div className="text-2xl font-bold text-accent">
                       {selectedMember.totalXp?.toLocaleString()}
                     </div>
-                    <div className="text-slate-500 text-xs">XP</div>
+                    <div className="text-secondary text-xs">XP</div>
                   </div>
                 </div>
               </div>
@@ -1272,12 +1272,12 @@ export default function CommunityPage() {
                     }
                   }}
                   disabled={unfriending === selectedMember.id}
-                  className="flex-1 py-3 bg-slate-800 text-red-400 rounded-xl font-bold border border-red-500/30 hover:bg-red-500/10"
+                  className="flex-1 py-3 bg-elevated text-red-400 rounded-xl font-bold border border-red-500/30 hover:bg-red-500/10"
                 >
                   {unfriending === selectedMember.id ? 'Removing...' : '✓ Friends (tap to unfriend)'}
                 </button>
               ) : ('isFriend' in selectedMember && selectedMember.isFriend) || requestSent.has(selectedMember.id) ? (
-                <button className="flex-1 py-3 bg-slate-800 text-green-400 rounded-xl font-bold border border-green-500/30">
+                <button className="flex-1 py-3 bg-elevated text-green-400 rounded-xl font-bold border border-green-500/30">
                   📨 Request Sent
                 </button>
               ) : (
@@ -1297,7 +1297,7 @@ export default function CommunityPage() {
                   </div>
                 </GlowButton>
               )}
-              <button className="px-4 py-3 bg-slate-800 text-white rounded-xl border border-slate-700">
+              <button className="px-4 py-3 bg-elevated text-primary rounded-xl border border-token">
                 💬
               </button>
             </div>
@@ -1314,25 +1314,25 @@ export default function CommunityPage() {
       {/* Favorites Picker Modal */}
       {showFavoritesPicker && (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-4 border-b border-token flex items-center justify-between">
             <button 
               onClick={() => setShowFavoritesPicker(false)} 
-              className="text-slate-400"
+              className="text-secondary"
             >
               Cancel
             </button>
-            <h2 className="text-white font-bold">Edit Leaderboards</h2>
+            <h2 className="text-primary font-bold">Edit Leaderboards</h2>
             <button 
               onClick={() => saveFavoriteGames(favoriteGames)}
               disabled={savingFavorites}
-              className="text-cyan-400 font-bold disabled:opacity-50"
+              className="text-accent font-bold disabled:opacity-50"
             >
               {savingFavorites ? 'Saving...' : 'Save'}
             </button>
           </div>
 
           <div className="flex-1 overflow-auto p-4">
-            <p className="text-slate-400 text-sm mb-4">
+            <p className="text-secondary text-sm mb-4">
               Select up to 8 games to show on your leaderboard tabs.
             </p>
 
@@ -1349,21 +1349,21 @@ export default function CommunityPage() {
                     disabled={isOverall || (!isSelected && !canSelect)}
                     className={`w-full p-3 rounded-xl flex items-center justify-between transition-all ${
                       isSelected
-                        ? 'bg-cyan-500/20 border-2 border-cyan-500'
+                        ? 'bg-accent/10 border-2 border-accent'
                         : canSelect
-                        ? 'bg-slate-800/50 border-2 border-transparent hover:border-slate-600'
-                        : 'bg-slate-800/30 border-2 border-transparent opacity-50'
+                        ? 'bg-elevated/50 border-2 border-transparent hover:border-token'
+                        : 'bg-elevated/30 border-2 border-transparent opacity-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{game.icon}</span>
                       <div className="text-left">
-                        <div className="text-white font-medium">{game.name}</div>
-                        <div className="text-slate-400 text-xs">{game.currency}</div>
+                        <div className="text-primary font-medium">{game.name}</div>
+                        <div className="text-secondary text-xs">{game.currency}</div>
                       </div>
                     </div>
                     {isSelected && (
-                      <span className="text-cyan-400">
+                      <span className="text-accent">
                         {isOverall ? '🔒' : '✓'}
                       </span>
                     )}
@@ -1372,7 +1372,7 @@ export default function CommunityPage() {
               })}
             </div>
 
-            <div className="mt-4 text-center text-slate-500 text-sm">
+            <div className="mt-4 text-center text-secondary text-sm">
               {favoriteGames.length}/8 selected
             </div>
           </div>

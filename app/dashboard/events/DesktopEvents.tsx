@@ -77,7 +77,7 @@ const MiniAvatar = ({ avatar, name }: { avatar: any; name: string }) => {
   
   return (
     <div 
-      className="w-6 h-6 rounded-full flex items-center justify-center text-xs border-2 border-slate-800"
+      className="w-6 h-6 rounded-full flex items-center justify-center text-xs border-2 border-token"
       style={{ backgroundColor: bg }}
       title={name}
     >
@@ -120,7 +120,7 @@ const FriendsInterested = ({ friends, totalCount }: { friends: FriendInterest[];
           ))}
         </div>
       )}
-      <span className="text-slate-400 text-xs">{text}</span>
+      <span className="text-secondary text-xs">{text}</span>
     </div>
   );
 };
@@ -208,32 +208,32 @@ const ShareModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-slate-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-slate-700">
+      <div className="relative bg-surface rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-token">
         {/* Header */}
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 border-b border-token">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white">Share Event</h3>
-            <button onClick={onClose} className="text-slate-400 hover:text-white text-2xl">×</button>
+            <h3 className="text-lg font-bold text-primary">Share Event</h3>
+            <button onClick={onClose} className="text-secondary hover:text-primary text-2xl">×</button>
           </div>
-          <div className="mt-2 p-3 bg-slate-800 rounded-lg">
+          <div className="mt-2 p-3 bg-elevated rounded-lg">
             <div className="flex items-center gap-2">
               <span className="text-xl">{event.game?.icon || '🎮'}</span>
               <div>
-                <div className="text-white font-medium text-sm">{event.name}</div>
-                <div className="text-slate-400 text-xs">{event.date} @ {event.time}</div>
+                <div className="text-primary font-medium text-sm">{event.name}</div>
+                <div className="text-secondary text-xs">{event.date} @ {event.time}</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-800">
+        <div className="flex border-b border-token">
           <button
             onClick={() => setActiveTab('link')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               activeTab === 'link'
-                ? 'text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-slate-400 hover:text-white'
+                ? 'text-accent border-b-2 border-cyan-400'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             🔗 Share Link
@@ -242,8 +242,8 @@ const ShareModal = ({
             onClick={() => setActiveTab('friends')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               activeTab === 'friends'
-                ? 'text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-slate-400 hover:text-white'
+                ? 'text-accent border-b-2 border-cyan-400'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             👥 Share with Friends
@@ -253,32 +253,32 @@ const ShareModal = ({
         {/* Tab Content */}
         {activeTab === 'link' ? (
           <div className="p-4">
-            <div className="text-slate-400 text-sm mb-3">Share this event with anyone:</div>
+            <div className="text-secondary text-sm mb-3">Share this event with anyone:</div>
             
             {/* Link preview */}
-            <div className="bg-slate-800 rounded-lg p-3 mb-4">
-              <div className="text-slate-400 text-xs mb-1">Public Link</div>
-              <div className="text-white text-sm break-all font-mono">{publicUrl}</div>
+            <div className="bg-elevated rounded-lg p-3 mb-4">
+              <div className="text-secondary text-xs mb-1">Public Link</div>
+              <div className="text-primary text-sm break-all font-mono">{publicUrl}</div>
             </div>
 
             {/* Share buttons */}
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleCopyLink}
-                className="flex items-center justify-center gap-2 py-3 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-700 transition-colors"
+                className="flex items-center justify-center gap-2 py-3 bg-elevated text-primary font-medium rounded-xl hover:bg-elevated transition-colors"
               >
                 {copied ? '✅ Copied!' : '📋 Copy Link'}
               </button>
               <button
                 onClick={handleNativeShare}
-                className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+                className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-primary font-medium rounded-xl hover:opacity-90 transition-opacity"
               >
                 📤 Share
               </button>
             </div>
 
             {/* Social hints */}
-            <div className="mt-4 text-center text-slate-500 text-xs">
+            <div className="mt-4 text-center text-secondary text-xs">
               Share via text, social media, or any app!
             </div>
           </div>
@@ -287,30 +287,30 @@ const ShareModal = ({
             {/* Friend list */}
             <div className="p-4 overflow-y-auto max-h-[40vh]">
               {loading ? (
-                <div className="text-center py-8 text-slate-400">Loading friends...</div>
+                <div className="text-center py-8 text-secondary">Loading friends...</div>
               ) : friends.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-3xl mb-2">👥</div>
-                  <div className="text-slate-400">No friends yet</div>
-                  <div className="text-slate-500 text-sm">Add friends in the Community tab</div>
+                  <div className="text-secondary">No friends yet</div>
+                  <div className="text-secondary text-sm">Add friends in the Community tab</div>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="text-slate-400 text-xs mb-3">Select friends to notify:</div>
+                  <div className="text-secondary text-xs mb-3">Select friends to notify:</div>
                   {friends.map(friend => (
                     <button
                       key={friend.odid}
                       onClick={() => toggleFriend(friend.odid)}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                         selectedFriends.has(friend.odid)
-                          ? 'bg-cyan-500/20 border border-cyan-500/50'
-                          : 'bg-slate-800 border border-slate-700 hover:border-slate-600'
+                          ? 'bg-accent/10 border border-accent/50'
+                          : 'bg-elevated border border-token hover:border-token'
                       }`}
                     >
                       <MiniAvatar avatar={friend.avatar} name={friend.name} />
-                      <span className="text-white flex-1 text-left">{friend.name}</span>
+                      <span className="text-primary flex-1 text-left">{friend.name}</span>
                       {selectedFriends.has(friend.odid) && (
-                        <span className="text-cyan-400">✓</span>
+                        <span className="text-accent">✓</span>
                       )}
                     </button>
                   ))}
@@ -319,11 +319,11 @@ const ShareModal = ({
             </div>
 
             {/* Actions */}
-            <div className="p-4 border-t border-slate-800">
+            <div className="p-4 border-t border-token">
               <button
                 onClick={handleShareWithFriends}
                 disabled={selectedFriends.size === 0 || sharing}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-primary font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sharing ? 'Sharing...' : `Share with ${selectedFriends.size} friend${selectedFriends.size !== 1 ? 's' : ''}`}
               </button>
@@ -375,21 +375,21 @@ const MiniCalendar = ({
   };
 
   return (
-    <div className="bg-[#0d0d14] border border-[#1e1e2e] rounded-2xl p-4">
+    <div className="bg-base border border-[#1e1e2e] rounded-2xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button 
           onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-          className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white"
+          className="p-2 hover:bg-elevated rounded-lg text-secondary hover:text-primary"
         >
           ←
         </button>
-        <h3 className="text-white font-bold">
+        <h3 className="text-primary font-bold">
           {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
         </h3>
         <button 
           onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-          className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white"
+          className="p-2 hover:bg-elevated rounded-lg text-secondary hover:text-primary"
         >
           →
         </button>
@@ -398,7 +398,7 @@ const MiniCalendar = ({
       {/* Day names */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {dayNames.map(day => (
-          <div key={day} className="text-center text-slate-500 text-xs font-medium py-1">
+          <div key={day} className="text-center text-secondary text-xs font-medium py-1">
             {day}
           </div>
         ))}
@@ -426,12 +426,12 @@ const MiniCalendar = ({
               }}
               className={`aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all relative ${
                 isSelected(day)
-                  ? 'bg-cyan-500 text-white'
+                  ? 'bg-accent text-primary'
                   : isToday(day)
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
                   : hasEvents
-                  ? 'bg-slate-800 text-white hover:bg-slate-700'
-                  : 'text-slate-500 hover:bg-slate-800/50'
+                  ? 'bg-elevated text-primary hover:bg-elevated'
+                  : 'text-secondary hover:bg-elevated/50'
               }`}
             >
               {day}
@@ -455,7 +455,7 @@ const MiniCalendar = ({
       {selectedDate && (
         <button
           onClick={() => onSelectDate(null)}
-          className="w-full mt-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"
+          className="w-full mt-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
         >
           Clear date filter
         </button>
@@ -475,7 +475,7 @@ const StreamButtons = ({ event }: { event: CalendarEvent }) => {
           href={event.twitchUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-white rounded-lg"
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-primary rounded-lg"
           onClick={(e) => e.stopPropagation()}
         >
           📺 Twitch
@@ -487,14 +487,14 @@ const StreamButtons = ({ event }: { event: CalendarEvent }) => {
           href={event.youtubeUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-white rounded-lg"
+          className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-primary rounded-lg"
           onClick={(e) => e.stopPropagation()}
         >
           ▶️ YouTube
         </a>
       )}
       {!event.twitchUrl && !event.youtubeUrl && (
-        <span className="flex items-center gap-1 px-2 py-1 text-xs bg-slate-700 text-slate-300 rounded-lg">
+        <span className="flex items-center gap-1 px-2 py-1 text-xs bg-elevated text-primary rounded-lg">
           📺 Stream
         </span>
       )}
@@ -713,7 +713,7 @@ function EventsPageContent() {
   const DesktopEventCard = ({ event }: { event: CalendarEvent }) => (
     <div 
       onClick={() => setSelectedEvent(event)}
-      className={`bg-[#0d0d14] rounded-xl overflow-hidden border cursor-pointer hover:border-slate-600 transition-all ${
+      className={`bg-base rounded-xl overflow-hidden border cursor-pointer hover:border-token transition-all ${
         event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-[#1e1e2e]'
       }`}
     >
@@ -733,16 +733,16 @@ function EventsPageContent() {
           {/* Event Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-white font-bold text-lg">{event.name}</span>
+              <span className="text-primary font-bold text-lg">{event.name}</span>
               {event.isLive && (
-                <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">LIVE</span>
+                <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
               )}
               {event.isStartingSoon && !event.isLive && (
                 <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full">SOON</span>
               )}
               {event.hasStream && <StreamButtons event={event} />}
             </div>
-            <div className="text-slate-400 text-sm">{event.time}</div>
+            <div className="text-secondary text-sm">{event.time}</div>
             
             {/* Friends interested - inline on desktop */}
             {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
@@ -758,7 +758,7 @@ function EventsPageContent() {
           {/* Price & Actions */}
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <div className={`font-bold text-lg ${event.isFree ? 'text-green-400' : 'text-cyan-400'}`}>
+              <div className={`font-bold text-lg ${event.isFree ? 'text-green-400' : 'text-accent'}`}>
                 {event.entryFee}
               </div>
               {event.hasStream && <div className="text-purple-400 text-xs">📺 Streamed</div>}
@@ -773,8 +773,8 @@ function EventsPageContent() {
                 disabled={togglingInterest === event.id}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   event.isInterested
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    ? 'bg-accent/10 text-accent border border-accent/50'
+                    : 'bg-elevated text-primary hover:bg-elevated'
                 }`}
               >
                 {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : '⭐ Interested?'}
@@ -784,7 +784,7 @@ function EventsPageContent() {
                   e.stopPropagation();
                   setShareEvent(event);
                 }}
-                className="px-3 py-2 bg-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-600"
+                className="px-3 py-2 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated"
               >
                 📤 Share
               </button>
@@ -799,8 +799,8 @@ function EventsPageContent() {
   const MobileEventCard = ({ event }: { event: CalendarEvent }) => (
     <div 
       onClick={() => setSelectedEvent(event)}
-      className={`bg-slate-800/50 rounded-xl overflow-hidden border cursor-pointer hover:border-slate-600 transition-all ${
-        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-slate-700/50'
+      className={`bg-elevated/50 rounded-xl overflow-hidden border cursor-pointer hover:border-token transition-all ${
+        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-token'
       }`}
     >
       <div 
@@ -816,15 +816,15 @@ function EventsPageContent() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-white font-bold truncate">{event.name}</span>
+              <span className="text-primary font-bold truncate">{event.name}</span>
               {event.isLive && (
-                <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">LIVE</span>
+                <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
               )}
               {event.isStartingSoon && !event.isLive && (
                 <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full">SOON</span>
               )}
             </div>
-            <div className="text-slate-400 text-sm">{event.time}</div>
+            <div className="text-secondary text-sm">{event.time}</div>
             
             <FriendsInterested 
               friends={event.interestedFriends || []} 
@@ -832,12 +832,12 @@ function EventsPageContent() {
             />
           </div>
           <div className="text-right">
-            <div className="text-cyan-400 font-bold">{event.entryFee}</div>
+            <div className="text-accent font-bold">{event.entryFee}</div>
             {event.hasStream && <div className="text-purple-400 text-xs mt-1">📺 Stream</div>}
           </div>
         </div>
         
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-700/50">
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-token">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -846,8 +846,8 @@ function EventsPageContent() {
             disabled={togglingInterest === event.id}
             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
               event.isInterested
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                ? 'bg-accent/10 text-accent border border-accent/50'
+                : 'bg-elevated text-primary hover:bg-elevated'
             }`}
           >
             {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : '⭐ Interested?'}
@@ -857,7 +857,7 @@ function EventsPageContent() {
               e.stopPropagation();
               setShareEvent(event);
             }}
-            className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-600"
+            className="px-4 py-2 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated"
           >
             📤 Share
           </button>
@@ -870,7 +870,7 @@ function EventsPageContent() {
   const EventDetailModal = ({ event, onClose }: { event: CalendarEvent; onClose: () => void }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-slate-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
+      <div className="relative bg-surface rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
         {/* Header */}
         <div 
           className="relative p-6 pb-4"
@@ -878,7 +878,7 @@ function EventsPageContent() {
         >
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-slate-800/80 rounded-full flex items-center justify-center text-slate-400 hover:text-white"
+            className="absolute top-4 right-4 w-8 h-8 bg-elevated/80 rounded-full flex items-center justify-center text-secondary hover:text-primary"
           >
             ×
           </button>
@@ -891,8 +891,8 @@ function EventsPageContent() {
               {event.game?.icon || '🎮'}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">{event.name}</h2>
-              <div className="text-slate-300">{event.game?.name || 'General Event'}</div>
+              <h2 className="text-2xl font-bold text-primary">{event.name}</h2>
+              <div className="text-primary">{event.game?.name || 'General Event'}</div>
             </div>
           </div>
         </div>
@@ -901,41 +901,41 @@ function EventsPageContent() {
         <div className="p-6 space-y-4">
           {/* Date & Time */}
           <div className="flex gap-4">
-            <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-              <div className="text-slate-500 text-xs mb-1">DATE</div>
-              <div className="text-white font-bold">{event.date}</div>
+            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-token">
+              <div className="text-secondary text-xs mb-1">DATE</div>
+              <div className="text-primary font-bold">{event.date}</div>
             </div>
-            <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-              <div className="text-slate-500 text-xs mb-1">TIME</div>
-              <div className="text-white font-bold">{event.time}</div>
+            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-token">
+              <div className="text-secondary text-xs mb-1">TIME</div>
+              <div className="text-primary font-bold">{event.time}</div>
             </div>
           </div>
           
           {/* Entry Fee & Spots */}
           <div className="flex gap-4">
-            <div className="flex-1 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl p-4 border border-cyan-500/20">
-              <div className="text-slate-500 text-xs mb-1">ENTRY FEE</div>
-              <div className={`text-xl font-bold ${event.isFree ? 'text-green-400' : 'text-cyan-400'}`}>
+            <div className="flex-1 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl p-4 border border-accent/20">
+              <div className="text-secondary text-xs mb-1">ENTRY FEE</div>
+              <div className={`text-xl font-bold ${event.isFree ? 'text-green-400' : 'text-accent'}`}>
                 {event.entryFee}
               </div>
             </div>
-            <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-              <div className="text-slate-500 text-xs mb-1">SPOTS</div>
-              <div className="text-white font-bold text-lg">{event.maxSpots || 'Open'}</div>
+            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-token">
+              <div className="text-secondary text-xs mb-1">SPOTS</div>
+              <div className="text-primary font-bold text-lg">{event.maxSpots || 'Open'}</div>
             </div>
           </div>
           
           {/* XP Rewards */}
-          <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 border border-cyan-500/20">
-            <div className="text-slate-400 text-xs mb-2">XP REWARDS</div>
+          <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 border border-accent/20">
+            <div className="text-secondary text-xs mb-2">XP REWARDS</div>
             <div className="flex justify-around">
               <div className="text-center">
-                <div className="text-cyan-400 font-bold text-xl">+{event.attendanceXp}</div>
-                <div className="text-slate-500 text-xs">Attendance</div>
+                <div className="text-accent font-bold text-xl">+{event.attendanceXp}</div>
+                <div className="text-secondary text-xs">Attendance</div>
               </div>
               <div className="text-center">
                 <div className="text-purple-400 font-bold text-xl">+{event.winXp}</div>
-                <div className="text-slate-500 text-xs">Per Win</div>
+                <div className="text-secondary text-xs">Per Win</div>
               </div>
             </div>
           </div>
@@ -943,7 +943,7 @@ function EventsPageContent() {
           {/* Prizing */}
           {event.prizing && event.prizing.length > 0 && (
             <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/20">
-              <div className="text-slate-400 text-xs mb-2">PRIZES</div>
+              <div className="text-secondary text-xs mb-2">PRIZES</div>
               <div className="space-y-2">
                 {event.prizing.map((prize, index) => {
                   const prizeInfo: Record<string, { icon: string; title: string; desc: string }> = {
@@ -957,8 +957,8 @@ function EventsPageContent() {
                     <div key={index} className="flex items-center gap-3">
                       <span className="text-xl">{info.icon}</span>
                       <div>
-                        <div className="text-white font-medium text-sm">{info.title}</div>
-                        {info.desc && <div className="text-slate-500 text-xs">{info.desc}</div>}
+                        <div className="text-primary font-medium text-sm">{info.title}</div>
+                        {info.desc && <div className="text-secondary text-xs">{info.desc}</div>}
                       </div>
                     </div>
                   );
@@ -978,7 +978,7 @@ function EventsPageContent() {
                       <MiniAvatar key={friend.id} avatar={friend.avatar} name={friend.name} />
                     ))}
                   </div>
-                  <span className="text-slate-400 text-sm">
+                  <span className="text-secondary text-sm">
                     {event.interestedFriends.map(f => f.name).join(', ')}
                   </span>
                 </div>
@@ -988,9 +988,9 @@ function EventsPageContent() {
           
           {/* Description */}
           {event.description && (
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-              <div className="text-slate-500 text-xs mb-2">DESCRIPTION</div>
-              <div className="text-slate-300 text-sm whitespace-pre-wrap">{event.description}</div>
+            <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+              <div className="text-secondary text-xs mb-2">DESCRIPTION</div>
+              <div className="text-primary text-sm whitespace-pre-wrap">{event.description}</div>
             </div>
           )}
           
@@ -999,8 +999,8 @@ function EventsPageContent() {
             <div className="bg-gradient-to-r from-purple-600/20 to-red-600/20 rounded-xl p-4 border border-purple-500/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-white font-bold">Watch Live!</div>
-                  <div className="text-slate-400 text-sm">This event will be streamed</div>
+                  <div className="text-primary font-bold">Watch Live!</div>
+                  <div className="text-secondary text-sm">This event will be streamed</div>
                 </div>
                 <StreamButtons event={event} />
               </div>
@@ -1009,15 +1009,15 @@ function EventsPageContent() {
         </div>
         
         {/* Action Buttons */}
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-token">
           <div className="flex gap-2">
             <button 
               onClick={() => toggleInterest(event.id)}
               disabled={togglingInterest === event.id}
               className={`flex-1 py-3 rounded-xl font-bold transition-all ${
                 event.isInterested
-                  ? 'bg-slate-700 text-slate-300 border-2 border-slate-600'
-                  : 'text-white'
+                  ? 'bg-elevated text-primary border-2 border-token'
+                  : 'text-primary'
               }`}
               style={!event.isInterested ? { 
                 background: `linear-gradient(135deg, ${event.game?.color || '#3b82f6'}, ${event.game?.color || '#3b82f6'}cc)`,
@@ -1027,12 +1027,12 @@ function EventsPageContent() {
             </button>
             <button
               onClick={() => setShareEvent(event)}
-              className="px-6 py-3 bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-600"
+              className="px-6 py-3 bg-elevated text-primary rounded-xl font-bold hover:bg-elevated"
             >
               📤
             </button>
           </div>
-          <p className="text-slate-500 text-xs text-center mt-2">Registration handled in-store</p>
+          <p className="text-secondary text-xs text-center mt-2">Registration handled in-store</p>
         </div>
       </div>
     </div>
@@ -1045,11 +1045,11 @@ function EventsPageContent() {
       <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10">
         <div className="px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-slate-400 text-sm">Tap to see details</p>
+            <p className="text-secondary text-sm">Tap to see details</p>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-sm hover:bg-slate-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-3 py-1.5 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated disabled:opacity-50 flex items-center gap-2"
             >
               {syncing ? '🔄 Syncing...' : '🔄 Sync'}
             </button>
@@ -1070,8 +1070,8 @@ function EventsPageContent() {
               onClick={() => setSelectedGames(new Set(['all']))}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                 selectedGames.has('all')
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  ? 'bg-accent text-primary'
+                  : 'bg-elevated text-secondary hover:bg-elevated'
               }`}
             >
               <span>🎮</span>
@@ -1084,8 +1084,8 @@ function EventsPageContent() {
                 onClick={() => setSelectedGames(new Set(favoriteGames))}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                   !selectedGames.has('all') && favoriteGames.every(g => selectedGames.has(g)) && selectedGames.size === favoriteGames.length
-                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-dashed border-slate-600'
+                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-primary'
+                    : 'bg-elevated text-secondary hover:bg-elevated border border-dashed border-token'
                 }`}
               >
                 <span>⭐</span>
@@ -1123,8 +1123,8 @@ function EventsPageContent() {
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                     isSelected
-                      ? 'bg-cyan-500 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                      ? 'bg-accent text-primary'
+                      : 'bg-elevated text-secondary hover:bg-elevated'
                   }`}
                 >
                   <span>{game.icon}</span>
@@ -1142,28 +1142,28 @@ function EventsPageContent() {
         {loading ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4 animate-bounce">📅</div>
-            <div className="text-slate-400">Loading events...</div>
+            <div className="text-secondary">Loading events...</div>
           </div>
         ) : error ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">❌</div>
-            <div className="text-white font-bold">Failed to load events</div>
-            <div className="text-slate-500 text-sm mt-2">{error}</div>
-            <button onClick={() => loadEvents()} className="mt-4 px-4 py-2 bg-cyan-600 text-white rounded-lg">
+            <div className="text-primary font-bold">Failed to load events</div>
+            <div className="text-secondary text-sm mt-2">{error}</div>
+            <button onClick={() => loadEvents()} className="mt-4 px-4 py-2 bg-accent text-primary rounded-lg">
               Retry
             </button>
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">📭</div>
-            <div className="text-white font-bold">No upcoming events</div>
-            <div className="text-slate-500 text-sm mt-2">
+            <div className="text-primary font-bold">No upcoming events</div>
+            <div className="text-secondary text-sm mt-2">
               Tap Sync to pull from Google Calendar
             </div>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="mt-4 px-4 py-2 bg-cyan-600 text-white rounded-lg disabled:opacity-50"
+              className="mt-4 px-4 py-2 bg-accent text-primary rounded-lg disabled:opacity-50"
             >
               {syncing ? 'Syncing...' : '🔄 Sync from Calendar'}
             </button>
@@ -1180,18 +1180,18 @@ function EventsPageContent() {
                 />
                 
                 {/* Quick stats */}
-                <div className="mt-4 bg-[#0d0d14] border border-[#1e1e2e] rounded-2xl p-4">
-                  <h3 className="text-white font-bold mb-3">This Week</h3>
+                <div className="mt-4 bg-base border border-[#1e1e2e] rounded-2xl p-4">
+                  <h3 className="text-primary font-bold mb-3">This Week</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-cyan-400">{events.length}</div>
-                      <div className="text-slate-500 text-xs">Events</div>
+                    <div className="bg-elevated/50 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-accent">{events.length}</div>
+                      <div className="text-secondary text-xs">Events</div>
                     </div>
-                    <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                    <div className="bg-elevated/50 rounded-lg p-3 text-center">
                       <div className="text-2xl font-bold text-purple-400">
                         {events.filter(e => e.isInterested).length}
                       </div>
-                      <div className="text-slate-500 text-xs">Interested</div>
+                      <div className="text-secondary text-xs">Interested</div>
                     </div>
                   </div>
                 </div>
@@ -1203,16 +1203,16 @@ function EventsPageContent() {
               {Object.entries(groupedEvents).length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-4xl mb-4">🔍</div>
-                  <div className="text-white font-bold">No events match your filters</div>
-                  <div className="text-slate-500 text-sm mt-2">
+                  <div className="text-primary font-bold">No events match your filters</div>
+                  <div className="text-secondary text-sm mt-2">
                     Try selecting a different game or clearing the date filter
                   </div>
                 </div>
               ) : (
                 Object.entries(groupedEvents).map(([date, dateEvents]) => (
                   <div key={date}>
-                    <h2 className="text-slate-400 text-sm font-medium mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
+                    <h2 className="text-secondary text-sm font-medium mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-accent rounded-full"></span>
                       {date}
                     </h2>
                     <div className="space-y-3">
@@ -1249,14 +1249,14 @@ function EventsLoading() {
   return (
     <div className="flex-1 p-4 lg:p-8">
       <div className="animate-pulse">
-        <div className="h-8 bg-slate-800 rounded w-48 mb-4"></div>
-        <div className="h-10 bg-slate-800 rounded mb-4"></div>
+        <div className="h-8 bg-elevated rounded w-48 mb-4"></div>
+        <div className="h-10 bg-elevated rounded mb-4"></div>
         <div className="lg:flex lg:gap-6">
-          <div className="w-80 h-96 bg-slate-800 rounded-2xl hidden lg:block"></div>
+          <div className="w-80 h-96 bg-elevated rounded-2xl hidden lg:block"></div>
           <div className="flex-1 space-y-4">
-            <div className="h-24 bg-slate-800 rounded-xl"></div>
-            <div className="h-24 bg-slate-800 rounded-xl"></div>
-            <div className="h-24 bg-slate-800 rounded-xl"></div>
+            <div className="h-24 bg-elevated rounded-xl"></div>
+            <div className="h-24 bg-elevated rounded-xl"></div>
+            <div className="h-24 bg-elevated rounded-xl"></div>
           </div>
         </div>
       </div>

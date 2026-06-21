@@ -15,7 +15,7 @@ interface ShopItem {
 }
 
 const rarityColors: Record<string, { border: string; bg: string; text: string }> = {
-  common: { border: 'border-slate-500', bg: 'bg-slate-500/20', text: 'text-slate-400' },
+  common: { border: 'border-token', bg: 'bg-elevated/50', text: 'text-secondary' },
   uncommon: { border: 'border-green-500', bg: 'bg-green-500/20', text: 'text-green-400' },
   rare: { border: 'border-blue-500', bg: 'bg-blue-500/20', text: 'text-blue-400' },
   epic: { border: 'border-purple-500', bg: 'bg-purple-500/20', text: 'text-purple-400' },
@@ -24,7 +24,7 @@ const rarityColors: Record<string, { border: string; bg: string; text: string }>
 
 const frameStyles: Record<string, string> = {
   none: 'border-transparent',
-  silver: 'border-slate-400',
+  silver: 'border-border-strong',
   gold: 'border-yellow-500',
   diamond: 'border-cyan-400',
   fire: 'border-orange-500',
@@ -144,18 +144,18 @@ export default function ShopPage() {
             />
           )}
           {item.category === 'frame' && (
-            <div className={`w-8 h-8 rounded-full border-4 ${frameStyles[item.assetData?.style] || ''} bg-slate-700`} />
+            <div className={`w-8 h-8 rounded-full border-4 ${frameStyles[item.assetData?.style] || ''} bg-elevated`} />
           )}
           {item.category === 'title' && '📛'}
         </div>
         
-        <div className="text-white font-semibold text-sm">{item.name}</div>
-        <div className="text-slate-400 text-xs mt-0.5">{item.description}</div>
+        <div className="text-primary font-semibold text-sm">{item.name}</div>
+        <div className="text-secondary text-xs mt-0.5">{item.description}</div>
         
         <div className="flex items-center justify-between mt-2">
           <span className={`text-xs uppercase ${rarity.text}`}>{item.rarity}</span>
           {!owned && (
-            <span className="text-white font-bold text-sm flex items-center gap-1">
+            <span className="text-primary font-bold text-sm flex items-center gap-1">
               {item.price} 💎
             </span>
           )}
@@ -163,7 +163,7 @@ export default function ShopPage() {
         
         {purchasing === item.id && (
           <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
-            <span className="text-white animate-pulse">Buying...</span>
+            <span className="text-primary animate-pulse">Buying...</span>
           </div>
         )}
       </button>
@@ -175,7 +175,7 @@ export default function ShopPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4">🛍️</div>
-          <div className="text-slate-400">Loading shop...</div>
+          <div className="text-secondary">Loading shop...</div>
         </div>
       </div>
     );
@@ -184,16 +184,16 @@ export default function ShopPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+      <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur-sm border-b border-token">
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-white">Shop</h1>
-              <p className="text-slate-400 text-sm">Buy cosmetics for your avatar</p>
+              <h1 className="text-xl font-bold text-primary">Shop</h1>
+              <p className="text-secondary text-sm">Buy cosmetics for your avatar</p>
             </div>
-            <div className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-full">
+            <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-full">
               <span className="text-xl">💎</span>
-              <span className="text-white font-bold">{gems.toLocaleString()}</span>
+              <span className="text-primary font-bold">{gems.toLocaleString()}</span>
             </div>
           </div>
 
@@ -206,8 +206,8 @@ export default function ShopPage() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                   activeCategory === cat.id
-                    ? 'bg-cyan-500 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                    ? 'bg-accent text-primary'
+                    : 'bg-elevated text-secondary hover:bg-elevated'
                 }`}
               >
                 <span>{cat.icon}</span>
@@ -229,16 +229,16 @@ export default function ShopPage() {
         {(!shopItems[activeCategory] || shopItems[activeCategory].length === 0) && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🏪</div>
-            <div className="text-slate-400">No items in this category</div>
+            <div className="text-secondary">No items in this category</div>
           </div>
         )}
       </div>
 
       {/* Tip */}
       <div className="p-4 pt-0">
-        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-center">
-          <p className="text-slate-400 text-sm">
-            💡 Go to <span className="text-cyan-400">Profile</span> to customize your avatar with purchased items
+        <div className="bg-elevated/50 rounded-xl p-4 border border-token text-center">
+          <p className="text-secondary text-sm">
+            💡 Go to <span className="text-accent">Profile</span> to customize your avatar with purchased items
           </p>
         </div>
       </div>
