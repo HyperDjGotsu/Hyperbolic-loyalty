@@ -95,8 +95,8 @@ function HeroStatCard({
   label: string;
 }) {
   return (
-    <div className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-[#00c8ea]/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
-      <div className="text-[28px] font-extrabold text-[#00c8ea]">
+    <div className="bg-surface border border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
+      <div className="text-[28px] font-extrabold text-accent">
         {value.toLocaleString()}
       </div>
       <div className="text-[11px] text-secondary uppercase tracking-wide mt-0.5">{label}</div>
@@ -168,7 +168,7 @@ function GameCard({
       >
         {/* Front of card */}
         <div
-          className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:border-white/[0.12] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden group h-full"
+          className="bg-surface border border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:border-border-strong hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden group h-full"
           style={{ backfaceVisibility: 'hidden' }}
           onClick={handleClick}
           onMouseEnter={() => setHoverCount(c => c + 1)}
@@ -210,7 +210,7 @@ function GameCard({
               <span className="text-[10px] text-secondary uppercase tracking-wide">Next Rank</span>
               <span className="text-[10px] text-secondary">{xpToNextRank} {game.xpName} to go</span>
             </div>
-            <div className="h-[6px] bg-[#0f0f1a] rounded overflow-hidden bar-shine-on-hover">
+            <div className="h-[6px] bg-surface rounded overflow-hidden bar-shine-on-hover">
               <div 
                 className="h-full rounded transition-all duration-500"
                 style={{ 
@@ -267,7 +267,7 @@ function GameCard({
 
         {/* Back of card - conditional layout based on stats */}
         <div
-          className="absolute inset-0 bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
+          className="absolute inset-0 bg-surface border border-token rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -294,7 +294,7 @@ function GameCard({
               </div>
             </div>
             <button 
-              className="text-xs text-secondary hover:text-primary transition-colors px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-[#2e2e3e]"
+              className="text-xs text-secondary hover:text-primary transition-colors px-3 py-1.5 rounded-lg bg-elevated hover:bg-elevated"
               onClick={handleClick}
             >
               ✕ Close
@@ -306,19 +306,19 @@ function GameCard({
             <>
               {/* Stats Grid - fits in 2x2 card */}
               <div className="grid grid-cols-4 gap-2 mb-3">
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5">
+                <div className="bg-surface rounded-lg p-2.5">
                   <div className="text-[9px] text-secondary uppercase mb-1">XP</div>
                   <div className="text-base font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5">
+                <div className="bg-surface rounded-lg p-2.5">
                   <div className="text-[9px] text-secondary uppercase mb-1">Events</div>
                   <div className="text-base font-bold text-accent">{stats.totalEvents}</div>
                 </div>
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5">
+                <div className="bg-surface rounded-lg p-2.5">
                   <div className="text-[9px] text-secondary uppercase mb-1">Win Rate</div>
                   <div className="text-base font-bold text-green-400">{stats.winRate}%</div>
                 </div>
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5">
+                <div className="bg-surface rounded-lg p-2.5">
                   <div className="text-[9px] text-secondary uppercase mb-1">Streak</div>
                   <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
                 </div>
@@ -326,22 +326,22 @@ function GameCard({
 
               {/* Secondary stats row */}
               <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-surface rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-secondary">Matches</span>
                   <span className="text-sm font-bold">{stats.matches}</span>
                 </div>
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-surface rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-secondary">Best</span>
                   <span className="text-sm font-bold">🏆 {stats.bestPlacement || '—'}</span>
                 </div>
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-surface rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-secondary">Since</span>
                   <span className="text-sm font-bold">{stats.firstPlayed || '—'}</span>
                 </div>
               </div>
 
               {/* W/L Record */}
-              <div className="bg-[#0f0f1a] rounded-lg p-2.5 mb-3 flex justify-between items-center">
+              <div className="bg-surface rounded-lg p-2.5 mb-3 flex justify-between items-center">
                 <span className="text-[10px] text-secondary">Record</span>
                 <span className="text-sm">
                   <span className="text-green-400 font-bold">{stats.wins}W</span>
@@ -358,7 +358,7 @@ function GameCard({
                     {earnedAchievements.slice(0, 6).map((achievement) => (
                       <div 
                         key={achievement.id}
-                        className="bg-[#0f0f1a] rounded-lg px-2 py-1 flex items-center gap-1.5 group relative"
+                        className="bg-surface rounded-lg px-2 py-1 flex items-center gap-1.5 group relative"
                         title={achievement.description}
                       >
                         <span className="text-sm">{achievement.icon}</span>
@@ -366,7 +366,7 @@ function GameCard({
                       </div>
                     ))}
                     {earnedAchievements.length > 6 && (
-                      <div className="bg-[#0f0f1a] rounded-lg px-2 py-1 text-[10px] text-secondary">
+                      <div className="bg-surface rounded-lg px-2 py-1 text-[10px] text-secondary">
                         +{earnedAchievements.length - 6} more
                       </div>
                     )}
@@ -377,7 +377,7 @@ function GameCard({
               {/* Leaderboard Rank & Next Event Row */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Leaderboard Rank */}
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5">
+                <div className="bg-surface rounded-lg p-2.5">
                   <div className="text-[9px] text-secondary uppercase mb-1">Leaderboard</div>
                   {game.leaderboardRank ? (
                     <div className="flex items-baseline gap-1">
@@ -390,7 +390,7 @@ function GameCard({
                 </div>
 
                 {/* Next Event */}
-                <div className="bg-[#0f0f1a] rounded-lg p-2.5">
+                <div className="bg-surface rounded-lg p-2.5">
                   <div className="text-[9px] text-secondary uppercase mb-1">Next Event</div>
                   {game.nextEvent ? (
                     <div>
@@ -407,17 +407,17 @@ function GameCard({
             // Compact layout for new players with minimal stats
             <>
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#0f0f1a] rounded-lg p-3">
+                <div className="bg-surface rounded-lg p-3">
                   <div className="text-[10px] text-secondary uppercase mb-1">Total XP</div>
                   <div className="text-xl font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
-                <div className="bg-[#0f0f1a] rounded-lg p-3">
+                <div className="bg-surface rounded-lg p-3">
                   <div className="text-[10px] text-secondary uppercase mb-1">Events</div>
                   <div className="text-xl font-bold text-accent">{stats.totalEvents}</div>
                 </div>
               </div>
               
-              <div className="bg-[#0f0f1a]/50 rounded-lg p-3 mb-4 text-center">
+              <div className="bg-surface/50 rounded-lg p-3 mb-4 text-center">
                 <div className="text-secondary text-xs">Play in tournaments to unlock detailed stats!</div>
               </div>
             </>
@@ -833,7 +833,7 @@ export default function DesktopDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center">
+      <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-bounce">🎮</div>
           <div className="text-secondary">Loading your profile...</div>
@@ -843,7 +843,7 @@ export default function DesktopDashboard() {
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0f0f1a] text-primary overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-base text-primary overflow-x-hidden">
       {/* Ambient background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div 
@@ -869,16 +869,16 @@ export default function DesktopDashboard() {
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
               <h1 
-                className="text-[22px] font-extrabold font-orbitron text-[#00c8ea]"
+                className="text-[22px] font-extrabold font-display text-accent"
               >
                 HYPERBOLIC GAMES
               </h1>
               <div className="flex gap-2.5">
-                <button className="w-[42px] h-[42px] bg-[#0f0f1a] border border-white/[0.07] rounded-xl flex items-center justify-center text-lg transition-all hover:border-[#00c8ea]/30 relative">
+                <button className="w-[42px] h-[42px] bg-surface border border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-accent/30 relative">
                   🔔
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 </button>
-                <button className="w-[42px] h-[42px] bg-[#0f0f1a] border border-white/[0.07] rounded-xl flex items-center justify-center text-lg transition-all hover:border-[#00c8ea]/30">
+                <button className="w-[42px] h-[42px] bg-surface border border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-accent/30">
                   ⚙️
                 </button>
               </div>
@@ -887,10 +887,10 @@ export default function DesktopDashboard() {
             {/* Player Hero Card */}
             <div 
               ref={heroRef}
-              className="group flex items-center gap-7 bg-[#0f0f1a] border border-white/[0.07] rounded-3xl p-7 relative overflow-hidden transition-all hover:border-[#00c8ea]/20 hover:shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
+              className="group flex items-center gap-7 bg-surface border border-token rounded-3xl p-7 relative overflow-hidden transition-all hover:border-accent/20 hover:shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
             >
               {/* Top gradient line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#00c8ea]/40" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent/40" />
               <div className="absolute top-0 right-0 w-[300px] h-full bg-[radial-gradient(ellipse_at_right,rgba(0,200,234,0.05)_0%,transparent_70%)] pointer-events-none" />
 
               {/* Avatar */}
@@ -923,11 +923,11 @@ export default function DesktopDashboard() {
 
                 {/* XP Bar */}
                 <div className="max-w-[380px]">
-                  <div className="h-2.5 bg-[#0f0f1a] rounded overflow-hidden relative bar-shine-on-hover">
+                  <div className="h-2.5 bg-surface rounded overflow-hidden relative bar-shine-on-hover">
                     <div 
                       className="h-full rounded relative"
                       style={{
-                        background: '#00c8ea',
+                        background: 'var(--accent)',
                         width: `${levelProgress}%`
                       }}
                     />
@@ -960,7 +960,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowCheckIn(true)}
                     disabled={hasCheckedInToday}
-                    className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-surface border border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(34,197,94,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -979,7 +979,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowGacha(true)}
                     disabled={hasSpunToday}
-                    className="bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-surface border border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -1083,7 +1083,7 @@ export default function DesktopDashboard() {
                 )}
 
                 {/* My Games - Enhanced Tiles */}
-                <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
+                <div className="animate-card bg-surface border border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       🎮 My Games
@@ -1116,7 +1116,7 @@ export default function DesktopDashboard() {
                 <CardOfTheDay />
 
                 {/* Recent Activity - Near other stats */}
-                <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
+                <div className="animate-card bg-surface border border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       📋 Recent Activity
@@ -1134,9 +1134,9 @@ export default function DesktopDashboard() {
                       extendedActivity.map((activity: any) => (
                         <div 
                           key={activity.id}
-                          className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[#0f0f1a] group"
+                          className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-surface group"
                         >
-                          <div className="w-[38px] h-[38px] bg-[#0f0f1a] rounded-xl flex items-center justify-center text-base group-hover:bg-[#0f0f1a] transition-colors shrink-0">
+                          <div className="w-[38px] h-[38px] bg-surface rounded-xl flex items-center justify-center text-base group-hover:bg-surface transition-colors shrink-0">
                             {activity.icon}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1163,24 +1163,24 @@ export default function DesktopDashboard() {
             {/* Bottom Sections - Full Width */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Overall Stats Summary */}
-              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
                   📊 Your Stats
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
+                  <div className="bg-elevated border border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-accent">{games.length}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Games Played</div>
                   </div>
-                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
+                  <div className="bg-elevated border border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-green-400">{playerData?.totalEventsAttended || 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Events Attended</div>
                   </div>
-                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-[#00c8ea]">{totalXp.toLocaleString()}</div>
+                  <div className="bg-elevated border border-token rounded-xl p-4 text-center">
+                    <div className="text-2xl font-bold text-accent">{totalXp.toLocaleString()}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Total XP</div>
                   </div>
-                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-4 text-center">
+                  <div className="bg-elevated border border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Week Streak</div>
                   </div>
@@ -1188,7 +1188,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Upcoming Events You're Interested In */}
-              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     📅 Your Upcoming Events
@@ -1202,7 +1202,7 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="space-y-3">
                   {/* Placeholder events - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/[0.06] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-token rounded-xl">
                     <div className="w-10 h-10 bg-[#E63946]/20 rounded-lg flex items-center justify-center text-lg">🏴‍☠️</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">One Piece Local</div>
@@ -1210,7 +1210,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">Registered</div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/[0.06] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-token rounded-xl">
                     <div className="w-10 h-10 bg-[#8B5CF6]/20 rounded-lg flex items-center justify-center text-lg">✨</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">MTG Commander Night</div>
@@ -1218,7 +1218,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="text-xs text-accent bg-accent/10 px-2 py-1 rounded">Interested</div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-[#0f0f1a] rounded-xl opacity-60">
+                  <div className="flex items-center gap-3 p-3 bg-surface rounded-xl opacity-60">
                     <div className="w-10 h-10 bg-elevated/50 rounded-lg flex items-center justify-center text-lg">📅</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-secondary">No more events this week</div>
@@ -1232,7 +1232,7 @@ export default function DesktopDashboard() {
             {/* Second Row */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Highlights */}
-              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     🛒 Store Highlights
@@ -1246,17 +1246,17 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {/* Placeholder items - will be replaced with real data */}
-                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center cursor-pointer hover:bg-white/[0.07] transition-colors">
+                  <div className="bg-elevated border border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">🎨</div>
                     <div className="text-xs font-medium">Custom Avatar Frame</div>
                     <div className="text-[10px] text-accent mt-1">500 XP</div>
                   </div>
-                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center cursor-pointer hover:bg-white/[0.07] transition-colors">
+                  <div className="bg-elevated border border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">✨</div>
                     <div className="text-xs font-medium">Name Glow Effect</div>
                     <div className="text-[10px] text-accent mt-1">750 XP</div>
                   </div>
-                  <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center cursor-pointer hover:bg-white/[0.07] transition-colors">
+                  <div className="bg-elevated border border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">🏆</div>
                     <div className="text-xs font-medium">Trophy Badge</div>
                     <div className="text-[10px] text-accent mt-1">1,000 XP</div>
@@ -1265,7 +1265,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Friends Activity */}
-              <div className="animate-card bg-[#0f0f1a] border border-white/[0.07] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     👥 Friends Activity
@@ -1279,21 +1279,21 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="space-y-3">
                   {/* Placeholder friends - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
-                    <div className="w-8 h-8 bg-[#00c8ea]/20 border border-[#00c8ea]/30 rounded-full flex items-center justify-center text-xs font-bold text-[#00c8ea]">JM</div>
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-token rounded-xl">
+                    <div className="w-8 h-8 bg-accent/20 border border-accent/30 rounded-full flex items-center justify-center text-xs font-bold text-accent">JM</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">JMoney</span> <span className="text-secondary">ranked up to</span> <span className="text-yellow-400">Warlord</span></div>
                       <div className="text-[10px] text-secondary">2 hours ago</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-token rounded-xl">
                     <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold">SK</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">SailorKing</span> <span className="text-secondary">won</span> <span className="text-green-400">3 matches</span> <span className="text-secondary">in One Piece</span></div>
                       <div className="text-[10px] text-secondary">5 hours ago</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-token rounded-xl">
                     <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-xs font-bold">TC</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">TCGMaster</span> <span className="text-secondary">earned</span> <span className="text-accent">+150 XP</span></div>

@@ -375,7 +375,7 @@ const MiniCalendar = ({
   };
 
   return (
-    <div className="bg-base border border-[#1e1e2e] rounded-2xl p-4">
+    <div className="bg-base border border-token rounded-2xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button 
@@ -714,7 +714,7 @@ function EventsPageContent() {
     <div 
       onClick={() => setSelectedEvent(event)}
       className={`bg-base rounded-xl overflow-hidden border cursor-pointer hover:border-token transition-all ${
-        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-[#1e1e2e]'
+        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-token'
       }`}
     >
       <div 
@@ -1042,7 +1042,7 @@ function EventsPageContent() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Filter Bar */}
-      <div className="border-b border-[#1e1e2e] bg-[#07070b]/95 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-token bg-base/95 backdrop-blur-sm sticky top-0 z-10">
         <div className="px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-4">
             <p className="text-secondary text-sm">Tap to see details</p>
@@ -1180,7 +1180,7 @@ function EventsPageContent() {
                 />
                 
                 {/* Quick stats */}
-                <div className="mt-4 bg-base border border-[#1e1e2e] rounded-2xl p-4">
+                <div className="mt-4 bg-base border border-token rounded-2xl p-4">
                   <h3 className="text-primary font-bold mb-3">This Week</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-elevated/50 rounded-lg p-3 text-center">
