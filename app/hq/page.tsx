@@ -1138,8 +1138,8 @@ export default function HQPage() {
 
   if (loading || isStaff === null) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-cyan-400 text-xl">Verifying access...</div>
+      <div className="min-h-screen bg-base flex items-center justify-center">
+        <div className="text-accent text-xl">Verifying access...</div>
       </div>
     );
   }
@@ -1147,7 +1147,7 @@ export default function HQPage() {
   const filteredGames = getFilteredGames();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-base text-primary">
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 px-6 py-3 rounded-xl z-50 font-medium ${
@@ -1158,16 +1158,16 @@ export default function HQPage() {
       )}
 
       {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-900/50">
+      <div className="border-b border-token bg-surface/50">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-accent">
                 HQ Command Center
               </h1>
-              <p className="text-slate-500 text-sm">Staff Only</p>
+              <p className="text-secondary text-sm">Staff Only</p>
             </div>
-            <a href="/dashboard" className="text-slate-400 hover:text-white text-sm">
+            <a href="/dashboard" className="text-secondary hover:text-primary text-sm">
               ← Back to Dashboard
             </a>
           </div>
@@ -1175,7 +1175,7 @@ export default function HQPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-800">
+      <div className="border-b border-token">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex gap-2 py-2">
             {[
@@ -1191,8 +1191,8 @@ export default function HQPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-accent/10 text-accent border border-accent/30'
+                    : 'text-secondary hover:text-primary hover:bg-elevated'
                 }`}
               >
                 {tab.label}
@@ -1207,8 +1207,8 @@ export default function HQPage() {
         {activeTab === 'players' && (
           <div className="space-y-6">
             {/* Search */}
-            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-              <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+            <div className="bg-surface rounded-xl p-6 border border-token">
+              <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                 Search Player
               </h2>
               <div className="flex gap-3">
@@ -1218,12 +1218,12 @@ export default function HQPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchPlayer()}
                   placeholder="Enter Player ID (HYP-XXXXX) or name..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="flex-1 bg-elevated border border-token rounded-lg px-4 py-3 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                 />
                 <button
                   onClick={searchPlayer}
                   disabled={searchLoading}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                  className="px-6 py-3 bg-accent rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
                 >
                   {searchLoading ? 'Searching...' : 'Search'}
                 </button>
@@ -1232,27 +1232,27 @@ export default function HQPage() {
 
             {/* Player Result */}
             {playerDetails && (
-              <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+              <div className="bg-surface rounded-xl border border-token overflow-hidden">
                 {/* Player Header */}
-                <div className="p-6 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border-b border-slate-800">
+                <div className="p-6 bg-elevated/50 border-b border-token">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold">{playerDetails.player.display_name}</h2>
-                      <p className="text-cyan-400 font-mono">{playerDetails.player.player_id}</p>
+                      <p className="text-accent font-mono">{playerDetails.player.player_id}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-cyan-400">
+                      <div className="text-3xl font-bold text-accent">
                         {playerDetails.totalXp.toLocaleString()}
                       </div>
-                      <div className="text-slate-500 text-sm">Total XP</div>
+                      <div className="text-secondary text-sm">Total XP</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Game XP Section - REDESIGNED */}
-                <div className="p-6 border-b border-slate-800">
+                <div className="p-6 border-b border-token">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                    <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
                       Game XP
                     </h3>
                     {/* Game Filter Dropdown */}
@@ -1265,7 +1265,7 @@ export default function HQPage() {
                           setSelectedGame(e.target.value);
                         }
                       }}
-                      className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      className="bg-elevated border border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
                     >
                       {getFavoritesCount() > 0 && (
                         <option value="favorites">⭐ Favorites ({getFavoritesCount()})</option>
@@ -1290,18 +1290,18 @@ export default function HQPage() {
                         const game = playerDetails.gameXp.find(g => g.game_id === gameFilter);
                         if (!game) return null;
                         return (
-                          <div className="flex-1 p-5 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border-2 border-cyan-500">
+                          <div className="flex-1 p-5 rounded-xl bg-accent/10 border-2 border-accent">
                             <div className="flex items-center gap-4">
                               <span className="text-4xl">{game.icon}</span>
                               <div className="flex-1">
                                 <div className="font-bold text-lg">{game.game_name}</div>
-                                <div className="text-purple-400 text-sm">{game.rank}</div>
+                                <div className="text-accent text-sm">{game.rank}</div>
                               </div>
                               <div className="text-right">
-                                <div className="text-3xl font-bold text-cyan-400">
+                                <div className="text-3xl font-bold text-accent">
                                   {game.xp.toLocaleString()}
                                 </div>
-                                <div className="text-slate-400 text-sm">{game.xp_name}</div>
+                                <div className="text-secondary text-sm">{game.xp_name}</div>
                               </div>
                             </div>
                           </div>
@@ -1309,7 +1309,7 @@ export default function HQPage() {
                       })()}
                       <button
                         onClick={() => setGameFilter(getFavoritesCount() > 0 ? 'favorites' : 'with_xp')}
-                        className="px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg text-sm"
+                        className="px-3 py-2 text-secondary hover:text-primary hover:bg-elevated rounded-lg text-sm"
                       >
                         Show All
                       </button>
@@ -1328,50 +1328,50 @@ export default function HQPage() {
                               }}
                               className={`p-4 rounded-xl cursor-pointer transition-all ${
                                 selectedGame === game.game_id
-                                  ? 'bg-gradient-to-br from-cyan-500/30 to-purple-500/30 border-2 border-cyan-500 shadow-lg shadow-cyan-500/20'
+                                  ? 'bg-accent/20 border-2 border-accent'
                                   : game.xp > 0
-                                    ? 'bg-slate-800 border-2 border-transparent hover:border-slate-600'
-                                    : 'bg-slate-800/50 border-2 border-transparent hover:border-slate-700 opacity-60'
+                                    ? 'bg-elevated border-2 border-transparent hover:border-token'
+                                    : 'bg-elevated/50 border-2 border-transparent hover:border-token opacity-60'
                               }`}
                             >
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-2xl">{game.icon}</span>
                                 <span className="font-medium text-sm truncate">{game.game_name}</span>
                               </div>
-                              <div className={`text-xl font-bold ${game.xp > 0 ? 'text-cyan-400' : 'text-slate-500'}`}>
+                              <div className={`text-xl font-bold ${game.xp > 0 ? 'text-accent' : 'text-secondary'}`}>
                                 {game.xp.toLocaleString()}
                               </div>
-                              <div className="text-slate-500 text-xs">{game.xp_name}</div>
+                              <div className="text-secondary text-xs">{game.xp_name}</div>
                               {game.xp > 0 && (
-                                <div className="mt-1 text-xs text-purple-400">{game.rank}</div>
+                                <div className="mt-1 text-xs text-accent">{game.rank}</div>
                               )}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-8 text-slate-500">
+                        <div className="text-center py-8 text-secondary">
                           No games match the current filter
                         </div>
                       )}
                       
                       {/* Quick stats when filter is active */}
                       {gameFilter === 'with_xp' && playerDetails.gameXp.filter(g => g.xp === 0).length > 0 && (
-                        <p className="text-slate-500 text-xs mt-3">
+                        <p className="text-secondary text-xs mt-3">
                           +{playerDetails.gameXp.filter(g => g.xp === 0).length} more games with 0 XP • 
                           <button 
                             onClick={() => setGameFilter('all')}
-                            className="text-cyan-400 hover:underline ml-1"
+                            className="text-accent hover:underline ml-1"
                           >
                             Show all
                           </button>
                         </p>
                       )}
                       {gameFilter === 'favorites' && (
-                        <p className="text-slate-500 text-xs mt-3">
+                        <p className="text-secondary text-xs mt-3">
                           ⭐ Showing player&apos;s favorite games • 
                           <button 
                             onClick={() => setGameFilter('all')}
-                            className="text-cyan-400 hover:underline ml-1"
+                            className="text-accent hover:underline ml-1"
                           >
                             Show all {playerDetails.gameXp.length} games
                           </button>
@@ -1382,16 +1382,16 @@ export default function HQPage() {
                 </div>
 
                 {/* XP Management - Multi-select Tiles */}
-                <div className="p-6 border-b border-slate-800">
+                <div className="p-6 border-b border-token">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                    <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
                       Award XP
                     </h3>
                     {/* Game selector for XP */}
                     <select
                       value={selectedGame}
                       onChange={(e) => setSelectedGame(e.target.value)}
-                      className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      className="bg-elevated border border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
                     >
                       {games.map(game => (
                         <option key={game.id} value={game.id}>
@@ -1403,18 +1403,18 @@ export default function HQPage() {
 
                   {/* Event Entry */}
                   <div className="mb-4">
-                    <div className="text-xs font-medium text-purple-400 uppercase tracking-wider mb-2">📅 Event Entry</div>
+                    <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">📅 Event Entry</div>
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => toggleTile('Attended', 10)}
                         className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
                           isTileSelected('Attended')
-                            ? 'bg-purple-500/20 border-purple-500 text-white'
-                            : 'bg-slate-800 border-slate-700 hover:border-purple-500 hover:bg-purple-500/10'
+                            ? 'bg-purple-500/20 border-purple-500 text-primary'
+                            : 'bg-elevated border-token hover:border-purple-500 hover:bg-purple-500/10'
                         }`}
                       >
                         <span className="font-medium">Attended</span>
-                        <span className="text-xs text-purple-400">+10 XP</span>
+                        <span className="text-xs text-accent">+10 XP</span>
                       </button>
                     </div>
                   </div>
@@ -1435,8 +1435,8 @@ export default function HQPage() {
                           onClick={() => toggleTile(item.label, item.xp)}
                           className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
                             isTileSelected(item.label)
-                              ? 'bg-green-500/20 border-green-500 text-white'
-                              : 'bg-slate-800 border-slate-700 hover:border-green-500 hover:bg-green-500/10'
+                              ? 'bg-green-500/20 border-green-500 text-primary'
+                              : 'bg-elevated border-token hover:border-green-500 hover:bg-green-500/10'
                           }`}
                         >
                           <span className="font-medium">{item.label}</span>
@@ -1461,8 +1461,8 @@ export default function HQPage() {
                           onClick={() => toggleTile(item.label, item.xp)}
                           className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
                             isTileSelected(item.label)
-                              ? 'bg-orange-500/20 border-orange-500 text-white'
-                              : 'bg-slate-800 border-slate-700 hover:border-orange-500 hover:bg-orange-500/10'
+                              ? 'bg-orange-500/20 border-orange-500 text-primary'
+                              : 'bg-elevated border-token hover:border-orange-500 hover:bg-orange-500/10'
                           }`}
                         >
                           <span className="font-medium">{item.label}</span>
@@ -1474,12 +1474,12 @@ export default function HQPage() {
 
                   {/* Selected Summary & Award Button */}
                   {selectedTiles.length > 0 && (
-                    <div className="mb-4 p-4 bg-slate-800 rounded-xl border border-cyan-500/30">
+                    <div className="mb-4 p-4 bg-elevated rounded-xl border border-accent/30">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="text-sm text-slate-400">Selected:</div>
+                        <div className="text-sm text-secondary">Selected:</div>
                         <button
                           onClick={() => setSelectedTiles([])}
-                          className="text-xs text-slate-500 hover:text-white"
+                          className="text-xs text-secondary hover:text-primary"
                         >
                           Clear all
                         </button>
@@ -1488,14 +1488,14 @@ export default function HQPage() {
                         {selectedTiles.map(tile => (
                           <span
                             key={tile.label}
-                            className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-sm"
+                            className="px-2 py-1 bg-accent/10 text-accent rounded text-sm"
                           >
                             {tile.label} (+{tile.xp})
                           </span>
                         ))}
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="text-lg font-bold text-cyan-400">
+                        <div className="text-lg font-bold text-accent">
                           Total: +{getSelectedTotal()} XP
                         </div>
                         <button
@@ -1510,36 +1510,36 @@ export default function HQPage() {
 
                   {/* Custom Award/Remove */}
                   <div>
-                    <div className="text-xs font-medium text-cyan-400 uppercase tracking-wider mb-2">✨ Custom (+ or -)</div>
+                    <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">✨ Custom (+ or -)</div>
                     <div className="flex gap-3">
                       <input
                         type="number"
                         value={xpAmount}
                         onChange={(e) => setXpAmount(e.target.value)}
                         placeholder="+/- XP"
-                        className="w-24 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-center"
+                        className="w-24 bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent text-center"
                       />
                       <input
                         type="text"
                         value={xpReason}
                         onChange={(e) => setXpReason(e.target.value)}
                         placeholder="Reason (e.g., Prize payout, Correction)"
-                        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                        className="flex-1 bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                       />
                       <button
                         onClick={addCustomXp}
-                        className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
+                        className="px-5 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
                       >
                         Apply
                       </button>
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">Use negative numbers to remove XP (e.g., -25)</p>
+                    <p className="text-xs text-secondary mt-2">Use negative numbers to remove XP (e.g., -25)</p>
                   </div>
                 </div>
 
                 {/* Recent Activity */}
                 <div className="p-6">
-                  <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+                  <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                     Recent Activity
                   </h3>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -1547,11 +1547,11 @@ export default function HQPage() {
                       playerDetails.recentActivity.map(activity => (
                         <div
                           key={activity.id}
-                          className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
+                          className="flex items-center justify-between p-3 bg-elevated rounded-lg"
                         >
                           <div>
-                            <div className="text-white">{activity.description || 'XP adjustment'}</div>
-                            <div className="text-slate-500 text-sm">
+                            <div className="text-primary">{activity.description || 'XP adjustment'}</div>
+                            <div className="text-secondary text-sm">
                               {activity.game_id} • {new Date(activity.created_at).toLocaleDateString()}
                             </div>
                           </div>
@@ -1561,7 +1561,7 @@ export default function HQPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="text-slate-500 text-center py-4">No recent activity</div>
+                      <div className="text-secondary text-center py-4">No recent activity</div>
                     )}
                   </div>
                 </div>
@@ -1574,16 +1574,16 @@ export default function HQPage() {
         {activeTab === 'emperor' && (
           <div className="space-y-6">
             {/* Month Selector */}
-            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+            <div className="bg-surface rounded-xl p-6 border border-token">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold">🏴‍☠️ One Piece Emperor Rankings</h2>
-                  <p className="text-slate-500">Monthly bounty competition</p>
+                  <p className="text-secondary">Monthly bounty competition</p>
                 </div>
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
+                  className="bg-elevated border border-token rounded-lg px-4 py-2 text-primary focus:outline-none focus:border-accent"
                 >
                   {getMonthOptions().map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1594,36 +1594,36 @@ export default function HQPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Current Emperor */}
-              <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-                <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+              <div className="bg-surface rounded-xl p-6 border border-token">
+                <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                   Monthly Rankings
                 </h3>
                 {emperorLoading ? (
-                  <div className="text-center py-8 text-slate-500">Loading...</div>
+                  <div className="text-center py-8 text-secondary">Loading...</div>
                 ) : monthlyRankings.length > 0 ? (
                   <div className="space-y-3">
                     {monthlyRankings.slice(0, 10).map((player, index) => (
                       <div
                         key={player.player_id}
                         className={`flex items-center justify-between p-3 rounded-lg ${
-                          index === 0 ? 'bg-yellow-500/20 border border-yellow-500/30' : 'bg-slate-800'
+                          index === 0 ? 'bg-yellow-500/20 border border-yellow-500/30' : 'bg-elevated'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
                             index === 0 ? 'bg-yellow-500 text-black' :
-                            index === 1 ? 'bg-slate-400 text-black' :
+                            index === 1 ? 'bg-secondary text-base' :
                             index === 2 ? 'bg-amber-600 text-black' :
-                            'bg-slate-700'
+                            "bg-elevated"
                           }`}>
                             {index + 1}
                           </div>
                           <div>
                             <div className="font-medium">{player.display_name}</div>
-                            <div className="text-slate-500 text-sm">{player.bounty}</div>
+                            <div className="text-secondary text-sm">{player.bounty}</div>
                           </div>
                         </div>
-                        <div className="text-cyan-400 font-bold">
+                        <div className="text-accent font-bold">
                           {player.berries.toLocaleString()}
                         </div>
                       </div>
@@ -1638,15 +1638,15 @@ export default function HQPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-slate-500">
+                  <div className="text-center py-8 text-secondary">
                     No rankings for this month
                   </div>
                 )}
               </div>
 
               {/* Hall of Fame */}
-              <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-                <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+              <div className="bg-surface rounded-xl p-6 border border-token">
+                <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                   Hall of Fame
                 </h3>
                 {hallOfFame.length > 0 ? (
@@ -1654,21 +1654,21 @@ export default function HQPage() {
                     {hallOfFame.map((emperor) => (
                       <div
                         key={emperor.id}
-                        className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-lg border border-purple-500/20"
+                        className="flex items-center justify-between p-3 bg-elevated/50 rounded-lg border border-purple-500/20"
                       >
                         <div>
                           <div className="font-medium">👑 {emperor.player_name}</div>
-                          <div className="text-slate-500 text-sm">{emperor.month}</div>
+                          <div className="text-secondary text-sm">{emperor.month}</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-cyan-400 font-bold">{emperor.bounty_display}</div>
-                          <div className="text-slate-500 text-xs">+{emperor.monthly_xp.toLocaleString()} that month</div>
+                          <div className="text-accent font-bold">{emperor.bounty_display}</div>
+                          <div className="text-secondary text-xs">+{emperor.monthly_xp.toLocaleString()} that month</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-slate-500">
+                  <div className="text-center py-8 text-secondary">
                     No emperors crowned yet
                   </div>
                 )}
@@ -1698,20 +1698,20 @@ export default function HQPage() {
                   twitch_url: null,
                   youtube_url: null,
                 })}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
+                className="px-4 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
               >
                 + New Banner
               </button>
             </div>
 
             {bannerLoading ? (
-              <div className="text-center py-8 text-slate-500">Loading banners...</div>
+              <div className="text-center py-8 text-secondary">Loading banners...</div>
             ) : (
               <div className="grid gap-4">
                 {banners.map(banner => (
                   <div
                     key={banner.id}
-                    className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden"
+                    className="bg-surface rounded-xl border border-token overflow-hidden"
                   >
                     <div
                       className="p-4"
@@ -1738,17 +1738,17 @@ export default function HQPage() {
                         )}
                       </div>
                     </div>
-                    <div className="p-3 flex items-center justify-between bg-slate-800/50">
+                    <div className="p-3 flex items-center justify-between bg-elevated/50">
                       <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${banner.is_active ? 'bg-green-500' : 'bg-slate-500'}`}></span>
-                        <span className="text-slate-400 text-sm">
+                        <span className={`w-2 h-2 rounded-full ${banner.is_active ? 'bg-green-500' : 'bg-elevated'}`}></span>
+                        <span className="text-secondary text-sm">
                           {banner.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setEditingBanner(banner)}
-                          className="px-3 py-1 text-cyan-400 hover:bg-cyan-500/20 rounded"
+                          className="px-3 py-1 text-accent hover:bg-accent/10 rounded"
                         >
                           Edit
                         </button>
@@ -1768,8 +1768,8 @@ export default function HQPage() {
             {/* Banner Editor Modal */}
             {editingBanner && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-slate-900 rounded-xl border border-slate-800 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                  <div className="p-4 border-b border-slate-800">
+                <div className="bg-surface rounded-xl border border-token max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-4 border-b border-token">
                     <h3 className="text-lg font-bold">
                       {editingBanner.id ? 'Edit Banner' : 'New Banner'}
                     </h3>
@@ -1798,36 +1798,36 @@ export default function HQPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">Title</label>
+                        <label className="text-secondary text-sm mb-1 block">Title</label>
                         <input
                           type="text"
                           value={editingBanner.title}
                           onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">Subtitle</label>
+                        <label className="text-secondary text-sm mb-1 block">Subtitle</label>
                         <input
                           type="text"
                           value={editingBanner.subtitle}
                           onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">Icon</label>
+                        <label className="text-secondary text-sm mb-1 block">Icon</label>
                         <div className="relative">
                           <button
                             type="button"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-left flex items-center justify-between"
+                            className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent text-left flex items-center justify-between"
                           >
                             <span className="text-2xl">{editingBanner.icon || '🎮'}</span>
-                            <span className="text-slate-500 text-sm">Click to change</span>
+                            <span className="text-secondary text-sm">Click to change</span>
                           </button>
                           {showEmojiPicker && (
-                            <div className="absolute top-full left-0 mt-2 p-3 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 w-64">
+                            <div className="absolute top-full left-0 mt-2 p-3 bg-elevated border border-token rounded-lg shadow-xl z-10 w-64">
                               <div className="grid grid-cols-8 gap-1">
                                 {['🎮', '🎲', '🎯', '🏆', '👑', '⭐', '🔥', '⚡',
                                   '🎪', '🎭', '🎨', '🎬', '🎤', '🎧', '🎸', '🎹',
@@ -1842,7 +1842,7 @@ export default function HQPage() {
                                       setEditingBanner(prev => prev ? { ...prev, icon: emoji } : prev);
                                       setShowEmojiPicker(false);
                                     }}
-                                    className="text-2xl hover:bg-slate-700 rounded p-1 transition-colors"
+                                    className="text-2xl hover:bg-elevated rounded p-1 transition-colors"
                                   >
                                     {emoji}
                                   </button>
@@ -1853,31 +1853,31 @@ export default function HQPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">Badge</label>
+                        <label className="text-secondary text-sm mb-1 block">Badge</label>
                         <input
                           type="text"
                           value={editingBanner.badge}
                           onChange={(e) => setEditingBanner({ ...editingBanner, badge: e.target.value })}
                           placeholder="e.g. LIVE SOON"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">Color From</label>
+                        <label className="text-secondary text-sm mb-1 block">Color From</label>
                         <input
                           type="color"
                           value={editingBanner.color_from}
                           onChange={(e) => setEditingBanner({ ...editingBanner, color_from: e.target.value })}
-                          className="w-full h-10 bg-slate-800 border border-slate-700 rounded-lg cursor-pointer"
+                          className="w-full h-10 bg-elevated border border-token rounded-lg cursor-pointer"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">Color To</label>
+                        <label className="text-secondary text-sm mb-1 block">Color To</label>
                         <input
                           type="color"
                           value={editingBanner.color_to}
                           onChange={(e) => setEditingBanner({ ...editingBanner, color_to: e.target.value })}
-                          className="w-full h-10 bg-slate-800 border border-slate-700 rounded-lg cursor-pointer"
+                          className="w-full h-10 bg-elevated border border-token rounded-lg cursor-pointer"
                         />
                       </div>
                     </div>
@@ -1885,23 +1885,23 @@ export default function HQPage() {
                     {/* Stream URLs */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">📺 Twitch URL</label>
+                        <label className="text-secondary text-sm mb-1 block">📺 Twitch URL</label>
                         <input
                           type="url"
                           value={editingBanner.twitch_url || ''}
                           onChange={(e) => setEditingBanner({ ...editingBanner, twitch_url: e.target.value || null })}
                           placeholder="https://twitch.tv/..."
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-purple-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 text-sm mb-1 block">▶️ YouTube URL</label>
+                        <label className="text-secondary text-sm mb-1 block">▶️ YouTube URL</label>
                         <input
                           type="url"
                           value={editingBanner.youtube_url || ''}
                           onChange={(e) => setEditingBanner({ ...editingBanner, youtube_url: e.target.value || null })}
                           placeholder="https://youtube.com/..."
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-red-500"
                         />
                       </div>
                     </div>
@@ -1918,16 +1918,16 @@ export default function HQPage() {
                       </label>
                     </div>
                   </div>
-                  <div className="p-4 border-t border-slate-800 flex justify-end gap-3">
+                  <div className="p-4 border-t border-token flex justify-end gap-3">
                     <button
                       onClick={() => setEditingBanner(null)}
-                      className="px-4 py-2 text-slate-400 hover:text-white"
+                      className="px-4 py-2 text-secondary hover:text-primary"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => saveBanner(editingBanner)}
-                      className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90"
+                      className="px-6 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
                     >
                       Save
                     </button>
@@ -1942,7 +1942,7 @@ export default function HQPage() {
         {activeTab === 'bounty' && (
           <div className="space-y-6">
             {bountyLoading ? (
-              <div className="text-center py-12 text-slate-400">Loading...</div>
+              <div className="text-center py-12 text-secondary">Loading...</div>
             ) : bountyEvent ? (
               <>
                 {/* Current Event */}
@@ -1952,7 +1952,7 @@ export default function HQPage() {
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                       bountyEvent.status === 'opt_in_open' ? 'bg-green-500/20 text-green-400' :
                       bountyEvent.status === 'active' ? 'bg-orange-500/20 text-orange-400' :
-                      bountyEvent.status === 'completed' ? 'bg-slate-500/20 text-slate-400' :
+                      bountyEvent.status === 'completed' ? 'bg-elevated/50 text-secondary' :
                       'bg-blue-500/20 text-blue-400'
                     }`}>
                       {bountyEvent.status.replace('_', ' ').toUpperCase()}
@@ -1964,30 +1964,30 @@ export default function HQPage() {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm text-slate-400 mb-1">Event Date</label>
+                          <label className="block text-sm text-secondary mb-1">Event Date</label>
                           <input
                             type="date"
                             value={newEventDate}
                             onChange={(e) => setNewEventDate(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                            className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm text-slate-400 mb-1">Opt-In Opens</label>
+                          <label className="block text-sm text-secondary mb-1">Opt-In Opens</label>
                           <input
                             type="datetime-local"
                             value={newOptInOpens}
                             onChange={(e) => setNewOptInOpens(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                            className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm text-slate-400 mb-1">Opt-In Closes</label>
+                          <label className="block text-sm text-secondary mb-1">Opt-In Closes</label>
                           <input
                             type="datetime-local"
                             value={newOptInCloses}
                             onChange={(e) => setNewOptInCloses(e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                            className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                           />
                         </div>
                       </div>
@@ -1995,13 +1995,13 @@ export default function HQPage() {
                         <button
                           onClick={saveEditedEvent}
                           disabled={creatingEvent}
-                          className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                          className="px-4 py-2 bg-accent rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
                         >
                           {creatingEvent ? 'Saving...' : 'Save Changes'}
                         </button>
                         <button
                           onClick={cancelEditingEvent}
-                          className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600"
+                          className="px-4 py-2 bg-elevated text-primary rounded-lg hover:bg-elevated/80"
                         >
                           Cancel
                         </button>
@@ -2011,27 +2011,27 @@ export default function HQPage() {
                     /* Display View */
                     <>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-slate-800/50 rounded-lg p-3">
-                          <div className="text-slate-400 text-xs">Event Date</div>
-                          <div className="text-white font-medium">{bountyEvent.event_date}</div>
+                        <div className="bg-elevated/50 rounded-lg p-3">
+                          <div className="text-secondary text-xs">Event Date</div>
+                          <div className="text-primary font-medium">{bountyEvent.event_date}</div>
                         </div>
-                        <div className="bg-slate-800/50 rounded-lg p-3">
-                          <div className="text-slate-400 text-xs">Month</div>
-                          <div className="text-white font-medium">{bountyEvent.month_key}</div>
+                        <div className="bg-elevated/50 rounded-lg p-3">
+                          <div className="text-secondary text-xs">Month</div>
+                          <div className="text-primary font-medium">{bountyEvent.month_key}</div>
                         </div>
-                        <div className="bg-slate-800/50 rounded-lg p-3">
-                          <div className="text-slate-400 text-xs">Opt-In Opens</div>
-                          <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_opens_at).toLocaleDateString()}</div>
+                        <div className="bg-elevated/50 rounded-lg p-3">
+                          <div className="text-secondary text-xs">Opt-In Opens</div>
+                          <div className="text-primary font-medium text-sm">{new Date(bountyEvent.opt_in_opens_at).toLocaleDateString()}</div>
                         </div>
-                        <div className="bg-slate-800/50 rounded-lg p-3">
-                          <div className="text-slate-400 text-xs">Opt-In Closes</div>
-                          <div className="text-white font-medium text-sm">{new Date(bountyEvent.opt_in_closes_at).toLocaleDateString()}</div>
+                        <div className="bg-elevated/50 rounded-lg p-3">
+                          <div className="text-secondary text-xs">Opt-In Closes</div>
+                          <div className="text-primary font-medium text-sm">{new Date(bountyEvent.opt_in_closes_at).toLocaleDateString()}</div>
                         </div>
                       </div>
 
                       {/* Status Controls */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="text-slate-400 text-sm mr-2">Change Status:</span>
+                        <span className="text-secondary text-sm mr-2">Change Status:</span>
                         {['upcoming', 'opt_in_open', 'active', 'completed'].map(status => (
                           <button
                             key={status}
@@ -2039,8 +2039,8 @@ export default function HQPage() {
                             disabled={bountyEvent.status === status}
                             className={`px-3 py-1 rounded text-sm font-medium transition-all ${
                               bountyEvent.status === status
-                                ? 'bg-cyan-500 text-white'
-                                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                ? 'bg-accent text-accent-fg'
+                                : 'bg-elevated text-primary hover:bg-elevated/80'
                             }`}
                           >
                             {status.replace('_', ' ')}
@@ -2051,7 +2051,7 @@ export default function HQPage() {
                       <div className="flex gap-4">
                         <button
                           onClick={startEditingEvent}
-                          className="text-cyan-400 hover:text-cyan-300 text-sm"
+                          className="text-accent hover:opacity-80 text-sm"
                         >
                           ✏️ Edit Event
                         </button>
@@ -2067,38 +2067,38 @@ export default function HQPage() {
                 </div>
 
                 {/* WANTED List */}
-                <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                <div className="bg-surface rounded-xl p-6 border border-token">
                   <h3 className="text-lg font-bold text-red-400 mb-4">🏴‍☠️ WANTED (Top 5 Auto-Added)</h3>
                   {bountyWanted.length > 0 ? (
                     <div className="space-y-2">
                       {bountyWanted.map((player, i) => (
                         <div key={player.player_id} className="flex items-center gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
                           <span className="text-red-400 font-bold w-8">#{i + 1}</span>
-                          <span className="text-white flex-1">{player.display_name}</span>
+                          <span className="text-primary flex-1">{player.display_name}</span>
                           <span className="text-red-400">{player.xp.toLocaleString()} Berries</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-slate-500">No WANTED players yet (Top 5 One Piece leaderboard)</p>
+                    <p className="text-secondary">No WANTED players yet (Top 5 One Piece leaderboard)</p>
                   )}
                 </div>
 
                 {/* Hunters List */}
-                <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                <div className="bg-surface rounded-xl p-6 border border-token">
                   <h3 className="text-lg font-bold text-green-400 mb-4">🏹 Registered Hunters ({bountyHunters.length})</h3>
                   {bountyHunters.length > 0 ? (
                     <div className="grid gap-2">
                       {bountyHunters.map(hunter => (
                         <div key={hunter.player_id} className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                           <span className="text-green-400">🏹</span>
-                          <span className="text-white flex-1">{hunter.display_name}</span>
-                          <span className="text-slate-400">{hunter.xp.toLocaleString()} Berries</span>
+                          <span className="text-primary flex-1">{hunter.display_name}</span>
+                          <span className="text-secondary">{hunter.xp.toLocaleString()} Berries</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-slate-500">No hunters registered yet</p>
+                    <p className="text-secondary">No hunters registered yet</p>
                   )}
                 </div>
 
@@ -2110,11 +2110,11 @@ export default function HQPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {/* Winner */}
                       <div>
-                        <label className="block text-sm text-slate-400 mb-1">Winner</label>
+                        <label className="block text-sm text-secondary mb-1">Winner</label>
                         <select
                           value={matchWinner}
                           onChange={(e) => setMatchWinner(e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value="">Select winner...</option>
                           <optgroup label="🎯 WANTED">
@@ -2136,11 +2136,11 @@ export default function HQPage() {
 
                       {/* Loser */}
                       <div>
-                        <label className="block text-sm text-slate-400 mb-1">Loser</label>
+                        <label className="block text-sm text-secondary mb-1">Loser</label>
                         <select
                           value={matchLoser}
                           onChange={(e) => setMatchLoser(e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value="">Select loser...</option>
                           <optgroup label="🎯 WANTED">
@@ -2164,11 +2164,11 @@ export default function HQPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {/* Match Type */}
                       <div>
-                        <label className="block text-sm text-slate-400 mb-1">Match Type</label>
+                        <label className="block text-sm text-secondary mb-1">Match Type</label>
                         <select
                           value={matchType}
                           onChange={(e) => setMatchType(e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value="">Select type...</option>
                           <option value="hunter_upsets_wanted">🏹 Hunter upsets WANTED (+30/-25)</option>
@@ -2180,11 +2180,11 @@ export default function HQPage() {
 
                       {/* Round */}
                       <div>
-                        <label className="block text-sm text-slate-400 mb-1">Round</label>
+                        <label className="block text-sm text-secondary mb-1">Round</label>
                         <select
                           value={matchRound}
                           onChange={(e) => setMatchRound(Number(e.target.value))}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value={1}>Round 1 (Bounty Round)</option>
                           <option value={2}>Round 2</option>
@@ -2206,18 +2206,18 @@ export default function HQPage() {
 
                 {/* Match History */}
                 {matches.length > 0 && (
-                  <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-                    <h3 className="text-lg font-bold text-slate-300 mb-4">📜 Match History ({matches.length})</h3>
+                  <div className="bg-surface rounded-xl p-6 border border-token">
+                    <h3 className="text-lg font-bold text-primary mb-4">📜 Match History ({matches.length})</h3>
                     <div className="space-y-2 max-h-96 overflow-auto">
                       {matches.map((match: any) => (
-                        <div key={match.id} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                        <div key={match.id} className="flex items-center gap-3 p-3 bg-elevated/50 rounded-lg border border-token/50">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 text-sm">
                               <span className="text-green-400 font-medium">{match.winner_name}</span>
-                              <span className="text-slate-500">defeated</span>
+                              <span className="text-secondary">defeated</span>
                               <span className="text-red-400 font-medium">{match.loser_name}</span>
                             </div>
-                            <div className="text-xs text-slate-500 mt-1">
+                            <div className="text-xs text-secondary mt-1">
                               {match.match_type.replace(/_/g, ' ')} • Round {match.round}
                             </div>
                           </div>
@@ -2227,7 +2227,7 @@ export default function HQPage() {
                           </div>
                           <button
                             onClick={() => deleteMatch(match.id)}
-                            className="text-slate-500 hover:text-red-400 p-1"
+                            className="text-secondary hover:text-red-400 p-1"
                             title="Delete match"
                           >
                             🗑️
@@ -2240,36 +2240,36 @@ export default function HQPage() {
               </>
             ) : (
               /* No Current Event - Create New */
-              <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+              <div className="bg-surface rounded-xl p-6 border border-token">
                 <h2 className="text-xl font-bold mb-4">🎯 Create Bounty Hunter Event</h2>
-                <p className="text-slate-400 mb-6">No event scheduled for this month. Create one below.</p>
+                <p className="text-secondary mb-6">No event scheduled for this month. Create one below.</p>
                 
                 <div className="grid gap-4 max-w-md">
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Event Date</label>
+                    <label className="block text-sm text-secondary mb-1">Event Date</label>
                     <input
                       type="date"
                       value={newEventDate}
                       onChange={(e) => setNewEventDate(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                      className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Opt-In Opens</label>
+                    <label className="block text-sm text-secondary mb-1">Opt-In Opens</label>
                     <input
                       type="datetime-local"
                       value={newOptInOpens}
                       onChange={(e) => setNewOptInOpens(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                      className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Opt-In Closes</label>
+                    <label className="block text-sm text-secondary mb-1">Opt-In Closes</label>
                     <input
                       type="datetime-local"
                       value={newOptInCloses}
                       onChange={(e) => setNewOptInCloses(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                      className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                     />
                   </div>
                   <button
@@ -2281,9 +2281,9 @@ export default function HQPage() {
                   </button>
                 </div>
 
-                <div className="mt-6 p-4 bg-slate-800/50 rounded-lg">
-                  <h4 className="font-medium text-slate-300 mb-2">💡 How it works</h4>
-                  <ul className="text-sm text-slate-400 space-y-1">
+                <div className="mt-6 p-4 bg-elevated/50 rounded-lg">
+                  <h4 className="font-medium text-primary mb-2">💡 How it works</h4>
+                  <ul className="text-sm text-secondary space-y-1">
                     <li>• Top 5 One Piece players are auto-WANTED (can&apos;t opt out)</li>
                     <li>• Other players can opt-in as Hunters during the opt-in window</li>
                     <li>• On event night, Hunters try to claim WANTED bounties</li>
@@ -2300,16 +2300,16 @@ export default function HQPage() {
         {activeTab === 'cotd' && (
           <div className="space-y-6">
             {/* Search Section */}
-            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+            <div className="bg-surface rounded-xl p-6 border border-token">
               <h2 className="text-xl font-bold mb-4">🃏 Set Card of the Day</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Game</label>
+                  <label className="block text-sm text-secondary mb-1">Game</label>
                   <select
                     value={cotdSearchGame}
                     onChange={(e) => setCotdSearchGame(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                    className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
                   >
                     <option value="one-piece-card-game">One Piece</option>
                     <option value="pokemon">Pokémon</option>
@@ -2323,26 +2323,26 @@ export default function HQPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm text-slate-400 mb-1">Card Name</label>
+                  <label className="block text-sm text-secondary mb-1">Card Name</label>
                   <input
                     type="text"
                     value={cotdSearchQuery}
                     onChange={(e) => setCotdSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && searchCOTDCards()}
                     placeholder="e.g. Monkey.D.Luffy"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder:text-slate-500"
+                    className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary placeholder:text-secondary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Card # <span className="text-slate-500">(optional)</span></label>
+                  <label className="block text-sm text-secondary mb-1">Card # <span className="text-secondary">(optional)</span></label>
                   <input
                     type="text"
                     value={cotdSearchNumber}
                     onChange={(e) => setCotdSearchNumber(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && searchCOTDCards()}
                     placeholder="e.g. 012"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder:text-slate-500"
+                    className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary placeholder:text-secondary"
                   />
                 </div>
 
@@ -2350,18 +2350,18 @@ export default function HQPage() {
                   <button
                     onClick={searchCOTDCards}
                     disabled={cotdSearchLoading || !cotdSearchQuery.trim()}
-                    className="w-full px-4 py-2 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 rounded-lg font-medium transition-colors"
+                    className="w-full px-4 py-2 bg-accent hover:opacity-90 disabled:opacity-50 rounded-lg font-medium transition-colors"
                   >
                     {cotdSearchLoading ? 'Searching...' : '🔍 Search'}
                   </button>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-500 mt-2">💡 Tip: Add card number for precise results (API returns max 20)</p>
+              <p className="text-xs text-secondary mt-2">💡 Tip: Add card number for precise results (API returns max 20)</p>
 
               {cotdSearchResults.length > 0 && (
                 <div className="mt-4">
-                  <h3 className="text-sm text-slate-400 mb-2">Found {cotdSearchResults.length} card variants</h3>
+                  <h3 className="text-sm text-secondary mb-2">Found {cotdSearchResults.length} card variants</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-auto">
                     {cotdSearchResults.map((card, idx) => (
                       <button
@@ -2369,18 +2369,18 @@ export default function HQPage() {
                         onClick={() => setCotdSelectedCard(card)}
                         className={`p-3 rounded-lg border text-left transition-all ${
                           cotdSelectedCard?.variantId === card.variantId && cotdSelectedCard?.id === card.id
-                            ? 'bg-cyan-500/20 border-cyan-500'
-                            : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                            ? 'bg-accent/10 border-accent'
+                            : 'bg-elevated border-token hover:border-token'
                         }`}
                       >
                         <div className="font-medium text-sm truncate">{card.name}</div>
-                        <div className="text-xs text-slate-400 mt-1">{card.set} • {card.rarity}</div>
+                        <div className="text-xs text-secondary mt-1">{card.set} • {card.rarity}</div>
                         {card.printing && card.printing !== 'Standard' && (
-                          <div className="text-xs text-purple-400 mt-1 font-medium">✨ {card.printing}</div>
+                          <div className="text-xs text-accent mt-1 font-medium">✨ {card.printing}</div>
                         )}
                         <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-slate-500">#{card.number}</span>
-                          <span className="text-xs text-cyan-400 font-medium">{formatCOTDPrice(card.price)}</span>
+                          <span className="text-xs text-secondary">#{card.number}</span>
+                          <span className="text-xs text-accent font-medium">{formatCOTDPrice(card.price)}</span>
                         </div>
                       </button>
                     ))}
@@ -2389,20 +2389,20 @@ export default function HQPage() {
               )}
 
               {cotdSelectedCard && (
-                <div className="mt-6 p-4 bg-slate-800 rounded-lg border border-cyan-500/30">
-                  <h3 className="text-sm text-cyan-400 mb-3">Selected Card</h3>
+                <div className="mt-6 p-4 bg-elevated rounded-lg border border-accent/30">
+                  <h3 className="text-sm text-accent mb-3">Selected Card</h3>
                   <div className="flex items-start gap-4">
                     <div className="flex-1">
                       <div className="text-lg font-bold">{cotdSelectedCard.name}</div>
-                      <div className="text-slate-400 text-sm mt-1">
+                      <div className="text-secondary text-sm mt-1">
                         {cotdSelectedCard.set} • {cotdSelectedCard.rarity} • #{cotdSelectedCard.number}
                       </div>
                       {cotdSelectedCard.printing && cotdSelectedCard.printing !== 'Standard' && (
-                        <div className="text-purple-400 text-sm mt-1 font-medium">
+                        <div className="text-accent text-sm mt-1 font-medium">
                           ✨ {cotdSelectedCard.printing}
                         </div>
                       )}
-                      <div className="text-slate-300 mt-2">
+                      <div className="text-primary mt-2">
                         Price: {formatCOTDPrice(cotdSelectedCard.price)}
                         {cotdSelectedCard.priceChange7d && (
                           <span className={`ml-2 text-sm ${cotdSelectedCard.priceChange7d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -2411,11 +2411,11 @@ export default function HQPage() {
                         )}
                       </div>
                     </div>
-                    <button onClick={() => setCotdSelectedCard(null)} className="text-slate-500 hover:text-red-400">✕</button>
+                    <button onClick={() => setCotdSelectedCard(null)} className="text-secondary hover:text-red-400">✕</button>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-slate-700">
-                    <label className="block text-sm text-slate-400 mb-2">Feature on Date</label>
+                  <div className="mt-4 pt-4 border-t border-token">
+                    <label className="block text-sm text-secondary mb-2">Feature on Date</label>
                     <div className="flex flex-wrap gap-2">
                       {getCOTDDateOptions().map(opt => (
                         <button
@@ -2424,10 +2424,10 @@ export default function HQPage() {
                           disabled={opt.isScheduled}
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                             cotdSelectedDate === opt.value
-                              ? 'bg-cyan-500 text-white'
+                              ? 'bg-accent text-accent-fg'
                               : opt.isScheduled
-                              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                              ? 'bg-elevated text-tertiary cursor-not-allowed'
+                              : 'bg-elevated text-primary hover:bg-elevated/80'
                           }`}
                         >
                           {opt.label}{opt.isScheduled && ' ✓'}
@@ -2439,7 +2439,7 @@ export default function HQPage() {
                   <button
                     onClick={setCOTDCard}
                     disabled={cotdSaving || !cotdSelectedDate}
-                    className="mt-4 w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                    className="mt-4 w-full px-4 py-3 bg-accent rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
                   >
                     {cotdSaving ? 'Saving...' : '✨ Set as Card of the Day'}
                   </button>
@@ -2448,11 +2448,11 @@ export default function HQPage() {
             </div>
 
             {/* Upcoming Schedule */}
-            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+            <div className="bg-surface rounded-xl p-6 border border-token">
               <h2 className="text-xl font-bold mb-4">📅 Upcoming Schedule</h2>
               
               {cotdUpcoming.length === 0 ? (
-                <div className="text-slate-500 text-center py-8">
+                <div className="text-secondary text-center py-8">
                   <div className="text-4xl mb-2">🃏</div>
                   <p>No cards scheduled yet</p>
                   <p className="text-sm mt-1">Search and select a card above to get started</p>
@@ -2460,9 +2460,9 @@ export default function HQPage() {
               ) : (
                 <div className="space-y-3">
                   {cotdUpcoming.map(card => (
-                    <div key={card.id} className="flex items-center gap-4 p-4 bg-slate-800 rounded-lg border border-slate-700">
+                    <div key={card.id} className="flex items-center gap-4 p-4 bg-elevated rounded-lg border border-token">
                       <div className="text-center min-w-[80px]">
-                        <div className="text-xs text-slate-500 uppercase">
+                        <div className="text-xs text-secondary uppercase">
                           {new Date(card.featured_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
                         <div className="text-lg font-bold">
@@ -2471,20 +2471,20 @@ export default function HQPage() {
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{card.card_name}</div>
-                        <div className="text-sm text-slate-400">{card.game_display} • #{card.card_number}</div>
+                        <div className="text-sm text-secondary">{card.game_display} • #{card.card_number}</div>
                         {card.card_data?.printing && card.card_data.printing !== 'Standard' && (
-                          <div className="text-xs text-purple-400 mt-0.5">✨ {card.card_data.printing}</div>
+                          <div className="text-xs text-accent mt-0.5">✨ {card.card_data.printing}</div>
                         )}
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-medium">{formatCOTDPrice(card.card_data?.price)}</div>
                         <div className={`text-xs px-2 py-0.5 rounded ${
-                          card.source === 'staff_pick' ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-700 text-slate-400'
+                          card.source === 'staff_pick' ? 'bg-purple-500/20 text-accent' : 'bg-elevated text-secondary'
                         }`}>
                           {card.source === 'staff_pick' ? '👤 Staff' : card.source === 'community_vote' ? '🗳️ Vote' : '🤖 Auto'}
                         </div>
                       </div>
-                      <button onClick={() => deleteCOTDCard(card.featured_date)} className="text-slate-500 hover:text-red-400 p-2">🗑️</button>
+                      <button onClick={() => deleteCOTDCard(card.featured_date)} className="text-secondary hover:text-red-400 p-2">🗑️</button>
                     </div>
                   ))}
                 </div>
@@ -2492,34 +2492,34 @@ export default function HQPage() {
             </div>
 
             {/* Voting Pool Management */}
-            <div className="bg-slate-900 rounded-xl p-6 border border-purple-500/30">
+            <div className="bg-surface rounded-xl p-6 border border-purple-500/30">
               <h2 className="text-xl font-bold mb-4">🗳️ Community Voting Pools</h2>
-              <p className="text-slate-400 text-sm mb-4">
-                Add 3-4 cards to a voting pool. Players vote and the winner becomes Card of the Day. Voters who pick the winner get <span className="text-cyan-400">+10 XP</span>!
+              <p className="text-secondary text-sm mb-4">
+                Add 3-4 cards to a voting pool. Players vote and the winner becomes Card of the Day. Voters who pick the winner get <span className="text-accent">+10 XP</span>!
               </p>
 
               {/* Add to Pool Section */}
               {cotdSelectedCard && (
                 <div className="mb-6 p-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
-                  <h3 className="text-sm text-purple-400 mb-3">Add to Voting Pool</h3>
+                  <h3 className="text-sm text-accent mb-3">Add to Voting Pool</h3>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="flex-1">
                       <div className="font-medium">{cotdSelectedCard.name}</div>
-                      <div className="text-sm text-slate-400">
+                      <div className="text-sm text-secondary">
                         #{cotdSelectedCard.number}
                         {cotdSelectedCard.printing && cotdSelectedCard.printing !== 'Standard' && (
-                          <span className="text-purple-400 ml-1">✨ {cotdSelectedCard.printing}</span>
+                          <span className="text-accent ml-1">✨ {cotdSelectedCard.printing}</span>
                         )}
                       </div>
                     </div>
-                    <div className="text-cyan-400 font-medium">{formatCOTDPrice(cotdSelectedCard.price)}</div>
+                    <div className="text-accent font-medium">{formatCOTDPrice(cotdSelectedCard.price)}</div>
                   </div>
                   
                   <div className="flex items-center gap-3">
                     <select
                       value={cotdVotingDate}
                       onChange={(e) => setCotdVotingDate(e.target.value)}
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                      className="flex-1 bg-elevated border border-token rounded-lg px-3 py-2 text-primary text-sm"
                     >
                       <option value="">Select voting date...</option>
                       {getVotingDateOptions().map(opt => (
@@ -2554,17 +2554,17 @@ export default function HQPage() {
                       const isTomorrow = date === tomorrow.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
                       
                       return (
-                        <div key={date} className="p-4 bg-slate-800 rounded-lg border border-slate-700">
+                        <div key={date} className="p-4 bg-elevated rounded-lg border border-token">
                           <div className="flex items-center justify-between mb-3">
                             <div>
                               <span className="font-medium">
                                 {dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                               </span>
-                              {isTomorrow && <span className="ml-2 text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">Voting Now</span>}
+                              {isTomorrow && <span className="ml-2 text-xs bg-purple-500/20 text-accent px-2 py-0.5 rounded">Voting Now</span>}
                               {isToday && <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">Today</span>}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm text-slate-400">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
+                              <span className="text-sm text-secondary">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
                               <button
                                 onClick={() => finalizeVoting(date)}
                                 disabled={cotdFinalizingVote || cards.length < 2}
@@ -2578,27 +2578,27 @@ export default function HQPage() {
                           
                           <div className="space-y-2">
                             {cards.map((card: any) => (
-                              <div key={card.id} className="flex items-center gap-3 p-2 bg-slate-900/50 rounded">
+                              <div key={card.id} className="flex items-center gap-3 p-2 bg-surface/50 rounded">
                                 <div className="flex-1 min-w-0">
                                   <div className="text-sm font-medium truncate">{card.card_name}</div>
-                                  <div className="text-xs text-slate-400">
+                                  <div className="text-xs text-secondary">
                                     {card.game_display} • #{card.card_number}
                                     {card.card_data?.printing && card.card_data.printing !== 'Standard' && (
-                                      <span className="text-purple-400 ml-1">✨ {card.card_data.printing}</span>
+                                      <span className="text-accent ml-1">✨ {card.card_data.printing}</span>
                                     )}
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-sm font-medium text-cyan-400">{card.votes_count || 0} votes</div>
+                                  <div className="text-sm font-medium text-accent">{card.votes_count || 0} votes</div>
                                   {totalVotes > 0 && (
-                                    <div className="text-xs text-slate-500">
+                                    <div className="text-xs text-secondary">
                                       {Math.round((card.votes_count || 0) / totalVotes * 100)}%
                                     </div>
                                   )}
                                 </div>
                                 <button
                                   onClick={() => removeFromVotingPool(card.id)}
-                                  className="text-slate-500 hover:text-red-400 p-1"
+                                  className="text-secondary hover:text-red-400 p-1"
                                 >
                                   🗑️
                                 </button>
@@ -2614,7 +2614,7 @@ export default function HQPage() {
                     })}
                 </div>
               ) : (
-                <div className="text-center py-6 text-slate-500">
+                <div className="text-center py-6 text-secondary">
                   <div className="text-3xl mb-2">🗳️</div>
                   <p>No voting pools yet</p>
                   <p className="text-sm mt-1">Search for cards above, select one, then add it to a voting pool</p>
@@ -2622,12 +2622,12 @@ export default function HQPage() {
               )}
             </div>
 
-            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-              <h3 className="font-medium text-slate-300 mb-2">💡 How it works</h3>
-              <ul className="text-sm text-slate-400 space-y-1">
+            <div className="bg-surface rounded-xl p-6 border border-token">
+              <h3 className="font-medium text-primary mb-2">💡 How it works</h3>
+              <ul className="text-sm text-secondary space-y-1">
                 <li>• <strong>Staff Picks:</strong> Set a card directly for any date (overrides voting)</li>
                 <li>• <strong>Community Voting:</strong> Add 3-4 cards to a pool, players vote, winner is featured</li>
-                <li>• Players who vote for the winning card earn <span className="text-cyan-400">+10 XP</span></li>
+                <li>• Players who vote for the winning card earn <span className="text-accent">+10 XP</span></li>
                 <li>• Voting for tomorrow&apos;s card happens today</li>
               </ul>
             </div>
@@ -2638,38 +2638,38 @@ export default function HQPage() {
         {activeTab === 'events' && (
           <div className="space-y-4">
             {/* Kiosk link */}
-            <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 flex items-center justify-between">
+            <div className="bg-surface rounded-xl p-4 border border-token flex items-center justify-between">
               <div>
-                <div className="font-semibold text-white">Door Kiosk</div>
-                <div className="text-slate-500 text-sm">Open on the Android device at the door</div>
+                <div className="font-semibold text-primary">Door Kiosk</div>
+                <div className="text-secondary text-sm">Open on the Android device at the door</div>
               </div>
               <a
                 href="/kiosk"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 text-sm font-medium"
+                className="px-4 py-2 bg-accent/10 text-accent rounded-lg hover:bg-accent/20 text-sm font-medium"
               >
                 Open Kiosk →
               </a>
             </div>
 
             {/* Event list */}
-            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+            <div className="bg-surface rounded-xl p-6 border border-token">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">Upcoming Events</h2>
                 <button
                   onClick={loadHQEvents}
                   disabled={eventsLoading}
-                  className="text-slate-500 hover:text-slate-300 text-sm px-3 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+                  className="text-secondary hover:text-primary text-sm px-3 py-1 rounded-lg hover:bg-elevated transition-colors"
                 >
                   {eventsLoading ? 'Loading...' : '↻ Refresh'}
                 </button>
               </div>
 
               {eventsLoading && hqEvents.length === 0 ? (
-                <p className="text-slate-600 text-center py-8">Loading events...</p>
+                <p className="text-tertiary text-center py-8">Loading events...</p>
               ) : hqEvents.length === 0 ? (
-                <p className="text-slate-600 text-center py-8">No upcoming events. Sync from the Events page first.</p>
+                <p className="text-tertiary text-center py-8">No upcoming events. Sync from the Events page first.</p>
               ) : (
                 <div className="space-y-3">
                   {hqEvents.map(event => {
@@ -2690,7 +2690,7 @@ export default function HQPage() {
                         className={`rounded-xl p-4 border flex items-center justify-between gap-4 ${
                           isActive
                             ? 'bg-emerald-950/40 border-emerald-500/40'
-                            : 'bg-slate-800 border-slate-700'
+                            : 'bg-elevated border-token'
                         }`}
                       >
                         <div className="min-w-0">
@@ -2701,10 +2701,10 @@ export default function HQPage() {
                                 LIVE
                               </span>
                             )}
-                            <span className="text-xs text-slate-500">{event.game?.icon} {event.game?.name}</span>
+                            <span className="text-xs text-secondary">{event.game?.icon} {event.game?.name}</span>
                           </div>
-                          <div className="font-semibold text-white truncate">{event.name}</div>
-                          <div className="text-slate-500 text-xs mt-0.5">{eventTime} · +{event.attendance_xp} XP</div>
+                          <div className="font-semibold text-primary truncate">{event.name}</div>
+                          <div className="text-secondary text-xs mt-0.5">{eventTime} · +{event.attendance_xp} XP</div>
                           {isActive && event.attendanceCount !== undefined && (
                             <div className="text-emerald-400 text-xs mt-1">{event.attendanceCount} checked in</div>
                           )}
@@ -2716,7 +2716,7 @@ export default function HQPage() {
                                 href={`/checkin?event_id=${event.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg text-xs hover:bg-slate-600 transition-colors"
+                                className="px-3 py-1.5 bg-elevated text-secondary rounded-lg text-xs hover:bg-elevated/80 transition-colors"
                               >
                                 QR Preview
                               </a>
@@ -2746,10 +2746,10 @@ export default function HQPage() {
             </div>
 
             {/* Calendar sync reminder */}
-            <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-              <p className="text-slate-600 text-sm">
+            <div className="bg-surface rounded-xl p-4 border border-token">
+              <p className="text-tertiary text-sm">
                 Events sync from Google Calendar.{' '}
-                <a href="/dashboard/events" className="text-cyan-600 hover:text-cyan-400">
+                <a href="/dashboard/events" className="text-accent hover:text-accent">
                   Go to Events page →
                 </a>{' '}
                 to pull updates.

@@ -131,18 +131,18 @@ export default function KioskPage() {
   const gameColor = activeEvent?.game?.color || '#3b82f6';
   const checkinUrl = activeEvent ? `${origin}/checkin?event_id=${activeEvent.id}` : '';
   const qrUrl = checkinUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(checkinUrl)}&bgcolor=0f172a&color=00e5ff&margin=3`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(checkinUrl)}&bgcolor=111009&color=c4b5fd&margin=3`
     : '';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white select-none overflow-hidden">
+    <div className="min-h-screen bg-base text-primary select-none overflow-hidden">
       {/* Feedback overlay */}
       {feedback && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className={`rounded-3xl p-12 text-center shadow-2xl border-2 max-w-md w-full mx-4 ${
-            feedback.type === 'success' ? 'bg-slate-900 border-emerald-500' :
-            feedback.type === 'already' ? 'bg-slate-900 border-amber-500' :
-            'bg-slate-900 border-red-500'
+            feedback.type === 'success' ? 'bg-surface border-emerald-500' :
+            feedback.type === 'already' ? 'bg-surface border-amber-500' :
+            'bg-surface border-red-500'
           }`}>
             <div className="text-8xl mb-4">
               {feedback.type === 'success' ? '✅' : feedback.type === 'already' ? '⏰' : '❌'}
@@ -154,9 +154,9 @@ export default function KioskPage() {
               {feedback.playerName || 'Player'}
             </div>
             {feedback.type === 'success' && feedback.xpAwarded && (
-              <div className="text-6xl font-black text-cyan-400 my-4">+{feedback.xpAwarded} XP</div>
+              <div className="text-6xl font-black text-accent my-4">+{feedback.xpAwarded} XP</div>
             )}
-            <div className="text-slate-400 text-xl">{feedback.message}</div>
+            <div className="text-secondary text-xl">{feedback.message}</div>
           </div>
         </div>
       )}
@@ -164,11 +164,11 @@ export default function KioskPage() {
       {!activeEvent ? (
         <div className="min-h-screen flex flex-col items-center justify-center gap-6 text-center px-8">
           <div className="text-8xl opacity-30">🎮</div>
-          <h1 className="text-4xl font-bold text-slate-500">No Active Event</h1>
-          <p className="text-slate-700 text-xl">Staff: open HQ → Events tab → Start Event</p>
+          <h1 className="text-4xl font-bold text-secondary">No Active Event</h1>
+          <p className="text-tertiary text-xl">Staff: open HQ → Events tab → Start Event</p>
           {nfcEnabled && (
-            <div className="flex items-center gap-2 text-emerald-700 text-sm mt-8">
-              <span className="w-2 h-2 bg-emerald-700 rounded-full"></span>
+            <div className="flex items-center gap-2 text-emerald-600 text-sm mt-8">
+              <span className="w-2 h-2 bg-emerald-600 rounded-full"></span>
               NFC ready
             </div>
           )}
@@ -181,13 +181,13 @@ export default function KioskPage() {
               <div className="text-xl font-bold" style={{ color: gameColor }}>
                 {activeEvent.game?.icon} {activeEvent.game?.name || 'Event'}
               </div>
-              <h1 className="text-5xl font-black text-white mt-1 leading-tight">{activeEvent.name}</h1>
+              <h1 className="text-5xl font-black text-primary mt-1 leading-tight">{activeEvent.name}</h1>
             </div>
             <div className="text-right flex-shrink-0">
               <div className="text-7xl font-black leading-none" style={{ color: gameColor }}>
                 {activeEvent.attendanceCount}
               </div>
-              <div className="text-slate-500 text-lg">checked in</div>
+              <div className="text-secondary text-lg">checked in</div>
             </div>
           </div>
 
@@ -195,13 +195,13 @@ export default function KioskPage() {
           <div className="flex-1 flex gap-8 items-center">
             {/* Left: QR code */}
             <div className="flex flex-col items-center gap-4 w-64 flex-shrink-0">
-              <div className="bg-slate-900 rounded-2xl p-3 border border-slate-800">
+              <div className="bg-surface rounded-2xl p-3 border border-border">
                 {qrUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={qrUrl} alt="Check-in QR code" width={220} height={220} className="rounded-xl" />
                 )}
               </div>
-              <p className="text-slate-500 text-center text-base">Scan with your phone</p>
+              <p className="text-secondary text-center text-base">Scan with your phone</p>
             </div>
 
             {/* Center: Tap prompt */}
@@ -212,34 +212,34 @@ export default function KioskPage() {
               >
                 <span className="text-8xl">📡</span>
               </div>
-              <h2 className="text-5xl font-black text-white">Tap Your Card</h2>
+              <h2 className="text-5xl font-black text-primary">Tap Your Card</h2>
               <div
                 className="px-8 py-4 rounded-2xl text-2xl font-black"
                 style={{ backgroundColor: `${gameColor}20`, color: gameColor }}
               >
                 +{activeEvent.attendanceXp} XP
               </div>
-              <p className="text-slate-600 text-lg">or scan the QR code →</p>
-              <div className={`flex items-center gap-2 text-sm ${nfcEnabled ? 'text-emerald-500' : 'text-slate-700'}`}>
-                <span className={`w-2 h-2 rounded-full ${nfcEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'}`} />
+              <p className="text-tertiary text-lg">or scan the QR code →</p>
+              <div className={`flex items-center gap-2 text-sm ${nfcEnabled ? 'text-emerald-500' : 'text-tertiary'}`}>
+                <span className={`w-2 h-2 rounded-full ${nfcEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-tertiary'}`} />
                 {nfcEnabled ? 'NFC Active' : 'NFC unavailable — use QR code'}
               </div>
             </div>
 
             {/* Right: Recent check-ins */}
             <div className="w-64 flex-shrink-0">
-              <h3 className="text-slate-600 text-sm font-semibold uppercase tracking-widest mb-4">Recent</h3>
+              <h3 className="text-tertiary text-sm font-semibold uppercase tracking-widest mb-4">Recent</h3>
               <div className="space-y-3">
                 {activeEvent.recentCheckIns.length === 0 ? (
-                  <p className="text-slate-700 text-center py-8 text-sm">Be the first to check in!</p>
+                  <p className="text-tertiary text-center py-8 text-sm">Be the first to check in!</p>
                 ) : (
                   activeEvent.recentCheckIns.map((ci, i) => (
-                    <div key={i} className="bg-slate-900 rounded-xl p-4 border border-slate-800 flex items-center justify-between gap-3">
+                    <div key={i} className="bg-surface rounded-xl p-4 border border-border flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-bold text-white text-sm truncate">{ci.playerName}</div>
-                        <div className="text-slate-600 text-xs">{ci.hypId}</div>
+                        <div className="font-bold text-primary text-sm truncate">{ci.playerName}</div>
+                        <div className="text-tertiary text-xs">{ci.hypId}</div>
                       </div>
-                      <div className="text-cyan-400 font-bold text-sm flex-shrink-0">+{ci.xpAwarded}</div>
+                      <div className="text-accent font-bold text-sm flex-shrink-0">+{ci.xpAwarded}</div>
                     </div>
                   ))
                 )}
