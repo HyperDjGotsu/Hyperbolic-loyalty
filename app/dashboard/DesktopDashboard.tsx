@@ -95,7 +95,7 @@ function HeroStatCard({
   label: string;
 }) {
   return (
-    <div className="bg-surface border-2 border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
+    <div className="bg-surface border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
       <div className="text-[28px] font-extrabold text-accent">
         {value.toLocaleString()}
       </div>
@@ -168,7 +168,7 @@ function GameCard({
       >
         {/* Front of card */}
         <div
-          className="bg-surface border-2 border-border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:border-border-strong hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden group h-full"
+          className="bg-surface border border-border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:border-border-strong hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden group h-full"
           style={{ backfaceVisibility: 'hidden' }}
           onClick={handleClick}
           onMouseEnter={() => setHoverCount(c => c + 1)}
@@ -267,7 +267,7 @@ function GameCard({
 
         {/* Back of card - conditional layout based on stats */}
         <div
-          className="absolute inset-0 bg-surface border-2 border-border-token rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
+          className="absolute inset-0 bg-surface border border-border-token rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -861,11 +861,11 @@ export default function DesktopDashboard() {
                 HYPERBOLIC GAMES
               </h1>
               <div className="flex gap-2.5">
-                <button className="w-[42px] h-[42px] bg-surface border-2 border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-accent/30 relative">
+                <button className="w-[42px] h-[42px] bg-surface border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-accent/30 relative">
                   🔔
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 </button>
-                <button className="w-[42px] h-[42px] bg-surface border-2 border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-accent/30">
+                <button className="w-[42px] h-[42px] bg-surface border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-accent/30">
                   ⚙️
                 </button>
               </div>
@@ -874,7 +874,7 @@ export default function DesktopDashboard() {
             {/* Player Hero Card */}
             <div 
               ref={heroRef}
-              className="group flex items-center gap-7 bg-surface border-2 border-border-token rounded-3xl p-7 relative overflow-hidden transition-all hover:border-accent/20 hover:shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
+              className="group flex items-center gap-7 bg-surface border border-border-token rounded-3xl p-7 relative overflow-hidden transition-all hover:border-accent/20 hover:shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
             >
               {/* Top gradient line */}
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent/40" />
@@ -947,7 +947,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowCheckIn(true)}
                     disabled={hasCheckedInToday}
-                    className="bg-surface border-2 border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(34,197,94,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -966,7 +966,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowGacha(true)}
                     disabled={hasSpunToday}
-                    className="bg-surface border-2 border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -1070,7 +1070,7 @@ export default function DesktopDashboard() {
                 )}
 
                 {/* My Games - Enhanced Tiles */}
-                <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       🎮 My Games
@@ -1103,7 +1103,7 @@ export default function DesktopDashboard() {
                 <CardOfTheDay />
 
                 {/* Recent Activity - Near other stats */}
-                <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       📋 Recent Activity
@@ -1150,24 +1150,24 @@ export default function DesktopDashboard() {
             {/* Bottom Sections - Full Width */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Overall Stats Summary */}
-              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
                   📊 Your Stats
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-elevated border-2 border-border-token rounded-xl p-4 text-center">
+                  <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-accent">{games.length}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Games Played</div>
                   </div>
-                  <div className="bg-elevated border-2 border-border-token rounded-xl p-4 text-center">
+                  <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-green-400">{playerData?.totalEventsAttended || 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Events Attended</div>
                   </div>
-                  <div className="bg-elevated border-2 border-border-token rounded-xl p-4 text-center">
+                  <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-accent">{totalXp.toLocaleString()}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Total XP</div>
                   </div>
-                  <div className="bg-elevated border-2 border-border-token rounded-xl p-4 text-center">
+                  <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Week Streak</div>
                   </div>
@@ -1175,7 +1175,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Upcoming Events You're Interested In */}
-              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     📅 Your Upcoming Events
@@ -1189,7 +1189,7 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="space-y-3">
                   {/* Placeholder events - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-elevated border-2 border-border-token rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
                     <div className="w-10 h-10 bg-[#E63946]/20 rounded-lg flex items-center justify-center text-lg">🏴‍☠️</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">One Piece Local</div>
@@ -1197,7 +1197,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">Registered</div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-elevated border-2 border-border-token rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
                     <div className="w-10 h-10 bg-[#8B5CF6]/20 rounded-lg flex items-center justify-center text-lg">✨</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">MTG Commander Night</div>
@@ -1219,7 +1219,7 @@ export default function DesktopDashboard() {
             {/* Second Row */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Highlights */}
-              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     🛒 Store Highlights
@@ -1233,17 +1233,17 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {/* Placeholder items - will be replaced with real data */}
-                  <div className="bg-elevated border-2 border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
+                  <div className="bg-elevated border border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">🎨</div>
                     <div className="text-xs font-medium">Custom Avatar Frame</div>
                     <div className="text-[10px] text-accent mt-1">500 XP</div>
                   </div>
-                  <div className="bg-elevated border-2 border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
+                  <div className="bg-elevated border border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">✨</div>
                     <div className="text-xs font-medium">Name Glow Effect</div>
                     <div className="text-[10px] text-accent mt-1">750 XP</div>
                   </div>
-                  <div className="bg-elevated border-2 border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
+                  <div className="bg-elevated border border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">🏆</div>
                     <div className="text-xs font-medium">Trophy Badge</div>
                     <div className="text-[10px] text-accent mt-1">1,000 XP</div>
@@ -1252,7 +1252,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Friends Activity */}
-              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     👥 Friends Activity
@@ -1266,21 +1266,21 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="space-y-3">
                   {/* Placeholder friends - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-elevated border-2 border-border-token rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
                     <div className="w-8 h-8 bg-accent/20 border border-accent/30 rounded-full flex items-center justify-center text-xs font-bold text-accent">JM</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">JMoney</span> <span className="text-secondary">ranked up to</span> <span className="text-yellow-400">Warlord</span></div>
                       <div className="text-[10px] text-secondary">2 hours ago</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-elevated border-2 border-border-token rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
                     <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold">SK</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">SailorKing</span> <span className="text-secondary">won</span> <span className="text-green-400">3 matches</span> <span className="text-secondary">in One Piece</span></div>
                       <div className="text-[10px] text-secondary">5 hours ago</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-elevated border-2 border-border-token rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
                     <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-xs font-bold">TC</div>
                     <div className="flex-1">
                       <div className="text-sm"><span className="font-medium">TCGMaster</span> <span className="text-secondary">earned</span> <span className="text-accent">+150 XP</span></div>
