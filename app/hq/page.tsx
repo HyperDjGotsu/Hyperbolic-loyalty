@@ -328,6 +328,9 @@ export default function HQPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [playerDetails, setPlayerDetails] = useState<PlayerDetails | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [dangerAction, setDangerAction] = useState<null | 'suspend' | 'delete'>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [dangerLoading, setDangerLoading] = useState(false);
   const [selectedGame, setSelectedGame] = useState('');
   const [xpAmount, setXpAmount] = useState('');
   const [xpReason, setXpReason] = useState('');
@@ -886,6 +889,47 @@ export default function HQPage() {
       showToast('Failed to save settings', 'error');
     } finally {
       setSettingsSaving(false);
+    }
+  };
+
+  // Player account actions
+  const suspendPlayer = async () => {
+    if (!playerDetails) return;
+    setDangerLoading(true);
+    try {
+      const res = await fetch(`/api/hq/player/${playerDetails.player.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pass_tier: 'none', pass_status: 'inactive', is_staff: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPlayerDetails(prev => prev ? { ...prev, player: { ...prev.player, is_staff: false } } : prev);
+      showToast(`${playerDetails.player.display_name}'s subscription removed`, 'success');
+      setDangerAction(null);
+    } catch (err: any) {
+      showToast(err.message || 'Failed', 'error');
+    } finally {
+      setDangerLoading(false);
+    }
+  };
+
+  const deletePlayer = async () => {
+    if (!playerDetails || deleteConfirmText !== playerDetails.player.display_name) return;
+    setDangerLoading(true);
+    try {
+      const res = await fetch(`/api/hq/player/${playerDetails.player.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showToast(`${playerDetails.player.display_name} deleted`, 'success');
+      setPlayerDetails(null);
+      setSearchQuery('');
+      setDangerAction(null);
+      setDeleteConfirmText('');
+    } catch (err: any) {
+      showToast(err.message || 'Failed', 'error');
+    } finally {
+      setDangerLoading(false);
     }
   };
 
@@ -1907,6 +1951,94 @@ export default function HQPage() {
                       <div className="text-secondary text-center py-4">No recent activity</div>
                     )}
                   </div>
+                </div>
+
+                {/* Account Management */}
+                <div className="p-6 border-t border-border-token">
+                  <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
+                    Account Management
+                  </h3>
+
+                  {dangerAction === null && (
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setDangerAction('suspend')}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors"
+                      >
+                        Remove Subscription
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setDangerAction('delete'); setDeleteConfirmText(''); }}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors"
+                      >
+                        Delete Account
+                      </button>
+                    </div>
+                  )}
+
+                  {dangerAction === 'suspend' && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                      <p className="text-sm text-yellow-300 mb-1 font-medium">Remove Subscription</p>
+                      <p className="text-xs text-secondary mb-4">
+                        This will set {playerDetails.player.display_name}&apos;s pass to inactive, revoke staff access, and remove any subscription permissions. Their XP and data stay intact.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={suspendPlayer}
+                          disabled={dangerLoading}
+                          className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-black hover:bg-yellow-400 transition-colors disabled:opacity-50"
+                        >
+                          {dangerLoading ? 'Removing…' : 'Confirm Remove'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDangerAction(null)}
+                          className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-elevated transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {dangerAction === 'delete' && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                      <p className="text-sm text-red-400 mb-1 font-medium">⚠️ Delete Account — Irreversible</p>
+                      <p className="text-xs text-secondary mb-3">
+                        Permanently removes {playerDetails.player.display_name} and all their XP, inventory, attendance, and activity records. This cannot be undone.
+                      </p>
+                      <p className="text-xs text-secondary mb-2">
+                        Type <span className="text-red-400 font-mono">{playerDetails.player.display_name}</span> to confirm:
+                      </p>
+                      <input
+                        type="text"
+                        value={deleteConfirmText}
+                        onChange={e => setDeleteConfirmText(e.target.value)}
+                        placeholder={playerDetails.player.display_name}
+                        className="w-full bg-input border border-red-500/40 rounded-lg px-3 py-2 text-sm text-primary mb-3 focus:outline-none focus:border-red-400"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={deletePlayer}
+                          disabled={dangerLoading || deleteConfirmText !== playerDetails.player.display_name}
+                          className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-40"
+                        >
+                          {dangerLoading ? 'Deleting…' : 'Delete Forever'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setDangerAction(null); setDeleteConfirmText(''); }}
+                          className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-elevated transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

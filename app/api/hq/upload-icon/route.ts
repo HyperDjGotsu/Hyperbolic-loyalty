@@ -54,6 +54,19 @@ export async function POST(request: Request) {
       .from('store-assets')
       .getPublicUrl(path);
 
+    // Prune: keep only the 2 most recent uploads so the store can revert if needed
+    try {
+      const { data: files } = await supabaseAdmin.storage.from('store-assets').list('icons', {
+        sortBy: { column: 'name', order: 'desc' },
+      });
+      if (files && files.length > 2) {
+        const toDelete = files.slice(2).map(f => `icons/${f.name}`);
+        await supabaseAdmin.storage.from('store-assets').remove(toDelete);
+      }
+    } catch (pruneErr) {
+      console.warn('Storage prune error (non-fatal):', pruneErr);
+    }
+
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
     console.error('upload-icon error:', err);
