@@ -862,9 +862,8 @@ export default function DesktopDashboard() {
         {/* Main Content - no sidebar, layout provides it */}
         <main className="flex-1">
           {/* Hero Section */}
-          <section 
+          <section
             className="px-10 pt-7 pb-10 relative"
-            style={{ background: 'linear-gradient(180deg, #0c0c12 0%, transparent 100%)' }}
           >
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
