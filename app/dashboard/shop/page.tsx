@@ -29,6 +29,13 @@ interface StoreConfig {
   shop_categories: ShopCategory[];
 }
 
+function IconRenderer({ value, className }: { value: string; className?: string }) {
+  if (value.startsWith('http')) {
+    return <img src={value} alt="icon" className={className || 'w-5 h-5 object-contain'} />;
+  }
+  return <span className={className}>{value}</span>;
+}
+
 const DEFAULT_CATEGORIES: ShopCategory[] = [
   { id: 'base', name: 'Base', icon: '😎', enabled: true },
   { id: 'background', name: 'Background', icon: '🎨', enabled: true },
@@ -189,7 +196,7 @@ export default function ShopPage() {
           <span className={`text-xs uppercase ${rarity.text}`}>{item.rarity}</span>
           {!owned && (
             <span className="text-primary font-bold text-sm flex items-center gap-1">
-              {item.price} {storeConfig.currency_icon}
+              {item.price} <IconRenderer value={storeConfig.currency_icon} className="w-4 h-4 object-contain" />
             </span>
           )}
         </div>
@@ -227,7 +234,7 @@ export default function ShopPage() {
               </p>
             </div>
             <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-full">
-              <span className="text-xl">{storeConfig.currency_icon}</span>
+              <IconRenderer value={storeConfig.currency_icon} className="w-6 h-6 object-contain text-xl" />
               <span className="text-primary font-bold">{balance.toLocaleString()}</span>
               <span className="text-secondary text-sm">{storeConfig.currency_name}</span>
             </div>
@@ -247,7 +254,7 @@ export default function ShopPage() {
                       : 'bg-elevated text-secondary hover:bg-elevated'
                   }`}
                 >
-                  <span>{cat.icon}</span>
+                  <IconRenderer value={cat.icon} className="w-4 h-4 object-contain" />
                   <span>{cat.name}</span>
                 </button>
               ))}

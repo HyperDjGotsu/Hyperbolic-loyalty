@@ -1,8 +1,173 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+
+// ── Icon Picker ────────────────────────────────────────────────────────────────
+
+const ICON_GROUPS = [
+  {
+    label: 'Currency & Value',
+    icons: ['🪙','💰','💎','💵','💴','💶','💷','💸','🏅','🥇','🥈','🥉','🎖️','🏆'],
+  },
+  {
+    label: 'Stars & Magic',
+    icons: ['⭐','🌟','💫','✨','🔮','🪄','🔆','☀️','🌙','🌠','💜','🌀','💠','🔷'],
+  },
+  {
+    label: 'Games & Cards',
+    icons: ['🎮','🕹️','🎲','🃏','🎯','🎳','♟️','🎭','🎪','🎰','🀄','🎴'],
+  },
+  {
+    label: 'Power & Elements',
+    icons: ['⚡','🔥','💧','🌿','❄️','⚗️','🧪','🌀','💥','🌊','🌪️','🌋'],
+  },
+  {
+    label: 'Combat & Adventure',
+    icons: ['⚔️','🛡️','🗡️','🏹','🔱','⚜️','🧨','🔑','💡','🗝️','🧿','🪬'],
+  },
+  {
+    label: 'Celebration',
+    icons: ['🎉','🎊','🎈','🎁','🎀','🎗️','🥂','🍾','👑','🌈','🍀','🦋'],
+  },
+  {
+    label: 'Creatures',
+    icons: ['🐉','🦁','🐺','🦊','🐲','🦄','🦅','🦋','🐾','🔯','🌟','⚡'],
+  },
+];
+
+function IconRenderer({ value, className }: { value: string; className?: string }) {
+  if (value.startsWith('http')) {
+    return <img src={value} alt="icon" className={className || 'w-6 h-6 object-contain'} />;
+  }
+  return <span className={className}>{value}</span>;
+}
+
+function IconPicker({
+  current,
+  onSelect,
+  onClose,
+}: {
+  current: string;
+  onSelect: (value: string) => void;
+  onClose: () => void;
+}) {
+  const [tab, setTab] = useState<'emoji' | 'upload'>('emoji');
+  const [uploading, setUploading] = useState(false);
+  const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [onClose]);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadFile(file);
+    setUploadPreview(URL.createObjectURL(file));
+    setUploadError('');
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+    setUploading(true);
+    setUploadError('');
+    try {
+      const fd = new FormData();
+      fd.append('file', uploadFile);
+      const res = await fetch('/api/hq/upload-icon', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      onSelect(data.url);
+      onClose();
+    } catch (err: any) {
+      setUploadError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div
+      ref={ref}
+      className="absolute z-50 left-0 top-full mt-2 w-80 bg-surface border border-border-token rounded-xl shadow-xl overflow-hidden"
+    >
+      {/* Tabs */}
+      <div className="flex border-b border-border-token">
+        {(['emoji', 'upload'] as const).map(t => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`flex-1 text-xs font-medium py-2.5 transition-colors ${
+              tab === t ? 'text-accent border-b-2 border-accent' : 'text-secondary'
+            }`}
+          >
+            {t === 'emoji' ? '😊 Emoji' : '📤 Upload Image'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'emoji' && (
+        <div className="max-h-72 overflow-y-auto p-3 space-y-3">
+          {ICON_GROUPS.map(group => (
+            <div key={group.label}>
+              <div className="text-[10px] text-tertiary uppercase tracking-wide mb-1.5">{group.label}</div>
+              <div className="flex flex-wrap gap-1">
+                {group.icons.map(icon => (
+                  <button
+                    key={icon}
+                    type="button"
+                    onClick={() => { onSelect(icon); onClose(); }}
+                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all hover:bg-elevated hover:scale-110 ${
+                      current === icon ? 'bg-accent/20 ring-1 ring-accent' : ''
+                    }`}
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'upload' && (
+        <div className="p-4 space-y-3">
+          <p className="text-xs text-tertiary">PNG, JPG, WebP, SVG — max 500 KB. Will replace emoji with your image.</p>
+          <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border-token rounded-xl cursor-pointer hover:border-accent transition-colors bg-elevated/30">
+            {uploadPreview ? (
+              <img src={uploadPreview} alt="preview" className="h-20 w-20 object-contain rounded-lg" />
+            ) : (
+              <>
+                <span className="text-3xl mb-1">📤</span>
+                <span className="text-xs text-secondary">Click to choose file</span>
+              </>
+            )}
+            <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+          </label>
+          {uploadError && <p className="text-xs text-red-400">{uploadError}</p>}
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={!uploadFile || uploading}
+            className="w-full bg-accent text-accent-fg text-sm font-medium py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40"
+          >
+            {uploading ? 'Uploading…' : 'Upload & Use'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface Player {
   id: string;
@@ -256,6 +421,8 @@ export default function HQPage() {
     ] as Array<{ id: string; name: string; icon: string; enabled: boolean }>,
   });
   const [settingsSaving, setSettingsSaving] = useState(false);
+  // null = closed, 'currency' = currency icon, number = category index
+  const [iconPickerTarget, setIconPickerTarget] = useState<null | 'currency' | number>(null);
 
   // Check staff access
   useEffect(() => {
@@ -3276,18 +3443,27 @@ export default function HQPage() {
                 <div>
                   <label className="text-xs font-medium text-secondary block mb-1">
                     Currency Icon
-                    <span className="ml-2 font-normal text-tertiary">Emoji shown next to balance</span>
+                    <span className="ml-2 font-normal text-tertiary">Emoji or image shown next to balance</span>
                   </label>
                   <div className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      value={storeConfig.currency_icon}
-                      onChange={e => setStoreConfig(c => ({ ...c, currency_icon: e.target.value }))}
-                      placeholder="⭐"
-                      className="w-24 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary text-center"
-                    />
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIconPickerTarget(t => t === 'currency' ? null : 'currency')}
+                        className="w-14 h-14 rounded-xl bg-elevated border-2 border-border-token hover:border-accent transition-colors flex items-center justify-center text-2xl"
+                      >
+                        <IconRenderer value={storeConfig.currency_icon} className="w-8 h-8 object-contain" />
+                      </button>
+                      {iconPickerTarget === 'currency' && (
+                        <IconPicker
+                          current={storeConfig.currency_icon}
+                          onSelect={v => setStoreConfig(c => ({ ...c, currency_icon: v }))}
+                          onClose={() => setIconPickerTarget(null)}
+                        />
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-full text-sm">
-                      <span>{storeConfig.currency_icon}</span>
+                      <IconRenderer value={storeConfig.currency_icon} className="w-5 h-5 object-contain" />
                       <span className="font-bold text-primary">1,250</span>
                       <span className="text-secondary">{storeConfig.currency_name}</span>
                     </div>
@@ -3343,6 +3519,7 @@ export default function HQPage() {
                   <div className="space-y-2">
                     {storeConfig.shop_categories.map((cat, i) => (
                       <div key={cat.id} className="flex items-center gap-3 bg-elevated/50 rounded-lg px-3 py-2">
+                        {/* Enable/disable toggle */}
                         <button
                           type="button"
                           onClick={() => setStoreConfig(c => ({
@@ -3359,7 +3536,30 @@ export default function HQPage() {
                             cat.enabled ? 'left-4' : 'left-0.5'
                           }`} />
                         </button>
-                        <span className="text-lg flex-shrink-0">{cat.icon}</span>
+                        {/* Icon picker */}
+                        <div className="relative flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setIconPickerTarget(t => t === i ? null : i)}
+                            className="w-8 h-8 rounded-lg bg-elevated hover:border hover:border-accent transition-all flex items-center justify-center text-base"
+                            title="Change icon"
+                          >
+                            <IconRenderer value={cat.icon} className="w-5 h-5 object-contain" />
+                          </button>
+                          {iconPickerTarget === i && (
+                            <IconPicker
+                              current={cat.icon}
+                              onSelect={v => setStoreConfig(c => ({
+                                ...c,
+                                shop_categories: c.shop_categories.map((x, j) =>
+                                  j === i ? { ...x, icon: v } : x
+                                ),
+                              }))}
+                              onClose={() => setIconPickerTarget(null)}
+                            />
+                          )}
+                        </div>
+                        {/* Name input */}
                         <input
                           type="text"
                           value={cat.name}
