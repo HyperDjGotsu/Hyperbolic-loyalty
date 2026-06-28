@@ -31,7 +31,9 @@ export async function PUT(request: Request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+    });
   } catch (err) {
     console.error('store-config PUT error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

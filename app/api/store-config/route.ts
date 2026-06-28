@@ -18,21 +18,23 @@ const DEFAULTS = {
   ],
 };
 
+const NO_CACHE = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
 export async function GET() {
   try {
-    const { data } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('store_config')
       .select('currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories')
       .eq('id', 1)
       .single();
 
-    if (!data) return NextResponse.json(DEFAULTS);
+    if (error || !data) return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
 
-    return NextResponse.json({
-      ...data,
-      shop_categories: data.shop_categories ?? DEFAULTS.shop_categories,
-    });
+    return NextResponse.json(
+      { ...data, shop_categories: data.shop_categories ?? DEFAULTS.shop_categories },
+      { headers: NO_CACHE }
+    );
   } catch {
-    return NextResponse.json(DEFAULTS);
+    return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
   }
 }
