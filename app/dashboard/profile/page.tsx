@@ -124,16 +124,22 @@ export default function ProfilePage() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showReferralDetails, setShowReferralDetails] = useState(false);
+  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
 
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
     try {
+      // Load store config for currency name
+      fetch('/api/store-config').then(r => r.ok ? r.json() : null).then(cfg => {
+        if (cfg) setStoreConfig(cfg);
+      }).catch(() => {});
+
       // Load player info
       const playerRes = await fetch('/api/player/by-clerk');
       if (playerRes.ok) {
         const data = await playerRes.json();
         if (data.linked) {
-          // Load inventory for avatar config and gems
+          // Load inventory for avatar config and balance
           const invRes = await fetch('/api/player/inventory');
           if (invRes.ok) {
             const invData = await invRes.json();
@@ -583,9 +589,9 @@ export default function ProfilePage() {
             <div className="text-secondary text-xs">Total XP</div>
           </div>
           <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            <div className="text-2xl mb-1">💎</div>
+            <div className="text-2xl mb-1">{storeConfig.currency_icon}</div>
             <div className="text-purple-400 font-bold">{playerData.gems.toLocaleString()}</div>
-            <div className="text-secondary text-xs">Gems</div>
+            <div className="text-secondary text-xs">{storeConfig.currency_name}</div>
           </div>
         </div>
       </div>

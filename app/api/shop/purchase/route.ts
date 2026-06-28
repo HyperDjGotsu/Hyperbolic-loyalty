@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const playerGems = player.gems || 0;
     if (playerGems < item.price) {
       return NextResponse.json({ 
-        error: 'Not enough gems', 
+        error: 'Not enough points', 
         required: item.price,
         current: playerGems,
       }, { status: 400 });

@@ -1127,6 +1127,33 @@ export type Database = {
           },
         ]
       }
+      store_config: {
+        Row: {
+          id: number
+          currency_name: string
+          currency_icon: string
+          store_name: string
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          currency_name?: string
+          currency_icon?: string
+          store_name?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          currency_name?: string
+          currency_icon?: string
+          store_name?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       player_game_xp: {

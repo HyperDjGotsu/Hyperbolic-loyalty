@@ -14,6 +14,11 @@ interface ShopItem {
   isDefault: boolean;
 }
 
+interface StoreConfig {
+  currency_name: string;
+  currency_icon: string;
+}
+
 const rarityColors: Record<string, { border: string; bg: string; text: string }> = {
   common: { border: 'border-border-token', bg: 'bg-elevated/50', text: 'text-secondary' },
   uncommon: { border: 'border-green-500', bg: 'bg-green-500/20', text: 'text-green-400' },
@@ -36,11 +41,12 @@ const frameStyles: Record<string, string> = {
 export default function ShopPage() {
   const { user, isLoaded } = useUser();
   const [activeCategory, setActiveCategory] = useState('base');
-  const [gems, setGems] = useState(0);
+  const [balance, setBalance] = useState(0);
   const [shopItems, setShopItems] = useState<Record<string, ShopItem[]>>({});
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [storeConfig, setStoreConfig] = useState<StoreConfig>({ currency_name: 'Points', currency_icon: '⭐' });
 
   const categories = [
     { id: 'base', name: 'Base', icon: '😎' },
@@ -53,23 +59,28 @@ export default function ShopPage() {
   const loadShopData = useCallback(async () => {
     setLoading(true);
     try {
-      // Load shop items
-      const shopRes = await fetch('/api/shop');
+      const [shopRes, invRes, configRes] = await Promise.all([
+        fetch('/api/shop'),
+        fetch('/api/player/inventory'),
+        fetch('/api/store-config'),
+      ]);
+
       if (shopRes.ok) {
         const shopData = await shopRes.json();
         setShopItems(shopData.grouped || {});
       }
 
-      // Load inventory to check what's owned
-      const invRes = await fetch('/api/player/inventory');
       if (invRes.ok) {
         const invData = await invRes.json();
-        setGems(invData.gems || 0);
-        
-        // Build owned IDs set
+        setBalance(invData.gems || 0);
         const owned = new Set<string>();
         invData.items?.forEach((item: ShopItem) => owned.add(item.id));
         setOwnedIds(owned);
+      }
+
+      if (configRes.ok) {
+        const config = await configRes.json();
+        setStoreConfig(config);
       }
     } catch (error) {
       console.error('Error loading shop data:', error);
@@ -86,8 +97,8 @@ export default function ShopPage() {
 
   const purchaseItem = async (item: ShopItem) => {
     if (ownedIds.has(item.id) || item.isDefault) return;
-    if (gems < item.price) {
-      alert('Not enough gems!');
+    if (balance < item.price) {
+      alert(`Not enough ${storeConfig.currency_name}!`);
       return;
     }
 
@@ -101,7 +112,7 @@ export default function ShopPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setGems(data.newBalance);
+        setBalance(data.newBalance);
         setOwnedIds(prev => new Set(prev).add(item.id));
         alert(`🎉 Purchased ${item.name}!`);
       } else {
@@ -120,7 +131,7 @@ export default function ShopPage() {
   const ShopItemCard = ({ item }: { item: ShopItem }) => {
     const owned = isOwned(item);
     const rarity = rarityColors[item.rarity] || rarityColors.common;
-    
+
     return (
       <button
         type="button"
@@ -133,12 +144,12 @@ export default function ShopPage() {
         {owned && (
           <div className="absolute top-1 right-1 text-green-400 text-xs font-bold">✓ OWNED</div>
         )}
-        
+
         <div className="text-2xl mb-2">
           {item.category === 'base' && item.assetData?.emoji}
           {item.category === 'badge' && item.assetData?.emoji}
           {item.category === 'background' && (
-            <div 
+            <div
               className="w-8 h-8 rounded-full border-2 border-border-strong"
               style={{ backgroundColor: item.assetData?.color }}
             />
@@ -148,19 +159,19 @@ export default function ShopPage() {
           )}
           {item.category === 'title' && '📛'}
         </div>
-        
+
         <div className="text-primary font-semibold text-sm">{item.name}</div>
         <div className="text-secondary text-xs mt-0.5">{item.description}</div>
-        
+
         <div className="flex items-center justify-between mt-2">
           <span className={`text-xs uppercase ${rarity.text}`}>{item.rarity}</span>
           {!owned && (
             <span className="text-primary font-bold text-sm flex items-center gap-1">
-              {item.price} 💎
+              {item.price} {storeConfig.currency_icon}
             </span>
           )}
         </div>
-        
+
         {purchasing === item.id && (
           <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
             <span className="text-primary animate-pulse">Buying...</span>
@@ -188,12 +199,13 @@ export default function ShopPage() {
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-primary">Shop</h1>
-              <p className="text-secondary text-sm">Buy cosmetics for your avatar</p>
+              <h1 className="text-xl font-bold text-primary">Prize Wall</h1>
+              <p className="text-secondary text-sm">Spend your {storeConfig.currency_name} on avatar cosmetics</p>
             </div>
             <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-full">
-              <span className="text-xl">💎</span>
-              <span className="text-primary font-bold">{gems.toLocaleString()}</span>
+              <span className="text-xl">{storeConfig.currency_icon}</span>
+              <span className="text-primary font-bold">{balance.toLocaleString()}</span>
+              <span className="text-secondary text-sm">{storeConfig.currency_name}</span>
             </div>
           </div>
 
@@ -225,7 +237,7 @@ export default function ShopPage() {
             <ShopItemCard key={item.id} item={item} />
           ))}
         </div>
-        
+
         {(!shopItems[activeCategory] || shopItems[activeCategory].length === 0) && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🏪</div>

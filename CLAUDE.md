@@ -97,3 +97,16 @@ Design implications:
 - **The value is delivered passively.** Points accumulate, leaderboards update, achievements unlock — without staff doing anything beyond showing up and running events normally.
 
 This constraint is also the SaaS pitch: "It works even if your staff isn't technical."
+
+## Shop / Prize Wall Currency
+- Currency display name = **Points** (default), configurable per store
+- DB column stays `players.gems` internally — only the display label changes
+- Store config lives in `store_config` table (single row), field `currency_name`
+- All UI text referencing "gems" must pull from `store_config.currency_name`
+- Any store-facing text that varies by brand (currency name, store name) must
+  never be hardcoded — always pulled from store config
+
+## SaaS White-Label Notes
+- Three target store types: Trade Emporium (flagship), Games of <City>, Gamers Guild of <City>
+- Currency name "Fragments/Shards" fits Hyperbolic brand but not white-label
+- "Points" is the safe default; stores configure their own in HQ settings

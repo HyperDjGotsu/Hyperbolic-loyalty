@@ -240,6 +240,10 @@ export default function HQPage() {
   const [shopFormOpen, setShopFormOpen] = useState(false);
   const [shopDeleteConfirm, setShopDeleteConfirm] = useState<string | null>(null);
 
+  // Store settings state
+  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Hyperbolic XP' });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
   // Check staff access
   useEffect(() => {
     if (!isLoaded) return;
@@ -665,6 +669,9 @@ export default function HQPage() {
     if (activeTab === 'shop') {
       loadShopItems();
     }
+    if (activeTab === 'settings') {
+      loadStoreConfig();
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -672,6 +679,32 @@ export default function HQPage() {
       loadEmperorRankings(selectedMonth);
     }
   }, [selectedMonth]);
+
+  // Store settings functions
+  const loadStoreConfig = async () => {
+    try {
+      const res = await fetch('/api/store-config');
+      if (res.ok) setStoreConfig(await res.json());
+    } catch { /* use defaults */ }
+  };
+
+  const saveStoreConfig = async () => {
+    setSettingsSaving(true);
+    try {
+      const res = await fetch('/api/hq/store-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(storeConfig),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      showToast('Settings saved', 'success');
+    } catch {
+      showToast('Failed to save settings', 'error');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
 
   // Shop management functions
   const loadShopItems = async () => {
@@ -1311,6 +1344,7 @@ export default function HQPage() {
               { id: 'cotd', label: '🃏 Card of Day', icon: '🃏' },
               { id: 'events', label: '📅 Events', icon: '📅' },
               { id: 'shop', label: '🛒 Shop', icon: '🛒' },
+              { id: 'settings', label: '⚙️ Settings', icon: '⚙️' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -2902,7 +2936,7 @@ export default function HQPage() {
                 ].map(r => (
                   <div key={r.rarity} className={`rounded-lg p-3 border ${r.bg}`}>
                     <div className={`text-xs font-bold ${r.color} mb-1`}>{r.rarity}</div>
-                    <div className="text-sm font-mono font-semibold text-primary">{r.range} <span className="text-xs text-tertiary">gems</span></div>
+                    <div className="text-sm font-mono font-semibold text-primary">{r.range} <span className="text-xs text-tertiary">pts</span></div>
                     <div className="text-xs text-tertiary mt-1 leading-tight">{r.desc}</div>
                   </div>
                 ))}
@@ -2988,7 +3022,7 @@ export default function HQPage() {
                                 {item.rarity}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-primary font-mono">{item.price.toLocaleString()} 💎</td>
+                            <td className="px-4 py-3 text-primary font-mono">{item.price.toLocaleString()} pts</td>
                             <td className="px-4 py-3">
                               <button
                                 onClick={() => toggleShopItemActive(item)}
@@ -3078,16 +3112,16 @@ export default function HQPage() {
                       onChange={e => setShopForm(f => ({ ...f, rarity: e.target.value }))}
                       className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                     >
-                      <option value="common">Common (100–250 gems)</option>
-                      <option value="uncommon">Uncommon (300–600 gems)</option>
-                      <option value="rare">Rare (750–1,200 gems)</option>
-                      <option value="epic">Epic (1,500–2,500 gems)</option>
-                      <option value="legendary">Legendary (3,000+ gems)</option>
+                      <option value="common">Common (100–250 pts)</option>
+                      <option value="uncommon">Uncommon (300–600 pts)</option>
+                      <option value="rare">Rare (750–1,200 pts)</option>
+                      <option value="epic">Epic (1,500–2,500 pts)</option>
+                      <option value="legendary">Legendary (3,000+ pts)</option>
                     </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-secondary block mb-1">
-                      Price (gems) *
+                      Price (points) *
                       <span className="ml-2 text-tertiary font-normal">
                         {shopForm.rarity === 'common' ? '100–250' : shopForm.rarity === 'uncommon' ? '300–600' : shopForm.rarity === 'rare' ? '750–1,200' : shopForm.rarity === 'epic' ? '1,500–2,500' : '3,000+'}
                       </span>
@@ -3184,6 +3218,78 @@ export default function HQPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6 max-w-xl">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <h2 className="font-semibold text-primary mb-1">Store Settings</h2>
+              <p className="text-xs text-tertiary mb-5">
+                These values appear across the player-facing app. Changes take effect immediately.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Store Name</label>
+                  <input
+                    type="text"
+                    value={storeConfig.store_name}
+                    onChange={e => setStoreConfig(c => ({ ...c, store_name: e.target.value }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">
+                    Currency Name
+                    <span className="ml-2 font-normal text-tertiary">What players earn and spend</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={storeConfig.currency_name}
+                    onChange={e => setStoreConfig(c => ({ ...c, currency_name: e.target.value }))}
+                    placeholder="Points"
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                  <p className="text-xs text-tertiary mt-1">
+                    Examples: Points, Credits, Gold, Marks, Flux, Fragments
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">
+                    Currency Icon
+                    <span className="ml-2 font-normal text-tertiary">Emoji shown next to balance</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={storeConfig.currency_icon}
+                      onChange={e => setStoreConfig(c => ({ ...c, currency_icon: e.target.value }))}
+                      placeholder="⭐"
+                      className="w-24 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary text-center"
+                    />
+                    <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-full text-sm">
+                      <span>{storeConfig.currency_icon}</span>
+                      <span className="font-bold text-primary">1,250</span>
+                      <span className="text-secondary">{storeConfig.currency_name}</span>
+                    </div>
+                    <span className="text-xs text-tertiary">← preview</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-border-token flex justify-end">
+                <button
+                  onClick={saveStoreConfig}
+                  disabled={settingsSaving}
+                  className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {settingsSaving ? 'Saving…' : 'Save Settings'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
