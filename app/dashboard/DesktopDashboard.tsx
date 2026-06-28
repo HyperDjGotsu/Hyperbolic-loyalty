@@ -565,6 +565,7 @@ export default function DesktopDashboard() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
+  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -711,6 +712,22 @@ export default function DesktopDashboard() {
 
     loadGameStats();
   }, [playerData, user]);
+
+  // Load store config
+  useEffect(() => {
+    async function loadStoreConfig() {
+      try {
+        const res = await fetch('/api/store-config');
+        if (res.ok) {
+          const data = await res.json();
+          setStoreConfig(data);
+        }
+      } catch (error) {
+        console.error('Error loading store config:', error);
+      }
+    }
+    loadStoreConfig();
+  }, []);
 
   // Load banners
   useEffect(() => {
@@ -936,6 +953,7 @@ export default function DesktopDashboard() {
               <div className="flex gap-3 relative z-10">
                 <HeroStatCard value={games.length} label="Games" />
                 <HeroStatCard value={totalXp} label="Total XP" />
+                <HeroStatCard value={playerData?.gems || 0} label={`${storeConfig.currency_icon} ${storeConfig.currency_name}`} />
               </div>
             </div>
           </section>

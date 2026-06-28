@@ -301,6 +301,7 @@ export async function GET() {
       passTier: player.pass_tier,
       passStatus: player.pass_status,
       xp: totalXp,
+      gems: player.gems || 0,
       gameXP,
       recentActivity: activity || [],
       primaryGameId: player.primary_game_id,

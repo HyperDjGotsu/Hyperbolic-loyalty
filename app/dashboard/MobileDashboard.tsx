@@ -84,6 +84,7 @@ export default function MobileDashboard() {
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
+  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
 
   const gamesContainerRef = useRef<HTMLDivElement>(null);
   const activityContainerRef = useRef<HTMLDivElement>(null);
@@ -194,6 +195,22 @@ export default function MobileDashboard() {
     
     loadDailyStatus();
   }, [playerData, user]);
+
+  // Load store config
+  useEffect(() => {
+    async function loadStoreConfig() {
+      try {
+        const res = await fetch('/api/store-config');
+        if (res.ok) {
+          const data = await res.json();
+          setStoreConfig(data);
+        }
+      } catch (error) {
+        console.error('Error loading store config:', error);
+      }
+    }
+    loadStoreConfig();
+  }, []);
 
   // Load banners for carousel
   useEffect(() => {
@@ -361,6 +378,7 @@ export default function MobileDashboard() {
               <StatCard icon="🎮" label="Games" value={games.length} />
               <StatCard icon="📋" label="Activity" value={recentActivity.length} />
               <StatCard icon="⭐" label="Level" value={level} color="text-orange-400" />
+              <StatCard icon={storeConfig.currency_icon} label={storeConfig.currency_name} value={playerData?.gems || 0} color="text-accent" />
             </div>
           </div>
         </div>
