@@ -77,7 +77,7 @@ const MiniAvatar = ({ avatar, name }: { avatar: any; name: string }) => {
   
   return (
     <div 
-      className="w-6 h-6 rounded-full flex items-center justify-center text-xs border-2 border-token"
+      className="w-6 h-6 rounded-full flex items-center justify-center text-xs border-2 border-border-token"
       style={{ backgroundColor: bg }}
       title={name}
     >
@@ -208,9 +208,9 @@ const ShareModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-surface rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-token">
+      <div className="relative bg-surface rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-border-token">
         {/* Header */}
-        <div className="p-4 border-b border-token">
+        <div className="p-4 border-b border-border-token">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-primary">Share Event</h3>
             <button onClick={onClose} className="text-secondary hover:text-primary text-2xl">×</button>
@@ -227,7 +227,7 @@ const ShareModal = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-token">
+        <div className="flex border-b border-border-token">
           <button
             onClick={() => setActiveTab('link')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
@@ -304,7 +304,7 @@ const ShareModal = ({
                       className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                         selectedFriends.has(friend.odid)
                           ? 'bg-accent/10 border border-accent/50'
-                          : 'bg-elevated border border-token hover:border-token'
+                          : 'bg-elevated border border-border-token hover:border-border-token'
                       }`}
                     >
                       <MiniAvatar avatar={friend.avatar} name={friend.name} />
@@ -319,7 +319,7 @@ const ShareModal = ({
             </div>
 
             {/* Actions */}
-            <div className="p-4 border-t border-token">
+            <div className="p-4 border-t border-border-token">
               <button
                 onClick={handleShareWithFriends}
                 disabled={selectedFriends.size === 0 || sharing}
@@ -375,7 +375,7 @@ const MiniCalendar = ({
   };
 
   return (
-    <div className="bg-base border border-token rounded-2xl p-4">
+    <div className="bg-base border border-border-token rounded-2xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button 
@@ -713,8 +713,8 @@ function EventsPageContent() {
   const DesktopEventCard = ({ event }: { event: CalendarEvent }) => (
     <div 
       onClick={() => setSelectedEvent(event)}
-      className={`bg-base rounded-xl overflow-hidden border cursor-pointer hover:border-token transition-all ${
-        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-token'
+      className={`bg-base rounded-xl overflow-hidden border cursor-pointer hover:border-border-token transition-all ${
+        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-border-token'
       }`}
     >
       <div 
@@ -799,8 +799,8 @@ function EventsPageContent() {
   const MobileEventCard = ({ event }: { event: CalendarEvent }) => (
     <div 
       onClick={() => setSelectedEvent(event)}
-      className={`bg-elevated/50 rounded-xl overflow-hidden border cursor-pointer hover:border-token transition-all ${
-        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-token'
+      className={`bg-elevated/50 rounded-xl overflow-hidden border cursor-pointer hover:border-border-token transition-all ${
+        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-border-token'
       }`}
     >
       <div 
@@ -837,7 +837,7 @@ function EventsPageContent() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-token">
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border-token">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -898,11 +898,11 @@ function EventsPageContent() {
         <div className="p-6 space-y-4">
           {/* Date & Time */}
           <div className="flex gap-4">
-            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-token">
+            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="text-secondary text-xs mb-1">DATE</div>
               <div className="text-primary font-bold">{event.date}</div>
             </div>
-            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-token">
+            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="text-secondary text-xs mb-1">TIME</div>
               <div className="text-primary font-bold">{event.time}</div>
             </div>
@@ -910,20 +910,20 @@ function EventsPageContent() {
           
           {/* Entry Fee & Spots */}
           <div className="flex gap-4">
-            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-token">
+            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="text-secondary text-xs mb-1">ENTRY FEE</div>
               <div className={`text-xl font-bold ${event.isFree ? 'text-green-400' : 'text-accent'}`}>
                 {event.entryFee}
               </div>
             </div>
-            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-token">
+            <div className="flex-1 bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="text-secondary text-xs mb-1">SPOTS</div>
               <div className="text-primary font-bold text-lg">{event.maxSpots || 'Open'}</div>
             </div>
           </div>
           
           {/* XP Rewards */}
-          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
             <div className="text-secondary text-xs mb-2">XP REWARDS</div>
             <div className="flex justify-around">
               <div className="text-center">
@@ -966,7 +966,7 @@ function EventsPageContent() {
           
           {/* Friends interested */}
           {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
-            <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+            <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="text-purple-400 font-bold mb-2">⭐ {event.interestedCount} Interested</div>
               {event.interestedFriends?.length > 0 && (
                 <div className="flex items-center gap-2">
@@ -985,7 +985,7 @@ function EventsPageContent() {
           
           {/* Description */}
           {event.description && (
-            <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+            <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="text-secondary text-xs mb-2">DESCRIPTION</div>
               <div className="text-primary text-sm whitespace-pre-wrap">{event.description}</div>
             </div>
@@ -993,7 +993,7 @@ function EventsPageContent() {
           
           {/* Stream */}
           {event.hasStream && (
-            <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+            <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-primary font-bold">Watch Live!</div>
@@ -1006,14 +1006,14 @@ function EventsPageContent() {
         </div>
         
         {/* Action Buttons */}
-        <div className="p-4 border-t border-token">
+        <div className="p-4 border-t border-border-token">
           <div className="flex gap-2">
             <button 
               onClick={() => toggleInterest(event.id)}
               disabled={togglingInterest === event.id}
               className={`flex-1 py-3 rounded-xl font-bold transition-all ${
                 event.isInterested
-                  ? 'bg-elevated text-primary border-2 border-token'
+                  ? 'bg-elevated text-primary border-2 border-border-token'
                   : 'bg-accent text-accent-fg'
               }`}
             >
@@ -1036,7 +1036,7 @@ function EventsPageContent() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Filter Bar */}
-      <div className="border-b border-token bg-base/95 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-border-token bg-base/95 backdrop-blur-sm sticky top-0 z-10">
         <div className="px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-4">
             <p className="text-secondary text-sm">Tap to see details</p>
@@ -1079,7 +1079,7 @@ function EventsPageContent() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
                   !selectedGames.has('all') && favoriteGames.every(g => selectedGames.has(g)) && selectedGames.size === favoriteGames.length
                     ? 'bg-accent text-accent-fg'
-                    : 'bg-elevated text-secondary hover:bg-elevated border border-dashed border-token'
+                    : 'bg-elevated text-secondary hover:bg-elevated border border-dashed border-border-token'
                 }`}
               >
                 <span>⭐</span>
@@ -1174,7 +1174,7 @@ function EventsPageContent() {
                 />
                 
                 {/* Quick stats */}
-                <div className="mt-4 bg-base border border-token rounded-2xl p-4">
+                <div className="mt-4 bg-base border border-border-token rounded-2xl p-4">
                   <h3 className="text-primary font-bold mb-3">This Week</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-elevated/50 rounded-lg p-3 text-center">

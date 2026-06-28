@@ -329,7 +329,7 @@ export default function MobileDashboard() {
             <div className="flex items-start gap-3">
               <div className="relative">
                 <Avatar avatar={avatarForComponent} size="md" />
-                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-primary text-xs font-bold px-2 py-0.5 rounded-full border-2 border-token">
+                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-primary text-xs font-bold px-2 py-0.5 rounded-full border-2 border-border-token">
                   {level}
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function MobileDashboard() {
                 </div>
                 <div className="text-secondary text-sm">Level {level} Player</div>
                 <div className="mt-2">
-                  <div className="h-2 bg-border-token rounded-full overflow-hidden">
+                  <div className="h-2 bg-border-border-token rounded-full overflow-hidden">
                     <div
                       className="h-full bg-accent rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${levelProgress}%` }}
@@ -357,7 +357,7 @@ export default function MobileDashboard() {
             </div>
 
             {/* Quick Stats */}
-            <div className="flex gap-3 mt-4 pt-3 border-t border-token">
+            <div className="flex gap-3 mt-4 pt-3 border-t border-border-token">
               <StatCard icon="🎮" label="Games" value={games.length} />
               <StatCard icon="📋" label="Activity" value={recentActivity.length} />
               <StatCard icon="⭐" label="Level" value={level} color="text-orange-400" />

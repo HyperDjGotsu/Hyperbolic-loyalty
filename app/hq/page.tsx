@@ -1283,7 +1283,7 @@ export default function HQPage() {
       )}
 
       {/* Header */}
-      <div className="border-b border-token bg-surface/50">
+      <div className="border-b border-border-token bg-surface/50">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -1300,7 +1300,7 @@ export default function HQPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-token">
+      <div className="border-b border-border-token">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex gap-2 py-2">
             {[
@@ -1333,7 +1333,7 @@ export default function HQPage() {
         {activeTab === 'players' && (
           <div className="space-y-6">
             {/* Search */}
-            <div className="bg-surface rounded-xl p-6 border border-token">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
               <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                 Search Player
               </h2>
@@ -1344,7 +1344,7 @@ export default function HQPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchPlayer()}
                   placeholder="Enter Player ID (HYP-XXXXX) or name..."
-                  className="flex-1 bg-elevated border border-token rounded-lg px-4 py-3 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
+                  className="flex-1 bg-elevated border border-border-token rounded-lg px-4 py-3 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                 />
                 <button
                   onClick={searchPlayer}
@@ -1358,9 +1358,9 @@ export default function HQPage() {
 
             {/* Player Result */}
             {playerDetails && (
-              <div className="bg-surface rounded-xl border border-token overflow-hidden">
+              <div className="bg-surface rounded-xl border border-border-token overflow-hidden">
                 {/* Player Header */}
-                <div className="p-6 bg-elevated/50 border-b border-token">
+                <div className="p-6 bg-elevated/50 border-b border-border-token">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold">{playerDetails.player.display_name}</h2>
@@ -1376,7 +1376,7 @@ export default function HQPage() {
                 </div>
 
                 {/* Game XP Section - REDESIGNED */}
-                <div className="p-6 border-b border-token">
+                <div className="p-6 border-b border-border-token">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
                       Game XP
@@ -1391,7 +1391,7 @@ export default function HQPage() {
                           setSelectedGame(e.target.value);
                         }
                       }}
-                      className="bg-elevated border border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
+                      className="bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
                     >
                       {getFavoritesCount() > 0 && (
                         <option value="favorites">⭐ Favorites ({getFavoritesCount()})</option>
@@ -1456,8 +1456,8 @@ export default function HQPage() {
                                 selectedGame === game.game_id
                                   ? 'bg-accent/20 border-2 border-accent'
                                   : game.xp > 0
-                                    ? 'bg-elevated border-2 border-transparent hover:border-token'
-                                    : 'bg-elevated/50 border-2 border-transparent hover:border-token opacity-60'
+                                    ? 'bg-elevated border-2 border-transparent hover:border-border-token'
+                                    : 'bg-elevated/50 border-2 border-transparent hover:border-border-token opacity-60'
                               }`}
                             >
                               <div className="flex items-center gap-2 mb-2">
@@ -1508,7 +1508,7 @@ export default function HQPage() {
                 </div>
 
                 {/* XP Management - Multi-select Tiles */}
-                <div className="p-6 border-b border-token">
+                <div className="p-6 border-b border-border-token">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
                       Award XP
@@ -1517,7 +1517,7 @@ export default function HQPage() {
                     <select
                       value={selectedGame}
                       onChange={(e) => setSelectedGame(e.target.value)}
-                      className="bg-elevated border border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
+                      className="bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
                     >
                       {games.map(game => (
                         <option key={game.id} value={game.id}>
@@ -1536,7 +1536,7 @@ export default function HQPage() {
                         className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
                           isTileSelected('Attended')
                             ? 'bg-purple-500/20 border-purple-500 text-primary'
-                            : 'bg-elevated border-token hover:border-purple-500 hover:bg-purple-500/10'
+                            : 'bg-elevated border-border-token hover:border-purple-500 hover:bg-purple-500/10'
                         }`}
                       >
                         <span className="font-medium">Attended</span>
@@ -1562,7 +1562,7 @@ export default function HQPage() {
                           className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
                             isTileSelected(item.label)
                               ? 'bg-green-500/20 border-green-500 text-primary'
-                              : 'bg-elevated border-token hover:border-green-500 hover:bg-green-500/10'
+                              : 'bg-elevated border-border-token hover:border-green-500 hover:bg-green-500/10'
                           }`}
                         >
                           <span className="font-medium">{item.label}</span>
@@ -1588,7 +1588,7 @@ export default function HQPage() {
                           className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
                             isTileSelected(item.label)
                               ? 'bg-orange-500/20 border-orange-500 text-primary'
-                              : 'bg-elevated border-token hover:border-orange-500 hover:bg-orange-500/10'
+                              : 'bg-elevated border-border-token hover:border-orange-500 hover:bg-orange-500/10'
                           }`}
                         >
                           <span className="font-medium">{item.label}</span>
@@ -1643,14 +1643,14 @@ export default function HQPage() {
                         value={xpAmount}
                         onChange={(e) => setXpAmount(e.target.value)}
                         placeholder="+/- XP"
-                        className="w-24 bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent text-center"
+                        className="w-24 bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent text-center"
                       />
                       <input
                         type="text"
                         value={xpReason}
                         onChange={(e) => setXpReason(e.target.value)}
                         placeholder="Reason (e.g., Prize payout, Correction)"
-                        className="flex-1 bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
+                        className="flex-1 bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                       />
                       <button
                         onClick={addCustomXp}
@@ -1700,7 +1700,7 @@ export default function HQPage() {
         {activeTab === 'emperor' && (
           <div className="space-y-6">
             {/* Month Selector */}
-            <div className="bg-surface rounded-xl p-6 border border-token">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold">🏴‍☠️ One Piece Emperor Rankings</h2>
@@ -1709,7 +1709,7 @@ export default function HQPage() {
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="bg-elevated border border-token rounded-lg px-4 py-2 text-primary focus:outline-none focus:border-accent"
+                  className="bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary focus:outline-none focus:border-accent"
                 >
                   {getMonthOptions().map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1720,7 +1720,7 @@ export default function HQPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Current Emperor */}
-              <div className="bg-surface rounded-xl p-6 border border-token">
+              <div className="bg-surface rounded-xl p-6 border border-border-token">
                 <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                   Monthly Rankings
                 </h3>
@@ -1771,7 +1771,7 @@ export default function HQPage() {
               </div>
 
               {/* Hall of Fame */}
-              <div className="bg-surface rounded-xl p-6 border border-token">
+              <div className="bg-surface rounded-xl p-6 border border-border-token">
                 <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                   Hall of Fame
                 </h3>
@@ -1837,7 +1837,7 @@ export default function HQPage() {
                 {banners.map(banner => (
                   <div
                     key={banner.id}
-                    className="bg-surface rounded-xl border border-token overflow-hidden"
+                    className="bg-surface rounded-xl border border-border-token overflow-hidden"
                   >
                     <div
                       className="p-4"
@@ -1894,8 +1894,8 @@ export default function HQPage() {
             {/* Banner Editor Modal */}
             {editingBanner && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-surface rounded-xl border border-token max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                  <div className="p-4 border-b border-token">
+                <div className="bg-surface rounded-xl border border-border-token max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-4 border-b border-border-token">
                     <h3 className="text-lg font-bold">
                       {editingBanner.id ? 'Edit Banner' : 'New Banner'}
                     </h3>
@@ -1929,7 +1929,7 @@ export default function HQPage() {
                           type="text"
                           value={editingBanner.title}
                           onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
-                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
@@ -1938,7 +1938,7 @@ export default function HQPage() {
                           type="text"
                           value={editingBanner.subtitle}
                           onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
-                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
@@ -1947,13 +1947,13 @@ export default function HQPage() {
                           <button
                             type="button"
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent text-left flex items-center justify-between"
+                            className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent text-left flex items-center justify-between"
                           >
                             <span className="text-2xl">{editingBanner.icon || '🎮'}</span>
                             <span className="text-secondary text-sm">Click to change</span>
                           </button>
                           {showEmojiPicker && (
-                            <div className="absolute top-full left-0 mt-2 p-3 bg-elevated border border-token rounded-lg shadow-xl z-10 w-64">
+                            <div className="absolute top-full left-0 mt-2 p-3 bg-elevated border border-border-token rounded-lg shadow-xl z-10 w-64">
                               <div className="grid grid-cols-8 gap-1">
                                 {['🎮', '🎲', '🎯', '🏆', '👑', '⭐', '🔥', '⚡',
                                   '🎪', '🎭', '🎨', '🎬', '🎤', '🎧', '🎸', '🎹',
@@ -1985,7 +1985,7 @@ export default function HQPage() {
                           value={editingBanner.badge}
                           onChange={(e) => setEditingBanner({ ...editingBanner, badge: e.target.value })}
                           placeholder="e.g. LIVE SOON"
-                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                         />
                       </div>
                       <div>
@@ -1994,7 +1994,7 @@ export default function HQPage() {
                           type="color"
                           value={editingBanner.color_from}
                           onChange={(e) => setEditingBanner({ ...editingBanner, color_from: e.target.value })}
-                          className="w-full h-10 bg-elevated border border-token rounded-lg cursor-pointer"
+                          className="w-full h-10 bg-elevated border border-border-token rounded-lg cursor-pointer"
                         />
                       </div>
                       <div>
@@ -2003,7 +2003,7 @@ export default function HQPage() {
                           type="color"
                           value={editingBanner.color_to}
                           onChange={(e) => setEditingBanner({ ...editingBanner, color_to: e.target.value })}
-                          className="w-full h-10 bg-elevated border border-token rounded-lg cursor-pointer"
+                          className="w-full h-10 bg-elevated border border-border-token rounded-lg cursor-pointer"
                         />
                       </div>
                     </div>
@@ -2017,7 +2017,7 @@ export default function HQPage() {
                           value={editingBanner.twitch_url || ''}
                           onChange={(e) => setEditingBanner({ ...editingBanner, twitch_url: e.target.value || null })}
                           placeholder="https://twitch.tv/..."
-                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-purple-500"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-purple-500"
                         />
                       </div>
                       <div>
@@ -2027,7 +2027,7 @@ export default function HQPage() {
                           value={editingBanner.youtube_url || ''}
                           onChange={(e) => setEditingBanner({ ...editingBanner, youtube_url: e.target.value || null })}
                           placeholder="https://youtube.com/..."
-                          className="w-full bg-elevated border border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-red-500"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-red-500"
                         />
                       </div>
                     </div>
@@ -2044,7 +2044,7 @@ export default function HQPage() {
                       </label>
                     </div>
                   </div>
-                  <div className="p-4 border-t border-token flex justify-end gap-3">
+                  <div className="p-4 border-t border-border-token flex justify-end gap-3">
                     <button
                       onClick={() => setEditingBanner(null)}
                       className="px-4 py-2 text-secondary hover:text-primary"
@@ -2095,7 +2095,7 @@ export default function HQPage() {
                             type="date"
                             value={newEventDate}
                             onChange={(e) => setNewEventDate(e.target.value)}
-                            className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                            className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                           />
                         </div>
                         <div>
@@ -2104,7 +2104,7 @@ export default function HQPage() {
                             type="datetime-local"
                             value={newOptInOpens}
                             onChange={(e) => setNewOptInOpens(e.target.value)}
-                            className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                            className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                           />
                         </div>
                         <div>
@@ -2113,7 +2113,7 @@ export default function HQPage() {
                             type="datetime-local"
                             value={newOptInCloses}
                             onChange={(e) => setNewOptInCloses(e.target.value)}
-                            className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                            className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                           />
                         </div>
                       </div>
@@ -2193,7 +2193,7 @@ export default function HQPage() {
                 </div>
 
                 {/* WANTED List */}
-                <div className="bg-surface rounded-xl p-6 border border-token">
+                <div className="bg-surface rounded-xl p-6 border border-border-token">
                   <h3 className="text-lg font-bold text-red-400 mb-4">🏴‍☠️ WANTED (Top 5 Auto-Added)</h3>
                   {bountyWanted.length > 0 ? (
                     <div className="space-y-2">
@@ -2211,7 +2211,7 @@ export default function HQPage() {
                 </div>
 
                 {/* Hunters List */}
-                <div className="bg-surface rounded-xl p-6 border border-token">
+                <div className="bg-surface rounded-xl p-6 border border-border-token">
                   <h3 className="text-lg font-bold text-green-400 mb-4">🏹 Registered Hunters ({bountyHunters.length})</h3>
                   {bountyHunters.length > 0 ? (
                     <div className="grid gap-2">
@@ -2240,7 +2240,7 @@ export default function HQPage() {
                         <select
                           value={matchWinner}
                           onChange={(e) => setMatchWinner(e.target.value)}
-                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value="">Select winner...</option>
                           <optgroup label="🎯 WANTED">
@@ -2266,7 +2266,7 @@ export default function HQPage() {
                         <select
                           value={matchLoser}
                           onChange={(e) => setMatchLoser(e.target.value)}
-                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value="">Select loser...</option>
                           <optgroup label="🎯 WANTED">
@@ -2294,7 +2294,7 @@ export default function HQPage() {
                         <select
                           value={matchType}
                           onChange={(e) => setMatchType(e.target.value)}
-                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value="">Select type...</option>
                           <option value="hunter_upsets_wanted">🏹 Hunter upsets WANTED (+30/-25)</option>
@@ -2310,7 +2310,7 @@ export default function HQPage() {
                         <select
                           value={matchRound}
                           onChange={(e) => setMatchRound(Number(e.target.value))}
-                          className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                          className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                         >
                           <option value={1}>Round 1 (Bounty Round)</option>
                           <option value={2}>Round 2</option>
@@ -2332,11 +2332,11 @@ export default function HQPage() {
 
                 {/* Match History */}
                 {matches.length > 0 && (
-                  <div className="bg-surface rounded-xl p-6 border border-token">
+                  <div className="bg-surface rounded-xl p-6 border border-border-token">
                     <h3 className="text-lg font-bold text-primary mb-4">📜 Match History ({matches.length})</h3>
                     <div className="space-y-2 max-h-96 overflow-auto">
                       {matches.map((match: any) => (
-                        <div key={match.id} className="flex items-center gap-3 p-3 bg-elevated/50 rounded-lg border border-token/50">
+                        <div key={match.id} className="flex items-center gap-3 p-3 bg-elevated/50 rounded-lg border border-border-token/50">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 text-sm">
                               <span className="text-green-400 font-medium">{match.winner_name}</span>
@@ -2366,7 +2366,7 @@ export default function HQPage() {
               </>
             ) : (
               /* No Current Event - Create New */
-              <div className="bg-surface rounded-xl p-6 border border-token">
+              <div className="bg-surface rounded-xl p-6 border border-border-token">
                 <h2 className="text-xl font-bold mb-4">🎯 Create Bounty Hunter Event</h2>
                 <p className="text-secondary mb-6">No event scheduled for this month. Create one below.</p>
                 
@@ -2377,7 +2377,7 @@ export default function HQPage() {
                       type="date"
                       value={newEventDate}
                       onChange={(e) => setNewEventDate(e.target.value)}
-                      className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                      className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                     />
                   </div>
                   <div>
@@ -2386,7 +2386,7 @@ export default function HQPage() {
                       type="datetime-local"
                       value={newOptInOpens}
                       onChange={(e) => setNewOptInOpens(e.target.value)}
-                      className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                      className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                     />
                   </div>
                   <div>
@@ -2395,7 +2395,7 @@ export default function HQPage() {
                       type="datetime-local"
                       value={newOptInCloses}
                       onChange={(e) => setNewOptInCloses(e.target.value)}
-                      className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                      className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                     />
                   </div>
                   <button
@@ -2426,7 +2426,7 @@ export default function HQPage() {
         {activeTab === 'cotd' && (
           <div className="space-y-6">
             {/* Search Section */}
-            <div className="bg-surface rounded-xl p-6 border border-token">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
               <h2 className="text-xl font-bold mb-4">🃏 Set Card of the Day</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
@@ -2435,7 +2435,7 @@ export default function HQPage() {
                   <select
                     value={cotdSearchGame}
                     onChange={(e) => setCotdSearchGame(e.target.value)}
-                    className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary"
+                    className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary"
                   >
                     <option value="one-piece-card-game">One Piece</option>
                     <option value="pokemon">Pokémon</option>
@@ -2456,7 +2456,7 @@ export default function HQPage() {
                     onChange={(e) => setCotdSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && searchCOTDCards()}
                     placeholder="e.g. Monkey.D.Luffy"
-                    className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary placeholder:text-secondary"
+                    className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary placeholder:text-secondary"
                   />
                 </div>
 
@@ -2468,7 +2468,7 @@ export default function HQPage() {
                     onChange={(e) => setCotdSearchNumber(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && searchCOTDCards()}
                     placeholder="e.g. 012"
-                    className="w-full bg-elevated border border-token rounded-lg px-4 py-2 text-primary placeholder:text-secondary"
+                    className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2 text-primary placeholder:text-secondary"
                   />
                 </div>
 
@@ -2496,7 +2496,7 @@ export default function HQPage() {
                         className={`p-3 rounded-lg border text-left transition-all ${
                           cotdSelectedCard?.variantId === card.variantId && cotdSelectedCard?.id === card.id
                             ? 'bg-accent/10 border-accent'
-                            : 'bg-elevated border-token hover:border-token'
+                            : 'bg-elevated border-border-token hover:border-border-token'
                         }`}
                       >
                         <div className="font-medium text-sm truncate">{card.name}</div>
@@ -2540,7 +2540,7 @@ export default function HQPage() {
                     <button onClick={() => setCotdSelectedCard(null)} className="text-secondary hover:text-red-400">✕</button>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-token">
+                  <div className="mt-4 pt-4 border-t border-border-token">
                     <label className="block text-sm text-secondary mb-2">Feature on Date</label>
                     <div className="flex flex-wrap gap-2">
                       {getCOTDDateOptions().map(opt => (
@@ -2574,7 +2574,7 @@ export default function HQPage() {
             </div>
 
             {/* Upcoming Schedule */}
-            <div className="bg-surface rounded-xl p-6 border border-token">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
               <h2 className="text-xl font-bold mb-4">📅 Upcoming Schedule</h2>
               
               {cotdUpcoming.length === 0 ? (
@@ -2586,7 +2586,7 @@ export default function HQPage() {
               ) : (
                 <div className="space-y-3">
                   {cotdUpcoming.map(card => (
-                    <div key={card.id} className="flex items-center gap-4 p-4 bg-elevated rounded-lg border border-token">
+                    <div key={card.id} className="flex items-center gap-4 p-4 bg-elevated rounded-lg border border-border-token">
                       <div className="text-center min-w-[80px]">
                         <div className="text-xs text-secondary uppercase">
                           {new Date(card.featured_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
@@ -2645,7 +2645,7 @@ export default function HQPage() {
                     <select
                       value={cotdVotingDate}
                       onChange={(e) => setCotdVotingDate(e.target.value)}
-                      className="flex-1 bg-elevated border border-token rounded-lg px-3 py-2 text-primary text-sm"
+                      className="flex-1 bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary text-sm"
                     >
                       <option value="">Select voting date...</option>
                       {getVotingDateOptions().map(opt => (
@@ -2680,7 +2680,7 @@ export default function HQPage() {
                       const isTomorrow = date === tomorrow.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
                       
                       return (
-                        <div key={date} className="p-4 bg-elevated rounded-lg border border-token">
+                        <div key={date} className="p-4 bg-elevated rounded-lg border border-border-token">
                           <div className="flex items-center justify-between mb-3">
                             <div>
                               <span className="font-medium">
@@ -2748,7 +2748,7 @@ export default function HQPage() {
               )}
             </div>
 
-            <div className="bg-surface rounded-xl p-6 border border-token">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
               <h3 className="font-medium text-primary mb-2">💡 How it works</h3>
               <ul className="text-sm text-secondary space-y-1">
                 <li>• <strong>Staff Picks:</strong> Set a card directly for any date (overrides voting)</li>
@@ -2764,7 +2764,7 @@ export default function HQPage() {
         {activeTab === 'events' && (
           <div className="space-y-4">
             {/* Kiosk link */}
-            <div className="bg-surface rounded-xl p-4 border border-token flex items-center justify-between">
+            <div className="bg-surface rounded-xl p-4 border border-border-token flex items-center justify-between">
               <div>
                 <div className="font-semibold text-primary">Door Kiosk</div>
                 <div className="text-secondary text-sm">Open on the Android device at the door</div>
@@ -2780,7 +2780,7 @@ export default function HQPage() {
             </div>
 
             {/* Event list */}
-            <div className="bg-surface rounded-xl p-6 border border-token">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">Upcoming Events</h2>
                 <button
@@ -2816,7 +2816,7 @@ export default function HQPage() {
                         className={`rounded-xl p-4 border flex items-center justify-between gap-4 ${
                           isActive
                             ? 'bg-emerald-950/40 border-emerald-500/40'
-                            : 'bg-elevated border-token'
+                            : 'bg-elevated border-border-token'
                         }`}
                       >
                         <div className="min-w-0">
@@ -2872,7 +2872,7 @@ export default function HQPage() {
             </div>
 
             {/* Calendar sync reminder */}
-            <div className="bg-surface rounded-xl p-4 border border-token">
+            <div className="bg-surface rounded-xl p-4 border border-border-token">
               <p className="text-tertiary text-sm">
                 Events sync from Google Calendar.{' '}
                 <a href="/dashboard/events" className="text-accent hover:text-accent">
@@ -2889,7 +2889,7 @@ export default function HQPage() {
           <div className="space-y-6">
 
             {/* Pricing Formula Reference */}
-            <div className="bg-surface rounded-xl p-6 border border-token">
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
               <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-1">Pricing Formula</h2>
               <p className="text-xs text-tertiary mb-4">Upper management sets the item spec — staff enters it here. Use these ranges as your guide.</p>
               <div className="grid grid-cols-5 gap-3 mb-4">
@@ -2907,7 +2907,7 @@ export default function HQPage() {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-token pt-4">
+              <div className="border-t border-border-token pt-4">
                 <div className="text-xs font-medium text-secondary mb-2">Category Guide</div>
                 <div className="grid grid-cols-3 gap-2 text-xs text-tertiary">
                   <div><span className="text-primary font-medium">Base</span> — Avatar body emoji (e.g. 🧙 🤖 🦊)</div>
@@ -2921,8 +2921,8 @@ export default function HQPage() {
             </div>
 
             {/* Item List */}
-            <div className="bg-surface rounded-xl border border-token overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-token">
+            <div className="bg-surface rounded-xl border border-border-token overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border-token">
                 <div className="flex items-center gap-3">
                   <h2 className="font-semibold text-primary">Shop Items</h2>
                   <span className="text-xs text-tertiary bg-elevated px-2 py-0.5 rounded-full">
@@ -2933,7 +2933,7 @@ export default function HQPage() {
                   <select
                     value={shopCategoryFilter}
                     onChange={e => setShopCategoryFilter(e.target.value)}
-                    className="text-sm bg-elevated border border-token rounded-lg px-3 py-1.5 text-primary"
+                    className="text-sm bg-elevated border border-border-token rounded-lg px-3 py-1.5 text-primary"
                   >
                     <option value="all">All categories</option>
                     <option value="base">Base</option>
@@ -2959,7 +2959,7 @@ export default function HQPage() {
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-token text-left">
+                    <tr className="border-b border-border-token text-left">
                       <th className="px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Item</th>
                       <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Category</th>
                       <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Rarity</th>
@@ -3043,7 +3043,7 @@ export default function HQPage() {
                       value={shopForm.name}
                       onChange={e => setShopForm(f => ({ ...f, name: e.target.value }))}
                       placeholder="e.g. Golden Dragon Frame"
-                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
                     />
                   </div>
                   <div>
@@ -3053,7 +3053,7 @@ export default function HQPage() {
                       value={shopForm.description}
                       onChange={e => setShopForm(f => ({ ...f, description: e.target.value }))}
                       placeholder="Optional short description"
-                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
                     />
                   </div>
                   <div>
@@ -3061,7 +3061,7 @@ export default function HQPage() {
                     <select
                       value={shopForm.category}
                       onChange={e => setShopForm(f => ({ ...f, category: e.target.value }))}
-                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                     >
                       <option value="base">Base — avatar body emoji</option>
                       <option value="background">Background — color behind avatar</option>
@@ -3076,7 +3076,7 @@ export default function HQPage() {
                     <select
                       value={shopForm.rarity}
                       onChange={e => setShopForm(f => ({ ...f, rarity: e.target.value }))}
-                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                     >
                       <option value="common">Common (100–250 gems)</option>
                       <option value="uncommon">Uncommon (300–600 gems)</option>
@@ -3098,7 +3098,7 @@ export default function HQPage() {
                       value={shopForm.price}
                       onChange={e => setShopForm(f => ({ ...f, price: e.target.value }))}
                       placeholder="e.g. 500"
-                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
                     />
                   </div>
 
@@ -3111,7 +3111,7 @@ export default function HQPage() {
                         value={shopForm.asset_emoji}
                         onChange={e => setShopForm(f => ({ ...f, asset_emoji: e.target.value }))}
                         placeholder="e.g. 🧙"
-                        className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
                       />
                     </div>
                   )}
@@ -3123,14 +3123,14 @@ export default function HQPage() {
                           type="color"
                           value={shopForm.asset_color}
                           onChange={e => setShopForm(f => ({ ...f, asset_color: e.target.value }))}
-                          className="w-10 h-9 rounded border border-token bg-input cursor-pointer"
+                          className="w-10 h-9 rounded border border-border-token bg-input cursor-pointer"
                         />
                         <input
                           type="text"
                           value={shopForm.asset_color}
                           onChange={e => setShopForm(f => ({ ...f, asset_color: e.target.value }))}
                           placeholder="#6366f1"
-                          className="flex-1 bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                          className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
                         />
                       </div>
                     </div>
@@ -3141,7 +3141,7 @@ export default function HQPage() {
                       <select
                         value={shopForm.asset_frame}
                         onChange={e => setShopForm(f => ({ ...f, asset_frame: e.target.value }))}
-                        className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary"
+                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                       >
                         <option value="silver">Silver</option>
                         <option value="gold">Gold</option>
@@ -3161,13 +3161,13 @@ export default function HQPage() {
                         value={shopForm.asset_title}
                         onChange={e => setShopForm(f => ({ ...f, asset_title: e.target.value }))}
                         placeholder="e.g. The Collector"
-                        className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
                       />
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-token">
+                <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-border-token">
                   <button
                     onClick={() => setShopFormOpen(false)}
                     className="text-sm text-secondary hover:text-primary px-4 py-2"

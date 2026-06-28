@@ -91,8 +91,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-base text-primary">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-56 bg-surface border-r border-token z-30">
-        <div className="px-4 py-5 border-b border-token flex items-center justify-between">
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-56 bg-surface border-r border-border-token z-30">
+        <div className="px-4 py-5 border-b border-border-token flex items-center justify-between">
           <span className="font-display font-bold text-lg text-primary">Hyperbolic XP</span>
           <ThemeToggle />
         </div>
@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem key={item.href} item={item} pathname={pathname} />
           ))}
         </nav>
-        <div className="p-4 border-t border-token">
+        <div className="p-4 border-t border-border-token">
           <Link
             href="/hq"
             className="text-xs text-tertiary hover:text-secondary transition-colors"
@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <main className="lg:ml-56 pb-20 lg:pb-0">
         {/* Desktop header */}
-        <div className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-token sticky top-0 bg-base/95 backdrop-blur-sm z-20">
+        <div className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-border-token sticky top-0 bg-base/95 backdrop-blur-sm z-20">
           <h1 className="text-base font-semibold text-primary capitalize">
             {pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
           </h1>
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-token z-30">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border-token z-30">
         <div className="flex items-center relative">
           {navItems.map((item) => (
             <MobileNavItem key={item.href} item={item} pathname={pathname} />

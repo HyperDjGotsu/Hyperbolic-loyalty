@@ -4,7 +4,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-base text-primary flex flex-col">
       {/* Nav */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-token">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-border-token">
         <span className="font-display text-xl font-bold tracking-tight">Hyperbolic XP</span>
         <div className="flex items-center gap-3">
           <Link
@@ -56,7 +56,7 @@ export default function LandingPage() {
       </main>
 
       {/* Features */}
-      <section className="border-t border-token py-16 px-6">
+      <section className="border-t border-border-token py-16 px-6">
         <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
             { icon: '🏆', title: 'Earn XP', body: 'Every event, match win, and purchase earns you points toward your rank.' },
@@ -73,7 +73,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-token py-6 px-6 text-center">
+      <footer className="border-t border-border-token py-6 px-6 text-center">
         <p className="text-xs text-tertiary">© 2026 Hyperbolic Creative. All rights reserved.</p>
       </footer>
     </div>

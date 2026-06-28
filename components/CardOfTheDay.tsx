@@ -131,7 +131,7 @@ const DEFAULT_THEME: GameTheme = {
   gradient: 'from-zinc-700/20 to-zinc-600/20',
   accent: 'text-cyan-400',
   icon: '🎴',
-  border: 'border-zinc-700',
+  border: 'border-border-token',
 };
 
 function getTheme(gameDisplay: string): GameTheme {

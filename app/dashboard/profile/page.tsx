@@ -333,7 +333,7 @@ export default function ProfilePage() {
           )}
         </div>
         {config.badge && (
-          <div className="absolute -bottom-1 -right-1 text-lg bg-elevated rounded-full w-7 h-7 flex items-center justify-center border-2 border-token">
+          <div className="absolute -bottom-1 -right-1 text-lg bg-elevated rounded-full w-7 h-7 flex items-center justify-center border-2 border-border-token">
             {config.badge}
           </div>
         )}
@@ -375,7 +375,7 @@ export default function ProfilePage() {
         className={`p-3 rounded-xl border-2 transition-all ${
           isSelected 
             ? 'border-accent bg-accent/10' 
-            : 'border-token bg-elevated/50 hover:border-token'
+            : 'border-border-token bg-elevated/50 hover:border-border-token'
         }`}
       >
         <div className="text-2xl">
@@ -400,7 +400,7 @@ export default function ProfilePage() {
   // Avatar Editor Modal
   const AvatarEditorModal = () => (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="p-4 border-b border-token flex items-center justify-between">
+      <div className="p-4 border-b border-border-token flex items-center justify-between">
         <button 
           type="button" 
           onClick={() => {
@@ -428,7 +428,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-token">
+      <div className="flex border-b border-border-token">
         {[
           { id: 'photo', label: '📷' },
           { id: 'base', label: '😎' },
@@ -463,7 +463,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full p-6 border-2 border-dashed border-token rounded-xl text-center hover:border-accent transition-colors"
+              className="w-full p-6 border-2 border-dashed border-border-token rounded-xl text-center hover:border-accent transition-colors"
             >
               <div className="text-4xl mb-2">📷</div>
               <div className="text-primary font-medium">Upload Photo</div>
@@ -561,7 +561,7 @@ export default function ProfilePage() {
             {playerData.status ? (
               <StatusBadge status={playerData.status} />
             ) : (
-              <div className="px-4 py-2 rounded-full bg-elevated/50 border border-token text-secondary text-sm flex items-center gap-2">
+              <div className="px-4 py-2 rounded-full bg-elevated/50 border border-border-token text-secondary text-sm flex items-center gap-2">
                 <span>+ Set Status</span>
               </div>
             )}
@@ -572,17 +572,17 @@ export default function ProfilePage() {
       {/* Stats */}
       <div className="px-4 -mt-2">
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-elevated/50 rounded-xl p-3 border border-token text-center">
+          <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
             <div className="text-2xl mb-1">🏆</div>
             <div className="text-primary font-bold text-lg">{playerData.level}</div>
             <div className="text-secondary text-xs">Level</div>
           </div>
-          <div className="bg-elevated/50 rounded-xl p-3 border border-token text-center">
+          <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
             <div className="text-2xl mb-1">⚡</div>
             <div className="text-accent font-bold">{playerData.totalXp.toLocaleString()}</div>
             <div className="text-secondary text-xs">Total XP</div>
           </div>
-          <div className="bg-elevated/50 rounded-xl p-3 border border-token text-center">
+          <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
             <div className="text-2xl mb-1">💎</div>
             <div className="text-purple-400 font-bold">{playerData.gems.toLocaleString()}</div>
             <div className="text-secondary text-xs">Gems</div>
@@ -597,13 +597,13 @@ export default function ProfilePage() {
         </h2>
         
         {referralLoading ? (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
             <div className="flex items-center justify-center py-4">
               <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
             </div>
           </div>
         ) : referralStats ? (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
             {/* Referral Code */}
             <div className="mb-4">
               <div className="text-secondary text-xs mb-1">Your Referral Code</div>
@@ -714,7 +714,7 @@ export default function ProfilePage() {
             )}
           </div>
         ) : (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-token text-center">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
             <p className="text-secondary">Unable to load referral info</p>
           </div>
         )}
@@ -725,7 +725,7 @@ export default function ProfilePage() {
         <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
           <span className="text-xl">🎒</span> Inventory
         </h2>
-        <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+        <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-xl mb-1">😎</div>
@@ -767,7 +767,7 @@ export default function ProfilePage() {
         </div>
         
         {favoriteGames.length > 0 ? (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
             <div className="flex flex-wrap gap-2">
               {favoriteGames.map(gameId => {
                 const game = ALL_GAMES.find(g => g.id === gameId);
@@ -775,7 +775,7 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={gameId}
-                    className="flex items-center gap-2 px-3 py-2 bg-elevated/50 rounded-lg border border-token/50"
+                    className="flex items-center gap-2 px-3 py-2 bg-elevated/50 rounded-lg border border-border-token/50"
                   >
                     <span>{game.icon}</span>
                     <span className="text-primary text-sm">{game.name}</span>
@@ -788,7 +788,7 @@ export default function ProfilePage() {
             </p>
           </div>
         ) : (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-token text-center">
+          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
             <p className="text-secondary">No favorite games selected</p>
             <button
               type="button"
@@ -814,7 +814,7 @@ export default function ProfilePage() {
           ].map((setting, i) => (
             <div 
               key={i} 
-              className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-token"
+              className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token"
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">{setting.icon}</span>
@@ -843,7 +843,7 @@ export default function ProfilePage() {
       {/* Favorite Games Editor Modal */}
       {editingFavorites && (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-          <div className="p-4 border-b border-token flex items-center justify-between">
+          <div className="p-4 border-b border-border-token flex items-center justify-between">
             <button 
               type="button" 
               onClick={() => setEditingFavorites(false)} 
@@ -862,7 +862,7 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="p-4 border-b border-token bg-surface/50">
+          <div className="p-4 border-b border-border-token bg-surface/50">
             <div className="flex items-center justify-between">
               <span className="text-secondary text-sm">Selected: {tempFavorites.length}/8</span>
               {tempFavorites.length >= 8 && (
@@ -909,8 +909,8 @@ export default function ProfilePage() {
                       isSelected
                         ? 'bg-accent/10 border-accent text-primary'
                         : isDisabled
-                          ? 'bg-elevated/30 border-token/30 text-tertiary cursor-not-allowed'
-                          : 'bg-elevated/50 border-token text-primary hover:border-token'
+                          ? 'bg-elevated/30 border-border-token/30 text-tertiary cursor-not-allowed'
+                          : 'bg-elevated/50 border-border-token text-primary hover:border-border-token'
                     }`}
                   >
                     <span className="text-2xl">{game.icon}</span>

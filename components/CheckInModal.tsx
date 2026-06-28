@@ -150,7 +150,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-token">
+        <div className="p-4 border-t border-border-token">
           <button onClick={handleClose} className="w-full py-3 text-tertiary font-medium">
             Close
           </button>

@@ -15,7 +15,7 @@ interface ShopItem {
 }
 
 const rarityColors: Record<string, { border: string; bg: string; text: string }> = {
-  common: { border: 'border-token', bg: 'bg-elevated/50', text: 'text-secondary' },
+  common: { border: 'border-border-token', bg: 'bg-elevated/50', text: 'text-secondary' },
   uncommon: { border: 'border-green-500', bg: 'bg-green-500/20', text: 'text-green-400' },
   rare: { border: 'border-blue-500', bg: 'bg-blue-500/20', text: 'text-blue-400' },
   epic: { border: 'border-purple-500', bg: 'bg-purple-500/20', text: 'text-purple-400' },
@@ -184,7 +184,7 @@ export default function ShopPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur-sm border-b border-token">
+      <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur-sm border-b border-border-token">
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -236,7 +236,7 @@ export default function ShopPage() {
 
       {/* Tip */}
       <div className="p-4 pt-0">
-        <div className="bg-elevated/50 rounded-xl p-4 border border-token text-center">
+        <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
           <p className="text-secondary text-sm">
             💡 Go to <span className="text-accent">Profile</span> to customize your avatar with purchased items
           </p>

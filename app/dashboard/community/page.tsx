@@ -602,7 +602,7 @@ export default function CommunityPage() {
     return (
       <div
         onClick={() => !isAnonymous && setSelectedMember(member)}
-        className={`bg-elevated/50 rounded-xl p-3 flex items-center gap-3 border border-token ${
+        className={`bg-elevated/50 rounded-xl p-3 flex items-center gap-3 border border-border-token ${
           !isAnonymous ? 'cursor-pointer hover:border-accent/50' : ''
         }`}
       >
@@ -654,7 +654,7 @@ export default function CommunityPage() {
   // Privacy Settings Modal
   const PrivacySettingsModal = () => (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="p-4 border-b border-token flex items-center justify-between">
+      <div className="p-4 border-b border-border-token flex items-center justify-between">
         <button onClick={() => setShowPrivacySettings(false)} className="text-secondary">
           ← Back
         </button>
@@ -768,7 +768,7 @@ export default function CommunityPage() {
     value: boolean; 
     onChange: (v: boolean) => void;
   }) => (
-    <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-token">
+    <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
       <div className="flex items-center gap-3">
         <span className="text-xl">{icon}</span>
         <div>
@@ -794,7 +794,7 @@ export default function CommunityPage() {
   // Search Modal Component
   const SearchModal = () => (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="p-4 border-b border-token">
+      <div className="p-4 border-b border-border-token">
         <div className="flex items-center gap-3">
           <button onClick={() => {
             setShowSearchModal(false);
@@ -810,7 +810,7 @@ export default function CommunityPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
-              className="w-full bg-elevated/80 border border-token rounded-xl py-3 px-4 pl-10 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
+              className="w-full bg-elevated/80 border border-border-token rounded-xl py-3 px-4 pl-10 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">🔍</span>
             {isSearching && (
@@ -851,7 +851,7 @@ export default function CommunityPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="relative bg-surface p-4 border-b border-token">
+      <div className="relative bg-surface p-4 border-b border-border-token">
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-primary flex items-center gap-2 font-display">
@@ -863,13 +863,13 @@ export default function CommunityPage() {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowSearchModal(true)}
-              className="bg-elevated/80 p-2 rounded-xl border border-token hover:border-accent/50 transition-colors"
+              className="bg-elevated/80 p-2 rounded-xl border border-border-token hover:border-accent/50 transition-colors"
             >
               <span className="text-xl">🔍</span>
             </button>
             <button 
               onClick={() => setShowPrivacySettings(true)}
-              className="bg-elevated/80 p-2 rounded-xl border border-token hover:border-accent/50 transition-colors"
+              className="bg-elevated/80 p-2 rounded-xl border border-border-token hover:border-accent/50 transition-colors"
             >
               <span className="text-xl">🛡️</span>
             </button>
@@ -878,7 +878,7 @@ export default function CommunityPage() {
       </div>
 
       {/* Tabs - Simplified: Ranks, Friends, One Piece */}
-      <div className="flex border-b border-token">
+      <div className="flex border-b border-border-token">
         {[
           { id: 'leaderboard' as const, label: '🏆 Ranks', icon: '🏆' },
           { id: 'friends' as const, label: '👥 Friends', count: friends.length, requestCount: friendRequests.length },
@@ -932,7 +932,7 @@ export default function CommunityPage() {
               ))}
               <button
                 onClick={() => setShowFavoritesPicker(true)}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-elevated/50 text-secondary hover:bg-elevated hover:text-primary transition-all border border-dashed border-token"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-elevated/50 text-secondary hover:bg-elevated hover:text-primary transition-all border border-dashed border-border-token"
               >
                 <span>⚙️</span>
                 <span className="text-sm">Edit</span>
@@ -941,7 +941,7 @@ export default function CommunityPage() {
 
             {/* Current Game Header */}
             {leaderboardGame !== 'overall' && (
-              <div className="bg-elevated rounded-xl p-3 border border-token">
+              <div className="bg-elevated rounded-xl p-3 border border-border-token">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon}</span>
@@ -1080,7 +1080,7 @@ export default function CommunityPage() {
 
                 {/* Hall of Fame */}
                 {hallOfFame.length > 0 && (
-                  <div className="bg-elevated/50 rounded-xl p-4 border border-token">
+                  <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
                     <h3 className="text-sm font-bold text-purple-400 uppercase tracking-wider mb-3">
                       🏆 Hall of Fame
                     </h3>
@@ -1193,7 +1193,7 @@ export default function CommunityPage() {
                   )}
 
                   {/* Point Stakes Info */}
-                  <div className="mt-4 pt-4 border-t border-token">
+                  <div className="mt-4 pt-4 border-t border-border-token">
                     <h4 className="text-xs font-medium text-secondary mb-2">Point Stakes (Round 1)</h4>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-surface/50 rounded p-2">
@@ -1225,7 +1225,7 @@ export default function CommunityPage() {
       {/* Member Profile Modal */}
       {selectedMember && (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-          <div className="p-4 border-b border-token flex items-center justify-between">
+          <div className="p-4 border-b border-border-token flex items-center justify-between">
             <button onClick={() => setSelectedMember(null)} className="text-secondary">
               ← Back
             </button>
@@ -1297,7 +1297,7 @@ export default function CommunityPage() {
                   </div>
                 </GlowButton>
               )}
-              <button className="px-4 py-3 bg-elevated text-primary rounded-xl border border-token">
+              <button className="px-4 py-3 bg-elevated text-primary rounded-xl border border-border-token">
                 💬
               </button>
             </div>
@@ -1314,7 +1314,7 @@ export default function CommunityPage() {
       {/* Favorites Picker Modal */}
       {showFavoritesPicker && (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-          <div className="p-4 border-b border-token flex items-center justify-between">
+          <div className="p-4 border-b border-border-token flex items-center justify-between">
             <button 
               onClick={() => setShowFavoritesPicker(false)} 
               className="text-secondary"
@@ -1351,7 +1351,7 @@ export default function CommunityPage() {
                       isSelected
                         ? 'bg-accent/10 border-2 border-accent'
                         : canSelect
-                        ? 'bg-elevated/50 border-2 border-transparent hover:border-token'
+                        ? 'bg-elevated/50 border-2 border-transparent hover:border-border-token'
                         : 'bg-elevated/30 border-2 border-transparent opacity-50'
                     }`}
                   >

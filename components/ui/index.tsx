@@ -104,7 +104,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       )}
       <input
         ref={ref}
-        className={`w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder:text-tertiary
+        className={`w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder:text-tertiary
           focus:outline-none focus:border-accent transition-colors duration-150 ${className}`}
         {...props}
       />
@@ -117,7 +117,7 @@ Input.displayName = 'Input';
 // ── Divider ────────────────────────────────────────────────────────────────
 
 export const Divider: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`border-t border-token ${className}`} />
+  <div className={`border-t border-border-token ${className}`} />
 );
 
 // ── ThemeToggle ────────────────────────────────────────────────────────────
