@@ -203,7 +203,7 @@ export const Avatar = ({
         }}
       >
         <div
-          className={`w-full h-full rounded-full bg-slate-900 flex items-center justify-center border-3 ${frameStyles} overflow-hidden`}
+          className={`w-full h-full rounded-full bg-base flex items-center justify-center border-3 ${frameStyles} overflow-hidden`}
         >
           {avatar.type === 'photo' && avatar.photoUrl ? (
             <img src={avatar.photoUrl} alt="" className="w-full h-full object-cover" />
@@ -285,7 +285,7 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
   return (
     <div
       onClick={onClick}
-      className={`bg-slate-800/80 rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${
+      className={`bg-surface rounded-xl overflow-hidden cursor-pointer transition-all border-2 ${
         isExpanded ? 'border-cyan-500' : 'border-transparent'
       }`}
       style={{ borderLeftColor: game.color, borderLeftWidth: '4px' }}
@@ -299,19 +299,19 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white text-sm">{game.name}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+            <span className="font-bold text-primary text-sm">{game.name}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-elevated text-secondary">
               Lv.{game.level || 1}
             </span>
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-elevated rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full"
                 style={{ width: `${(game.xp || 0) % 100}%`, backgroundColor: game.color }}
               />
             </div>
-            <span className="text-xs text-slate-400 font-mono">{(game.xp || 0).toLocaleString()}</span>
+            <span className="text-xs text-secondary font-mono">{(game.xp || 0).toLocaleString()}</span>
           </div>
           <div className="mt-2 flex items-center gap-2">
             <span className="text-xs">{game.id === 'one_piece' ? '🏴' : '⏳'}</span>
@@ -331,7 +331,7 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
                 />
               ))}
             </div>
-            <span className={`text-xs ${earned ? 'text-yellow-400' : isComplete ? 'text-green-400' : 'text-slate-500'}`}>
+            <span className={`text-xs ${earned ? 'text-yellow-400' : isComplete ? 'text-green-400' : 'text-tertiary'}`}>
               {earned ? `✓ ${achievementName}` : `${progress}/${threshold} ${currentMonth}`}
             </span>
           </div>
@@ -341,28 +341,28 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
       {isExpanded && (
         <div className="px-3 pb-3 pt-1 border-t border-border-token space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-slate-400">
-              Rank: <span className="text-white">{game.rank}</span>
+            <span className="text-secondary">
+              Rank: <span className="text-primary">{game.rank}</span>
             </span>
-            <span className="text-slate-400">
+            <span className="text-secondary">
               {game.xpName}: <span style={{ color: game.color }}>{(game.xp || 0).toLocaleString()}</span>
             </span>
           </div>
-          <div className="bg-slate-900/50 rounded-lg p-2">
+          <div className="bg-elevated rounded-lg p-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span>{game.id === 'one_piece' ? '🏴' : '⏳'}</span>
-                <span className="text-xs font-medium text-white">{achievementName}</span>
+                <span className="text-xs font-medium text-primary">{achievementName}</span>
               </div>
               {earned ? (
                 <span className="text-xs text-yellow-400 font-medium">+30 XP Earned!</span>
               ) : isComplete ? (
                 <span className="text-xs text-green-400 font-medium">Complete! +30 XP pending</span>
               ) : (
-                <span className="text-xs text-slate-400">{threshold - progress} more to go</span>
+                <span className="text-xs text-secondary">{threshold - progress} more to go</span>
               )}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-tertiary mt-1">
               Attend {threshold} events this month to earn +30 bonus XP
             </p>
           </div>

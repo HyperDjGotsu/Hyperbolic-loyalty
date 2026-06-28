@@ -149,7 +149,7 @@ export default function NotificationBell() {
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-400 hover:text-white transition-colors"
+        className="relative p-2 text-secondary hover:text-primary transition-colors"
       >
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
@@ -211,17 +211,17 @@ export default function NotificationBell() {
                     <div className="text-xl">{getIcon(notification.type)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-medium text-sm truncate">
+                        <span className="text-primary font-medium text-sm truncate">
                           {notification.title}
                         </span>
                         {!notification.is_read && (
                           <span className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-slate-400 text-sm truncate">
+                      <p className="text-secondary text-sm truncate">
                         {notification.message}
                       </p>
-                      <p className="text-slate-500 text-xs mt-1">
+                      <p className="text-tertiary text-xs mt-1">
                         {timeAgo(notification.created_at)}
                       </p>
                     </div>
@@ -239,7 +239,7 @@ export default function NotificationBell() {
                   setIsOpen(false);
                   // Could navigate to full notifications page
                 }}
-                className="w-full text-center text-slate-400 text-sm py-2 hover:text-white"
+                className="w-full text-center text-secondary text-sm py-2 hover:text-primary"
               >
                 View all notifications
               </button>

@@ -114,7 +114,7 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
         {/* Header */}
         <div className="p-4 border-b border-border-token flex items-center justify-between">
           <h2 className="text-xl font-bold text-primary">Set Your Status</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-2xl">
+          <button onClick={onClose} className="text-secondary hover:text-primary text-2xl">
             ×
           </button>
         </div>
@@ -134,11 +134,11 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
                   className={`w-full p-3 rounded-xl text-left transition-all flex items-center gap-3 ${
                     isSelected
                       ? 'bg-cyan-500/20 border-2 border-cyan-500'
-                      : 'bg-slate-700/50 border-2 border-transparent hover:bg-slate-700'
+                      : 'bg-elevated border-2 border-transparent hover:bg-input'
                   }`}
                 >
                   <span className="text-2xl">{preset.emoji}</span>
-                  <span className="text-white">{preset.text}</span>
+                  <span className="text-primary">{preset.text}</span>
                   {isSelected && (
                     <span className="ml-auto text-cyan-400">✓</span>
                   )}
@@ -154,11 +154,11 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
               className={`w-full p-3 rounded-xl text-left transition-all flex items-center gap-3 mb-2 ${
                 isCustom
                   ? 'bg-purple-500/20 border-2 border-purple-500'
-                  : 'bg-slate-700/50 border-2 border-transparent hover:bg-slate-700'
+                  : 'bg-elevated border-2 border-transparent hover:bg-input'
               }`}
             >
               <span className="text-2xl">✏️</span>
-              <span className="text-white">Write your own...</span>
+              <span className="text-primary">Write your own...</span>
             </button>
 
             {isCustom && (
@@ -168,10 +168,10 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value.slice(0, 50))}
                   placeholder="What's on your mind?"
-                  className="w-full p-3 rounded-xl bg-slate-700 text-white placeholder-slate-400 border-2 border-purple-500/50 focus:border-purple-500 outline-none"
+                  className="w-full p-3 rounded-xl bg-input text-primary placeholder-tertiary border-2 border-purple-500/50 focus:border-purple-500 outline-none"
                   autoFocus
                 />
-                <div className="text-right text-slate-500 text-sm mt-1">
+                <div className="text-right text-tertiary text-sm mt-1">
                   {customText.length}/50
                 </div>
               </div>
@@ -192,7 +192,7 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
           )}
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 rounded-xl bg-slate-700 text-white hover:bg-slate-600 transition-colors"
+            className="flex-1 px-4 py-2 rounded-xl bg-elevated text-primary hover:bg-input transition-colors"
           >
             Cancel
           </button>
@@ -216,7 +216,7 @@ export function StatusBadge({ status, onClick }: { status: string | null; onClic
       return (
         <button
           onClick={onClick}
-          className="text-slate-500 text-sm hover:text-slate-400 transition-colors flex items-center gap-1"
+          className="text-tertiary text-sm hover:text-secondary transition-colors flex items-center gap-1"
         >
           <span>✏️</span>
           <span>Set status...</span>
@@ -229,12 +229,12 @@ export function StatusBadge({ status, onClick }: { status: string | null; onClic
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-700/50 text-sm ${
-        onClick ? 'hover:bg-slate-700 cursor-pointer' : ''
+      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full bg-elevated text-sm ${
+        onClick ? 'hover:bg-input cursor-pointer' : ''
       } transition-colors`}
     >
-      <span className="text-white">{status}</span>
-      {onClick && <span className="text-slate-400 text-xs ml-1">✏️</span>}
+      <span className="text-primary">{status}</span>
+      {onClick && <span className="text-secondary text-xs ml-1">✏️</span>}
     </button>
   );
 }
