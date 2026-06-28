@@ -905,14 +905,18 @@ export default function DesktopDashboard() {
           </nav>
 
           {/* User Button */}
-          <div 
-            className="w-[42px] h-[42px] rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all hover:scale-110"
-            style={{
+          <div
+            className="w-[42px] h-[42px] rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all hover:scale-110 overflow-hidden"
+            style={avatarForComponent.photoUrl ? {} : {
               background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
               boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
             }}
           >
-            {avatarForComponent.base}
+            {avatarForComponent.photoUrl ? (
+              <img src={avatarForComponent.photoUrl} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              avatarForComponent.base
+            )}
           </div>
         </aside>
 
@@ -953,11 +957,15 @@ export default function DesktopDashboard() {
 
               {/* Avatar */}
               <div className="relative">
-                <div 
-                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-accent"
-                  style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}
+                <div
+                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-accent overflow-hidden"
+                  style={avatarForComponent.photoUrl ? {} : { background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}
                 >
-                  {avatarForComponent.base}
+                  {avatarForComponent.photoUrl ? (
+                    <img src={avatarForComponent.photoUrl} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    avatarForComponent.base
+                  )}
                 </div>
                 <div 
                   className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap"

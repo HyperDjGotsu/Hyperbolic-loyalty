@@ -882,11 +882,15 @@ export default function DesktopDashboard() {
 
               {/* Avatar */}
               <div className="relative">
-                <div 
-                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-accent"
-                  style={{ background: 'linear-gradient(135deg, #0a2a3a, #0f3a4a)' }}
+                <div
+                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-accent overflow-hidden"
+                  style={avatarForComponent.photoUrl ? {} : { background: 'linear-gradient(135deg, #0a2a3a, #0f3a4a)' }}
                 >
-                  {avatarForComponent.base}
+                  {avatarForComponent.photoUrl ? (
+                    <img src={avatarForComponent.photoUrl} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    avatarForComponent.base
+                  )}
                 </div>
                 <div 
                   className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap"
