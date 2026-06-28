@@ -317,7 +317,7 @@ export function CardOfTheDay() {
               className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
                 showVoting
                   ? 'bg-purple-500/20 text-purple-400'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                  : 'bg-elevated text-secondary hover:text-primary'
               }`}
             >
               {showVoting ? '📊 Today' : '🗳️ Vote'}
@@ -332,7 +332,7 @@ export function CardOfTheDay() {
       {/* Voting UI */}
       {showVoting && voting ? (
         <div className="p-6">
-          <p className="text-zinc-400 text-sm mb-4">
+          <p className="text-secondary text-sm mb-4">
             Vote for tomorrow&apos;s card! Winners get <span className="text-cyan-400 font-medium">+10 XP</span>
           </p>
 
@@ -349,7 +349,7 @@ export function CardOfTheDay() {
                   className={`w-full p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
                     isVoted
                       ? 'bg-purple-500/20 border-purple-500'
-                      : 'bg-[#07070b] border-transparent hover:border-purple-500/50'
+                      : 'bg-base border-transparent hover:border-purple-500/50'
                   } ${castingVote ? 'opacity-50' : ''}`}
                 >
                   {/* Vote percentage bar */}
@@ -363,7 +363,7 @@ export function CardOfTheDay() {
                   <div className="relative flex items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate">{poolCard.name}</div>
-                      <div className="text-xs text-zinc-500">
+                      <div className="text-xs text-tertiary">
                         {poolCard.game} • #{poolCard.number}
                         {poolCard.cardData?.printing && poolCard.cardData.printing !== 'Standard' && (
                           <span className="text-purple-400 ml-1">✨</span>
@@ -372,10 +372,10 @@ export function CardOfTheDay() {
                     </div>
 
                     <div className="text-right min-w-[50px]">
-                      <div className={`text-sm font-bold ${isLeading ? 'text-yellow-400' : 'text-white'}`}>
+                      <div className={`text-sm font-bold ${isLeading ? 'text-yellow-400' : 'text-primary'}`}>
                         {poolCard.percentage}%
                       </div>
-                      <div className="text-[10px] text-zinc-500">
+                      <div className="text-[10px] text-tertiary">
                         {poolCard.votes} vote{poolCard.votes !== 1 ? 's' : ''}
                       </div>
                     </div>
@@ -387,7 +387,7 @@ export function CardOfTheDay() {
             })}
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
+          <div className="mt-4 flex items-center justify-between text-xs text-tertiary">
             <span>{voting.totalVotes} total votes</span>
             <span>
               For {new Date(voting.voteDate + 'T12:00:00').toLocaleDateString('en-US', {
@@ -410,7 +410,7 @@ export function CardOfTheDay() {
           <div className="flex gap-4">
             {/* Card image or placeholder */}
             <div className="shrink-0">
-              <div className="w-[100px] h-[140px] rounded-lg overflow-hidden bg-[#07070b] shadow-lg">
+              <div className="w-[100px] h-[140px] rounded-lg overflow-hidden bg-base shadow-lg">
                 {imageUrl ? (
                   <img
                     src={imageUrl}
@@ -428,10 +428,10 @@ export function CardOfTheDay() {
 
             {/* Card info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-white font-semibold text-lg leading-tight mb-1 line-clamp-2">
+              <h3 className="text-primary font-semibold text-lg leading-tight mb-1 line-clamp-2">
                 {card.name}
               </h3>
-              <p className="text-zinc-500 text-sm mb-4">
+              <p className="text-tertiary text-sm mb-4">
                 {card.set} • {card.rarity}
               </p>
 
@@ -439,10 +439,10 @@ export function CardOfTheDay() {
               <div className="flex flex-col gap-2">
                 <div className="flex items-end justify-between gap-2">
                   <div>
-                    <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-0.5">
+                    <p className="text-tertiary text-[10px] uppercase tracking-wider mb-0.5">
                       Market Price
                     </p>
-                    <p className="text-white text-2xl font-bold">
+                    <p className="text-primary text-2xl font-bold">
                       {formatPrice(card.price)}
                     </p>
                   </div>
@@ -477,7 +477,7 @@ export function CardOfTheDay() {
             href={card.tcgplayerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`mt-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#07070b] hover:bg-[#0d0d12] transition-colors ${theme.accent} text-sm font-medium`}
+            className={`mt-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-base hover:bg-elevated transition-colors ${theme.accent} text-sm font-medium`}
           >
             View on TCGPlayer
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -532,13 +532,13 @@ export function CardOfTheDayCompact() {
         <div className="flex items-center gap-3">
           <div className="w-14 h-20 bg-elevated rounded-lg" />
           <div className="flex-1">
-            <div className="h-4 bg-slate-700 rounded w-3/4 mb-2" />
-            <div className="h-3 bg-slate-700 rounded w-1/2 mb-2" />
-            <div className="h-3 bg-slate-700 rounded w-1/3" />
+            <div className="h-4 bg-elevated rounded w-3/4 mb-2" />
+            <div className="h-3 bg-elevated rounded w-1/2 mb-2" />
+            <div className="h-3 bg-elevated rounded w-1/3" />
           </div>
           <div className="text-right">
-            <div className="h-5 bg-slate-700 rounded w-16 mb-1" />
-            <div className="h-4 bg-slate-700 rounded w-12" />
+            <div className="h-5 bg-elevated rounded w-16 mb-1" />
+            <div className="h-4 bg-elevated rounded w-12" />
           </div>
         </div>
       </div>
@@ -555,7 +555,7 @@ export function CardOfTheDayCompact() {
 
   if (showVotingUI) {
     return (
-      <div className="bg-slate-800/50 rounded-xl p-3 border border-purple-500/30">
+      <div className="bg-elevated rounded-xl p-3 border border-purple-500/30">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">🗳️ Vote for Tomorrow</span>
           <span className="text-[10px] text-cyan-400">+10 XP if you win!</span>
@@ -572,12 +572,12 @@ export function CardOfTheDayCompact() {
                 className={`w-full p-2 rounded-lg text-left text-xs transition-all ${
                   isVoted
                     ? 'bg-purple-500/20 border border-purple-500'
-                    : 'bg-slate-800/50 border border-transparent hover:border-purple-500/50'
+                    : 'bg-elevated border border-transparent hover:border-purple-500/50'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="truncate flex-1">{poolCard.name}</span>
-                  <span className="text-slate-400 ml-2">{poolCard.percentage}%</span>
+                  <span className="text-secondary ml-2">{poolCard.percentage}%</span>
                   {isVoted && <span className="text-purple-400 ml-1">✓</span>}
                 </div>
               </button>
@@ -605,7 +605,7 @@ export function CardOfTheDayCompact() {
     >
       <div className="flex items-center gap-3">
         {/* Card image or icon */}
-        <div className="w-14 h-20 rounded-lg overflow-hidden bg-slate-700 shrink-0 shadow-lg">
+        <div className="w-14 h-20 rounded-lg overflow-hidden bg-elevated shrink-0 shadow-lg">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -622,10 +622,10 @@ export function CardOfTheDayCompact() {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-medium line-clamp-2 leading-tight">
+          <p className="text-primary text-sm font-medium line-clamp-2 leading-tight">
             {card.name}
           </p>
-          <p className="text-slate-500 text-xs mt-1">
+          <p className="text-tertiary text-xs mt-1">
             Card of the Day
           </p>
           <p className={`text-xs mt-0.5 ${theme.accent}`}>
@@ -635,7 +635,7 @@ export function CardOfTheDayCompact() {
 
         {/* Price */}
         <div className="text-right shrink-0">
-          <p className="text-white font-bold text-base">
+          <p className="text-primary font-bold text-base">
             {formatPrice(card.price)}
           </p>
           {card.priceChange7d !== null && (
@@ -665,30 +665,30 @@ function CardOfTheDaySkeleton() {
     <div className="bg-surface border border-border-token rounded-2xl overflow-hidden animate-pulse">
       <div className="px-6 py-4 border-b border-border-token flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-zinc-800 rounded" />
-          <div className="h-5 bg-zinc-800 rounded w-28" />
+          <div className="w-6 h-6 bg-elevated rounded" />
+          <div className="h-5 bg-elevated rounded w-28" />
         </div>
-        <div className="h-4 bg-zinc-800 rounded w-20" />
+        <div className="h-4 bg-elevated rounded w-20" />
       </div>
       <div className="p-6">
         <div className="flex gap-4">
-          <div className="w-[100px] h-[140px] bg-zinc-800 rounded-lg shrink-0" />
+          <div className="w-[100px] h-[140px] bg-elevated rounded-lg shrink-0" />
           <div className="flex-1">
-            <div className="h-6 bg-zinc-800 rounded w-3/4 mb-2" />
-            <div className="h-4 bg-zinc-800 rounded w-1/2 mb-6" />
+            <div className="h-6 bg-elevated rounded w-3/4 mb-2" />
+            <div className="h-4 bg-elevated rounded w-1/2 mb-6" />
             <div className="flex justify-between items-end">
               <div>
-                <div className="h-3 bg-zinc-800 rounded w-20 mb-2" />
-                <div className="h-8 bg-zinc-800 rounded w-24" />
+                <div className="h-3 bg-elevated rounded w-20 mb-2" />
+                <div className="h-8 bg-elevated rounded w-24" />
               </div>
               <div className="flex gap-2">
-                <div className="h-8 bg-zinc-800 rounded w-16" />
-                <div className="h-8 bg-zinc-800 rounded w-16" />
+                <div className="h-8 bg-elevated rounded w-16" />
+                <div className="h-8 bg-elevated rounded w-16" />
               </div>
             </div>
           </div>
         </div>
-        <div className="h-10 bg-zinc-800 rounded-xl mt-4" />
+        <div className="h-10 bg-elevated rounded-xl mt-4" />
       </div>
     </div>
   );

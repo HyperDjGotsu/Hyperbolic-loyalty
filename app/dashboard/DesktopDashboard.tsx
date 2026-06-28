@@ -896,7 +896,7 @@ export default function DesktopDashboard() {
               {/* Avatar */}
               <div className="relative">
                 <div 
-                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-cyan-400 animate-avatar-glow"
+                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-accent"
                   style={{ background: 'linear-gradient(135deg, #0a2a3a, #0f3a4a)' }}
                 >
                   {avatarForComponent.base}
@@ -1330,31 +1330,6 @@ export default function DesktopDashboard() {
           animation: ambient 20s ease-in-out infinite;
         }
         
-        @keyframes logo-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
-          50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 40px rgba(0, 212, 255, 0.2); }
-        }
-        .animate-logo-pulse {
-          animation: logo-pulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes avatar-glow {
-          0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), 0 0 60px rgba(168, 85, 247, 0.2); }
-          50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6), 0 0 80px rgba(168, 85, 247, 0.3); }
-        }
-        .animate-avatar-glow {
-          animation: avatar-glow 4s ease-in-out infinite;
-        }
-        
-        @keyframes xp-shine {
-          0% { filter: brightness(1); }
-          50% { filter: brightness(1.15); }
-          100% { filter: brightness(1); }
-        }
-        .animate-xp-shine {
-          animation: xp-shine 2s ease-in-out infinite;
-        }
-        
         @keyframes bar-sweep {
           0% {
             left: -30%;
@@ -1390,13 +1365,6 @@ export default function DesktopDashboard() {
           animation: bar-sweep 2s ease-in-out forwards;
         }
         
-        @keyframes brand-shimmer {
-          0%, 100% { filter: brightness(1); }
-          50% { filter: brightness(1.2); }
-        }
-        .animate-brand-shimmer {
-          animation: brand-shimmer 3s ease-in-out infinite;
-        }
       `}</style>
     </div>
   );

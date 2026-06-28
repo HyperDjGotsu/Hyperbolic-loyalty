@@ -250,7 +250,7 @@ function GameCard({
               <span className="text-[10px] text-tertiary uppercase tracking-wide">Next Rank</span>
               <span className="text-[10px] text-secondary">{xpToNextRank} {game.xpName} to go</span>
             </div>
-            <div className="h-[6px] bg-[#111118] rounded overflow-hidden">
+            <div className="h-[6px] bg-elevated rounded overflow-hidden">
               <div 
                 className="h-full rounded transition-all duration-500"
                 style={{ 
@@ -279,7 +279,7 @@ function GameCard({
               )}
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-[5px] bg-[#07070b] rounded overflow-hidden">
+              <div className="flex-1 h-[5px] bg-base rounded overflow-hidden">
                 <div 
                   className="h-full rounded"
                   style={{ 
@@ -337,40 +337,40 @@ function GameCard({
           {hasRichStats ? (
             <>
               <div className="grid grid-cols-4 gap-2 mb-3">
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-tertiary uppercase mb-1">XP</div>
                   <div className="text-base font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-tertiary uppercase mb-1">Events</div>
                   <div className="text-base font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-tertiary uppercase mb-1">Win Rate</div>
                   <div className="text-base font-bold text-green-400">{stats.winRate}%</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-tertiary uppercase mb-1">Streak</div>
                   <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-tertiary">Matches</span>
                   <span className="text-sm font-bold">{stats.matches}</span>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-tertiary">Best</span>
                   <span className="text-sm font-bold">🏆 {stats.bestPlacement || '—'}</span>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-tertiary">Since</span>
                   <span className="text-sm font-bold">{stats.firstPlayed || '—'}</span>
                 </div>
               </div>
 
-              <div className="bg-[#111118] rounded-lg p-2.5 mb-3 flex justify-between items-center">
+              <div className="bg-elevated rounded-lg p-2.5 mb-3 flex justify-between items-center">
                 <span className="text-[10px] text-tertiary">Record</span>
                 <span className="text-sm">
                   <span className="text-green-400 font-bold">{stats.wins}W</span>
@@ -387,7 +387,7 @@ function GameCard({
                     {earnedAchievements.slice(0, 6).map((achievement) => (
                       <div 
                         key={achievement.id}
-                        className="bg-[#111118] rounded-lg px-2 py-1 flex items-center gap-1.5 group relative"
+                        className="bg-elevated rounded-lg px-2 py-1 flex items-center gap-1.5 group relative"
                         title={achievement.description}
                       >
                         <span className="text-sm">{achievement.icon}</span>
@@ -395,7 +395,7 @@ function GameCard({
                       </div>
                     ))}
                     {earnedAchievements.length > 6 && (
-                      <div className="bg-[#111118] rounded-lg px-2 py-1 text-[10px] text-tertiary">
+                      <div className="bg-elevated rounded-lg px-2 py-1 text-[10px] text-tertiary">
                         +{earnedAchievements.length - 6} more
                       </div>
                     )}
@@ -406,7 +406,7 @@ function GameCard({
               {/* Leaderboard Rank & Next Event Row */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Leaderboard Rank */}
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-tertiary uppercase mb-1">Leaderboard</div>
                   {game.leaderboardRank ? (
                     <div className="flex items-baseline gap-1">
@@ -419,7 +419,7 @@ function GameCard({
                 </div>
 
                 {/* Next Event */}
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-tertiary uppercase mb-1">Next Event</div>
                   {game.nextEvent ? (
                     <div>
@@ -435,17 +435,17 @@ function GameCard({
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#111118] rounded-lg p-3">
+                <div className="bg-elevated rounded-lg p-3">
                   <div className="text-[10px] text-tertiary uppercase mb-1">Total XP</div>
                   <div className="text-xl font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-3">
+                <div className="bg-elevated rounded-lg p-3">
                   <div className="text-[10px] text-tertiary uppercase mb-1">Events</div>
                   <div className="text-xl font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
               </div>
               
-              <div className="bg-[#111118]/50 rounded-lg p-3 mb-4 text-center">
+              <div className="bg-elevated/50 rounded-lg p-3 mb-4 text-center">
                 <div className="text-tertiary text-xs">Play in tournaments to unlock detailed stats!</div>
               </div>
             </>

@@ -91,10 +91,10 @@ export default function COTDVotingWidget() {
     return (
       <div className="bg-elevated rounded-xl p-4 border border-border-token">
         <div className="animate-pulse">
-          <div className="h-5 bg-slate-700 rounded w-1/2 mb-3"></div>
+          <div className="h-5 bg-elevated rounded w-1/2 mb-3"></div>
           <div className="space-y-2">
-            <div className="h-16 bg-slate-800 rounded"></div>
-            <div className="h-16 bg-slate-800 rounded"></div>
+            <div className="h-16 bg-surface rounded"></div>
+            <div className="h-16 bg-surface rounded"></div>
           </div>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function COTDVotingWidget() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">🗳️</span>
-          <h3 className="font-bold text-white">Vote for Tomorrow&apos;s Card</h3>
+          <h3 className="font-bold text-primary">Vote for Tomorrow&apos;s Card</h3>
         </div>
         {data.hasVoted && (
           <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
@@ -122,7 +122,7 @@ export default function COTDVotingWidget() {
       </div>
 
       {/* Subtitle */}
-      <p className="text-xs text-slate-400 mb-3">
+      <p className="text-xs text-secondary mb-3">
         Pick the winner and earn <span className="text-cyan-400 font-medium">+10 XP</span> if your card wins!
       </p>
 
@@ -162,7 +162,7 @@ export default function COTDVotingWidget() {
                 {/* Card Info */}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">{card.name}</div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-secondary">
                     {card.game} • #{card.number}
                     {card.cardData.printing && card.cardData.printing !== 'Standard' && (
                       <span className="text-purple-400 ml-1">✨ {card.cardData.printing}</span>
@@ -179,10 +179,10 @@ export default function COTDVotingWidget() {
 
                 {/* Votes */}
                 <div className="text-right min-w-[50px]">
-                  <div className={`text-sm font-bold ${isLeading ? 'text-yellow-400' : 'text-white'}`}>
+                  <div className={`text-sm font-bold ${isLeading ? 'text-yellow-400' : 'text-primary'}`}>
                     {card.percentage}%
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-tertiary">
                     {card.votes} vote{card.votes !== 1 ? 's' : ''}
                   </div>
                 </div>
@@ -200,7 +200,7 @@ export default function COTDVotingWidget() {
       </div>
 
       {/* Footer */}
-      <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+      <div className="mt-3 flex items-center justify-between text-xs text-tertiary">
         <span>{data.totalVotes} total vote{data.totalVotes !== 1 ? 's' : ''}</span>
         <span>Voting for {new Date(data.voteDate + 'T12:00:00').toLocaleDateString('en-US', { 
           weekday: 'short', 

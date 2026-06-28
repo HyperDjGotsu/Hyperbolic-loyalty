@@ -869,7 +869,7 @@ export default function DesktopDashboard() {
         <aside className="w-[72px] bg-base/80 backdrop-blur-xl border-r border-border-token flex flex-col items-center py-5 fixed top-0 left-0 bottom-0 z-50">
           {/* Logo */}
           <div 
-            className="w-[46px] h-[46px] rounded-[14px] flex items-center justify-center text-[22px] mb-7 animate-logo-pulse"
+            className="w-[46px] h-[46px] rounded-[14px] flex items-center justify-center text-[22px] mb-7 border border-border-token"
             style={{
               background: 'linear-gradient(135deg, #00d4ff, #a855f7, #ec4899)',
               boxShadow: '0 0 20px rgba(168, 85, 247, 0.3)'
@@ -919,28 +919,22 @@ export default function DesktopDashboard() {
         {/* Main Content */}
         <main className="flex-1 ml-[72px]">
           {/* Hero Section */}
-          <section 
+          <section
             className="px-10 pt-7 pb-10 relative"
-            style={{ background: 'linear-gradient(180deg, #0c0c12 0%, transparent 100%)' }}
           >
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
               <h1 
-                className="text-[22px] font-extrabold font-orbitron animate-brand-shimmer"
-                style={{
-                  background: 'linear-gradient(135deg, #00d4ff, #a855f7, #ec4899)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
+                className="text-[22px] font-extrabold font-display text-primary"
               >
                 HYPERBOLIC GAMES
               </h1>
               <div className="flex gap-2.5">
-                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)] relative">
+                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong relative">
                   🔔
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 </button>
-                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
+                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong">
                   ⚙️
                 </button>
               </div>
@@ -960,7 +954,7 @@ export default function DesktopDashboard() {
               {/* Avatar */}
               <div className="relative">
                 <div 
-                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-cyan-400 animate-avatar-glow"
+                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-accent"
                   style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}
                 >
                   {avatarForComponent.base}
@@ -1279,7 +1273,7 @@ export default function DesktopDashboard() {
                     <div className="text-xs text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded">Interested</div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-base rounded-xl opacity-60">
-                    <div className="w-10 h-10 bg-slate-500/20 rounded-lg flex items-center justify-center text-lg">📅</div>
+                    <div className="w-10 h-10 bg-elevated rounded-lg flex items-center justify-center text-lg">📅</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-secondary">No more events this week</div>
                       <div className="text-xs text-tertiary">Check the calendar for more</div>
@@ -1390,31 +1384,6 @@ export default function DesktopDashboard() {
           animation: ambient 20s ease-in-out infinite;
         }
         
-        @keyframes logo-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
-          50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 40px rgba(0, 212, 255, 0.2); }
-        }
-        .animate-logo-pulse {
-          animation: logo-pulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes avatar-glow {
-          0%, 100% { box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), 0 0 60px rgba(168, 85, 247, 0.2); }
-          50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6), 0 0 80px rgba(168, 85, 247, 0.3); }
-        }
-        .animate-avatar-glow {
-          animation: avatar-glow 4s ease-in-out infinite;
-        }
-        
-        @keyframes xp-shine {
-          0% { filter: brightness(1); }
-          50% { filter: brightness(1.15); }
-          100% { filter: brightness(1); }
-        }
-        .animate-xp-shine {
-          animation: xp-shine 2s ease-in-out infinite;
-        }
-        
         @keyframes bar-sweep {
           0% {
             left: -30%;
@@ -1450,13 +1419,6 @@ export default function DesktopDashboard() {
           animation: bar-sweep 2s ease-in-out forwards;
         }
         
-        @keyframes brand-shimmer {
-          0%, 100% { filter: brightness(1); }
-          50% { filter: brightness(1.2); }
-        }
-        .animate-brand-shimmer {
-          animation: brand-shimmer 3s ease-in-out infinite;
-        }
       `}</style>
     </div>
   );
