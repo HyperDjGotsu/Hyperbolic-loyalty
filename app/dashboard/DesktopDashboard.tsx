@@ -845,18 +845,6 @@ export default function DesktopDashboard() {
   return (
     <div ref={containerRef} className="min-h-screen bg-base text-primary overflow-x-hidden">
       {/* Ambient background glow */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div 
-          className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] animate-ambient"
-          style={{
-            background: `
-              radial-gradient(ellipse at 30% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-              radial-gradient(ellipse at 70% 60%, rgba(0, 212, 255, 0.06) 0%, transparent 40%),
-              radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 40%)
-            `
-          }}
-        />
-      </div>
 
       <div className="min-h-screen relative z-10">
         {/* Main Content - no sidebar, layout provides it */}
