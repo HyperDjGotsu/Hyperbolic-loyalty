@@ -241,7 +241,20 @@ export default function HQPage() {
   const [shopDeleteConfirm, setShopDeleteConfirm] = useState<string | null>(null);
 
   // Store settings state
-  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Hyperbolic XP' });
+  const [storeConfig, setStoreConfig] = useState({
+    currency_name: 'Points',
+    currency_icon: '⭐',
+    store_name: 'Hyperbolic XP',
+    shop_title: 'Prize Wall',
+    shop_description: 'avatar cosmetics',
+    shop_categories: [
+      { id: 'base', name: 'Base', icon: '😎', enabled: true },
+      { id: 'background', name: 'Background', icon: '🎨', enabled: true },
+      { id: 'frame', name: 'Frame', icon: '✨', enabled: true },
+      { id: 'badge', name: 'Badge', icon: '🏷️', enabled: true },
+      { id: 'title', name: 'Title', icon: '📛', enabled: true },
+    ] as Array<{ id: string; name: string; icon: string; enabled: boolean }>,
+  });
   const [settingsSaving, setSettingsSaving] = useState(false);
 
   // Check staff access
@@ -684,7 +697,10 @@ export default function HQPage() {
   const loadStoreConfig = async () => {
     try {
       const res = await fetch('/api/store-config');
-      if (res.ok) setStoreConfig(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setStoreConfig(prev => ({ ...prev, ...data, shop_categories: data.shop_categories ?? prev.shop_categories }));
+      }
     } catch { /* use defaults */ }
   };
 
@@ -3223,11 +3239,11 @@ export default function HQPage() {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="space-y-6 max-w-xl">
+
+            {/* Currency */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">
-              <h2 className="font-semibold text-primary mb-1">Store Settings</h2>
-              <p className="text-xs text-tertiary mb-5">
-                These values appear across the player-facing app. Changes take effect immediately.
-              </p>
+              <h2 className="font-semibold text-primary mb-1">Currency</h2>
+              <p className="text-xs text-tertiary mb-5">What players earn throughout the app.</p>
 
               <div className="space-y-4">
                 <div>
@@ -3279,16 +3295,100 @@ export default function HQPage() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="mt-6 pt-4 border-t border-border-token flex justify-end">
-                <button
-                  onClick={saveStoreConfig}
-                  disabled={settingsSaving}
-                  className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {settingsSaving ? 'Saving…' : 'Save Settings'}
-                </button>
+            {/* Shop Page */}
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <h2 className="font-semibold text-primary mb-1">Shop Page</h2>
+              <p className="text-xs text-tertiary mb-5">
+                Controls the player-facing Prize Wall — title, redemption copy, and which filters appear.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Page Title</label>
+                  <input
+                    type="text"
+                    value={storeConfig.shop_title}
+                    onChange={e => setStoreConfig(c => ({ ...c, shop_title: e.target.value }))}
+                    placeholder="Prize Wall"
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">
+                    Redemption Description
+                    <span className="ml-2 font-normal text-tertiary">
+                      Fills in: "Spend your {storeConfig.currency_name} on ___"
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={storeConfig.shop_description}
+                    onChange={e => setStoreConfig(c => ({ ...c, shop_description: e.target.value }))}
+                    placeholder="avatar cosmetics"
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                  <p className="text-xs text-tertiary mt-1">
+                    Preview: &ldquo;Spend your {storeConfig.currency_name} on {storeConfig.shop_description || '…'}&rdquo;
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-3">
+                    Category Filters
+                    <span className="ml-2 font-normal text-tertiary">Toggle and rename each filter tab</span>
+                  </label>
+                  <div className="space-y-2">
+                    {storeConfig.shop_categories.map((cat, i) => (
+                      <div key={cat.id} className="flex items-center gap-3 bg-elevated/50 rounded-lg px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => setStoreConfig(c => ({
+                            ...c,
+                            shop_categories: c.shop_categories.map((x, j) =>
+                              j === i ? { ...x, enabled: !x.enabled } : x
+                            ),
+                          }))}
+                          className={`w-9 h-5 rounded-full transition-colors relative flex-shrink-0 ${
+                            cat.enabled ? 'bg-accent' : 'bg-elevated'
+                          }`}
+                        >
+                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${
+                            cat.enabled ? 'left-4' : 'left-0.5'
+                          }`} />
+                        </button>
+                        <span className="text-lg flex-shrink-0">{cat.icon}</span>
+                        <input
+                          type="text"
+                          value={cat.name}
+                          onChange={e => setStoreConfig(c => ({
+                            ...c,
+                            shop_categories: c.shop_categories.map((x, j) =>
+                              j === i ? { ...x, name: e.target.value } : x
+                            ),
+                          }))}
+                          className="flex-1 bg-transparent text-sm text-primary border-b border-border-token focus:border-accent outline-none py-0.5"
+                        />
+                        <span className={`text-xs ${cat.enabled ? 'text-accent' : 'text-tertiary'}`}>
+                          {cat.enabled ? 'visible' : 'hidden'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={saveStoreConfig}
+                disabled={settingsSaving}
+                className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {settingsSaving ? 'Saving…' : 'Save Settings'}
+              </button>
             </div>
           </div>
         )}

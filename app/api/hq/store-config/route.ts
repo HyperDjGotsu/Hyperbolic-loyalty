@@ -22,11 +22,11 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { currency_name, currency_icon, store_name } = body;
+    const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories } = body;
 
     const { data, error } = await supabaseAdmin
       .from('store_config')
-      .upsert({ id: 1, currency_name, currency_icon, store_name, updated_at: new Date().toISOString() })
+      .upsert({ id: 1, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, updated_at: new Date().toISOString() })
       .select()
       .single();
 

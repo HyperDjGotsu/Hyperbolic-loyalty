@@ -1133,6 +1133,9 @@ export type Database = {
           currency_name: string
           currency_icon: string
           store_name: string
+          shop_title: string
+          shop_description: string
+          shop_categories: any
           created_at: string | null
           updated_at: string | null
         }
@@ -1141,6 +1144,9 @@ export type Database = {
           currency_name?: string
           currency_icon?: string
           store_name?: string
+          shop_title?: string
+          shop_description?: string
+          shop_categories?: any
           created_at?: string | null
           updated_at?: string | null
         }
@@ -1149,6 +1155,9 @@ export type Database = {
           currency_name?: string
           currency_icon?: string
           store_name?: string
+          shop_title?: string
+          shop_description?: string
+          shop_categories?: any
           created_at?: string | null
           updated_at?: string | null
         }

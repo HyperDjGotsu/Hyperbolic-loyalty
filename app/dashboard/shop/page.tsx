@@ -14,10 +14,28 @@ interface ShopItem {
   isDefault: boolean;
 }
 
+interface ShopCategory {
+  id: string;
+  name: string;
+  icon: string;
+  enabled: boolean;
+}
+
 interface StoreConfig {
   currency_name: string;
   currency_icon: string;
+  shop_title: string;
+  shop_description: string;
+  shop_categories: ShopCategory[];
 }
+
+const DEFAULT_CATEGORIES: ShopCategory[] = [
+  { id: 'base', name: 'Base', icon: '😎', enabled: true },
+  { id: 'background', name: 'Background', icon: '🎨', enabled: true },
+  { id: 'frame', name: 'Frame', icon: '✨', enabled: true },
+  { id: 'badge', name: 'Badge', icon: '🏷️', enabled: true },
+  { id: 'title', name: 'Title', icon: '📛', enabled: true },
+];
 
 const rarityColors: Record<string, { border: string; bg: string; text: string }> = {
   common: { border: 'border-border-token', bg: 'bg-elevated/50', text: 'text-secondary' },
@@ -40,21 +58,21 @@ const frameStyles: Record<string, string> = {
 
 export default function ShopPage() {
   const { user, isLoaded } = useUser();
-  const [activeCategory, setActiveCategory] = useState('base');
   const [balance, setBalance] = useState(0);
   const [shopItems, setShopItems] = useState<Record<string, ShopItem[]>>({});
   const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
-  const [storeConfig, setStoreConfig] = useState<StoreConfig>({ currency_name: 'Points', currency_icon: '⭐' });
+  const [storeConfig, setStoreConfig] = useState<StoreConfig>({
+    currency_name: 'Points',
+    currency_icon: '⭐',
+    shop_title: 'Prize Wall',
+    shop_description: 'avatar cosmetics',
+    shop_categories: DEFAULT_CATEGORIES,
+  });
+  const [activeCategory, setActiveCategory] = useState('');
 
-  const categories = [
-    { id: 'base', name: 'Base', icon: '😎' },
-    { id: 'background', name: 'Background', icon: '🎨' },
-    { id: 'frame', name: 'Frame', icon: '✨' },
-    { id: 'badge', name: 'Badge', icon: '🏷️' },
-    { id: 'title', name: 'Title', icon: '📛' },
-  ];
+  const visibleCategories = (storeConfig.shop_categories ?? DEFAULT_CATEGORIES).filter(c => c.enabled);
 
   const loadShopData = useCallback(async () => {
     setLoading(true);
@@ -80,7 +98,11 @@ export default function ShopPage() {
 
       if (configRes.ok) {
         const config = await configRes.json();
-        setStoreConfig(config);
+        const categories: ShopCategory[] = config.shop_categories ?? DEFAULT_CATEGORIES;
+        setStoreConfig({ ...config, shop_categories: categories });
+        // Set initial active tab to first enabled category
+        const firstEnabled = categories.find(c => c.enabled);
+        if (firstEnabled) setActiveCategory(firstEnabled.id);
       }
     } catch (error) {
       console.error('Error loading shop data:', error);
@@ -199,8 +221,10 @@ export default function ShopPage() {
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-primary">Prize Wall</h1>
-              <p className="text-secondary text-sm">Spend your {storeConfig.currency_name} on avatar cosmetics</p>
+              <h1 className="text-xl font-bold text-primary">{storeConfig.shop_title}</h1>
+              <p className="text-secondary text-sm">
+                Spend your {storeConfig.currency_name} on {storeConfig.shop_description}
+              </p>
             </div>
             <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-full">
               <span className="text-xl">{storeConfig.currency_icon}</span>
@@ -209,24 +233,26 @@ export default function ShopPage() {
             </div>
           </div>
 
-          {/* Category tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {categories.map(cat => (
-              <button
-                type="button"
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
-                  activeCategory === cat.id
-                    ? 'bg-accent text-primary'
-                    : 'bg-elevated text-secondary hover:bg-elevated'
-                }`}
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
-              </button>
-            ))}
-          </div>
+          {/* Category tabs — only enabled ones */}
+          {visibleCategories.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {visibleCategories.map(cat => (
+                <button
+                  type="button"
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+                    activeCategory === cat.id
+                      ? 'bg-accent text-primary'
+                      : 'bg-elevated text-secondary hover:bg-elevated'
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -3,17 +3,35 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULTS = { currency_name: 'Points', currency_icon: '⭐', store_name: 'Hyperbolic XP' };
+const DEFAULTS = {
+  currency_name: 'Points',
+  currency_icon: '⭐',
+  store_name: 'Hyperbolic XP',
+  shop_title: 'Prize Wall',
+  shop_description: 'avatar cosmetics',
+  shop_categories: [
+    { id: 'base', name: 'Base', icon: '😎', enabled: true },
+    { id: 'background', name: 'Background', icon: '🎨', enabled: true },
+    { id: 'frame', name: 'Frame', icon: '✨', enabled: true },
+    { id: 'badge', name: 'Badge', icon: '🏷️', enabled: true },
+    { id: 'title', name: 'Title', icon: '📛', enabled: true },
+  ],
+};
 
 export async function GET() {
   try {
     const { data } = await supabaseAdmin
       .from('store_config')
-      .select('currency_name, currency_icon, store_name')
+      .select('currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories')
       .eq('id', 1)
       .single();
 
-    return NextResponse.json(data ?? DEFAULTS);
+    if (!data) return NextResponse.json(DEFAULTS);
+
+    return NextResponse.json({
+      ...data,
+      shop_categories: data.shop_categories ?? DEFAULTS.shop_categories,
+    });
   } catch {
     return NextResponse.json(DEFAULTS);
   }
