@@ -94,7 +94,7 @@ function HeroStatCard({
   label: string;
 }) {
   return (
-    <div className="bg-base border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-cyan-500/30 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
+    <div className="bg-base border-2 border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-cyan-500/30 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
       <div 
         className="text-[28px] font-extrabold"
         style={{
@@ -174,7 +174,7 @@ function GameCard({
       >
         {/* Front of card */}
         <div
-          className="bg-base border border-border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.3)] relative overflow-hidden group h-full"
+          className="bg-base border-2 border-border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.3)] relative overflow-hidden group h-full"
           style={{ backfaceVisibility: 'hidden' }}
           onClick={handleClick}
           onMouseEnter={() => setHoverCount(c => c + 1)}
@@ -273,7 +273,7 @@ function GameCard({
 
         {/* Back of card - conditional layout based on stats */}
         <div
-          className="absolute inset-0 bg-base border border-border-token rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
+          className="absolute inset-0 bg-base border-2 border-border-token rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -869,7 +869,7 @@ export default function DesktopDashboard() {
         <aside className="w-[72px] bg-base/80 backdrop-blur-xl border-r border-border-token flex flex-col items-center py-5 fixed top-0 left-0 bottom-0 z-50">
           {/* Logo */}
           <div 
-            className="w-[46px] h-[46px] rounded-[14px] flex items-center justify-center text-[22px] mb-7 border border-border-token"
+            className="w-[46px] h-[46px] rounded-[14px] flex items-center justify-center text-[22px] mb-7 border-2 border-border-token"
             style={{
               background: 'linear-gradient(135deg, #00d4ff, #a855f7, #ec4899)',
               boxShadow: '0 0 20px rgba(168, 85, 247, 0.3)'
@@ -930,11 +930,11 @@ export default function DesktopDashboard() {
                 HYPERBOLIC GAMES
               </h1>
               <div className="flex gap-2.5">
-                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong relative">
+                <button className="w-[42px] h-[42px] bg-elevated border-2 border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong relative">
                   🔔
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 </button>
-                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong">
+                <button className="w-[42px] h-[42px] bg-elevated border-2 border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong">
                   ⚙️
                 </button>
               </div>
@@ -943,7 +943,7 @@ export default function DesktopDashboard() {
             {/* Player Hero Card */}
             <div 
               ref={heroRef}
-              className="group flex items-center gap-7 bg-elevated border border-border-token rounded-3xl p-7 relative overflow-hidden transition-all hover:border-cyan-500/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.3),0_0_20px_rgba(0,212,255,0.3)]"
+              className="group flex items-center gap-7 bg-elevated border-2 border-border-token rounded-3xl p-7 relative overflow-hidden transition-all hover:border-cyan-500/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.3),0_0_20px_rgba(0,212,255,0.3)]"
             >
               {/* Top gradient line */}
               <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500" />
@@ -1018,7 +1018,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowCheckIn(true)}
                     disabled={hasCheckedInToday}
-                    className="bg-elevated border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-elevated border-2 border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(34,197,94,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -1037,7 +1037,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowGacha(true)}
                     disabled={hasSpunToday}
-                    className="bg-elevated border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-elevated border-2 border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -1141,7 +1141,7 @@ export default function DesktopDashboard() {
                 )}
 
                 {/* My Games - Enhanced Tiles */}
-                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       🎮 My Games
@@ -1170,7 +1170,7 @@ export default function DesktopDashboard() {
 
               {/* Right Column: Recent Activity */}
               <div className="flex flex-col gap-6">
-                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       📋 Recent Activity
@@ -1217,7 +1217,7 @@ export default function DesktopDashboard() {
             {/* Bottom Sections - Full Width */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Overall Stats Summary */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
                   📊 Your Stats
                 </h3>
@@ -1242,7 +1242,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Upcoming Events You're Interested In */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     📅 Your Upcoming Events
@@ -1286,7 +1286,7 @@ export default function DesktopDashboard() {
             {/* Second Row */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Highlights */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     🛒 Store Highlights
@@ -1319,7 +1319,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Friends Activity */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border-2 border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     👥 Friends Activity
