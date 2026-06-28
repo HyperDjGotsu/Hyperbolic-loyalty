@@ -208,7 +208,7 @@ function GameCard({
       >
         {/* Front of card */}
         <div
-          className="bg-[#07070b] border border-[#1e1e2e] rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.3)] relative overflow-hidden group h-full"
+          className="bg-base border border-border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.3)] relative overflow-hidden group h-full"
           style={{ backfaceVisibility: 'hidden' }}
           onClick={handleClick}
           onMouseEnter={() => setHoverCount(c => c + 1)}
@@ -301,7 +301,7 @@ function GameCard({
 
         {/* Back of card */}
         <div
-          className="absolute inset-0 bg-[#07070b] border border-[#1e1e2e] rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
+          className="absolute inset-0 bg-base border border-border-token rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -683,7 +683,7 @@ export default function MockDemoPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">🎮 Mock Data Demo</h1>
           <p className="text-slate-400">Preview of game cards with rich stats data. Click cards to flip!</p>
-          <div className="mt-4 p-4 bg-[#111118] rounded-xl border border-[#1e1e2e]">
+          <div className="mt-4 p-4 bg-elevated rounded-xl border border-border-token">
             <h3 className="text-sm font-semibold text-cyan-400 mb-2">Legend:</h3>
             <ul className="text-xs text-slate-400 space-y-1">
               <li>• <span className="text-green-400">One Piece, Pokemon, MTG, Gundam, Star Wars</span> — Have match history → Expands 2x2</li>
@@ -693,7 +693,7 @@ export default function MockDemoPage() {
         </div>
 
         {/* Games Grid */}
-        <div className="bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6">
+        <div className="bg-surface border border-border-token rounded-2xl p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             🎮 My Games
           </h2>
@@ -711,7 +711,7 @@ export default function MockDemoPage() {
         </div>
 
         {/* Stats Summary */}
-        <div className="mt-8 p-4 bg-[#111118] rounded-xl border border-[#1e1e2e]">
+        <div className="mt-8 p-4 bg-elevated rounded-xl border border-border-token">
           <h3 className="text-sm font-semibold text-cyan-400 mb-3">Mock Player Summary:</h3>
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>

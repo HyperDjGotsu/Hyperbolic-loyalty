@@ -89,7 +89,7 @@ export default function COTDVotingWidget() {
   // Loading state
   if (loading) {
     return (
-      <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800">
+      <div className="bg-elevated rounded-xl p-4 border border-border-token">
         <div className="animate-pulse">
           <div className="h-5 bg-slate-700 rounded w-1/2 mb-3"></div>
           <div className="space-y-2">
@@ -147,7 +147,7 @@ export default function COTDVotingWidget() {
               className={`w-full p-3 rounded-lg border transition-all text-left relative overflow-hidden ${
                 isVoted
                   ? 'bg-purple-500/20 border-purple-500'
-                  : 'bg-slate-800/50 border-slate-700 hover:border-purple-500/50 hover:bg-slate-800'
+                  : 'bg-elevated border-border-token hover:border-purple-500/50 hover:bg-elevated'
               } ${voting ? 'opacity-50 cursor-wait' : ''}`}
             >
               {/* Vote percentage bar */}

@@ -383,7 +383,7 @@ export default function ProfilePage() {
           {item.category === 'badge' && item.assetData?.emoji}
           {item.category === 'background' && (
             <div 
-              className="w-8 h-8 rounded-full border-2 border-white/30 mx-auto"
+              className="w-8 h-8 rounded-full border-2 border-border-strong mx-auto"
               style={{ backgroundColor: item.assetData?.color }}
             />
           )}

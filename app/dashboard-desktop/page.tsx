@@ -94,7 +94,7 @@ function HeroStatCard({
   label: string;
 }) {
   return (
-    <div className="bg-[#07070b] border border-[#1e1e2e] rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-cyan-500/30 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
+    <div className="bg-base border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-cyan-500/30 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
       <div 
         className="text-[28px] font-extrabold"
         style={{
@@ -174,7 +174,7 @@ function GameCard({
       >
         {/* Front of card */}
         <div
-          className="bg-[#07070b] border border-[#1e1e2e] rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.3)] relative overflow-hidden group h-full"
+          className="bg-base border border-border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.3)] relative overflow-hidden group h-full"
           style={{ backfaceVisibility: 'hidden' }}
           onClick={handleClick}
           onMouseEnter={() => setHoverCount(c => c + 1)}
@@ -216,7 +216,7 @@ function GameCard({
               <span className="text-[10px] text-slate-500 uppercase tracking-wide">Next Rank</span>
               <span className="text-[10px] text-slate-400">{xpToNextRank} {game.xpName} to go</span>
             </div>
-            <div className="h-[6px] bg-[#111118] rounded overflow-hidden bar-shine-on-hover">
+            <div className="h-[6px] bg-elevated rounded overflow-hidden bar-shine-on-hover">
               <div 
                 className="h-full rounded transition-all duration-500"
                 style={{ 
@@ -254,7 +254,7 @@ function GameCard({
                     style={{
                       background: i < (game.monthlyAttendance || 0)
                         ? (game.earnedMonthlyBonus ? '#22c55e' : game.color)
-                        : '#1e1e2e'
+                        : 'var(--border)'
                     }}
                   />
                 ))}
@@ -273,7 +273,7 @@ function GameCard({
 
         {/* Back of card - conditional layout based on stats */}
         <div
-          className="absolute inset-0 bg-[#07070b] border border-[#1e1e2e] rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
+          className="absolute inset-0 bg-base border border-border-token rounded-2xl p-5 cursor-pointer overflow-hidden flex flex-col"
           style={{ 
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -300,7 +300,7 @@ function GameCard({
               </div>
             </div>
             <button 
-              className="text-xs text-slate-500 hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-[#1e1e2e] hover:bg-[#2e2e3e]"
+              className="text-xs text-secondary hover:text-primary transition-colors px-3 py-1.5 rounded-lg bg-elevated hover:bg-input"
               onClick={handleClick}
             >
               ✕ Close
@@ -312,19 +312,19 @@ function GameCard({
             <>
               {/* Stats Grid - fits in 2x2 card */}
               <div className="grid grid-cols-4 gap-2 mb-3">
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-slate-500 uppercase mb-1">XP</div>
                   <div className="text-base font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-slate-500 uppercase mb-1">Events</div>
                   <div className="text-base font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-slate-500 uppercase mb-1">Win Rate</div>
                   <div className="text-base font-bold text-green-400">{stats.winRate}%</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-slate-500 uppercase mb-1">Streak</div>
                   <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
                 </div>
@@ -332,22 +332,22 @@ function GameCard({
 
               {/* Secondary stats row */}
               <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-slate-500">Matches</span>
                   <span className="text-sm font-bold">{stats.matches}</span>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-slate-500">Best</span>
                   <span className="text-sm font-bold">🏆 {stats.bestPlacement || '—'}</span>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
+                <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
                   <span className="text-[10px] text-slate-500">Since</span>
                   <span className="text-sm font-bold">{stats.firstPlayed || '—'}</span>
                 </div>
               </div>
 
               {/* W/L Record */}
-              <div className="bg-[#111118] rounded-lg p-2.5 mb-3 flex justify-between items-center">
+              <div className="bg-elevated rounded-lg p-2.5 mb-3 flex justify-between items-center">
                 <span className="text-[10px] text-slate-500">Record</span>
                 <span className="text-sm">
                   <span className="text-green-400 font-bold">{stats.wins}W</span>
@@ -364,7 +364,7 @@ function GameCard({
                     {earnedAchievements.slice(0, 6).map((achievement) => (
                       <div 
                         key={achievement.id}
-                        className="bg-[#111118] rounded-lg px-2 py-1 flex items-center gap-1.5 group relative"
+                        className="bg-elevated rounded-lg px-2 py-1 flex items-center gap-1.5 group relative"
                         title={achievement.description}
                       >
                         <span className="text-sm">{achievement.icon}</span>
@@ -372,7 +372,7 @@ function GameCard({
                       </div>
                     ))}
                     {earnedAchievements.length > 6 && (
-                      <div className="bg-[#111118] rounded-lg px-2 py-1 text-[10px] text-slate-500">
+                      <div className="bg-elevated rounded-lg px-2 py-1 text-[10px] text-slate-500">
                         +{earnedAchievements.length - 6} more
                       </div>
                     )}
@@ -383,7 +383,7 @@ function GameCard({
               {/* Leaderboard Rank & Next Event Row */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Leaderboard Rank */}
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-slate-500 uppercase mb-1">Leaderboard</div>
                   {game.leaderboardRank ? (
                     <div className="flex items-baseline gap-1">
@@ -396,7 +396,7 @@ function GameCard({
                 </div>
 
                 {/* Next Event */}
-                <div className="bg-[#111118] rounded-lg p-2.5">
+                <div className="bg-elevated rounded-lg p-2.5">
                   <div className="text-[9px] text-slate-500 uppercase mb-1">Next Event</div>
                   {game.nextEvent ? (
                     <div>
@@ -413,17 +413,17 @@ function GameCard({
             // Compact layout for new players with minimal stats
             <>
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#111118] rounded-lg p-3">
+                <div className="bg-elevated rounded-lg p-3">
                   <div className="text-[10px] text-slate-500 uppercase mb-1">Total XP</div>
                   <div className="text-xl font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
-                <div className="bg-[#111118] rounded-lg p-3">
+                <div className="bg-elevated rounded-lg p-3">
                   <div className="text-[10px] text-slate-500 uppercase mb-1">Events</div>
                   <div className="text-xl font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
               </div>
               
-              <div className="bg-[#111118]/50 rounded-lg p-3 mb-4 text-center">
+              <div className="bg-elevated/50 rounded-lg p-3 mb-4 text-center">
                 <div className="text-slate-500 text-xs">Play in tournaments to unlock detailed stats!</div>
               </div>
             </>
@@ -839,7 +839,7 @@ export default function DesktopDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#07070b] flex items-center justify-center">
+      <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-bounce">🎮</div>
           <div className="text-slate-400">Loading your profile...</div>
@@ -849,7 +849,7 @@ export default function DesktopDashboard() {
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#07070b] text-white overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-base text-white overflow-x-hidden">
       {/* Ambient background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div 
@@ -866,7 +866,7 @@ export default function DesktopDashboard() {
 
       <div className="flex min-h-screen relative z-10">
         {/* Sidebar */}
-        <aside className="w-[72px] bg-[#0c0c12]/80 backdrop-blur-xl border-r border-[#1e1e2e] flex flex-col items-center py-5 fixed top-0 left-0 bottom-0 z-50">
+        <aside className="w-[72px] bg-base/80 backdrop-blur-xl border-r border-border-token flex flex-col items-center py-5 fixed top-0 left-0 bottom-0 z-50">
           {/* Logo */}
           <div 
             className="w-[46px] h-[46px] rounded-[14px] flex items-center justify-center text-[22px] mb-7 animate-logo-pulse"
@@ -936,11 +936,11 @@ export default function DesktopDashboard() {
                 HYPERBOLIC GAMES
               </h1>
               <div className="flex gap-2.5">
-                <button className="w-[42px] h-[42px] bg-[#111118] border border-[#1e1e2e] rounded-xl flex items-center justify-center text-lg transition-all hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)] relative">
+                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)] relative">
                   🔔
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 </button>
-                <button className="w-[42px] h-[42px] bg-[#111118] border border-[#1e1e2e] rounded-xl flex items-center justify-center text-lg transition-all hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
+                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
                   ⚙️
                 </button>
               </div>
@@ -949,7 +949,7 @@ export default function DesktopDashboard() {
             {/* Player Hero Card */}
             <div 
               ref={heroRef}
-              className="group flex items-center gap-7 bg-[#111118] border border-[#1e1e2e] rounded-3xl p-7 relative overflow-hidden transition-all hover:border-cyan-500/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.3),0_0_20px_rgba(0,212,255,0.3)]"
+              className="group flex items-center gap-7 bg-elevated border border-border-token rounded-3xl p-7 relative overflow-hidden transition-all hover:border-cyan-500/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.3),0_0_20px_rgba(0,212,255,0.3)]"
             >
               {/* Top gradient line */}
               <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500" />
@@ -987,7 +987,7 @@ export default function DesktopDashboard() {
 
                 {/* XP Bar */}
                 <div className="max-w-[380px]">
-                  <div className="h-2.5 bg-[#07070b] rounded overflow-hidden relative bar-shine-on-hover">
+                  <div className="h-2.5 bg-base rounded overflow-hidden relative bar-shine-on-hover">
                     <div 
                       className="h-full rounded relative"
                       style={{
@@ -1024,7 +1024,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowCheckIn(true)}
                     disabled={hasCheckedInToday}
-                    className="bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-elevated border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(34,197,94,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -1043,7 +1043,7 @@ export default function DesktopDashboard() {
                   <button
                     onClick={() => setShowGacha(true)}
                     disabled={hasSpunToday}
-                    className="bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-elevated border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div 
@@ -1147,7 +1147,7 @@ export default function DesktopDashboard() {
                 )}
 
                 {/* My Games - Enhanced Tiles */}
-                <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
+                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       🎮 My Games
@@ -1176,7 +1176,7 @@ export default function DesktopDashboard() {
 
               {/* Right Column: Recent Activity */}
               <div className="flex flex-col gap-6">
-                <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
+                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
                       📋 Recent Activity
@@ -1194,9 +1194,9 @@ export default function DesktopDashboard() {
                       extendedActivity.map((activity: any) => (
                         <div 
                           key={activity.id}
-                          className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-[#07070b] group"
+                          className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-base group"
                         >
-                          <div className="w-[38px] h-[38px] bg-[#07070b] rounded-xl flex items-center justify-center text-base group-hover:bg-[#111118] transition-colors shrink-0">
+                          <div className="w-[38px] h-[38px] bg-base rounded-xl flex items-center justify-center text-base group-hover:bg-elevated transition-colors shrink-0">
                             {activity.icon}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1223,24 +1223,24 @@ export default function DesktopDashboard() {
             {/* Bottom Sections - Full Width */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Overall Stats Summary */}
-              <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
                   📊 Your Stats
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-[#07070b] rounded-xl p-4 text-center">
+                  <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-cyan-400">{games.length}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Games Played</div>
                   </div>
-                  <div className="bg-[#07070b] rounded-xl p-4 text-center">
+                  <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-green-400">{playerData?.totalEventsAttended || 0}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Events Attended</div>
                   </div>
-                  <div className="bg-[#07070b] rounded-xl p-4 text-center">
+                  <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-purple-400">{totalXp.toLocaleString()}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Total XP</div>
                   </div>
-                  <div className="bg-[#07070b] rounded-xl p-4 text-center">
+                  <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
                     <div className="text-[10px] text-slate-500 uppercase mt-1">Week Streak</div>
                   </div>
@@ -1248,7 +1248,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Upcoming Events You're Interested In */}
-              <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     📅 Your Upcoming Events
@@ -1262,7 +1262,7 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="space-y-3">
                   {/* Placeholder events - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-[#07070b] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-base rounded-xl">
                     <div className="w-10 h-10 bg-[#E63946]/20 rounded-lg flex items-center justify-center text-lg">🏴‍☠️</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">One Piece Local</div>
@@ -1270,7 +1270,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">Registered</div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-[#07070b] rounded-xl">
+                  <div className="flex items-center gap-3 p-3 bg-base rounded-xl">
                     <div className="w-10 h-10 bg-[#8B5CF6]/20 rounded-lg flex items-center justify-center text-lg">✨</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">MTG Commander Night</div>
@@ -1278,7 +1278,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="text-xs text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded">Interested</div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 bg-[#07070b] rounded-xl opacity-60">
+                  <div className="flex items-center gap-3 p-3 bg-base rounded-xl opacity-60">
                     <div className="w-10 h-10 bg-slate-500/20 rounded-lg flex items-center justify-center text-lg">📅</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-slate-400">No more events this week</div>
@@ -1292,7 +1292,7 @@ export default function DesktopDashboard() {
             {/* Second Row */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Highlights */}
-              <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     🛒 Store Highlights
@@ -1306,17 +1306,17 @@ export default function DesktopDashboard() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {/* Placeholder items - will be replaced with real data */}
-                  <div className="bg-[#07070b] rounded-xl p-3 text-center cursor-pointer hover:bg-[#0a0a10] transition-colors">
+                  <div className="bg-base rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">🎨</div>
                     <div className="text-xs font-medium">Custom Avatar Frame</div>
                     <div className="text-[10px] text-cyan-400 mt-1">500 XP</div>
                   </div>
-                  <div className="bg-[#07070b] rounded-xl p-3 text-center cursor-pointer hover:bg-[#0a0a10] transition-colors">
+                  <div className="bg-base rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">✨</div>
                     <div className="text-xs font-medium">Name Glow Effect</div>
                     <div className="text-[10px] text-cyan-400 mt-1">750 XP</div>
                   </div>
-                  <div className="bg-[#07070b] rounded-xl p-3 text-center cursor-pointer hover:bg-[#0a0a10] transition-colors">
+                  <div className="bg-base rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
                     <div className="text-3xl mb-2">🏆</div>
                     <div className="text-xs font-medium">Trophy Badge</div>
                     <div className="text-[10px] text-cyan-400 mt-1">1,000 XP</div>
@@ -1325,7 +1325,7 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Friends Activity */}
-              <div className="animate-card bg-[#111118] border border-[#1e1e2e] rounded-2xl p-6 transition-all hover:border-white/10">
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
                     👥 Friends Activity

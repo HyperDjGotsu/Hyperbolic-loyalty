@@ -139,7 +139,7 @@ export default function ShopPage() {
           {item.category === 'badge' && item.assetData?.emoji}
           {item.category === 'background' && (
             <div 
-              className="w-8 h-8 rounded-full border-2 border-white/30"
+              className="w-8 h-8 rounded-full border-2 border-border-strong"
               style={{ backgroundColor: item.assetData?.color }}
             />
           )}

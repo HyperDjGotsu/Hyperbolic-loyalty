@@ -293,9 +293,9 @@ export function CardOfTheDay() {
   const isPositive30d = card.priceChange30d !== null && card.priceChange30d >= 0;
 
   return (
-    <div className="bg-[#111118] border border-[#1e1e2e] rounded-2xl overflow-hidden transition-all hover:border-white/10">
+    <div className="bg-surface border border-border-token rounded-2xl overflow-hidden transition-all hover:border-border-strong">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-border-token flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-lg">{theme.icon}</span>
           <span className="text-[15px] font-semibold">Card of the Day</span>
@@ -528,9 +528,9 @@ export function CardOfTheDayCompact() {
 
   if (loading || votingLoading) {
     return (
-      <div className="bg-slate-800/50 rounded-xl p-3 animate-pulse border border-slate-700/50">
+      <div className="bg-elevated rounded-xl p-3 animate-pulse border border-border-token">
         <div className="flex items-center gap-3">
-          <div className="w-14 h-20 bg-slate-700 rounded-lg" />
+          <div className="w-14 h-20 bg-elevated rounded-lg" />
           <div className="flex-1">
             <div className="h-4 bg-slate-700 rounded w-3/4 mb-2" />
             <div className="h-3 bg-slate-700 rounded w-1/2 mb-2" />
@@ -601,7 +601,7 @@ export function CardOfTheDayCompact() {
       href={card.tcgplayerUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="block bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 hover:bg-slate-800/70 transition-colors"
+      className="block bg-elevated rounded-xl p-3 border border-border-token hover:border-border-strong transition-colors"
     >
       <div className="flex items-center gap-3">
         {/* Card image or icon */}
@@ -662,8 +662,8 @@ export function CardOfTheDayCompact() {
 
 function CardOfTheDaySkeleton() {
   return (
-    <div className="bg-[#111118] border border-[#1e1e2e] rounded-2xl overflow-hidden animate-pulse">
-      <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+    <div className="bg-surface border border-border-token rounded-2xl overflow-hidden animate-pulse">
+      <div className="px-6 py-4 border-b border-border-token flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-zinc-800 rounded" />
           <div className="h-5 bg-zinc-800 rounded w-28" />

@@ -176,10 +176,10 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-80 bg-surface border border-border-token rounded-xl shadow-xl z-50 overflow-hidden">
           {/* Header */}
-          <div className="p-3 border-b border-slate-700 flex items-center justify-between">
-            <h3 className="text-white font-bold">Notifications</h3>
+          <div className="p-3 border-b border-border-token flex items-center justify-between">
+            <h3 className="text-primary font-bold">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
@@ -196,14 +196,14 @@ export default function NotificationBell() {
             {notifications.length === 0 ? (
               <div className="p-6 text-center">
                 <div className="text-3xl mb-2">🔔</div>
-                <div className="text-slate-400">No notifications yet</div>
+                <div className="text-secondary">No notifications yet</div>
               </div>
             ) : (
               notifications.map(notification => (
                 <button
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`w-full text-left p-3 border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors ${
+                  className={`w-full text-left p-3 border-b border-border-token hover:bg-elevated transition-colors ${
                     !notification.is_read ? 'bg-cyan-500/10' : ''
                   }`}
                 >
@@ -233,7 +233,7 @@ export default function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-2 border-t border-slate-700">
+            <div className="p-2 border-t border-border-token">
               <button
                 onClick={() => {
                   setIsOpen(false);

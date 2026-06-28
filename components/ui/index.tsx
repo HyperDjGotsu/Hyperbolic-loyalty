@@ -213,13 +213,13 @@ export const Avatar = ({
         </div>
       </div>
       {showBadge && avatar.badge && (
-        <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-700 text-sm">
+        <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-surface rounded-full flex items-center justify-center border-2 border-border-token text-sm">
           {avatar.badge}
         </div>
       )}
       {isOnline !== null && (
         <div
-          className={`absolute top-0 right-0 w-3 h-3 rounded-full border-2 border-slate-900 ${
+          className={`absolute top-0 right-0 w-3 h-3 rounded-full border-2 border-base ${
             isOnline ? 'bg-green-500' : 'bg-slate-600'
           }`}
         />
@@ -339,7 +339,7 @@ export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
       </div>
 
       {isExpanded && (
-        <div className="px-3 pb-3 pt-1 border-t border-slate-700/50 space-y-2">
+        <div className="px-3 pb-3 pt-1 border-t border-border-token space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-slate-400">
               Rank: <span className="text-white">{game.rank}</span>
