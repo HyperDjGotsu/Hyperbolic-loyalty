@@ -137,6 +137,19 @@ interface HQEvent {
   attendanceCount?: number;
 }
 
+interface HQShopItem {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  price: number;
+  rarity: string;
+  asset_data: Record<string, string>;
+  is_default: boolean;
+  active: boolean;
+  created_at: string;
+}
+
 export default function HQPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -208,6 +221,24 @@ export default function HQPage() {
   const [cotdAddingToPool, setCotdAddingToPool] = useState(false);
   const [cotdFinalizingVote, setCotdFinalizingVote] = useState(false);
 
+  // Shop management state
+  const [shopItems, setShopItems] = useState<HQShopItem[]>([]);
+  const [shopLoading, setShopLoading] = useState(false);
+  const [shopSaving, setShopSaving] = useState(false);
+  const [shopCategoryFilter, setShopCategoryFilter] = useState('all');
+  const [shopForm, setShopForm] = useState({
+    name: '',
+    description: '',
+    category: 'base',
+    price: '',
+    rarity: 'common',
+    asset_emoji: '',
+    asset_color: '#6366f1',
+    asset_frame: 'silver',
+    asset_title: '',
+  });
+  const [shopFormOpen, setShopFormOpen] = useState(false);
+  const [shopDeleteConfirm, setShopDeleteConfirm] = useState<string | null>(null);
 
   // Check staff access
   useEffect(() => {
@@ -631,6 +662,9 @@ export default function HQPage() {
     if (activeTab === 'bounty') {
       loadBountyData();
     }
+    if (activeTab === 'shop') {
+      loadShopItems();
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -638,6 +672,97 @@ export default function HQPage() {
       loadEmperorRankings(selectedMonth);
     }
   }, [selectedMonth]);
+
+  // Shop management functions
+  const loadShopItems = async () => {
+    setShopLoading(true);
+    try {
+      const res = await fetch('/api/hq/shop');
+      const data = await res.json();
+      setShopItems(data.items || []);
+    } catch {
+      showToast('Failed to load shop items', 'error');
+    } finally {
+      setShopLoading(false);
+    }
+  };
+
+  const buildAssetData = () => {
+    const { category, asset_emoji, asset_color, asset_frame, asset_title } = shopForm;
+    if (category === 'base' || category === 'badge' || category === 'effect') return { emoji: asset_emoji };
+    if (category === 'background') return { color: asset_color };
+    if (category === 'frame') return { style: asset_frame };
+    if (category === 'title') return { text: asset_title };
+    return { emoji: asset_emoji };
+  };
+
+  const saveShopItem = async () => {
+    if (!shopForm.name || !shopForm.price) {
+      showToast('Name and price are required', 'error');
+      return;
+    }
+    setShopSaving(true);
+    try {
+      const res = await fetch('/api/hq/shop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: shopForm.name,
+          description: shopForm.description || null,
+          category: shopForm.category,
+          price: Number(shopForm.price),
+          rarity: shopForm.rarity,
+          asset_data: buildAssetData(),
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setShopItems(prev => [...prev, data.item]);
+      setShopForm({ name: '', description: '', category: 'base', price: '', rarity: 'common', asset_emoji: '', asset_color: '#6366f1', asset_frame: 'silver', asset_title: '' });
+      setShopFormOpen(false);
+      showToast('Item added to shop', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to save item', 'error');
+    } finally {
+      setShopSaving(false);
+    }
+  };
+
+  const toggleShopItemActive = async (item: HQShopItem) => {
+    try {
+      const res = await fetch('/api/hq/shop', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, active: !item.active }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setShopItems(prev => prev.map(i => i.id === item.id ? data.item : i));
+      showToast(`Item ${!item.active ? 'activated' : 'deactivated'}`, 'success');
+    } catch {
+      showToast('Failed to update item', 'error');
+    }
+  };
+
+  const deleteShopItem = async (id: string) => {
+    try {
+      const res = await fetch(`/api/hq/shop?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.deleted) {
+        setShopItems(prev => prev.filter(i => i.id !== id));
+        showToast('Item removed from shop', 'success');
+      } else {
+        // Was owned by players — just deactivated
+        setShopItems(prev => prev.map(i => i.id === id ? data.item : i));
+        showToast('Item is owned by players — deactivated instead of deleted', 'success');
+      }
+    } catch {
+      showToast('Failed to remove item', 'error');
+    } finally {
+      setShopDeleteConfirm(null);
+    }
+  };
 
   // Load Bounty Hunter data
   const loadBountyData = async () => {
@@ -1185,6 +1310,7 @@ export default function HQPage() {
               { id: 'banners', label: '🎨 Banners', icon: '🎨' },
               { id: 'cotd', label: '🃏 Card of Day', icon: '🃏' },
               { id: 'events', label: '📅 Events', icon: '📅' },
+              { id: 'shop', label: '🛒 Shop', icon: '🛒' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -2755,6 +2881,309 @@ export default function HQPage() {
                 to pull updates.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Shop Tab */}
+        {activeTab === 'shop' && (
+          <div className="space-y-6">
+
+            {/* Pricing Formula Reference */}
+            <div className="bg-surface rounded-xl p-6 border border-token">
+              <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-1">Pricing Formula</h2>
+              <p className="text-xs text-tertiary mb-4">Upper management sets the item spec — staff enters it here. Use these ranges as your guide.</p>
+              <div className="grid grid-cols-5 gap-3 mb-4">
+                {[
+                  { rarity: 'Common', range: '100–250', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', desc: 'Basic cosmetics, accessible to most players' },
+                  { rarity: 'Uncommon', range: '300–600', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20', desc: 'Takes a few events to earn' },
+                  { rarity: 'Rare', range: '750–1,200', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', desc: 'Dedicated players, ~2 weeks of play' },
+                  { rarity: 'Epic', range: '1,500–2,500', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', desc: 'Monthly milestone feel' },
+                  { rarity: 'Legendary', range: '3,000+', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20', desc: 'Top earners only — prestige tier' },
+                ].map(r => (
+                  <div key={r.rarity} className={`rounded-lg p-3 border ${r.bg}`}>
+                    <div className={`text-xs font-bold ${r.color} mb-1`}>{r.rarity}</div>
+                    <div className="text-sm font-mono font-semibold text-primary">{r.range} <span className="text-xs text-tertiary">gems</span></div>
+                    <div className="text-xs text-tertiary mt-1 leading-tight">{r.desc}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-token pt-4">
+                <div className="text-xs font-medium text-secondary mb-2">Category Guide</div>
+                <div className="grid grid-cols-3 gap-2 text-xs text-tertiary">
+                  <div><span className="text-primary font-medium">Base</span> — Avatar body emoji (e.g. 🧙 🤖 🦊)</div>
+                  <div><span className="text-primary font-medium">Background</span> — Color behind avatar (hex code)</div>
+                  <div><span className="text-primary font-medium">Frame</span> — Border style around avatar</div>
+                  <div><span className="text-primary font-medium">Badge</span> — Small emoji shown on profile (e.g. ⭐ 💎)</div>
+                  <div><span className="text-primary font-medium">Title</span> — Text under player name (e.g. "The Collector")</div>
+                  <div><span className="text-primary font-medium">Effect</span> — Special visual effect emoji or key</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Item List */}
+            <div className="bg-surface rounded-xl border border-token overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-token">
+                <div className="flex items-center gap-3">
+                  <h2 className="font-semibold text-primary">Shop Items</h2>
+                  <span className="text-xs text-tertiary bg-elevated px-2 py-0.5 rounded-full">
+                    {shopItems.filter(i => i.active).length} active / {shopItems.length} total
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={shopCategoryFilter}
+                    onChange={e => setShopCategoryFilter(e.target.value)}
+                    className="text-sm bg-elevated border border-token rounded-lg px-3 py-1.5 text-primary"
+                  >
+                    <option value="all">All categories</option>
+                    <option value="base">Base</option>
+                    <option value="background">Background</option>
+                    <option value="frame">Frame</option>
+                    <option value="badge">Badge</option>
+                    <option value="title">Title</option>
+                    <option value="effect">Effect</option>
+                  </select>
+                  <button
+                    onClick={() => setShopFormOpen(true)}
+                    className="bg-accent text-accent-fg text-sm font-medium px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                  >
+                    + Add Item
+                  </button>
+                </div>
+              </div>
+
+              {shopLoading ? (
+                <div className="p-8 text-center text-tertiary text-sm">Loading items…</div>
+              ) : shopItems.filter(i => shopCategoryFilter === 'all' || i.category === shopCategoryFilter).length === 0 ? (
+                <div className="p-8 text-center text-tertiary text-sm">No items found.</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-token text-left">
+                      <th className="px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Item</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Category</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Rarity</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Price</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)]">
+                    {shopItems
+                      .filter(i => shopCategoryFilter === 'all' || i.category === shopCategoryFilter)
+                      .map(item => {
+                        const rarityColor: Record<string, string> = {
+                          common: 'text-slate-400', uncommon: 'text-green-400',
+                          rare: 'text-blue-400', epic: 'text-purple-400', legendary: 'text-yellow-400',
+                        };
+                        return (
+                          <tr key={item.id} className={`hover:bg-elevated/50 transition-colors ${!item.active ? 'opacity-50' : ''}`}>
+                            <td className="px-6 py-3">
+                              <div className="font-medium text-primary">{item.name}</div>
+                              {item.description && <div className="text-xs text-tertiary mt-0.5">{item.description}</div>}
+                            </td>
+                            <td className="px-4 py-3 text-secondary capitalize">{item.category}</td>
+                            <td className="px-4 py-3">
+                              <span className={`capitalize font-medium ${rarityColor[item.rarity] || 'text-secondary'}`}>
+                                {item.rarity}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-primary font-mono">{item.price.toLocaleString()} 💎</td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => toggleShopItemActive(item)}
+                                disabled={item.is_default}
+                                className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${
+                                  item.is_default ? 'bg-elevated text-tertiary cursor-not-allowed' :
+                                  item.active ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25' :
+                                  'bg-elevated text-tertiary hover:bg-elevated'
+                                }`}
+                              >
+                                {item.is_default ? 'Default' : item.active ? 'Active' : 'Inactive'}
+                              </button>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {!item.is_default && (
+                                shopDeleteConfirm === item.id ? (
+                                  <div className="flex items-center gap-2 justify-end">
+                                    <span className="text-xs text-tertiary">Remove?</span>
+                                    <button onClick={() => deleteShopItem(item.id)} className="text-xs text-red-400 hover:text-red-300 font-medium">Yes</button>
+                                    <button onClick={() => setShopDeleteConfirm(null)} className="text-xs text-secondary hover:text-primary">Cancel</button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => setShopDeleteConfirm(item.id)}
+                                    className="text-xs text-tertiary hover:text-red-400 transition-colors"
+                                  >
+                                    Remove
+                                  </button>
+                                )
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Add Item Form */}
+            {shopFormOpen && (
+              <div className="bg-surface rounded-xl p-6 border border-accent/30">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="font-semibold text-primary">New Shop Item</h3>
+                  <button onClick={() => setShopFormOpen(false)} className="text-secondary hover:text-primary text-sm">Cancel</button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Item Name *</label>
+                    <input
+                      type="text"
+                      value={shopForm.name}
+                      onChange={e => setShopForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="e.g. Golden Dragon Frame"
+                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Description</label>
+                    <input
+                      type="text"
+                      value={shopForm.description}
+                      onChange={e => setShopForm(f => ({ ...f, description: e.target.value }))}
+                      placeholder="Optional short description"
+                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Category *</label>
+                    <select
+                      value={shopForm.category}
+                      onChange={e => setShopForm(f => ({ ...f, category: e.target.value }))}
+                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    >
+                      <option value="base">Base — avatar body emoji</option>
+                      <option value="background">Background — color behind avatar</option>
+                      <option value="frame">Frame — border style</option>
+                      <option value="badge">Badge — small emoji on profile</option>
+                      <option value="title">Title — text under name</option>
+                      <option value="effect">Effect — visual effect</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Rarity *</label>
+                    <select
+                      value={shopForm.rarity}
+                      onChange={e => setShopForm(f => ({ ...f, rarity: e.target.value }))}
+                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    >
+                      <option value="common">Common (100–250 gems)</option>
+                      <option value="uncommon">Uncommon (300–600 gems)</option>
+                      <option value="rare">Rare (750–1,200 gems)</option>
+                      <option value="epic">Epic (1,500–2,500 gems)</option>
+                      <option value="legendary">Legendary (3,000+ gems)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">
+                      Price (gems) *
+                      <span className="ml-2 text-tertiary font-normal">
+                        {shopForm.rarity === 'common' ? '100–250' : shopForm.rarity === 'uncommon' ? '300–600' : shopForm.rarity === 'rare' ? '750–1,200' : shopForm.rarity === 'epic' ? '1,500–2,500' : '3,000+'}
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={shopForm.price}
+                      onChange={e => setShopForm(f => ({ ...f, price: e.target.value }))}
+                      placeholder="e.g. 500"
+                      className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                    />
+                  </div>
+
+                  {/* Asset data — context-sensitive by category */}
+                  {(shopForm.category === 'base' || shopForm.category === 'badge' || shopForm.category === 'effect') && (
+                    <div>
+                      <label className="text-xs font-medium text-secondary block mb-1">Emoji *</label>
+                      <input
+                        type="text"
+                        value={shopForm.asset_emoji}
+                        onChange={e => setShopForm(f => ({ ...f, asset_emoji: e.target.value }))}
+                        placeholder="e.g. 🧙"
+                        className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      />
+                    </div>
+                  )}
+                  {shopForm.category === 'background' && (
+                    <div>
+                      <label className="text-xs font-medium text-secondary block mb-1">Color *</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={shopForm.asset_color}
+                          onChange={e => setShopForm(f => ({ ...f, asset_color: e.target.value }))}
+                          className="w-10 h-9 rounded border border-token bg-input cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={shopForm.asset_color}
+                          onChange={e => setShopForm(f => ({ ...f, asset_color: e.target.value }))}
+                          placeholder="#6366f1"
+                          className="flex-1 bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {shopForm.category === 'frame' && (
+                    <div>
+                      <label className="text-xs font-medium text-secondary block mb-1">Frame Style *</label>
+                      <select
+                        value={shopForm.asset_frame}
+                        onChange={e => setShopForm(f => ({ ...f, asset_frame: e.target.value }))}
+                        className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      >
+                        <option value="silver">Silver</option>
+                        <option value="gold">Gold</option>
+                        <option value="diamond">Diamond</option>
+                        <option value="fire">Fire</option>
+                        <option value="pirate">Pirate</option>
+                        <option value="electric">Electric</option>
+                        <option value="legendary">Legendary</option>
+                      </select>
+                    </div>
+                  )}
+                  {shopForm.category === 'title' && (
+                    <div>
+                      <label className="text-xs font-medium text-secondary block mb-1">Title Text *</label>
+                      <input
+                        type="text"
+                        value={shopForm.asset_title}
+                        onChange={e => setShopForm(f => ({ ...f, asset_title: e.target.value }))}
+                        placeholder="e.g. The Collector"
+                        className="w-full bg-input border border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-token">
+                  <button
+                    onClick={() => setShopFormOpen(false)}
+                    className="text-sm text-secondary hover:text-primary px-4 py-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveShopItem}
+                    disabled={shopSaving}
+                    className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    {shopSaving ? 'Saving…' : 'Add to Shop'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -963,6 +963,7 @@ export type Database = {
       }
       shop_items: {
         Row: {
+          active: boolean
           asset_data: Json
           category: string
           created_at: string | null
@@ -974,6 +975,7 @@ export type Database = {
           rarity: string
         }
         Insert: {
+          active?: boolean
           asset_data: Json
           category: string
           created_at?: string | null
@@ -985,6 +987,7 @@ export type Database = {
           rarity?: string
         }
         Update: {
+          active?: boolean
           asset_data?: Json
           category?: string
           created_at?: string | null

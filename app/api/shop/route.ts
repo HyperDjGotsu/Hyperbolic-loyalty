@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     let query = supabaseAdmin
       .from('shop_items')
       .select('*')
+      .eq('active', true)
       .order('price', { ascending: true });
 
     if (category) {
