@@ -241,14 +241,14 @@ function GameCard({
                 trigger={hoverCount}
                 className="text-[28px] font-bold text-cyan-400"
               />
-              <span className="text-xs text-slate-500">{game.xpName}</span>
+              <span className="text-xs text-tertiary">{game.xpName}</span>
             </div>
           </div>
 
           <div className="mb-4">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wide">Next Rank</span>
-              <span className="text-[10px] text-slate-400">{xpToNextRank} {game.xpName} to go</span>
+              <span className="text-[10px] text-tertiary uppercase tracking-wide">Next Rank</span>
+              <span className="text-[10px] text-secondary">{xpToNextRank} {game.xpName} to go</span>
             </div>
             <div className="h-[6px] bg-[#111118] rounded overflow-hidden">
               <div 
@@ -288,13 +288,13 @@ function GameCard({
                   }}
                 />
               </div>
-              <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
+              <span className="text-[11px] text-secondary font-medium whitespace-nowrap">
                 {game.monthlyAttendance || 0}/{game.monthlyThreshold || 4}
               </span>
             </div>
           </div>
           
-          <div className="absolute bottom-2 right-2 text-[10px] text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-2 right-2 text-[10px] text-tertiary opacity-0 group-hover:opacity-100 transition-opacity">
             Click for stats
           </div>
         </div>
@@ -327,7 +327,7 @@ function GameCard({
               </div>
             </div>
             <button 
-              className="text-xs text-slate-500 hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-[#1e1e2e] hover:bg-[#2e2e3e]"
+              className="text-xs text-tertiary hover:text-primary transition-colors px-3 py-1.5 rounded-lg bg-elevated hover:bg-input"
               onClick={handleClick}
             >
               ✕ Close
@@ -338,43 +338,43 @@ function GameCard({
             <>
               <div className="grid grid-cols-4 gap-2 mb-3">
                 <div className="bg-[#111118] rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">XP</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">XP</div>
                   <div className="text-base font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
                 <div className="bg-[#111118] rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Events</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Events</div>
                   <div className="text-base font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
                 <div className="bg-[#111118] rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Win Rate</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Win Rate</div>
                   <div className="text-base font-bold text-green-400">{stats.winRate}%</div>
                 </div>
                 <div className="bg-[#111118] rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Streak</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Streak</div>
                   <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mb-3">
                 <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">Matches</span>
+                  <span className="text-[10px] text-tertiary">Matches</span>
                   <span className="text-sm font-bold">{stats.matches}</span>
                 </div>
                 <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">Best</span>
+                  <span className="text-[10px] text-tertiary">Best</span>
                   <span className="text-sm font-bold">🏆 {stats.bestPlacement || '—'}</span>
                 </div>
                 <div className="bg-[#111118] rounded-lg p-2.5 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">Since</span>
+                  <span className="text-[10px] text-tertiary">Since</span>
                   <span className="text-sm font-bold">{stats.firstPlayed || '—'}</span>
                 </div>
               </div>
 
               <div className="bg-[#111118] rounded-lg p-2.5 mb-3 flex justify-between items-center">
-                <span className="text-[10px] text-slate-500">Record</span>
+                <span className="text-[10px] text-tertiary">Record</span>
                 <span className="text-sm">
                   <span className="text-green-400 font-bold">{stats.wins}W</span>
-                  <span className="text-slate-500 mx-1">-</span>
+                  <span className="text-tertiary mx-1">-</span>
                   <span className="text-red-400 font-bold">{stats.losses}L</span>
                 </span>
               </div>
@@ -382,7 +382,7 @@ function GameCard({
               {/* Achievements */}
               {earnedAchievements.length > 0 && (
                 <div className="mb-3">
-                  <div className="text-[9px] text-slate-500 uppercase mb-2">Achievements</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-2">Achievements</div>
                   <div className="flex flex-wrap gap-1.5">
                     {earnedAchievements.slice(0, 6).map((achievement) => (
                       <div 
@@ -391,11 +391,11 @@ function GameCard({
                         title={achievement.description}
                       >
                         <span className="text-sm">{achievement.icon}</span>
-                        <span className="text-[10px] font-medium text-slate-300">{achievement.name}</span>
+                        <span className="text-[10px] font-medium text-secondary">{achievement.name}</span>
                       </div>
                     ))}
                     {earnedAchievements.length > 6 && (
-                      <div className="bg-[#111118] rounded-lg px-2 py-1 text-[10px] text-slate-500">
+                      <div className="bg-[#111118] rounded-lg px-2 py-1 text-[10px] text-tertiary">
                         +{earnedAchievements.length - 6} more
                       </div>
                     )}
@@ -407,27 +407,27 @@ function GameCard({
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Leaderboard Rank */}
                 <div className="bg-[#111118] rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Leaderboard</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Leaderboard</div>
                   {game.leaderboardRank ? (
                     <div className="flex items-baseline gap-1">
                       <span className="text-base font-bold" style={{ color: game.color }}>#{game.leaderboardRank}</span>
-                      <span className="text-[10px] text-slate-500">of {game.leaderboardTotal}</span>
+                      <span className="text-[10px] text-tertiary">of {game.leaderboardTotal}</span>
                     </div>
                   ) : (
-                    <div className="text-sm text-slate-500">—</div>
+                    <div className="text-sm text-tertiary">—</div>
                   )}
                 </div>
 
                 {/* Next Event */}
                 <div className="bg-[#111118] rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Next Event</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Next Event</div>
                   {game.nextEvent ? (
                     <div>
-                      <div className="text-[11px] font-medium text-white truncate">{game.nextEvent.name}</div>
-                      <div className="text-[10px] text-slate-400">{game.nextEvent.date} • {game.nextEvent.time}</div>
+                      <div className="text-[11px] font-medium text-primary truncate">{game.nextEvent.name}</div>
+                      <div className="text-[10px] text-secondary">{game.nextEvent.date} • {game.nextEvent.time}</div>
                     </div>
                   ) : (
-                    <div className="text-[11px] text-slate-500">No upcoming events</div>
+                    <div className="text-[11px] text-tertiary">No upcoming events</div>
                   )}
                 </div>
               </div>
@@ -436,17 +436,17 @@ function GameCard({
             <>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-[#111118] rounded-lg p-3">
-                  <div className="text-[10px] text-slate-500 uppercase mb-1">Total XP</div>
+                  <div className="text-[10px] text-tertiary uppercase mb-1">Total XP</div>
                   <div className="text-xl font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
                 <div className="bg-[#111118] rounded-lg p-3">
-                  <div className="text-[10px] text-slate-500 uppercase mb-1">Events</div>
+                  <div className="text-[10px] text-tertiary uppercase mb-1">Events</div>
                   <div className="text-xl font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
               </div>
               
               <div className="bg-[#111118]/50 rounded-lg p-3 mb-4 text-center">
-                <div className="text-slate-500 text-xs">Play in tournaments to unlock detailed stats!</div>
+                <div className="text-tertiary text-xs">Play in tournaments to unlock detailed stats!</div>
               </div>
             </>
           )}
@@ -677,15 +677,15 @@ export default function MockDemoPage() {
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#07070b] text-white p-8">
+    <div className="min-h-screen bg-base text-primary p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">🎮 Mock Data Demo</h1>
-          <p className="text-slate-400">Preview of game cards with rich stats data. Click cards to flip!</p>
+          <p className="text-secondary">Preview of game cards with rich stats data. Click cards to flip!</p>
           <div className="mt-4 p-4 bg-elevated rounded-xl border border-border-token">
             <h3 className="text-sm font-semibold text-cyan-400 mb-2">Legend:</h3>
-            <ul className="text-xs text-slate-400 space-y-1">
+            <ul className="text-xs text-secondary space-y-1">
               <li>• <span className="text-green-400">One Piece, Pokemon, MTG, Gundam, Star Wars</span> — Have match history → Expands 2x2</li>
               <li>• <span className="text-pink-400">Lorcana</span> — No wins/matches → Stays 1x1 compact flip</li>
             </ul>
@@ -716,19 +716,19 @@ export default function MockDemoPage() {
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-cyan-400">146</div>
-              <div className="text-xs text-slate-500">Total Events</div>
+              <div className="text-xs text-tertiary">Total Events</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-green-400">311</div>
-              <div className="text-xs text-slate-500">Total Wins</div>
+              <div className="text-xs text-tertiary">Total Wins</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-400">9,035</div>
-              <div className="text-xs text-slate-500">Total XP</div>
+              <div className="text-xs text-tertiary">Total XP</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-yellow-400">67%</div>
-              <div className="text-xs text-slate-500">Avg Win Rate</div>
+              <div className="text-xs text-tertiary">Avg Win Rate</div>
             </div>
           </div>
         </div>

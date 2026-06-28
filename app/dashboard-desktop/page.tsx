@@ -105,7 +105,7 @@ function HeroStatCard({
       >
         {value.toLocaleString()}
       </div>
-      <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-0.5">{label}</div>
+      <div className="text-[11px] text-tertiary uppercase tracking-wide mt-0.5">{label}</div>
     </div>
   );
 }
@@ -207,14 +207,14 @@ function GameCard({
                 trigger={hoverCount}
                 className="text-[28px] font-bold text-cyan-400"
               />
-              <span className="text-xs text-slate-500">{game.xpName}</span>
+              <span className="text-xs text-tertiary">{game.xpName}</span>
             </div>
           </div>
 
           <div className="mb-4">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wide">Next Rank</span>
-              <span className="text-[10px] text-slate-400">{xpToNextRank} {game.xpName} to go</span>
+              <span className="text-[10px] text-tertiary uppercase tracking-wide">Next Rank</span>
+              <span className="text-[10px] text-secondary">{xpToNextRank} {game.xpName} to go</span>
             </div>
             <div className="h-[6px] bg-elevated rounded overflow-hidden bar-shine-on-hover">
               <div 
@@ -259,14 +259,14 @@ function GameCard({
                   />
                 ))}
               </div>
-              <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
+              <span className="text-[11px] text-secondary font-medium whitespace-nowrap">
                 {game.monthlyAttendance || 0}/{game.monthlyThreshold || 4} Jan
               </span>
             </div>
           </div>
           
           {/* Click hint */}
-          <div className="absolute bottom-2 right-2 text-[10px] text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-2 right-2 text-[10px] text-tertiary opacity-0 group-hover:opacity-100 transition-opacity">
             Click for stats
           </div>
         </div>
@@ -313,19 +313,19 @@ function GameCard({
               {/* Stats Grid - fits in 2x2 card */}
               <div className="grid grid-cols-4 gap-2 mb-3">
                 <div className="bg-elevated rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">XP</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">XP</div>
                   <div className="text-base font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
                 <div className="bg-elevated rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Events</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Events</div>
                   <div className="text-base font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
                 <div className="bg-elevated rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Win Rate</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Win Rate</div>
                   <div className="text-base font-bold text-green-400">{stats.winRate}%</div>
                 </div>
                 <div className="bg-elevated rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Streak</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Streak</div>
                   <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
                 </div>
               </div>
@@ -333,25 +333,25 @@ function GameCard({
               {/* Secondary stats row */}
               <div className="grid grid-cols-3 gap-2 mb-3">
                 <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">Matches</span>
+                  <span className="text-[10px] text-tertiary">Matches</span>
                   <span className="text-sm font-bold">{stats.matches}</span>
                 </div>
                 <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">Best</span>
+                  <span className="text-[10px] text-tertiary">Best</span>
                   <span className="text-sm font-bold">🏆 {stats.bestPlacement || '—'}</span>
                 </div>
                 <div className="bg-elevated rounded-lg p-2.5 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">Since</span>
+                  <span className="text-[10px] text-tertiary">Since</span>
                   <span className="text-sm font-bold">{stats.firstPlayed || '—'}</span>
                 </div>
               </div>
 
               {/* W/L Record */}
               <div className="bg-elevated rounded-lg p-2.5 mb-3 flex justify-between items-center">
-                <span className="text-[10px] text-slate-500">Record</span>
+                <span className="text-[10px] text-tertiary">Record</span>
                 <span className="text-sm">
                   <span className="text-green-400 font-bold">{stats.wins}W</span>
-                  <span className="text-slate-500 mx-1">-</span>
+                  <span className="text-tertiary mx-1">-</span>
                   <span className="text-red-400 font-bold">{stats.losses}L</span>
                 </span>
               </div>
@@ -359,7 +359,7 @@ function GameCard({
               {/* Achievements */}
               {earnedAchievements.length > 0 && (
                 <div className="mb-3">
-                  <div className="text-[9px] text-slate-500 uppercase mb-2">Achievements</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-2">Achievements</div>
                   <div className="flex flex-wrap gap-1.5">
                     {earnedAchievements.slice(0, 6).map((achievement) => (
                       <div 
@@ -368,11 +368,11 @@ function GameCard({
                         title={achievement.description}
                       >
                         <span className="text-sm">{achievement.icon}</span>
-                        <span className="text-[10px] font-medium text-slate-300">{achievement.name}</span>
+                        <span className="text-[10px] font-medium text-secondary">{achievement.name}</span>
                       </div>
                     ))}
                     {earnedAchievements.length > 6 && (
-                      <div className="bg-elevated rounded-lg px-2 py-1 text-[10px] text-slate-500">
+                      <div className="bg-elevated rounded-lg px-2 py-1 text-[10px] text-tertiary">
                         +{earnedAchievements.length - 6} more
                       </div>
                     )}
@@ -384,27 +384,27 @@ function GameCard({
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {/* Leaderboard Rank */}
                 <div className="bg-elevated rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Leaderboard</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Leaderboard</div>
                   {game.leaderboardRank ? (
                     <div className="flex items-baseline gap-1">
                       <span className="text-base font-bold" style={{ color: game.color }}>#{game.leaderboardRank}</span>
-                      <span className="text-[10px] text-slate-500">of {game.leaderboardTotal}</span>
+                      <span className="text-[10px] text-tertiary">of {game.leaderboardTotal}</span>
                     </div>
                   ) : (
-                    <div className="text-sm text-slate-500">—</div>
+                    <div className="text-sm text-tertiary">—</div>
                   )}
                 </div>
 
                 {/* Next Event */}
                 <div className="bg-elevated rounded-lg p-2.5">
-                  <div className="text-[9px] text-slate-500 uppercase mb-1">Next Event</div>
+                  <div className="text-[9px] text-tertiary uppercase mb-1">Next Event</div>
                   {game.nextEvent ? (
                     <div>
-                      <div className="text-[11px] font-medium text-white truncate">{game.nextEvent.name}</div>
-                      <div className="text-[10px] text-slate-400">{game.nextEvent.date} • {game.nextEvent.time}</div>
+                      <div className="text-[11px] font-medium text-primary truncate">{game.nextEvent.name}</div>
+                      <div className="text-[10px] text-secondary">{game.nextEvent.date} • {game.nextEvent.time}</div>
                     </div>
                   ) : (
-                    <div className="text-[11px] text-slate-500">No upcoming events</div>
+                    <div className="text-[11px] text-tertiary">No upcoming events</div>
                   )}
                 </div>
               </div>
@@ -414,17 +414,17 @@ function GameCard({
             <>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-elevated rounded-lg p-3">
-                  <div className="text-[10px] text-slate-500 uppercase mb-1">Total XP</div>
+                  <div className="text-[10px] text-tertiary uppercase mb-1">Total XP</div>
                   <div className="text-xl font-bold" style={{ color: game.color }}>{game.xp.toLocaleString()}</div>
                 </div>
                 <div className="bg-elevated rounded-lg p-3">
-                  <div className="text-[10px] text-slate-500 uppercase mb-1">Events</div>
+                  <div className="text-[10px] text-tertiary uppercase mb-1">Events</div>
                   <div className="text-xl font-bold text-cyan-400">{stats.totalEvents}</div>
                 </div>
               </div>
               
               <div className="bg-elevated/50 rounded-lg p-3 mb-4 text-center">
-                <div className="text-slate-500 text-xs">Play in tournaments to unlock detailed stats!</div>
+                <div className="text-tertiary text-xs">Play in tournaments to unlock detailed stats!</div>
               </div>
             </>
           )}
@@ -842,14 +842,14 @@ export default function DesktopDashboard() {
       <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-bounce">🎮</div>
-          <div className="text-slate-400">Loading your profile...</div>
+          <div className="text-secondary">Loading your profile...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-base text-white overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-base text-primary overflow-x-hidden">
       {/* Ambient background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div 
@@ -893,7 +893,7 @@ export default function DesktopDashboard() {
                 className={`w-[46px] h-[46px] rounded-xl flex items-center justify-center text-xl transition-all duration-300 relative
                   ${item.active 
                     ? 'bg-gradient-to-br from-cyan-500/15 to-purple-500/10 text-cyan-400 border border-cyan-500/30 shadow-[0_0_20px_rgba(0,212,255,0.3)]' 
-                    : 'text-slate-500 hover:bg-[#16161f] hover:text-white hover:scale-105'
+                    : 'text-secondary hover:bg-elevated hover:text-primary hover:scale-105'
                   }`}
               >
                 {item.active && (
@@ -997,7 +997,7 @@ export default function DesktopDashboard() {
                     />
                   </div>
                   <div className="flex justify-between text-xs mt-1.5">
-                    <span className="text-slate-500">XP to next level</span>
+                    <span className="text-tertiary">XP to next level</span>
                     <span className="text-cyan-400 font-semibold">
                       {totalXp.toLocaleString()} / {nextLevelXp.toLocaleString()}
                     </span>
@@ -1035,7 +1035,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="relative z-10 text-left">
                       <div className="text-base font-bold">{hasCheckedInToday ? 'Checked In!' : 'Check In'}</div>
-                      <div className="text-xs text-slate-500">Earn daily XP</div>
+                      <div className="text-xs text-tertiary">Earn daily XP</div>
                     </div>
                   </button>
 
@@ -1054,7 +1054,7 @@ export default function DesktopDashboard() {
                     </div>
                     <div className="relative z-10 text-left">
                       <div className="text-base font-bold">{hasSpunToday ? 'Claimed!' : 'Daily Spin'}</div>
-                      <div className="text-xs text-slate-500">Try your luck!</div>
+                      <div className="text-xs text-tertiary">Try your luck!</div>
                     </div>
                   </button>
                 </div>
@@ -1201,7 +1201,7 @@ export default function DesktopDashboard() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium truncate">{activity.text}</div>
-                            <div className="text-[11px] text-slate-500">{activity.time}</div>
+                            <div className="text-[11px] text-tertiary">{activity.time}</div>
                           </div>
                           <div className={`text-sm font-bold shrink-0 ${activity.xp >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                             {activity.xp >= 0 ? '+' : ''}{activity.xp}
@@ -1209,10 +1209,10 @@ export default function DesktopDashboard() {
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-12 text-slate-500">
+                      <div className="text-center py-12 text-tertiary">
                         <div className="text-3xl mb-3">📋</div>
                         <p className="text-sm">No activity yet</p>
-                        <p className="text-xs text-slate-600 mt-1">Attend events to start earning XP!</p>
+                        <p className="text-xs text-tertiary mt-1">Attend events to start earning XP!</p>
                       </div>
                     )}
                   </div>
@@ -1230,19 +1230,19 @@ export default function DesktopDashboard() {
                 <div className="grid grid-cols-4 gap-4">
                   <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-cyan-400">{games.length}</div>
-                    <div className="text-[10px] text-slate-500 uppercase mt-1">Games Played</div>
+                    <div className="text-[10px] text-tertiary uppercase mt-1">Games Played</div>
                   </div>
                   <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-green-400">{playerData?.totalEventsAttended || 0}</div>
-                    <div className="text-[10px] text-slate-500 uppercase mt-1">Events Attended</div>
+                    <div className="text-[10px] text-tertiary uppercase mt-1">Events Attended</div>
                   </div>
                   <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-purple-400">{totalXp.toLocaleString()}</div>
-                    <div className="text-[10px] text-slate-500 uppercase mt-1">Total XP</div>
+                    <div className="text-[10px] text-tertiary uppercase mt-1">Total XP</div>
                   </div>
                   <div className="bg-base rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
-                    <div className="text-[10px] text-slate-500 uppercase mt-1">Week Streak</div>
+                    <div className="text-[10px] text-tertiary uppercase mt-1">Week Streak</div>
                   </div>
                 </div>
               </div>
@@ -1266,7 +1266,7 @@ export default function DesktopDashboard() {
                     <div className="w-10 h-10 bg-[#E63946]/20 rounded-lg flex items-center justify-center text-lg">🏴‍☠️</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">One Piece Local</div>
-                      <div className="text-xs text-slate-500">Saturday, 1:00 PM</div>
+                      <div className="text-xs text-tertiary">Saturday, 1:00 PM</div>
                     </div>
                     <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">Registered</div>
                   </div>
@@ -1274,15 +1274,15 @@ export default function DesktopDashboard() {
                     <div className="w-10 h-10 bg-[#8B5CF6]/20 rounded-lg flex items-center justify-center text-lg">✨</div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">MTG Commander Night</div>
-                      <div className="text-xs text-slate-500">Friday, 6:00 PM</div>
+                      <div className="text-xs text-tertiary">Friday, 6:00 PM</div>
                     </div>
                     <div className="text-xs text-cyan-400 bg-cyan-400/10 px-2 py-1 rounded">Interested</div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-base rounded-xl opacity-60">
                     <div className="w-10 h-10 bg-slate-500/20 rounded-lg flex items-center justify-center text-lg">📅</div>
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-400">No more events this week</div>
-                      <div className="text-xs text-slate-600">Check the calendar for more</div>
+                      <div className="text-sm font-medium text-secondary">No more events this week</div>
+                      <div className="text-xs text-tertiary">Check the calendar for more</div>
                     </div>
                   </div>
                 </div>
@@ -1342,22 +1342,22 @@ export default function DesktopDashboard() {
                   <div className="flex items-center gap-3 p-2">
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold">JM</div>
                     <div className="flex-1">
-                      <div className="text-sm"><span className="font-medium">JMoney</span> <span className="text-slate-500">ranked up to</span> <span className="text-yellow-400">Warlord</span></div>
-                      <div className="text-[10px] text-slate-500">2 hours ago</div>
+                      <div className="text-sm"><span className="font-medium">JMoney</span> <span className="text-tertiary">ranked up to</span> <span className="text-yellow-400">Warlord</span></div>
+                      <div className="text-[10px] text-tertiary">2 hours ago</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-2">
                     <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold">SK</div>
                     <div className="flex-1">
-                      <div className="text-sm"><span className="font-medium">SailorKing</span> <span className="text-slate-500">won</span> <span className="text-green-400">3 matches</span> <span className="text-slate-500">in One Piece</span></div>
-                      <div className="text-[10px] text-slate-500">5 hours ago</div>
+                      <div className="text-sm"><span className="font-medium">SailorKing</span> <span className="text-tertiary">won</span> <span className="text-green-400">3 matches</span> <span className="text-tertiary">in One Piece</span></div>
+                      <div className="text-[10px] text-tertiary">5 hours ago</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-2">
                     <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-xs font-bold">TC</div>
                     <div className="flex-1">
-                      <div className="text-sm"><span className="font-medium">TCGMaster</span> <span className="text-slate-500">earned</span> <span className="text-cyan-400">+150 XP</span></div>
-                      <div className="text-[10px] text-slate-500">Yesterday</div>
+                      <div className="text-sm"><span className="font-medium">TCGMaster</span> <span className="text-tertiary">earned</span> <span className="text-cyan-400">+150 XP</span></div>
+                      <div className="text-[10px] text-tertiary">Yesterday</div>
                     </div>
                   </div>
                 </div>
