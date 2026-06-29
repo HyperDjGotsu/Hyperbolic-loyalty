@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { notifyAllPlayers } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,16 @@ export async function POST(request: Request) {
       .single();
 
     if (error) throw error;
+
+    // Broadcast to all members (non-blocking)
+    notifyAllPlayers(
+      'store',
+      '🛍️ New item in the Prize Wall!',
+      `${name} is now available${price === 0 ? ' for free' : ` for ${price} Points`}.`,
+      { item_id: data.id, item_name: name, category, rarity },
+      'store'
+    ).catch(() => {});
+
     return NextResponse.json({ item: data });
   } catch (err) {
     console.error('HQ shop POST error:', err);

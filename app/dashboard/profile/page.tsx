@@ -165,6 +165,17 @@ export default function ProfilePage() {
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(defaultPrivacySettings);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
 
+  // Notification preferences state
+  const [showNotifModal, setShowNotifModal] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState({
+    daily_rewards: true,
+    events: true,
+    leaderboard: true,
+    social: true,
+    store: true,
+  });
+  const [savingNotif, setSavingNotif] = useState(false);
+
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
     try {
@@ -251,6 +262,34 @@ export default function ProfilePage() {
     }
   }, []);
 
+  const loadNotifPrefs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/player/notification-preferences');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.prefs) setNotifPrefs(data.prefs);
+      }
+    } catch (err) {
+      console.error('Error loading notification prefs:', err);
+    }
+  }, []);
+
+  const saveNotifPrefs = async () => {
+    setSavingNotif(true);
+    try {
+      const res = await fetch('/api/player/notification-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notifPrefs),
+      });
+      if (res.ok) setShowNotifModal(false);
+    } catch (err) {
+      console.error('Error saving notification prefs:', err);
+    } finally {
+      setSavingNotif(false);
+    }
+  };
+
   const loadPrivacySettings = useCallback(async () => {
     try {
       const res = await fetch('/api/player/privacy');
@@ -302,8 +341,9 @@ export default function ProfilePage() {
       loadFavoriteGames();
       loadReferralStats();
       loadPrivacySettings();
+      loadNotifPrefs();
     }
-  }, [isLoaded, user, loadPlayerData, loadFavoriteGames, loadReferralStats, loadPrivacySettings]);
+  }, [isLoaded, user, loadPlayerData, loadFavoriteGames, loadReferralStats, loadPrivacySettings, loadNotifPrefs]);
 
   const saveAvatar = async () => {
     setSaving(true);
@@ -490,6 +530,89 @@ export default function ProfilePage() {
       </button>
     );
   };
+
+  const NotifToggle = ({ icon, label, description, value, onChange }: {
+    icon: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
+  }) => (
+    <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+      <div className="flex items-center gap-3">
+        <span className="text-xl">{icon}</span>
+        <div>
+          <span className="text-primary text-sm font-medium">{label}</span>
+          <div className="text-secondary text-xs">{description}</div>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${value ? 'bg-accent' : 'bg-elevated border border-border-strong'}`}
+      >
+        <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`} />
+      </button>
+    </div>
+  );
+
+  const NotificationsModal = () => (
+    <div className="fixed inset-0 bg-base z-50 flex flex-col">
+      <div className="p-4 border-b border-border-token flex items-center justify-between bg-surface">
+        <button type="button" onClick={() => setShowNotifModal(false)} className="text-secondary hover:text-primary transition-colors">
+          ← Back
+        </button>
+        <h2 className="text-primary font-bold">Notifications</h2>
+        <div className="w-12" />
+      </div>
+      <div className="flex-1 overflow-auto p-4 space-y-3 bg-base">
+        <p className="text-secondary text-sm pb-1">Choose what you want to hear about. You can change these any time.</p>
+
+        <NotifToggle
+          icon="🎰"
+          label="Daily & Rewards"
+          description="Daily spin ready, XP earned, achievements unlocked"
+          value={notifPrefs.daily_rewards}
+          onChange={(v) => setNotifPrefs((p) => ({ ...p, daily_rewards: v }))}
+        />
+        <NotifToggle
+          icon="📅"
+          label="Events"
+          description="New events announced, reminders 2h before, post-event recap"
+          value={notifPrefs.events}
+          onChange={(v) => setNotifPrefs((p) => ({ ...p, events: v }))}
+        />
+        <NotifToggle
+          icon="🏆"
+          label="Leaderboard"
+          description="Rank changes, Emperor dethroned, Bounty Hunter Night alerts"
+          value={notifPrefs.leaderboard}
+          onChange={(v) => setNotifPrefs((p) => ({ ...p, leaderboard: v }))}
+        />
+        <NotifToggle
+          icon="👥"
+          label="Social"
+          description="Friend requests, referral bonuses when friends attend events"
+          value={notifPrefs.social}
+          onChange={(v) => setNotifPrefs((p) => ({ ...p, social: v }))}
+        />
+        <NotifToggle
+          icon="🛍️"
+          label="Store"
+          description="New Prize Wall items, pass expiring soon"
+          value={notifPrefs.store}
+          onChange={(v) => setNotifPrefs((p) => ({ ...p, store: v }))}
+        />
+
+        <div className="pt-4 pb-8">
+          <button
+            type="button"
+            onClick={saveNotifPrefs}
+            disabled={savingNotif}
+            className="w-full py-4 rounded-xl bg-accent text-white font-bold text-base disabled:opacity-50 hover:opacity-90 transition-opacity"
+          >
+            {savingNotif ? 'Saving...' : 'Save Preferences'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   const ToggleSetting = ({ icon, label, description, value, onChange }: {
     icon: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
@@ -1097,18 +1220,20 @@ export default function ProfilePage() {
           </div>
 
           {/* Notifications */}
-          <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+          <button
+            type="button"
+            onClick={() => setShowNotifModal(true)}
+            className="w-full bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
+          >
             <div className="flex items-center gap-3">
               <span className="text-xl">🔔</span>
-              <div>
+              <div className="text-left">
                 <div className="text-primary text-sm font-medium">Notifications</div>
                 <div className="text-tertiary text-xs">Event reminders & XP alerts</div>
               </div>
             </div>
-            <span className="text-secondary text-xs bg-elevated px-2 py-1 rounded-full border border-border-token">
-              Coming soon
-            </span>
-          </div>
+            <span className="text-secondary text-sm">›</span>
+          </button>
 
           {/* Privacy */}
           <button
@@ -1127,6 +1252,9 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {/* Notifications Modal */}
+      {showNotifModal && <NotificationsModal />}
 
       {/* Privacy Settings Modal */}
       {showPrivacyModal && <PrivacySettingsModal />}

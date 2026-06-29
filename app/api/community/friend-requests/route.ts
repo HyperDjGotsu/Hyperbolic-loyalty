@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { createNotification } from '@/lib/notifications';
 
 
 export const dynamic = 'force-dynamic';
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
     // Get current player
     const { data: currentPlayer, error: playerError } = await supabaseAdmin
       .from('players')
-      .select('id')
+      .select('id, display_name')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -187,6 +188,17 @@ export async function POST(request: Request) {
       console.error('Error creating friend request:', insertError);
       return NextResponse.json({ error: 'Failed to send friend request' }, { status: 500 });
     }
+
+    // Notify recipient (non-blocking)
+    const senderName = (currentPlayer as { id: string; display_name?: string }).display_name ?? 'Someone';
+    createNotification(
+      targetPlayer.id,
+      'friend_request',
+      'New friend request',
+      `${senderName} wants to connect with you.`,
+      { from_player_id: currentPlayer.id, from_player_name: senderName },
+      'social'
+    ).catch(() => {});
 
     return NextResponse.json({ success: true, message: 'Friend request sent' });
 

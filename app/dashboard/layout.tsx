@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/ui';
 
 const navItems = [
@@ -43,6 +44,15 @@ const navItems = [
     ),
   },
   {
+    href: '/dashboard/notifications',
+    label: 'Alerts',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+      </svg>
+    ),
+  },
+  {
     href: '/dashboard/profile',
     label: 'Profile',
     icon: (
@@ -52,6 +62,9 @@ const navItems = [
     ),
   },
 ];
+
+// Desktop sidebar items (no Alerts tab — bell is already in DesktopDashboard header)
+const desktopNavItems = navItems.filter((i) => i.href !== '/dashboard/notifications');
 
 function NavItem({ item, pathname }: { item: typeof navItems[0]; pathname: string }) {
   const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
@@ -70,15 +83,31 @@ function NavItem({ item, pathname }: { item: typeof navItems[0]; pathname: strin
   );
 }
 
-function MobileNavItem({ item, pathname }: { item: typeof navItems[0]; pathname: string }) {
+function MobileNavItem({
+  item,
+  pathname,
+  unreadCount,
+}: {
+  item: typeof navItems[0];
+  pathname: string;
+  unreadCount: number;
+}) {
   const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  const showBadge = item.href === '/dashboard/notifications' && unreadCount > 0;
   return (
     <Link
       href={item.href}
-      className={`flex flex-col items-center gap-1 py-2 px-3 flex-1 transition-colors
+      className={`flex flex-col items-center gap-1 py-2 px-3 flex-1 transition-colors relative
         ${isActive ? 'text-primary' : 'text-tertiary hover:text-secondary'}`}
     >
-      {item.icon}
+      <div className="relative">
+        {item.icon}
+        {showBadge && (
+          <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </div>
       <span className="text-[10px] font-medium">{item.label}</span>
       {isActive && <span className="absolute bottom-0 h-0.5 w-6 bg-accent rounded-full" />}
     </Link>
@@ -87,6 +116,29 @@ function MobileNavItem({ item, pathname }: { item: typeof navItems[0]; pathname:
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch('/api/notifications?unread=true&limit=1');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.unreadCount ?? 0);
+        }
+      } catch {
+        // silently ignore
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Clear badge when visiting notifications page
+  useEffect(() => {
+    if (pathname === '/dashboard/notifications') setUnreadCount(0);
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-base text-primary">
@@ -97,7 +149,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <ThemeToggle />
         </div>
         <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
-          {navItems.map((item) => (
+          {desktopNavItems.map((item) => (
             <NavItem key={item.href} item={item} pathname={pathname} />
           ))}
         </nav>
@@ -126,7 +178,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border-token z-30">
         <div className="flex items-center relative">
           {navItems.map((item) => (
-            <MobileNavItem key={item.href} item={item} pathname={pathname} />
+            <MobileNavItem
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              unreadCount={unreadCount}
+            />
           ))}
         </div>
       </nav>

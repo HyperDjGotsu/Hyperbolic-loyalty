@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,7 +142,17 @@ async function checkReferralBonus(playerId: string, staffId: string): Promise<{
           .eq('id', playerId);
 
         console.log(`🎁 Referral reward: +${REFERRAL_FIRST_EVENT_BONUS} XP awarded to ${referrer.display_name} (${player.display_name} attended first event)`);
-        
+
+        // Notify the referrer (non-blocking)
+        createNotification(
+          referrer.id,
+          'referral',
+          'Referral bonus earned! 🎁',
+          `${player.display_name} attended their first event — you earned +${REFERRAL_FIRST_EVENT_BONUS} XP!`,
+          { new_player_name: player.display_name, xp: String(REFERRAL_FIRST_EVENT_BONUS) },
+          'social'
+        ).catch(() => {});
+
         return {
           awarded: true,
           referrerName: referrer.display_name,

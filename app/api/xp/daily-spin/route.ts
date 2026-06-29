@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -140,6 +141,16 @@ export async function POST(_request: NextRequest) {
       console.error('xp_ledger insert error:', ledgerError);
       return NextResponse.json({ error: 'Failed to award XP' }, { status: 500 });
     }
+
+    // Fire XP notification (non-blocking)
+    createNotification(
+      playerId,
+      'xp_earned',
+      `Daily spin: ${prize.label}`,
+      `You earned +${prize.xp} XP from your daily spin.`,
+      { xp: String(prize.xp), rarity: prize.rarity },
+      'daily_rewards'
+    ).catch(() => {});
 
     // Compute new total XP
     const { data: totals } = await supabaseAdmin

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { notifyAllPlayers } from '@/lib/notifications';
 
 
 export const dynamic = 'force-dynamic';
@@ -584,6 +585,16 @@ export async function POST(request: Request) {
             errors.push(`Insert ${event.name}: ${error.message}`);
           } else {
             synced++;
+            // Announce new event to all members (non-blocking)
+            const eventDate = new Date(event.scheduled_at);
+            const dateLabel = eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' });
+            notifyAllPlayers(
+              'event_announced',
+              `📣 New event: ${event.name}`,
+              `${dateLabel} — check Events for details and mark yourself as interested.`,
+              { event_name: event.name, scheduled_at: event.scheduled_at, game_id: event.game_id ?? '' },
+              'events'
+            ).catch(() => {});
           }
         }
       } catch (err) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,6 +104,16 @@ export async function POST(
         source: 'event_attendance' as any,
         description: `Event attendance: ${event.name}`,
       } as any);
+
+    // Post-event recap notification (non-blocking)
+    createNotification(
+      playerId,
+      'event_recap',
+      `You attended ${event.name}!`,
+      `Nice work showing up — you earned +${xpAwarded} XP.`,
+      { event_id: String(eventId), event_name: event.name, xp: String(xpAwarded) },
+      'events'
+    ).catch(() => {});
 
     return NextResponse.json({ success: true, xpAwarded, playerName, eventName: event.name });
   } catch (error) {
