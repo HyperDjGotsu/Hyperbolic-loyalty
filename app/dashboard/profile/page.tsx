@@ -350,8 +350,8 @@ export default function ProfilePage() {
           </div>
         )}
         {onClick && (
-          <div className="absolute bottom-0 right-0 bg-accent text-primary text-xs px-2 py-1 rounded-full font-bold">
-            ✏️
+          <div className="absolute bottom-0 right-0 bg-accent w-7 h-7 rounded-full flex items-center justify-center border-2 border-surface">
+            <span className="text-xs">✏️</span>
           </div>
         )}
       </div>
@@ -411,22 +411,22 @@ export default function ProfilePage() {
 
   // Avatar Editor Modal
   const AvatarEditorModal = () => (
-    <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
-      <div className="p-4 border-b border-border-token flex items-center justify-between">
-        <button 
-          type="button" 
+    <div className="fixed inset-0 bg-base z-50 flex flex-col">
+      <div className="p-4 border-b border-border-token flex items-center justify-between bg-surface">
+        <button
+          type="button"
           onClick={() => {
             setTempAvatar(playerData?.avatarConfig || defaultAvatarConfig);
             setEditingAvatar(false);
-          }} 
-          className="text-secondary"
+          }}
+          className="text-secondary hover:text-primary transition-colors"
         >
           Cancel
         </button>
         <h2 className="text-primary font-bold">Edit Avatar</h2>
-        <button 
-          type="button" 
-          onClick={saveAvatar} 
+        <button
+          type="button"
+          onClick={saveAvatar}
           disabled={saving}
           className="text-accent font-bold disabled:opacity-50"
         >
@@ -435,47 +435,50 @@ export default function ProfilePage() {
       </div>
 
       {/* Preview */}
-      <div className="p-8 flex justify-center">
+      <div className="p-8 flex justify-center bg-surface border-b border-border-token">
         <AvatarPreview config={tempAvatar} size="xl" />
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border-token">
+      <div className="flex border-b border-border-token bg-surface">
         {[
-          { id: 'photo', label: '📷' },
-          { id: 'base', label: '😎' },
-          { id: 'background', label: '🎨' },
-          { id: 'frame', label: '✨' },
-          { id: 'badge', label: '🏷️' },
+          { id: 'photo', label: '📷', name: 'Photo' },
+          { id: 'base', label: '😎', name: 'Base' },
+          { id: 'background', label: '🎨', name: 'BG' },
+          { id: 'frame', label: '✨', name: 'Frame' },
+          { id: 'badge', label: '🏷️', name: 'Badge' },
         ].map(tab => (
           <button
             type="button"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 text-xl ${
-              activeTab === tab.id ? 'text-accent border-b-2 border-cyan-400' : 'text-secondary'
+            className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 text-xs transition-colors ${
+              activeTab === tab.id
+                ? 'text-accent border-b-2 border-accent'
+                : 'text-secondary hover:text-primary'
             }`}
           >
-            {tab.label}
+            <span className="text-lg">{tab.label}</span>
+            <span>{tab.name}</span>
           </button>
         ))}
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4 bg-base">
         {activeTab === 'photo' && (
           <div className="space-y-4">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handlePhotoUpload} 
-              accept="image/*" 
-              className="hidden" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handlePhotoUpload}
+              accept="image/*"
+              className="hidden"
             />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full p-6 border-2 border-dashed border-border-token rounded-xl text-center hover:border-accent transition-colors"
+              className="w-full p-6 border-2 border-dashed border-border-token rounded-xl text-center hover:border-accent transition-colors bg-elevated/50"
             >
               <div className="text-4xl mb-2">📷</div>
               <div className="text-primary font-medium">Upload Photo</div>
@@ -553,22 +556,26 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="bg-surface pt-8 pb-6 px-4">
         <div className="flex flex-col items-center">
-          <AvatarPreview 
-            config={playerData.avatarConfig} 
-            size="xl" 
-            onClick={() => {
-              setTempAvatar(playerData.avatarConfig);
-              setEditingAvatar(true);
-            }} 
+          <AvatarPreview
+            config={playerData.avatarConfig}
+            size="xl"
           />
           <h1 className="text-primary text-2xl font-bold mt-4">{playerData.displayName}</h1>
           <div className="text-secondary font-mono text-sm">{playerData.id}</div>
-          
+
+          <button
+            type="button"
+            onClick={() => { setTempAvatar(playerData.avatarConfig); setEditingAvatar(true); }}
+            className="mt-3 px-4 py-1.5 rounded-full bg-elevated border border-border-token text-secondary text-sm hover:text-primary hover:border-border-strong transition-colors"
+          >
+            Edit Avatar
+          </button>
+
           {/* Status Badge */}
           <button
             type="button"
             onClick={() => setStatusModalOpen(true)}
-            className="mt-3"
+            className="mt-2"
           >
             {playerData.status ? (
               <StatusBadge status={playerData.status} />
