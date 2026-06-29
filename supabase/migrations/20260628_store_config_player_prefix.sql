@@ -1,0 +1,2 @@
+ALTER TABLE store_config
+  ADD COLUMN IF NOT EXISTS player_id_prefix TEXT NOT NULL DEFAULT 'HYP';

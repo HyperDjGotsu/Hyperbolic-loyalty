@@ -22,9 +22,14 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories } = body;
+    const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix } = body;
 
-    const updates = { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, updated_at: new Date().toISOString() };
+    // Sanitize prefix: uppercase, letters only, 2-5 chars
+    const sanitizedPrefix = player_id_prefix
+      ? String(player_id_prefix).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5) || 'HYP'
+      : undefined;
+
+    const updates = { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, ...(sanitizedPrefix ? { player_id_prefix: sanitizedPrefix } : {}), updated_at: new Date().toISOString() };
 
     // Use update (not upsert) — row is guaranteed to exist from migration seed
     const { data, error } = await supabaseAdmin

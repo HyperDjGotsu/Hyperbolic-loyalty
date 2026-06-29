@@ -9,6 +9,7 @@ const DEFAULTS = {
   store_name: 'Hyperbolic XP',
   shop_title: 'Prize Wall',
   shop_description: 'avatar cosmetics',
+  player_id_prefix: 'HYP',
   shop_categories: [
     { id: 'base', name: 'Base', icon: '😎', enabled: true },
     { id: 'background', name: 'Background', icon: '🎨', enabled: true },
@@ -44,6 +45,7 @@ export async function GET(request: Request) {
       store_name:       row.store_name       ?? DEFAULTS.store_name,
       shop_title:       row.shop_title       ?? DEFAULTS.shop_title,
       shop_description: row.shop_description ?? DEFAULTS.shop_description,
+      player_id_prefix: row.player_id_prefix ?? DEFAULTS.player_id_prefix,
       shop_categories:  row.shop_categories  ?? DEFAULTS.shop_categories,
     };
 

@@ -423,6 +423,7 @@ export default function HQPage() {
     store_name: 'Hyperbolic XP',
     shop_title: 'Prize Wall',
     shop_description: 'avatar cosmetics',
+    player_id_prefix: 'HYP',
     shop_categories: [
       { id: 'base', name: 'Base', icon: '😎', enabled: true },
       { id: 'background', name: 'Background', icon: '🎨', enabled: true },
@@ -3873,6 +3874,39 @@ export default function HQPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Player ID */}
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <h2 className="font-semibold text-primary mb-1">Player ID Prefix</h2>
+              <p className="text-xs text-tertiary mb-5">
+                The tag at the start of every player's ID. Keep it short and unique to your store.
+              </p>
+              <div>
+                <label className="text-xs font-medium text-secondary block mb-1">
+                  Prefix
+                  <span className="ml-2 font-normal text-tertiary">2–5 letters, uppercase</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={storeConfig.player_id_prefix}
+                    onChange={e => setStoreConfig(c => ({
+                      ...c,
+                      player_id_prefix: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5),
+                    }))}
+                    placeholder="HYP"
+                    maxLength={5}
+                    className="w-28 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono tracking-widest"
+                  />
+                  <span className="text-secondary text-sm font-mono">
+                    {storeConfig.player_id_prefix || 'HYP'}-XXXXXX
+                  </span>
+                </div>
+                <p className="text-xs text-tertiary mt-2">
+                  Examples: HYP, GOM, MTG, GAM, TCG — shown in the welcome flow and on player profiles.
+                </p>
               </div>
             </div>
 

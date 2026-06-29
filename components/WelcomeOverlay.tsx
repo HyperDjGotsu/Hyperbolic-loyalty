@@ -1,52 +1,72 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 const STORAGE_KEY = 'hxp_welcome_seen';
 
-const SLIDES = [
-  {
-    emoji: '👋',
-    title: 'Welcome to Hyperbolic XP',
-    body: "You just joined your store's loyalty system. Every time you show up, play, and compete — you earn XP and climb the leaderboard.",
-    cta: null,
-  },
-  {
-    emoji: '⚡',
-    title: 'Earn XP Every Visit',
-    body: 'Check in at events to earn XP. Win matches for bonus XP. The more you play, the higher you rank.',
-    cta: null,
-  },
-  {
-    emoji: '🎰',
-    title: 'Free Daily Spin',
-    body: "Every day you get a free spin on the prize wheel. Prizes reset at midnight — don't leave XP on the table.",
-    cta: null,
-  },
-  {
-    emoji: '🛍️',
-    title: 'The Prize Wall',
-    body: 'Spend your points on avatar cosmetics: backgrounds, frames, badges, and more. Your profile, your style.',
-    cta: null,
-  },
-  {
-    emoji: '🪪',
-    title: 'Your Player ID',
-    body: "Your HYP-ID is your identity at the store. Staff use it to check you in, award XP, and look you up. Find it any time on your Profile.",
-    cta: "Let's go",
-  },
-];
+interface StoreConfig {
+  store_name: string;
+  shop_title: string;
+  shop_description: string;
+  player_id_prefix: string;
+  currency_name: string;
+}
+
+const DEFAULT_CONFIG: StoreConfig = {
+  store_name: 'Hyperbolic XP',
+  shop_title: 'Prize Wall',
+  shop_description: 'avatar cosmetics — backgrounds, frames, badges, and more',
+  player_id_prefix: 'HYP',
+  currency_name: 'Points',
+};
+
+function buildSlides(cfg: StoreConfig) {
+  return [
+    {
+      emoji: '👋',
+      title: `Welcome to ${cfg.store_name}`,
+      body: "You just joined your store's loyalty system. Every time you show up, play, and compete — you earn XP and climb the leaderboard.",
+    },
+    {
+      emoji: '⚡',
+      title: 'Earn XP Every Visit',
+      body: 'Check in at events to earn XP. Win matches for bonus XP. The more you play, the higher you rank.',
+    },
+    {
+      emoji: '🎰',
+      title: 'Free Daily Spin',
+      body: `Every day you get a free spin on the prize wheel. Prizes reset at midnight — don't leave ${cfg.currency_name} on the table.`,
+    },
+    {
+      emoji: '🛍️',
+      title: cfg.shop_title,
+      body: `Spend your ${cfg.currency_name} on ${cfg.shop_description}. Your profile, your style.`,
+    },
+    {
+      emoji: '🪪',
+      title: 'Your Player ID',
+      body: `Your ${cfg.player_id_prefix}-ID is your identity at the store. Staff use it to check you in, award XP, and look you up. Find it any time on your Profile.`,
+      cta: "Let's go",
+    },
+  ] as Array<{ emoji: string; title: string; body: string; cta?: string }>;
+}
 
 export function WelcomeOverlay() {
-  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const [slide, setSlide] = useState(0);
+  const [config, setConfig] = useState<StoreConfig>(DEFAULT_CONFIG);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !localStorage.getItem(STORAGE_KEY)) {
-      setVisible(true);
-    }
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem(STORAGE_KEY)) return;
+
+    // Fetch store config for dynamic slide content
+    fetch(`/api/store-config?t=${Date.now()}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setConfig({ ...DEFAULT_CONFIG, ...data }); })
+      .catch(() => {});
+
+    setVisible(true);
   }, []);
 
   const dismiss = () => {
@@ -61,6 +81,8 @@ export function WelcomeOverlay() {
       dismiss();
     }
   };
+
+  const SLIDES = buildSlides(config);
 
   if (!visible) return null;
 
@@ -88,7 +110,6 @@ export function WelcomeOverlay() {
 
       {/* Progress dots + CTA */}
       <div className="p-8 flex flex-col items-center gap-6">
-        {/* Dots */}
         <div className="flex gap-2">
           {SLIDES.map((_, i) => (
             <button
@@ -102,7 +123,6 @@ export function WelcomeOverlay() {
           ))}
         </div>
 
-        {/* CTA */}
         <button
           type="button"
           onClick={next}
