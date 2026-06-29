@@ -23,6 +23,36 @@ interface AvatarConfig {
   photo_url: string | null;
 }
 
+interface PrivacySettings {
+  profileVisibility: 'public' | 'friends' | 'private';
+  showOnLeaderboard: boolean;
+  showAsAnonymous: boolean;
+  allowFriendRequests: boolean;
+  hideFromSearch: boolean;
+  showActivity: boolean;
+  showGames: boolean;
+  showRealName: boolean;
+}
+
+const privacyOptions = {
+  profileVisibility: [
+    { id: 'public', label: 'Public', icon: '🌐', description: 'Anyone can see your profile' },
+    { id: 'friends', label: 'Friends Only', icon: '👥', description: 'Only friends can see your profile' },
+    { id: 'private', label: 'Private', icon: '🔒', description: 'Only you can see your profile' },
+  ],
+};
+
+const defaultPrivacySettings: PrivacySettings = {
+  profileVisibility: 'public',
+  showOnLeaderboard: true,
+  showAsAnonymous: false,
+  allowFriendRequests: true,
+  hideFromSearch: false,
+  showActivity: true,
+  showGames: true,
+  showRealName: false,
+};
+
 interface PlayerData {
   id: string;
   odid: string;
@@ -130,6 +160,11 @@ export default function ProfilePage() {
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
   const [isDarkMode, setIsDarkMode] = useState(true);
 
+  // Privacy state
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(defaultPrivacySettings);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
     try {
@@ -216,6 +251,47 @@ export default function ProfilePage() {
     }
   }, []);
 
+  const loadPrivacySettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/player/privacy');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.privacy) {
+          setPrivacySettings({
+            profileVisibility: data.privacy.profile_visibility || 'public',
+            showOnLeaderboard: data.privacy.show_on_leaderboard ?? true,
+            showAsAnonymous: data.privacy.show_as_anonymous ?? false,
+            allowFriendRequests: data.privacy.allow_friend_requests ?? true,
+            hideFromSearch: data.privacy.hide_from_search ?? false,
+            showActivity: data.privacy.show_activity ?? true,
+            showGames: data.privacy.show_games ?? true,
+            showRealName: data.privacy.show_real_name ?? false,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading privacy settings:', error);
+    }
+  }, []);
+
+  const savePrivacySettings = async () => {
+    setSavingPrivacy(true);
+    try {
+      const res = await fetch('/api/player/privacy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(privacySettings),
+      });
+      if (res.ok) {
+        setShowPrivacyModal(false);
+      }
+    } catch (error) {
+      console.error('Error saving privacy settings:', error);
+    } finally {
+      setSavingPrivacy(false);
+    }
+  };
+
   useEffect(() => {
     setIsDarkMode(localStorage.getItem('theme') !== 'light');
   }, []);
@@ -225,8 +301,9 @@ export default function ProfilePage() {
       loadPlayerData();
       loadFavoriteGames();
       loadReferralStats();
+      loadPrivacySettings();
     }
-  }, [isLoaded, user, loadPlayerData, loadFavoriteGames, loadReferralStats]);
+  }, [isLoaded, user, loadPlayerData, loadFavoriteGames, loadReferralStats, loadPrivacySettings]);
 
   const saveAvatar = async () => {
     setSaving(true);
@@ -413,6 +490,119 @@ export default function ProfilePage() {
       </button>
     );
   };
+
+  const ToggleSetting = ({ icon, label, description, value, onChange }: {
+    icon: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
+  }) => (
+    <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+      <div className="flex items-center gap-3">
+        <span className="text-xl">{icon}</span>
+        <div>
+          <span className="text-primary text-sm">{label}</span>
+          <div className="text-secondary text-xs">{description}</div>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => onChange(!value)}
+        className={`w-12 h-7 rounded-full transition-colors relative ${value ? 'bg-accent' : 'bg-elevated'}`}
+      >
+        <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`} />
+      </button>
+    </div>
+  );
+
+  const PrivacySettingsModal = () => (
+    <div className="fixed inset-0 bg-base z-50 flex flex-col">
+      <div className="p-4 border-b border-border-token flex items-center justify-between bg-surface">
+        <button type="button" onClick={() => setShowPrivacyModal(false)} className="text-secondary hover:text-primary transition-colors">
+          ← Back
+        </button>
+        <h2 className="text-primary font-bold">Privacy Settings</h2>
+        <div className="w-12" />
+      </div>
+      <div className="flex-1 overflow-auto p-4 space-y-6 bg-base">
+        <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🛡️</span>
+            <div>
+              <div className="font-bold text-primary">Your Safety Matters</div>
+              <div className="text-secondary text-sm mt-1">Control who can see your profile, find you in search, and contact you.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="font-bold text-primary mb-3">👁️ Profile Visibility</h3>
+          <div className="space-y-2">
+            {privacyOptions.profileVisibility.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setPrivacySettings((prev) => ({ ...prev, profileVisibility: opt.id as PrivacySettings['profileVisibility'] }))}
+                className={`w-full p-4 rounded-xl flex items-center justify-between ${
+                  privacySettings.profileVisibility === opt.id
+                    ? 'bg-accent/10 border-2 border-accent'
+                    : 'bg-elevated/50 border-2 border-transparent hover:border-border-token'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{opt.icon}</span>
+                  <div className="text-left">
+                    <div className="text-primary font-medium">{opt.label}</div>
+                    <div className="text-secondary text-sm">{opt.description}</div>
+                  </div>
+                </div>
+                {privacySettings.profileVisibility === opt.id && <span className="text-accent">✓</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="font-bold text-primary mb-3">🏆 Leaderboard</h3>
+          <ToggleSetting
+            icon="🎭"
+            label="Show as Anonymous"
+            description="Hide your name on leaderboard (rank still visible)"
+            value={privacySettings.showAsAnonymous}
+            onChange={(v) => setPrivacySettings((prev) => ({ ...prev, showAsAnonymous: v }))}
+          />
+        </div>
+
+        <div>
+          <h3 className="font-bold text-primary mb-3">🔍 Discovery</h3>
+          <div className="space-y-2">
+            <ToggleSetting
+              icon="🚫"
+              label="Hide from Search"
+              description="Don't appear in player searches"
+              value={privacySettings.hideFromSearch}
+              onChange={(v) => setPrivacySettings((prev) => ({ ...prev, hideFromSearch: v }))}
+            />
+            <ToggleSetting
+              icon="👥"
+              label="Allow Friend Requests"
+              description="Let others send you friend requests"
+              value={privacySettings.allowFriendRequests}
+              onChange={(v) => setPrivacySettings((prev) => ({ ...prev, allowFriendRequests: v }))}
+            />
+          </div>
+        </div>
+
+        <div className="pt-4 pb-8">
+          <button
+            type="button"
+            onClick={savePrivacySettings}
+            disabled={savingPrivacy}
+            className="w-full py-4 rounded-xl bg-accent text-white font-bold text-base disabled:opacity-50 hover:opacity-90 transition-opacity"
+          >
+            {savingPrivacy ? 'Saving...' : '💾 Save Privacy Settings'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   // Avatar Editor Modal
   const AvatarEditorModal = () => (
@@ -921,20 +1111,25 @@ export default function ProfilePage() {
           </div>
 
           {/* Privacy */}
-          <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+          <button
+            type="button"
+            onClick={() => setShowPrivacyModal(true)}
+            className="w-full bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
+          >
             <div className="flex items-center gap-3">
               <span className="text-xl">🛡️</span>
-              <div>
+              <div className="text-left">
                 <div className="text-primary text-sm font-medium">Privacy</div>
                 <div className="text-tertiary text-xs">Leaderboard & profile visibility</div>
               </div>
             </div>
-            <span className="text-secondary text-xs bg-elevated px-2 py-1 rounded-full border border-border-token">
-              Coming soon
-            </span>
-          </div>
+            <span className="text-secondary text-sm">›</span>
+          </button>
         </div>
       </div>
+
+      {/* Privacy Settings Modal */}
+      {showPrivacyModal && <PrivacySettingsModal />}
 
       {/* Avatar Editor Modal */}
       {editingAvatar && <AvatarEditorModal />}
