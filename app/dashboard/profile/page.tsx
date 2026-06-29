@@ -595,7 +595,11 @@ export default function ProfilePage() {
             <div className="text-secondary text-xs">Total XP</div>
           </div>
           <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            <div className="text-2xl mb-1">{storeConfig.currency_icon}</div>
+            <div className="text-2xl mb-1">
+              {storeConfig.currency_icon.startsWith('http')
+                ? <img src={storeConfig.currency_icon} alt="" className="w-7 h-7 object-contain mx-auto" />
+                : storeConfig.currency_icon}
+            </div>
             <div className="text-purple-400 font-bold">{playerData.gems.toLocaleString()}</div>
             <div className="text-secondary text-xs">{storeConfig.currency_name}</div>
           </div>
