@@ -60,11 +60,11 @@ select
   s.name, s.city, s.state, s.prefix, s.color
 from organizations o
 cross join (values
-  ('Trade Emporium',        'Pittsburg',    'CA', 'TEM', '#c4b5fd'),
-  ('Games of Martinez',     'Martinez',     'CA', 'GOM', '#60a5fa'),
-  ('Games of Antioch',      'Antioch',      'CA', 'GOA', '#34d399'),
-  ('Games of Walnut Creek', 'Walnut Creek', 'CA', 'GWC', '#fb923c'),
-  ('Games of Concord',      'Concord',      'CA', 'GOC', '#f472b6')
+  ('Trade Emporium',               'Pittsburg',    'CA', 'TEM',  '#c4b5fd'),
+  ('Games of Martinez',            'Martinez',     'CA', 'GOM',  '#60a5fa'),
+  ('Games of Brentwood',           'Brentwood',    'CA', 'GOB',  '#34d399'),
+  ('Games of Concord',             'Concord',      'CA', 'GOC',  '#f472b6'),
+  ('Gamers Guild of Pleasant Hill','Pleasant Hill','CA', 'GOPH', '#fb923c')
 ) as s(name, city, state, prefix, color)
 where o.slug = 'ggc'
 on conflict (org_id, player_id_prefix) do nothing;
