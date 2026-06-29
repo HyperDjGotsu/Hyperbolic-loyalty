@@ -7,6 +7,7 @@ import gsap from 'gsap';
 import { Avatar } from '@/components/ui';
 import { DailyGacha } from '@/components/DailyGacha';
 import { CheckInModal } from '@/components/CheckInModal';
+import NotificationBell from '@/components/NotificationBell';
 import type { Banner } from '@/lib/types';
 
 // Scouter-style number counting component - only animates on hover trigger
@@ -959,12 +960,13 @@ export default function DesktopDashboard() {
               >
                 HYPERBOLIC GAMES
               </h1>
-              <div className="flex gap-2.5">
-                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong relative">
-                  🔔
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                </button>
-                <button className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong">
+              <div className="flex gap-2.5 items-center">
+                <NotificationBell />
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard/profile')}
+                  className="w-[42px] h-[42px] bg-elevated border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-border-strong"
+                >
                   ⚙️
                 </button>
               </div>
