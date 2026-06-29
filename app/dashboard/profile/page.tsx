@@ -128,6 +128,7 @@ export default function ProfilePage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [showReferralDetails, setShowReferralDetails] = useState(false);
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
@@ -213,6 +214,10 @@ export default function ProfilePage() {
     } finally {
       setReferralLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    setIsDarkMode(localStorage.getItem('theme') !== 'light');
   }, []);
 
   useEffect(() => {
@@ -868,31 +873,66 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Settings placeholder */}
+      {/* Settings */}
       <div className="px-4 mt-6 mb-6">
         <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
           <span className="text-xl">⚙️</span> Settings
         </h2>
         <div className="space-y-2">
-          {[
-            { icon: '🔔', label: 'Notifications', value: 'On' },
-            { icon: '🎨', label: 'Theme', value: 'Dark' },
-            { icon: '🛡️', label: 'Privacy', value: 'Friends Only' },
-          ].map((setting, i) => (
-            <div 
-              key={i} 
-              className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{setting.icon}</span>
-                <span className="text-primary">{setting.label}</span>
-              </div>
-              <div className="text-secondary flex items-center gap-2">
-                {setting.value}
-                <span className="text-tertiary">›</span>
+          {/* Theme */}
+          <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🎨</span>
+              <div>
+                <div className="text-primary text-sm font-medium">Theme</div>
+                <div className="text-tertiary text-xs">{isDarkMode ? 'Dark mode' : 'Light mode'}</div>
               </div>
             </div>
-          ))}
+            <button
+              type="button"
+              onClick={() => {
+                const next = isDarkMode ? 'light' : 'dark';
+                const tone = next === 'light' ? 'paper' : 'warm';
+                localStorage.setItem('theme', next);
+                localStorage.setItem('tone', tone);
+                document.documentElement.setAttribute('data-tone', tone);
+                setIsDarkMode(!isDarkMode);
+              }}
+              className={`relative w-12 h-6 rounded-full transition-colors ${isDarkMode ? 'bg-accent' : 'bg-border-strong'}`}
+            >
+              <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${
+                isDarkMode ? 'left-1' : 'left-7'
+              }`} />
+            </button>
+          </div>
+
+          {/* Notifications */}
+          <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🔔</span>
+              <div>
+                <div className="text-primary text-sm font-medium">Notifications</div>
+                <div className="text-tertiary text-xs">Event reminders & XP alerts</div>
+              </div>
+            </div>
+            <span className="text-secondary text-xs bg-elevated px-2 py-1 rounded-full border border-border-token">
+              Coming soon
+            </span>
+          </div>
+
+          {/* Privacy */}
+          <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🛡️</span>
+              <div>
+                <div className="text-primary text-sm font-medium">Privacy</div>
+                <div className="text-tertiary text-xs">Leaderboard & profile visibility</div>
+              </div>
+            </div>
+            <span className="text-secondary text-xs bg-elevated px-2 py-1 rounded-full border border-border-token">
+              Coming soon
+            </span>
+          </div>
         </div>
       </div>
 
