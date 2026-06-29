@@ -87,19 +87,28 @@ function ScouterNumber({
 }
 
 // Hero stat card - just displays the value, no animation
-function HeroStatCard({ 
-  value, 
-  label
-}: { 
-  value: number; 
+function HeroStatCard({
+  value,
+  label,
+  icon,
+}: {
+  value: number;
   label: string;
+  icon?: string;
 }) {
   return (
     <div className="bg-surface border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
       <div className="text-[28px] font-extrabold text-accent">
         {value.toLocaleString()}
       </div>
-      <div className="text-[11px] text-secondary uppercase tracking-wide mt-0.5">{label}</div>
+      <div className="text-[11px] text-secondary uppercase tracking-wide mt-0.5 flex items-center justify-center gap-1">
+        {icon && (
+          icon.startsWith('http')
+            ? <img src={icon} alt="" className="w-3.5 h-3.5 object-contain inline" />
+            : <span>{icon}</span>
+        )}
+        {label}
+      </div>
     </div>
   );
 }
@@ -953,7 +962,7 @@ export default function DesktopDashboard() {
               <div className="flex gap-3 relative z-10">
                 <HeroStatCard value={games.length} label="Games" />
                 <HeroStatCard value={totalXp} label="Total XP" />
-                <HeroStatCard value={playerData?.gems || 0} label={`${storeConfig.currency_icon} ${storeConfig.currency_name}`} />
+                <HeroStatCard value={playerData?.gems || 0} label={storeConfig.currency_name} icon={storeConfig.currency_icon} />
               </div>
             </div>
           </section>

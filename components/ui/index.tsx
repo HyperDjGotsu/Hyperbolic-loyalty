@@ -242,7 +242,11 @@ export const StatCard: React.FC<{
   className?: string;
 }> = ({ label, value, sublabel, icon, color, className = '' }) => (
   <Card className={`p-4 ${className}`}>
-    {icon && <p className="text-lg mb-1">{icon}</p>}
+    {icon && (
+      icon.startsWith('http')
+        ? <img src={icon} alt="" className="w-6 h-6 object-contain mb-1" />
+        : <p className="text-lg mb-1">{icon}</p>
+    )}
     <p className="text-xs font-medium text-tertiary uppercase tracking-wide mb-1">{label}</p>
     <p className={`font-display text-3xl font-black ${color || 'text-primary'}`}>{value}</p>
     {sublabel && <p className="text-xs text-secondary mt-0.5">{sublabel}</p>}
