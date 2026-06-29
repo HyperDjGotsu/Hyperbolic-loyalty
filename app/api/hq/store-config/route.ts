@@ -24,16 +24,19 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories } = body;
 
+    const updates = { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, updated_at: new Date().toISOString() };
     console.log('[store-config PUT]', { currency_name, shop_title, shop_description });
 
+    // Use update (not upsert) — row is guaranteed to exist from migration seed
     const { data, error } = await supabaseAdmin
       .from('store_config')
-      .upsert({ id: 1, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, updated_at: new Date().toISOString() })
+      .update(updates)
+      .eq('id', 1)
       .select('currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories')
       .single();
 
     if (error) {
-      console.error('[store-config PUT] upsert error:', error);
+      console.error('[store-config PUT] update error:', error);
       throw error;
     }
     console.log('[store-config PUT] saved:', data);
