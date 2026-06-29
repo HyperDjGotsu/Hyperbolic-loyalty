@@ -878,6 +878,200 @@ function AppTourSection({ cfg }: { cfg: PitchConfig }) {
   );
 }
 
+/* ── Why it matters section ── */
+function WhyItMattersSection({ cfg }: { cfg: PitchConfig }) {
+  const color = cfg.hqColor;
+  const storeCount = cfg.stores.length;
+  const totalPlayers = cfg.stores.reduce((s, g) => s + g.players, 0);
+
+  return (
+    <section id="why" className="py-16 sm:py-20 px-5">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <SectionLabel>Why it matters</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+            Your regulars are your business.<br className="hidden sm:block" /> You should know who they are.
+          </h2>
+          <p className="text-secondary max-w-xl mx-auto">
+            Most game stores run on gut feel. They know the faces but not the numbers. This changes that — and the numbers matter.
+          </p>
+        </div>
+
+        {/* ── Core value props ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+          {[
+            {
+              icon: '🔄',
+              stat: '2×',
+              statLabel: 'more frequent visits',
+              title: 'Loyalty members come back more',
+              body: "Players enrolled in a loyalty system visit twice as often as walk-ins. They're not just coming for the game — they're coming for the points, the rank, the streak. That's recurring revenue you didn't have to advertise for.",
+              color: color,
+            },
+            {
+              icon: '📅',
+              stat: '+40%',
+              statLabel: 'event attendance',
+              title: 'Notifications fill your events',
+              body: "A day-of reminder pushed to every player's phone moves attendance numbers. Bigger events mean better play experiences, stronger word of mouth, and more entry fees. One good event reminder pays for itself.",
+              color: '#34d399',
+            },
+            {
+              icon: '🛡️',
+              stat: '3×',
+              statLabel: 'less likely to shop online',
+              title: 'Loyalty beats Amazon',
+              body: "A player with 4,000 Points, a custom frame, and a #3 leaderboard spot doesn't buy their next booster box from TCGPlayer. They buy it from you — because switching means starting over. That's defensible revenue.",
+              color: '#60a5fa',
+            },
+            {
+              icon: '📊',
+              stat: '100%',
+              statLabel: 'visibility you don\'t have now',
+              title: 'Know your top 20%',
+              body: "In most stores, the top 20% of customers drive 60–70% of revenue. Right now you probably can't name them all. With Hyperbolic XP you can sort by XP, by game, by check-ins — and actually invest in the people who matter most.",
+              color: '#f59e0b',
+            },
+          ].map(item => (
+            <div key={item.title} className="rounded-2xl border border-border-token p-6 bg-elevated">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: `${item.color}20` }}>
+                  {item.icon}
+                </div>
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-bold" style={{ color: item.color }}>{item.stat}</span>
+                    <span className="text-xs text-tertiary">{item.statLabel}</span>
+                  </div>
+                  <div className="font-bold text-primary text-sm mt-0.5">{item.title}</div>
+                </div>
+              </div>
+              <p className="text-secondary text-sm leading-relaxed">{item.body}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── The math ── */}
+        <div className="rounded-2xl border border-border-token overflow-hidden mb-8">
+          <div className="px-5 sm:px-8 py-5 border-b border-border-token bg-elevated">
+            <div className="font-bold text-primary">The math for {cfg.companyName}</div>
+            <div className="text-xs text-tertiary mt-0.5">Conservative scenario — {totalPlayers} active players across {storeCount} stores</div>
+          </div>
+          <div className="divide-y divide-border-token">
+            {[
+              {
+                scenario: 'Before: average player visits once a month',
+                result: `${totalPlayers} players × 1 visit × $25 avg spend`,
+                value: `$${(totalPlayers * 25).toLocaleString()}/mo`,
+                highlight: false,
+              },
+              {
+                scenario: 'After: loyalty members visit 1.5× more often',
+                result: `${totalPlayers} players × 1.5 visits × $25 avg spend`,
+                value: `$${Math.round(totalPlayers * 1.5 * 25).toLocaleString()}/mo`,
+                highlight: false,
+              },
+              {
+                scenario: 'Lift from loyalty system alone',
+                result: `Without additional marketing or staff`,
+                value: `+$${Math.round(totalPlayers * 0.5 * 25).toLocaleString()}/mo`,
+                highlight: true,
+              },
+            ].map(row => (
+              <div
+                key={row.scenario}
+                className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 px-5 sm:px-8 py-4"
+                style={row.highlight ? { background: `${color}08` } : { background: 'var(--bg-base)' }}
+              >
+                <div className="flex-1">
+                  <div className={cn('text-sm font-semibold', row.highlight ? 'text-primary' : 'text-secondary')}>{row.scenario}</div>
+                  <div className="text-xs text-tertiary">{row.result}</div>
+                </div>
+                <div className={cn('text-xl font-bold flex-shrink-0', row.highlight ? '' : 'text-primary')} style={row.highlight ? { color } : {}}>
+                  {row.value}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 sm:px-8 py-4 bg-elevated border-t border-border-token">
+            <p className="text-xs text-tertiary">
+              Based on industry loyalty program data. Actual results depend on staff engagement and event cadence. The multiplier grows as players invest more time in their account.
+            </p>
+          </div>
+        </div>
+
+        {/* ── Before / After ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+          <div className="rounded-2xl border border-border-token p-6 bg-elevated">
+            <div className="text-xs font-bold uppercase tracking-widest text-tertiary mb-4">Without Hyperbolic XP</div>
+            <div className="space-y-3">
+              {[
+                "You know your regulars by face, not by data",
+                "Event reminders = a post on Instagram, maybe",
+                "Players drift to online stores between events",
+                "No way to reward your most loyal customers",
+                "Staff turnover means losing player relationships",
+                "No idea which of your 5 stores is most engaged",
+              ].map(item => (
+                <div key={item} className="flex items-start gap-2.5 text-sm text-secondary">
+                  <span className="text-red-400 mt-0.5 flex-shrink-0">✕</span>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border p-6 bg-elevated" style={{ borderColor: `${color}30` }}>
+            <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color }}>With Hyperbolic XP</div>
+            <div className="space-y-3">
+              {[
+                "Every player has an ID, XP history, and game stats",
+                "Event reminders go directly to every player's phone",
+                "Points and rank keep players invested in your store",
+                "Top players get recognized — they evangelize for you",
+                "Player data lives in the system, not in a staff member's head",
+                `See all ${storeCount} stores in one view — compare, act, grow`,
+              ].map(item => (
+                <div key={item} className="flex items-start gap-2.5 text-sm text-secondary">
+                  <span className="text-green-400 mt-0.5 flex-shrink-0">✓</span>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── The referral flywheel ── */}
+        <div className="rounded-2xl border border-border-token p-6 sm:p-8 bg-elevated">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-widest text-tertiary mb-3">Built-in growth engine</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-primary mb-3 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+                The referral flywheel
+              </h3>
+              <p className="text-secondary text-sm leading-relaxed">
+                Every player who joins gets a referral code. When they bring a friend — who then attends their first event — both players earn bonus XP. Players recruit for you because it's in their interest to.
+              </p>
+            </div>
+            <div className="space-y-3">
+              {[
+                { step: '1', label: 'Player joins, gets referral code', color },
+                { step: '2', label: 'Friend signs up with the code', color: '#60a5fa' },
+                { step: '3', label: 'Friend attends first event', color: '#34d399' },
+                { step: '4', label: 'Both earn XP — loyalty deepens', color: '#f59e0b' },
+              ].map(s => (
+                <div key={s.step} className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: `${s.color}20`, color: s.color }}>{s.step}</div>
+                  <div className="text-sm text-secondary">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export const PITCH_STORAGE_KEY = 'hxp_pitch_config';
 
 /* ── Shared pitch UI — used by /pitch and /pitch/[slug] ── */
@@ -962,6 +1156,9 @@ export default function PitchContent({ cfg: defaultCfg }: { cfg: PitchConfig }) 
 
       {/* ── App tour ── */}
       <AppTourSection cfg={cfg} />
+
+      {/* ── Why it matters ── */}
+      <WhyItMattersSection cfg={cfg} />
 
       {/* ── Player experience ── */}
       <Section id="player">
@@ -1260,8 +1457,8 @@ export default function PitchContent({ cfg: defaultCfg }: { cfg: PitchConfig }) 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden sm:flex">
         <div className="flex items-center gap-1 px-3 py-2 rounded-2xl border border-border-token shadow-2xl bg-surface">
           {[
-            { href: '#player', label: 'Players' },
-            { href: '#prizewall', label: 'Prizes' },
+            { href: '#tour', label: 'Tour' },
+            { href: '#why', label: 'Why it matters' },
             { href: '#staff', label: 'Staff' },
             { href: '#hq', label: 'HQ' },
             { href: '#company', label: `${cfg.companyName.split(' ')[0]} View` },
