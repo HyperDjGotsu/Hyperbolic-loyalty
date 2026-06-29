@@ -200,7 +200,7 @@ export default function MobileDashboard() {
   useEffect(() => {
     async function loadStoreConfig() {
       try {
-        const res = await fetch('/api/store-config', { cache: 'no-store' });
+        const res = await fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           setStoreConfig(data);

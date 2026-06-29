@@ -94,7 +94,7 @@ export default function ShopPage() {
       const [shopRes, invRes, configRes] = await Promise.all([
         fetch('/api/shop'),
         fetch('/api/player/inventory'),
-        fetch('/api/store-config', { cache: 'no-store' }),
+        fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' }),
       ]);
 
       if (shopRes.ok) {

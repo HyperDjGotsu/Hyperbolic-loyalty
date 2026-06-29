@@ -874,7 +874,7 @@ export default function HQPage() {
   // Store settings functions
   const loadStoreConfig = async () => {
     try {
-      const res = await fetch('/api/store-config', { cache: 'no-store' });
+      const res = await fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setStoreConfig(prev => ({ ...prev, ...data, shop_categories: data.shop_categories ?? prev.shop_categories }));

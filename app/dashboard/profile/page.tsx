@@ -133,7 +133,7 @@ export default function ProfilePage() {
     setLoading(true);
     try {
       // Load store config for currency name
-      fetch('/api/store-config').then(r => r.ok ? r.json() : null).then(cfg => {
+      fetch(`/api/store-config?t=${Date.now()}`).then(r => r.ok ? r.json() : null).then(cfg => {
         if (cfg) setStoreConfig(cfg);
       }).catch(() => {});
 

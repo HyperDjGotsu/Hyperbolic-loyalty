@@ -97,11 +97,6 @@ function HeroStatCard({
 }) {
   return (
     <div className="bg-base border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-cyan-500/30 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]">
-      {icon && (
-        icon.startsWith('http')
-          ? <img src={icon} alt="" className="w-8 h-8 object-contain mx-auto mb-1" />
-          : <div className="text-2xl mb-1">{icon}</div>
-      )}
       <div
         className="text-[28px] font-extrabold"
         style={{
@@ -112,7 +107,14 @@ function HeroStatCard({
       >
         {value.toLocaleString()}
       </div>
-      <div className="text-[11px] text-tertiary uppercase tracking-wide mt-0.5">{label}</div>
+      <div className="text-[11px] text-tertiary uppercase tracking-wide mt-0.5 flex items-center justify-center gap-1">
+        {icon && (
+          icon.startsWith('http')
+            ? <img src={icon} alt="" className="w-4 h-4 object-contain" />
+            : <span>{icon}</span>
+        )}
+        {label}
+      </div>
     </div>
   );
 }
@@ -730,7 +732,7 @@ export default function DesktopDashboard() {
   useEffect(() => {
     async function loadStoreConfig() {
       try {
-        const res = await fetch('/api/store-config', { cache: 'no-store' });
+        const res = await fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           setStoreConfig(data);

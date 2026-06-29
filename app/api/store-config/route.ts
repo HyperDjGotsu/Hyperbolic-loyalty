@@ -18,9 +18,14 @@ const DEFAULTS = {
   ],
 };
 
-const NO_CACHE = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+const NO_CACHE = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate',
+  'Pragma': 'no-cache',
+  'Surrogate-Control': 'no-store',
+};
 
-export async function GET() {
+export async function GET(request: Request) {
+  void request; // touch request to ensure dynamic rendering
   try {
     const { data, error } = await supabaseAdmin
       .from('store_config')
