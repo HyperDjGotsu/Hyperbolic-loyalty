@@ -12,8 +12,8 @@ export async function GET(request: Request) {
 
   try {
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 90 * 60 * 1000);  // 1.5h from now
-    const windowEnd = new Date(now.getTime() + 150 * 60 * 1000);   // 2.5h from now
+    const windowStart = new Date(now.getTime() + 60 * 60 * 1000);   // 1h from now
+    const windowEnd = new Date(now.getTime() + 13 * 60 * 60 * 1000); // 13h from now
 
     // Find events starting in the 2h window
     const { data: events } = await supabaseAdmin
@@ -41,9 +41,9 @@ export async function GET(request: Request) {
     for (const event of events) {
       const startsAt = new Date(event.scheduled_at);
       const minutesUntil = Math.round((startsAt.getTime() - now.getTime()) / 60000);
-      const timeLabel = minutesUntil >= 60
-        ? `${Math.floor(minutesUntil / 60)}h ${minutesUntil % 60}m`
-        : `${minutesUntil}m`;
+      const hours = Math.floor(minutesUntil / 60);
+      const mins = minutesUntil % 60;
+      const timeLabel = hours > 0 ? `${hours}h${mins > 0 ? ` ${mins}m` : ''}` : `${mins}m`;
 
       const rows: Record<string, unknown>[] = eligible.map((p) => ({
         player_id: p.id,
