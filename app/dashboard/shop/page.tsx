@@ -29,6 +29,12 @@ interface StoreConfig {
   shop_categories: ShopCategory[];
 }
 
+interface PassInfo {
+  tier: string;
+  status: string;
+  isActive: boolean;
+}
+
 function IconRenderer({ value, className }: { value: string; className?: string }) {
   if (value.startsWith('http')) {
     return <img src={value} alt="icon" className={className || 'w-5 h-5 object-contain'} />;
@@ -78,6 +84,7 @@ export default function ShopPage() {
     shop_categories: DEFAULT_CATEGORIES,
   });
   const [activeCategory, setActiveCategory] = useState('');
+  const [passInfo, setPassInfo] = useState<PassInfo>({ tier: 'none', status: 'none', isActive: false });
 
   const visibleCategories = (storeConfig.shop_categories ?? DEFAULT_CATEGORIES).filter(c => c.enabled);
 
@@ -101,6 +108,7 @@ export default function ShopPage() {
         const owned = new Set<string>();
         invData.items?.forEach((item: ShopItem) => owned.add(item.id));
         setOwnedIds(owned);
+        if (invData.passInfo) setPassInfo(invData.passInfo);
       }
 
       if (configRes.ok) {
@@ -159,19 +167,23 @@ export default function ShopPage() {
 
   const ShopItemCard = ({ item }: { item: ShopItem }) => {
     const owned = isOwned(item);
+    const locked = !passInfo.isActive && !owned && item.price > 0;
     const rarity = rarityColors[item.rarity] || rarityColors.common;
 
     return (
       <button
         type="button"
-        onClick={() => !owned && purchaseItem(item)}
-        disabled={owned || purchasing === item.id}
+        onClick={() => !owned && !locked && purchaseItem(item)}
+        disabled={owned || locked || purchasing === item.id}
         className={`relative p-3 rounded-xl border-2 ${rarity.border} ${rarity.bg} text-left transition-all ${
-          owned ? 'opacity-60' : 'hover:scale-105 active:scale-95'
+          owned ? 'opacity-60' : locked ? 'opacity-70' : 'hover:scale-105 active:scale-95'
         }`}
       >
         {owned && (
           <div className="absolute top-1 right-1 text-green-400 text-xs font-bold">✓ OWNED</div>
+        )}
+        {locked && !owned && (
+          <div className="absolute top-1 right-1 text-xs">🔒</div>
         )}
 
         <div className="text-2xl mb-2">
@@ -262,6 +274,19 @@ export default function ShopPage() {
           )}
         </div>
       </div>
+
+      {/* Free Member Banner */}
+      {!passInfo.isActive && (
+        <div className="mx-4 mt-4 bg-accent/10 border border-accent/30 rounded-xl p-4 flex items-start gap-3">
+          <span className="text-xl">🎫</span>
+          <div>
+            <p className="text-sm font-semibold text-primary">Player Pass Required</p>
+            <p className="text-xs text-secondary mt-0.5">
+              Upgrade to a Player Pass in-store to unlock purchases. You can still browse and save up your {storeConfig.currency_name}.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Shop Items */}
       <div className="p-4">

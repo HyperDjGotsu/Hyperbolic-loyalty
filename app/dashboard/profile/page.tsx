@@ -32,6 +32,9 @@ interface PlayerData {
   gems: number;
   avatarConfig: AvatarConfig;
   status: string | null;
+  passTier: string | null;
+  passStatus: string | null;
+  passExpiresAt: string | null;
 }
 
 interface ReferralStats {
@@ -165,6 +168,9 @@ export default function ProfilePage() {
               gems: invData.gems || 0,
               avatarConfig: invData.avatarConfig || defaultAvatarConfig,
               status,
+              passTier: data.passTier || null,
+              passStatus: data.passStatus || null,
+              passExpiresAt: data.passExpiresAt || null,
             });
             setTempAvatar(invData.avatarConfig || defaultAvatarConfig);
             setOwnedItems(invData.grouped || {});
@@ -805,6 +811,50 @@ export default function ProfilePage() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Membership */}
+      <div className="px-4 mt-6">
+        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
+          <span className="text-xl">🎫</span> Membership
+        </h2>
+        <div className={`rounded-xl p-4 border ${
+          playerData.passStatus === 'active'
+            ? 'bg-accent/10 border-accent/30'
+            : 'bg-elevated/50 border-border-token'
+        }`}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-primary font-semibold">
+              {playerData.passTier === 'player' ? 'Player Pass' :
+               playerData.passTier === 'all_access' ? 'All Access Pass' :
+               playerData.passTier === 'shadow_vip' ? 'Shadow VIP' :
+               'Free Member'}
+            </span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              playerData.passStatus === 'active'
+                ? 'bg-green-500/20 text-green-400'
+                : playerData.passStatus === 'grace_period'
+                ? 'bg-yellow-500/20 text-yellow-400'
+                : 'bg-surface text-secondary'
+            }`}>
+              {playerData.passStatus === 'active' ? 'Active' :
+               playerData.passStatus === 'grace_period' ? 'Grace Period' :
+               playerData.passStatus === 'cancelled' ? 'Cancelled' :
+               playerData.passStatus === 'expired' ? 'Expired' :
+               'Free'}
+            </span>
+          </div>
+          {playerData.passExpiresAt && playerData.passStatus === 'active' && (
+            <p className="text-secondary text-xs mt-1">
+              Renews {new Date(playerData.passExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
+          {!playerData.passTier || playerData.passTier === 'none' ? (
+            <p className="text-secondary text-xs mt-1">
+              Ask staff in-store to upgrade your membership and unlock the Prize Wall.
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {/* Settings placeholder */}

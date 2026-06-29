@@ -176,7 +176,11 @@ interface Player {
   email: string;
   is_staff: boolean;
   created_at: string;
-  favorite_games?: string[]; // Player's favorite game IDs
+  favorite_games?: string[];
+  pass_tier: string | null;
+  pass_status: string | null;
+  pass_expires_at: string | null;
+  pass_started_at: string | null;
 }
 
 interface GameXP {
@@ -331,6 +335,10 @@ export default function HQPage() {
   const [dangerAction, setDangerAction] = useState<null | 'suspend' | 'delete'>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [dangerLoading, setDangerLoading] = useState(false);
+  const [assignPassOpen, setAssignPassOpen] = useState(false);
+  const [assignPassTier, setAssignPassTier] = useState<'player' | 'none'>('player');
+  const [assignPassExpiry, setAssignPassExpiry] = useState('');
+  const [assigningPass, setAssigningPass] = useState(false);
   const [selectedGame, setSelectedGame] = useState('');
   const [xpAmount, setXpAmount] = useState('');
   const [xpReason, setXpReason] = useState('');
@@ -889,6 +897,47 @@ export default function HQPage() {
       showToast('Failed to save settings', 'error');
     } finally {
       setSettingsSaving(false);
+    }
+  };
+
+  // Assign / remove pass
+  const assignPass = async () => {
+    if (!playerDetails) return;
+    setAssigningPass(true);
+    try {
+      const expiresAt = assignPassTier === 'player'
+        ? (assignPassExpiry
+            ? new Date(assignPassExpiry).toISOString()
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())
+        : null;
+      const body = {
+        pass_tier: assignPassTier,
+        pass_status: assignPassTier === 'none' ? 'cancelled' : 'active',
+        pass_started_at: assignPassTier === 'player' ? new Date().toISOString() : null,
+        pass_expires_at: expiresAt,
+      };
+      const res = await fetch(`/api/hq/player/${playerDetails.player.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPlayerDetails(prev => prev ? {
+        ...prev,
+        player: { ...prev.player, pass_tier: data.pass_tier, pass_status: data.pass_status, pass_expires_at: data.pass_expires_at, pass_started_at: data.pass_started_at },
+      } : prev);
+      showToast(
+        assignPassTier === 'none'
+          ? 'Pass removed — player reverted to free tier'
+          : `Player Pass assigned${expiresAt ? ` — renews ${new Date(expiresAt).toLocaleDateString()}` : ''}`,
+        'success'
+      );
+      setAssignPassOpen(false);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to assign pass', 'error');
+    } finally {
+      setAssigningPass(false);
     }
   };
 
@@ -1954,91 +2003,205 @@ export default function HQPage() {
                 </div>
 
                 {/* Account Management */}
-                <div className="p-6 border-t border-border-token">
-                  <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
-                    Account Management
-                  </h3>
+                <div className="p-6 border-t border-border-token space-y-6">
+                  {/* Pass Status */}
+                  <div>
+                    <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">
+                      Player Pass
+                    </h3>
+                    <div className="bg-elevated rounded-xl p-4 border border-border-token mb-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-primary">
+                          {playerDetails.player.pass_tier === 'player' ? 'Player Pass' :
+                           playerDetails.player.pass_tier === 'all_access' ? 'All Access Pass' :
+                           playerDetails.player.pass_tier === 'shadow_vip' ? 'Shadow VIP' :
+                           'Free Member'}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          playerDetails.player.pass_status === 'active'
+                            ? 'bg-green-500/20 text-green-400'
+                            : playerDetails.player.pass_status === 'grace_period'
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : playerDetails.player.pass_status === 'cancelled'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-surface text-secondary'
+                        }`}>
+                          {playerDetails.player.pass_status === 'active' ? 'Active' :
+                           playerDetails.player.pass_status === 'grace_period' ? 'Grace Period' :
+                           playerDetails.player.pass_status === 'cancelled' ? 'Cancelled' :
+                           playerDetails.player.pass_status === 'expired' ? 'Expired' :
+                           'None'}
+                        </span>
+                      </div>
+                      {playerDetails.player.pass_expires_at && (
+                        <p className="text-xs text-secondary">
+                          Renews {new Date(playerDetails.player.pass_expires_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      )}
+                      {playerDetails.player.pass_started_at && (
+                        <p className="text-xs text-tertiary mt-0.5">
+                          Started {new Date(playerDetails.player.pass_started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
 
-                  {dangerAction === null && (
-                    <div className="flex gap-3">
+                    {/* Assign Pass toggle */}
+                    {!assignPassOpen && (
                       <button
                         type="button"
-                        onClick={() => setDangerAction('suspend')}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors"
+                        onClick={() => { setAssignPassOpen(true); setAssignPassTier('player'); setAssignPassExpiry(''); }}
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors"
                       >
-                        Remove Subscription
+                        Assign / Change Pass
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => { setDangerAction('delete'); setDeleteConfirmText(''); }}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors"
-                      >
-                        Delete Account
-                      </button>
-                    </div>
-                  )}
+                    )}
 
-                  {dangerAction === 'suspend' && (
-                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-                      <p className="text-sm text-yellow-300 mb-1 font-medium">Remove Subscription</p>
-                      <p className="text-xs text-secondary mb-4">
-                        This will set {playerDetails.player.display_name}&apos;s pass to inactive, revoke staff access, and remove any subscription permissions. Their XP and data stay intact.
-                      </p>
-                      <div className="flex gap-2">
+                    {assignPassOpen && (
+                      <div className="bg-elevated border border-border-strong rounded-xl p-4 space-y-3">
+                        <p className="text-sm font-medium text-primary">Assign Pass</p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setAssignPassTier('player')}
+                            className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                              assignPassTier === 'player'
+                                ? 'bg-accent/20 text-accent border-accent/50'
+                                : 'bg-surface text-secondary border-border-token hover:border-border-strong'
+                            }`}
+                          >
+                            Player Pass
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAssignPassTier('none')}
+                            className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                              assignPassTier === 'none'
+                                ? 'bg-surface text-primary border-border-strong'
+                                : 'bg-surface text-secondary border-border-token hover:border-border-strong'
+                            }`}
+                          >
+                            Free Member
+                          </button>
+                        </div>
+                        {assignPassTier === 'player' && (
+                          <div>
+                            <label className="text-xs text-secondary block mb-1">Renewal Date (leave blank for 30 days)</label>
+                            <input
+                              type="date"
+                              value={assignPassExpiry}
+                              onChange={e => setAssignPassExpiry(e.target.value)}
+                              className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                            />
+                          </div>
+                        )}
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={assignPass}
+                            disabled={assigningPass}
+                            className="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-white hover:bg-accent/80 transition-colors disabled:opacity-50"
+                          >
+                            {assigningPass ? 'Saving…' : 'Confirm'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAssignPassOpen(false)}
+                            className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-surface transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Danger Zone */}
+                  <div>
+                    <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">
+                      Danger Zone
+                    </h3>
+
+                    {dangerAction === null && (
+                      <div className="flex gap-3">
                         <button
                           type="button"
-                          onClick={suspendPlayer}
-                          disabled={dangerLoading}
-                          className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-black hover:bg-yellow-400 transition-colors disabled:opacity-50"
+                          onClick={() => setDangerAction('suspend')}
+                          className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors"
                         >
-                          {dangerLoading ? 'Removing…' : 'Confirm Remove'}
+                          Remove Subscription
                         </button>
                         <button
                           type="button"
-                          onClick={() => setDangerAction(null)}
-                          className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-elevated transition-colors"
+                          onClick={() => { setDangerAction('delete'); setDeleteConfirmText(''); }}
+                          className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors"
                         >
-                          Cancel
+                          Delete Account
                         </button>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {dangerAction === 'delete' && (
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                      <p className="text-sm text-red-400 mb-1 font-medium">⚠️ Delete Account — Irreversible</p>
-                      <p className="text-xs text-secondary mb-3">
-                        Permanently removes {playerDetails.player.display_name} and all their XP, inventory, attendance, and activity records. This cannot be undone.
-                      </p>
-                      <p className="text-xs text-secondary mb-2">
-                        Type <span className="text-red-400 font-mono">{playerDetails.player.display_name}</span> to confirm:
-                      </p>
-                      <input
-                        type="text"
-                        value={deleteConfirmText}
-                        onChange={e => setDeleteConfirmText(e.target.value)}
-                        placeholder={playerDetails.player.display_name}
-                        className="w-full bg-input border border-red-500/40 rounded-lg px-3 py-2 text-sm text-primary mb-3 focus:outline-none focus:border-red-400"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={deletePlayer}
-                          disabled={dangerLoading || deleteConfirmText !== playerDetails.player.display_name}
-                          className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-40"
-                        >
-                          {dangerLoading ? 'Deleting…' : 'Delete Forever'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setDangerAction(null); setDeleteConfirmText(''); }}
-                          className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-elevated transition-colors"
-                        >
-                          Cancel
-                        </button>
+                    {dangerAction === 'suspend' && (
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                        <p className="text-sm text-yellow-300 mb-1 font-medium">Remove Subscription</p>
+                        <p className="text-xs text-secondary mb-4">
+                          This will set {playerDetails.player.display_name}&apos;s pass to inactive, revoke staff access, and remove any subscription permissions. Their XP and data stay intact.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={suspendPlayer}
+                            disabled={dangerLoading}
+                            className="px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-black hover:bg-yellow-400 transition-colors disabled:opacity-50"
+                          >
+                            {dangerLoading ? 'Removing…' : 'Confirm Remove'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDangerAction(null)}
+                            className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-elevated transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+
+                    {dangerAction === 'delete' && (
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                        <p className="text-sm text-red-400 mb-1 font-medium">Delete Account — Irreversible</p>
+                        <p className="text-xs text-secondary mb-3">
+                          Permanently removes {playerDetails.player.display_name} and all their XP, inventory, attendance, and activity records. This cannot be undone.
+                        </p>
+                        <p className="text-xs text-secondary mb-2">
+                          Type <span className="text-red-400 font-mono">{playerDetails.player.display_name}</span> to confirm:
+                        </p>
+                        <input
+                          type="text"
+                          value={deleteConfirmText}
+                          onChange={e => setDeleteConfirmText(e.target.value)}
+                          placeholder={playerDetails.player.display_name}
+                          className="w-full bg-input border border-red-500/40 rounded-lg px-3 py-2 text-sm text-primary mb-3 focus:outline-none focus:border-red-400"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={deletePlayer}
+                            disabled={dangerLoading || deleteConfirmText !== playerDetails.player.display_name}
+                            className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-40"
+                          >
+                            {dangerLoading ? 'Deleting…' : 'Delete Forever'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setDangerAction(null); setDeleteConfirmText(''); }}
+                            className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-elevated transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

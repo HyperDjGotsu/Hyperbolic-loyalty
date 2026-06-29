@@ -16,7 +16,7 @@ export async function GET() {
     // Get current player
     const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
-      .select('id, gems, avatar_config')
+      .select('id, gems, avatar_config, pass_tier, pass_status')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -109,8 +109,13 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       gems: player.gems || 0,
+      passInfo: {
+        tier: (player as any).pass_tier || 'none',
+        status: (player as any).pass_status || 'none',
+        isActive: (player as any).pass_tier === 'player' && (player as any).pass_status === 'active',
+      },
       avatarConfig: player.avatar_config || {
         base: '😎',
         background: '#3b82f6',

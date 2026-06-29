@@ -300,6 +300,8 @@ export async function GET() {
       avatarConfig,
       passTier: player.pass_tier,
       passStatus: player.pass_status,
+      passExpiresAt: player.pass_expires_at,
+      passStartedAt: player.pass_started_at,
       xp: totalXp,
       gems: player.gems || 0,
       gameXP,

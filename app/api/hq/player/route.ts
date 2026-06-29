@@ -100,7 +100,7 @@ export async function GET(request: Request) {
     // Search by player_id or display_name - now includes favorite_games
     let playerQuery = supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, email, is_staff, created_at, favorite_games') as any;
+      .select('id, player_id, display_name, email, is_staff, created_at, favorite_games, pass_tier, pass_status, pass_expires_at, pass_started_at') as any;
 
     if (query.toUpperCase().startsWith('HYP-')) {
       playerQuery = playerQuery.ilike('player_id', `%${query}%`);
@@ -123,6 +123,10 @@ export async function GET(request: Request) {
       is_staff: boolean;
       created_at: string;
       favorite_games: string[] | null;
+      pass_tier: string | null;
+      pass_status: string | null;
+      pass_expires_at: string | null;
+      pass_started_at: string | null;
     };
 
     // Get games list

@@ -23,11 +23,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const { pass_tier, pass_status, is_staff } = body;
+    const { pass_tier, pass_status, pass_expires_at, pass_started_at, is_staff } = body;
 
     const updates: Record<string, unknown> = {};
     if (pass_tier !== undefined) updates.pass_tier = pass_tier;
     if (pass_status !== undefined) updates.pass_status = pass_status;
+    if (pass_expires_at !== undefined) updates.pass_expires_at = pass_expires_at;
+    if (pass_started_at !== undefined) updates.pass_started_at = pass_started_at;
     if (is_staff !== undefined) updates.is_staff = is_staff;
 
     if (Object.keys(updates).length === 0) {
@@ -38,7 +40,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       .from('players')
       .update(updates)
       .eq('id', params.id)
-      .select('id, player_id, display_name, pass_tier, pass_status, is_staff')
+      .select('id, player_id, display_name, pass_tier, pass_status, pass_expires_at, pass_started_at, is_staff')
       .single();
 
     if (error) throw error;
