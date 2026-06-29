@@ -490,6 +490,394 @@ function HQSection({ cfg, rankColors }: { cfg: PitchConfig; rankColors: string[]
   );
 }
 
+/* ── App Tour Slides ── */
+function AppPhone({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative mx-auto" style={{ width: 260 }}>
+      <div className="relative rounded-[36px] overflow-hidden shadow-2xl" style={{ background: '#111009', minHeight: 500, border: '2px solid rgba(255,255,255,0.1)' }}>
+        <div className="flex justify-between px-6 pt-3 pb-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <span>9:41</span><span>●●●</span>
+        </div>
+        <div className="flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function AppTourSection({ cfg }: { cfg: PitchConfig }) {
+  const [slide, setSlide] = useState(0);
+  const color = cfg.hqColor;
+  const prefix = cfg.hqPrefix;
+
+  const slides = [
+    {
+      label: 'Home Dashboard',
+      title: 'This is what your player sees every time they open the app.',
+      body: `Their loyalty ID, their rank, their XP. Everything personal to them — no login friction, no confusion. They know exactly where they stand.`,
+      screen: (
+        <div className="px-4 pb-4">
+          <div className="rounded-2xl p-4 mb-3" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${color}20` }}>🎮</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{prefix}-AXR001</div>
+                <div className="font-bold text-white text-sm">Alex R.</div>
+                <div className="text-[11px]" style={{ color }}>Planeswalker · Level 64</div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold" style={{ color }}>4,820</div>
+                <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Points</div>
+              </div>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden mb-1" style={{ background: '#222018' }}>
+              <div className="h-full rounded-full" style={{ width: '76%', background: color }} />
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.25)' }}>180 pts to next rank</span>
+              <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.25)' }}>#3 on leaderboard</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {[{ v: '52', l: 'Events' }, { v: '8🔥', l: 'Streak' }, { v: '72%', l: 'Win rate' }].map(s => (
+              <div key={s.l} className="rounded-xl p-2 text-center" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-xs font-bold text-white">{s.v}</div>
+                <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <div className="rounded-xl py-2.5 text-xs font-bold text-center" style={{ background: color, color: '#111009' }}>🎰 Daily Spin</div>
+            <div className="rounded-xl py-2.5 text-xs font-bold text-center" style={{ background: '#222018', color: '#f2efe8', border: '1px solid rgba(255,255,255,0.08)' }}>🛍️ Prize Wall</div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl py-2.5 text-xs font-bold text-center" style={{ background: '#222018', color: '#f2efe8', border: '1px solid rgba(255,255,255,0.08)' }}>📅 Events</div>
+            <div className="rounded-xl py-2.5 text-xs font-bold text-center" style={{ background: '#222018', color: '#f2efe8', border: '1px solid rgba(255,255,255,0.08)' }}>🏆 Leaderboard</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      label: 'Events Calendar',
+      title: 'Every event at your store, always visible.',
+      body: `Players can see what's coming up this week, register interest, and get reminded the day of. No more "I didn't know there was a tournament."`,
+      screen: (
+        <div className="px-4 pb-4">
+          <div className="text-xs font-semibold text-white mb-3">This Week</div>
+          {[
+            { name: 'One Piece Weekly', day: 'Today', time: '6 PM', players: 18, color: '#E63946', live: true },
+            { name: 'Pokemon League', day: 'Sun', time: '2 PM', players: 24, color: '#FACC15', live: false },
+            { name: 'MTG Commander', day: 'Fri', time: '6 PM', players: 12, color: '#8B5CF6', live: false },
+            { name: 'Gundam Card Game', day: 'Sat', time: '4 PM', players: 8, color: '#3B82F6', live: false },
+          ].map(ev => (
+            <div key={ev.name} className="flex items-center gap-2.5 p-3 rounded-xl mb-2" style={{ background: '#1a1810', border: `1px solid ${ev.live ? ev.color + '40' : 'rgba(255,255,255,0.07)'}` }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${ev.color}20` }}>🎮</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold text-white truncate">{ev.name}</div>
+                <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{ev.day} · {ev.time} · {ev.players} players</div>
+              </div>
+              {ev.live
+                ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#22c55e20', color: '#22c55e' }}>LIVE</span>
+                : <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.3)' }}>+XP</span>}
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    {
+      label: 'Check-in & XP',
+      title: 'Staff awards XP. The player gets notified instantly.',
+      body: `Staff looks up the player by ID or QR scan, taps "Event Check-in." The player's phone lights up with a notification — they earned 50 XP just for showing up.`,
+      screen: (
+        <div className="px-4 pb-4">
+          {/* Staff check-in view compressed into phone */}
+          <div className="rounded-2xl p-4 mb-3" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Staff · Check In</div>
+            <div className="flex items-center gap-2 p-2.5 rounded-xl mb-3" style={{ background: '#222018', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base" style={{ background: `${color}20` }}>🎮</div>
+              <div>
+                <div className="text-xs font-bold text-white">Alex R.</div>
+                <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>{prefix}-AXR001 · 4,820 pts</div>
+              </div>
+              <div className="ml-auto text-green-400 text-[10px] font-semibold">✓ Found</div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Event Check-in', xp: '+50 XP', color },
+                { label: 'Match Win', xp: '+25 XP', color: '#34d399' },
+              ].map(a => (
+                <div key={a.label} className="rounded-xl p-2.5" style={{ background: '#111009', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="text-[10px] font-semibold text-white">{a.label}</div>
+                  <div className="text-xs font-bold mt-0.5" style={{ color: a.color }}>{a.xp}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Player notification */}
+          <div className="rounded-2xl p-4" style={{ background: '#1a1810', border: `1px solid ${color}40` }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Player's Phone</div>
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">⚡</div>
+              <div>
+                <div className="text-xs font-bold text-white">+50 XP Earned!</div>
+                <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>One Piece Weekly · you're now #3</div>
+              </div>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden mt-3" style={{ background: '#222018' }}>
+              <div className="h-full rounded-full transition-all" style={{ width: '82%', background: color }} />
+            </div>
+            <div className="text-[9px] mt-1 text-right" style={{ color: 'rgba(255,255,255,0.3)' }}>4,870 / 5,000 to Mythic</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      label: 'Leaderboard',
+      title: 'Competition is the retention engine.',
+      body: `Players come back because they want to climb. The leaderboard shows their rank, their gap to the person above them, and the top players they're chasing. It resets each month so everyone has a shot.`,
+      screen: (
+        <div className="px-4 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-xs font-semibold text-white">One Piece</div>
+            <div className="text-[10px]" style={{ color }}>Resets in 12 days</div>
+          </div>
+          {[
+            { rank: 1, name: 'Alex R.', xp: 4820, you: true },
+            { rank: 2, name: 'Marcus D.', xp: 3100, you: false },
+            { rank: 3, name: 'Taylor W.', xp: 2090, you: false },
+            { rank: 4, name: 'Jordan S.', xp: 1540, you: false },
+            { rank: 5, name: 'Casey M.', xp: 980, you: false },
+          ].map(p => (
+            <div key={p.rank} className="flex items-center gap-2.5 p-2.5 rounded-xl mb-1.5" style={{ background: p.you ? `${color}18` : '#1a1810', border: `1px solid ${p.you ? color + '40' : 'rgba(255,255,255,0.07)'}` }}>
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: p.rank === 1 ? '#FACC1530' : '#222018', color: p.rank === 1 ? '#FACC15' : 'rgba(255,255,255,0.4)' }}>{p.rank}</div>
+              <div className="flex-1 text-xs font-semibold text-white">{p.name}{p.you ? ' (you)' : ''}</div>
+              <div className="text-xs font-bold" style={{ color: p.you ? color : 'rgba(255,255,255,0.6)' }}>{p.xp.toLocaleString()}</div>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    {
+      label: 'Daily Spin',
+      title: 'Free every day. Drives daily opens.',
+      body: `Every player gets one free spin at midnight reset. They win Points, XP, or rare cosmetics. This alone brings people back daily — even on days they're not playing.`,
+      screen: (
+        <div className="px-4 pb-4">
+          <div className="text-center mb-3">
+            <div className="text-xs font-semibold text-white mb-0.5">Daily Spin</div>
+            <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Resets at midnight · free once a day</div>
+          </div>
+          <div className="rounded-2xl p-5 text-center mb-3" style={{ background: '#1a1810', border: `1px solid ${color}30` }}>
+            <div className="text-5xl mb-3">🎰</div>
+            <div className="rounded-xl py-2.5 text-xs font-bold" style={{ background: color, color: '#111009' }}>Spin Now →</div>
+          </div>
+          <div className="text-[10px] font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Possible prizes</div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {[
+              { label: '+50 XP', rarity: 'Common', color: '#60a5fa' },
+              { label: '+150 XP', rarity: 'Rare', color },
+              { label: 'Gold Frame', rarity: 'Epic', color: '#FACC15' },
+              { label: '+25 XP', rarity: 'Common', color: '#60a5fa' },
+              { label: 'Badge', rarity: 'Rare', color: '#f472b6' },
+              { label: '👑 Title', rarity: 'Legendary', color: '#f59e0b' },
+            ].map(p => (
+              <div key={p.label} className="rounded-lg p-2 text-center" style={{ background: '#1a1810', border: `1px solid ${p.color}30` }}>
+                <div className="text-[10px] font-bold" style={{ color: p.color }}>{p.label}</div>
+                <div className="text-[8px]" style={{ color: 'rgba(255,255,255,0.3)' }}>{p.rarity}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      label: 'Prize Wall',
+      title: 'Points become something players actually want.',
+      body: `Cosmetics for their profile — frames, backgrounds, badges, titles. They earn them, show them off, and feel ownership over their loyalty account. You control what's on the wall.`,
+      screen: (
+        <div className="px-4 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-xs font-semibold text-white">Prize Wall</div>
+            <div className="text-[10px] font-bold" style={{ color }}>4,820 pts available</div>
+          </div>
+          <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+            {['All', 'Frames', 'Badges', 'Backgrounds', 'Titles'].map((cat, i) => (
+              <div key={cat} className="px-2.5 py-1 rounded-lg text-[10px] font-medium flex-shrink-0" style={{ background: i === 0 ? color : '#1a1810', color: i === 0 ? '#111009' : 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.07)' }}>{cat}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {cfg.prizes.slice(0, 4).map(item => (
+              <div key={item.id} className="rounded-xl p-3" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-2xl mb-1">{item.icon}</div>
+                <div className="text-[11px] font-bold text-white truncate">{item.name}</div>
+                <div className="text-[9px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{item.category} · {item.rarity}</div>
+                <div className="rounded-lg py-1.5 text-center text-[10px] font-bold" style={{ background: `${item.color}20`, color: item.color }}>{item.cost.toLocaleString()} pts</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      label: 'Player Profile',
+      title: 'Their identity at your store.',
+      body: `Every player has a profile with their ID, their cosmetics, their stats, and their games. The Player ID is how staff finds them — and it's theirs. They'll remember it.`,
+      screen: (
+        <div className="px-4 pb-4">
+          {/* Avatar area */}
+          <div className="flex flex-col items-center mb-4">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-2" style={{ background: `${color}20`, border: `2px solid ${color}50` }}>🎮</div>
+            <div className="font-bold text-white text-sm">Alex R.</div>
+            <div className="text-[11px] font-mono mt-0.5" style={{ color }}>
+              {prefix}-AXR001
+            </div>
+          </div>
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            {[{ v: '4,820', l: 'Points' }, { v: '#3', l: 'Rank' }, { v: '52', l: 'Events' }].map(s => (
+              <div key={s.l} className="rounded-xl p-2.5 text-center" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-sm font-bold text-white">{s.v}</div>
+                <div className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          {/* Equipped cosmetics */}
+          <div className="rounded-xl p-3 mb-2" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="text-[10px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>Equipped</div>
+            <div className="flex gap-2">
+              {[{ label: 'Golden Frame', icon: '🖼️', color: '#FACC15' }, { label: 'Dragon Badge', icon: '🐉', color: '#E63946' }, { label: 'Emperor', icon: '👑', color: '#f59e0b' }].map(c => (
+                <div key={c.label} className="flex-1 rounded-lg p-2 text-center" style={{ background: '#222018' }}>
+                  <div className="text-lg">{c.icon}</div>
+                  <div className="text-[8px]" style={{ color: c.color }}>{c.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl p-2.5 text-center" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>Member since Jan 2025 · 8-win streak 🔥</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      label: 'Notifications',
+      title: 'The app keeps players engaged between visits.',
+      body: `Daily spin reminders, event announcements, XP confirmations. Players stay connected to the store even when they're not there — which means they show up more.`,
+      screen: (
+        <div className="px-4 pb-4">
+          <div className="text-xs font-semibold text-white mb-3">Notifications</div>
+          {[
+            { icon: '🎰', title: 'Daily spin ready!', body: "Don't leave Points on the table — spin now.", time: '2m ago', color },
+            { icon: '📣', title: 'New event announced', body: 'One Piece Regional — Sat Jan 25 · 12 PM', time: '1h ago', color: '#E63946' },
+            { icon: '⚡', title: 'XP Earned', body: '+50 XP from Pokemon League check-in', time: '2d ago', color: '#FACC15' },
+            { icon: '🏆', title: 'Rank up!', body: "You've reached Planeswalker rank in MTG", time: '3d ago', color: '#8B5CF6' },
+            { icon: '🛍️', title: 'New prize added', body: 'Holographic Frame now on the Prize Wall', time: '5d ago', color: '#34d399' },
+          ].map(n => (
+            <div key={n.title} className="flex items-start gap-2.5 p-2.5 rounded-xl mb-2" style={{ background: '#1a1810', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0 mt-0.5" style={{ background: `${n.color}20` }}>{n.icon}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-semibold text-white">{n.title}</div>
+                <div className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{n.body}</div>
+              </div>
+              <div className="text-[9px] flex-shrink-0 mt-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>{n.time}</div>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+  ];
+
+  const total = slides.length;
+  const current = slides[slide];
+
+  return (
+    <section id="tour" className="py-16 sm:py-20 px-5 bg-surface border-b border-border-token">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-10">
+          <SectionLabel>App walkthrough</SectionLabel>
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+            Slide by slide
+          </h2>
+          <p className="text-secondary max-w-lg mx-auto">
+            Walk through every screen your players will use. Use the arrows or dot navigation.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+          {/* Phone */}
+          <div className="order-2 lg:order-1 flex justify-center">
+            <AppPhone key={slide}>{current.screen}</AppPhone>
+          </div>
+
+          {/* Narrative */}
+          <div className="order-1 lg:order-2">
+            {/* Slide label */}
+            <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color }}>
+              {slide + 1} of {total} · {current.label}
+            </div>
+
+            <h3 className="text-2xl sm:text-3xl font-bold text-primary mb-4 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+              {current.title}
+            </h3>
+            <p className="text-secondary text-base leading-relaxed mb-8">
+              {current.body}
+            </p>
+
+            {/* Navigation */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSlide(s => Math.max(0, s - 1))}
+                disabled={slide === 0}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-border-token text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                ←
+              </button>
+              <div className="flex gap-1.5 flex-1">
+                {slides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSlide(i)}
+                    className="rounded-full transition-all"
+                    style={{
+                      width: i === slide ? 24 : 8,
+                      height: 8,
+                      background: i === slide ? color : 'var(--bg-elevated)',
+                      border: '1px solid var(--border)',
+                    }}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={() => setSlide(s => Math.min(total - 1, s + 1))}
+                disabled={slide === total - 1}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-border-token text-primary hover:bg-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                →
+              </button>
+            </div>
+
+            {/* Slide titles quick-jump */}
+            <div className="mt-6 flex flex-wrap gap-2">
+              {slides.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSlide(i)}
+                  className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+                  style={i === slide
+                    ? { background: `${color}20`, color, border: `1px solid ${color}40` }
+                    : { background: 'var(--bg-elevated)', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }
+                  }
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export const PITCH_STORAGE_KEY = 'hxp_pitch_config';
 
 /* ── Shared pitch UI — used by /pitch and /pitch/[slug] ── */
@@ -571,6 +959,9 @@ export default function PitchContent({ cfg: defaultCfg }: { cfg: PitchConfig }) 
           ))}
         </div>
       </div>
+
+      {/* ── App tour ── */}
+      <AppTourSection cfg={cfg} />
 
       {/* ── Player experience ── */}
       <Section id="player">
