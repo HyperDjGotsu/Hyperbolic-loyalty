@@ -518,6 +518,8 @@ export const DailyGacha = ({ onComplete, onClose }: DailyGachaProps) => {
       prizeRef.current = p;
       setPrize(p);
       setNextSpinAt(data.nextSpinAt);
+      // Mark getting-started spin task complete
+      if (typeof window !== 'undefined') localStorage.setItem('hxp_done_spin', 'true');
       return true;
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please retry.');

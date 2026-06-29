@@ -398,6 +398,7 @@ export default function ProfilePage() {
         const data = await res.json();
         setFavoriteGames(data.favorites);
         setEditingFavorites(false);
+        if (typeof window !== 'undefined') localStorage.setItem('hxp_done_games', 'true');
         alert('✅ Favorite games saved!');
       } else {
         alert('Failed to save favorites');

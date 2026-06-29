@@ -13,6 +13,7 @@ import { BannerCarousel } from '@/components/BannerCarousel';
 import { DailyGacha } from '@/components/DailyGacha';
 import { CheckInModal } from '@/components/CheckInModal';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
+import { GettingStartedCard } from '@/components/GettingStartedCard';
 import type { Player, ActivityItem, Banner } from '@/lib/types';
 
 // Type for displayed game data
@@ -411,6 +412,11 @@ export default function MobileDashboard() {
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
           )}
         </GlowButton>
+      </div>
+
+      {/* Getting Started checklist — shown to new players */}
+      <div className="mt-4">
+        <GettingStartedCard />
       </div>
 
       {/* Banner Carousel */}

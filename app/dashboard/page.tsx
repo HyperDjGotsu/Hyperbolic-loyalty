@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 
 // Dynamic imports - only loads the version needed
 const MobileDashboard = dynamic(() => import('./MobileDashboard'), {
@@ -72,5 +73,10 @@ export default function DashboardPage() {
   }
 
   // Only render ONE component based on screen size
-  return isDesktop ? <DesktopDashboard /> : <MobileDashboard />;
+  return (
+    <>
+      <WelcomeOverlay />
+      {isDesktop ? <DesktopDashboard /> : <MobileDashboard />}
+    </>
+  );
 }

@@ -129,6 +129,8 @@ export default function ShopPage() {
   useEffect(() => {
     if (isLoaded && user) {
       loadShopData();
+      // Mark getting-started shop task complete
+      if (typeof window !== 'undefined') localStorage.setItem('hxp_done_shop', 'true');
     }
   }, [isLoaded, user, loadShopData]);
 
