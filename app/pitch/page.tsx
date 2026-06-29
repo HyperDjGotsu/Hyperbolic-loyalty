@@ -418,7 +418,11 @@ export default function PitchPage() {
             >
               See the player experience →
             </a>
-            <a href="#company" className="px-8 py-4 rounded-xl font-bold text-base border border-border-strong hover:bg-elevated transition-colors">
+            <a
+              href="#company"
+              className="px-8 py-4 rounded-xl font-bold text-base transition-colors"
+              style={{ background: 'rgba(255,255,255,0.08)', color: '#f2efe8', border: '1px solid rgba(255,255,255,0.18)' }}
+            >
               Skip to company overview ↓
             </a>
           </div>
@@ -871,7 +875,8 @@ export default function PitchPage() {
             </a>
             <a
               href="/hq"
-              className="px-8 py-4 rounded-xl font-bold text-base border border-border-strong hover:bg-elevated transition-colors"
+              className="px-8 py-4 rounded-xl font-bold text-base transition-colors"
+              style={{ background: 'rgba(255,255,255,0.08)', color: '#f2efe8', border: '1px solid rgba(255,255,255,0.18)' }}
             >
               View store HQ
             </a>
