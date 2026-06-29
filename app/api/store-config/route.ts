@@ -33,8 +33,12 @@ export async function GET(request: Request) {
       .eq('id', 1)
       .single();
 
-    if (error || !data) return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
+    if (error || !data) {
+      console.log('[store-config GET] no row found, returning defaults. error:', error?.code);
+      return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
+    }
 
+    console.log('[store-config GET] returning:', { currency_name: data.currency_name, shop_title: data.shop_title, shop_description: data.shop_description });
     return NextResponse.json(
       { ...data, shop_categories: data.shop_categories ?? DEFAULTS.shop_categories },
       { headers: NO_CACHE }

@@ -24,13 +24,19 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories } = body;
 
+    console.log('[store-config PUT]', { currency_name, shop_title, shop_description });
+
     const { data, error } = await supabaseAdmin
       .from('store_config')
       .upsert({ id: 1, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, updated_at: new Date().toISOString() })
-      .select()
+      .select('currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[store-config PUT] upsert error:', error);
+      throw error;
+    }
+    console.log('[store-config PUT] saved:', data);
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
