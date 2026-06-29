@@ -883,190 +883,183 @@ function WhyItMattersSection({ cfg }: { cfg: PitchConfig }) {
   const color = cfg.hqColor;
   const storeCount = cfg.stores.length;
   const totalPlayers = cfg.stores.reduce((s, g) => s + g.players, 0);
+  const [spend, setSpend] = useState(40);
+
+  const liftRevenue = Math.round(totalPlayers * spend * 0.5);
 
   return (
-    <section id="why" className="py-16 sm:py-20 px-5">
+    <section id="why" className="py-16 sm:py-20 px-5 bg-surface">
       <div className="max-w-5xl mx-auto">
+
+        {/* ── Lead: the real problem ── */}
         <div className="text-center mb-12">
           <SectionLabel>Why it matters</SectionLabel>
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
-            Your regulars are your business.<br className="hidden sm:block" /> You should know who they are.
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-5 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+            Your community lives in your staff's heads.<br className="hidden sm:block" /> That's fragile.
           </h2>
-          <p className="text-secondary max-w-xl mx-auto">
-            Most game stores run on gut feel. They know the faces but not the numbers. This changes that — and the numbers matter.
+          <p className="text-secondary max-w-2xl mx-auto text-base leading-relaxed">
+            When a great staff member leaves, they take everything with them — who the regulars are, what games they play, who's been coming for years, who had a bad experience last month. The players walk in the next week and the new person has no idea who they are. That's not a staffing problem. It's a systems problem.
           </p>
         </div>
 
-        {/* ── Core value props ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-          {[
-            {
-              icon: '🔄',
-              stat: '2×',
-              statLabel: 'more frequent visits',
-              title: 'Loyalty members come back more',
-              body: "Players enrolled in a loyalty system visit twice as often as walk-ins. They're not just coming for the game — they're coming for the points, the rank, the streak. That's recurring revenue you didn't have to advertise for.",
-              color: color,
-            },
-            {
-              icon: '📅',
-              stat: '+40%',
-              statLabel: 'event attendance',
-              title: 'Notifications fill your events',
-              body: "A day-of reminder pushed to every player's phone moves attendance numbers. Bigger events mean better play experiences, stronger word of mouth, and more entry fees. One good event reminder pays for itself.",
-              color: '#34d399',
-            },
-            {
-              icon: '🛡️',
-              stat: '3×',
-              statLabel: 'less likely to shop online',
-              title: 'Loyalty beats Amazon',
-              body: "A player with 4,000 Points, a custom frame, and a #3 leaderboard spot doesn't buy their next booster box from TCGPlayer. They buy it from you — because switching means starting over. That's defensible revenue.",
-              color: '#60a5fa',
-            },
-            {
-              icon: '📊',
-              stat: '100%',
-              statLabel: 'visibility you don\'t have now',
-              title: 'Know your top 20%',
-              body: "In most stores, the top 20% of customers drive 60–70% of revenue. Right now you probably can't name them all. With Hyperbolic XP you can sort by XP, by game, by check-ins — and actually invest in the people who matter most.",
-              color: '#f59e0b',
-            },
-          ].map(item => (
-            <div key={item.title} className="rounded-2xl border border-border-token p-6 bg-elevated">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: `${item.color}20` }}>
-                  {item.icon}
-                </div>
-                <div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-2xl font-bold" style={{ color: item.color }}>{item.stat}</span>
-                    <span className="text-xs text-tertiary">{item.statLabel}</span>
+        {/* ── Staff retention callout ── */}
+        <div className="rounded-2xl overflow-hidden mb-6 border border-border-token">
+          <div className="grid grid-cols-1 sm:grid-cols-2">
+            {/* Before */}
+            <div className="p-6 sm:p-8 border-b sm:border-b-0 sm:border-r border-border-token bg-elevated">
+              <div className="text-xs font-bold uppercase tracking-widest text-tertiary mb-5">When staff walks out</div>
+              <div className="space-y-4">
+                {[
+                  { icon: '👤', text: 'New staff member has no idea who your regulars are' },
+                  { icon: '🔇', text: "Players feel like strangers. The regulars who built the culture start coming less" },
+                  { icon: '📉', text: 'Event turnout drops — the social glue was in one person\'s relationships' },
+                  { icon: '⏳', text: 'Rebuilding takes 3–6 months of slow, manual relationship work' },
+                ].map(item => (
+                  <div key={item.text} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: 'rgba(239,68,68,0.1)' }}>{item.icon}</div>
+                    <p className="text-sm text-secondary leading-snug pt-1">{item.text}</p>
                   </div>
-                  <div className="font-bold text-primary text-sm mt-0.5">{item.title}</div>
-                </div>
+                ))}
               </div>
-              <p className="text-secondary text-sm leading-relaxed">{item.body}</p>
             </div>
-          ))}
+            {/* After */}
+            <div className="p-6 sm:p-8" style={{ background: `${color}08` }}>
+              <div className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color }}>With Hyperbolic XP</div>
+              <div className="space-y-4">
+                {[
+                  { icon: '🏷️', text: 'New staff pulls up any player instantly — name, games, XP, how long they\'ve been coming' },
+                  { icon: '💬', text: '"Hey Alex, good to see you — still #3 on the One Piece board?" on day one' },
+                  { icon: '📣', text: 'Events keep running on autopilot. Notifications go out regardless of who\'s working' },
+                  { icon: '🔄', text: 'Community continuity is in the system, not a person. Turnover doesn\'t reset the clock' },
+                ].map(item => (
+                  <div key={item.text} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${color}20` }}>{item.icon}</div>
+                    <p className="text-sm text-secondary leading-snug pt-1">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* ── The math ── */}
-        <div className="rounded-2xl border border-border-token overflow-hidden mb-8">
+        {/* ── New player angle ── */}
+        <div className="rounded-2xl border border-border-token p-6 sm:p-8 bg-elevated mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-widest text-tertiary mb-3">For players walking in for the first time</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-primary mb-3 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
+                They're joining a community, not just a store.
+              </h3>
+              <p className="text-secondary text-sm leading-relaxed">
+                A new player scans the QR code, creates their account, and immediately sees the leaderboard — who's been here the longest, who's dominating One Piece, what events are coming up. They're not walking into an empty room. They're walking into something with history, with stakes, with people they want to beat. That feeling is what turns a first visit into a regular.
+              </p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: 'Scans QR · creates account', sub: '30 seconds', icon: '📱', done: true },
+                { label: 'Sees the leaderboard', sub: 'Who\'s #1? Who should I beat?', icon: '🏆', done: true },
+                { label: 'Checks upcoming events', sub: 'One Piece Weekly — this Saturday', icon: '📅', done: true },
+                { label: 'Gets their first check-in XP', sub: '+50 XP — they\'re on the board', icon: '⚡', done: true },
+                { label: 'Returns next week', sub: 'Because they\'re #47 and want to climb', icon: '🔄', done: false },
+              ].map((step, i) => (
+                <div key={step.label} className="flex items-center gap-3 p-3 rounded-xl border border-border-token" style={{ background: 'var(--bg-base)' }}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: step.done ? `${color}20` : 'var(--bg-elevated)' }}>{step.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-primary">{step.label}</div>
+                    <div className="text-xs text-tertiary">{step.sub}</div>
+                  </div>
+                  {i < 4 && <span className="text-green-400 text-sm flex-shrink-0">✓</span>}
+                  {i === 4 && <span className="text-xs flex-shrink-0" style={{ color }}>← the goal</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── The math — interactive ── */}
+        <div className="rounded-2xl border border-border-token overflow-hidden mb-6">
           <div className="px-5 sm:px-8 py-5 border-b border-border-token bg-elevated">
-            <div className="font-bold text-primary">The math for {cfg.companyName}</div>
-            <div className="text-xs text-tertiary mt-0.5">Conservative scenario — {totalPlayers} active players across {storeCount} stores</div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="font-bold text-primary">What retention is actually worth</div>
+                <div className="text-xs text-tertiary mt-0.5">{totalPlayers} active players · {storeCount} stores · adjust avg spend below</div>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <span className="text-xs text-tertiary">Avg spend/visit</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setSpend(s => Math.max(10, s - 5))} className="w-7 h-7 rounded-lg border border-border-token bg-base text-sm font-bold text-secondary hover:text-primary transition-colors">−</button>
+                  <span className="font-bold text-primary w-10 text-center">${spend}</span>
+                  <button onClick={() => setSpend(s => Math.min(200, s + 5))} className="w-7 h-7 rounded-lg border border-border-token bg-base text-sm font-bold text-secondary hover:text-primary transition-colors">+</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="divide-y divide-border-token">
             {[
               {
-                scenario: 'Before: average player visits once a month',
-                result: `${totalPlayers} players × 1 visit × $25 avg spend`,
-                value: `$${(totalPlayers * 25).toLocaleString()}/mo`,
+                label: 'Current revenue (1 visit/mo average)',
+                calc: `${totalPlayers} players × $${spend}`,
+                value: `$${(totalPlayers * spend).toLocaleString()}/mo`,
                 highlight: false,
               },
               {
-                scenario: 'After: loyalty members visit 1.5× more often',
-                result: `${totalPlayers} players × 1.5 visits × $25 avg spend`,
-                value: `$${Math.round(totalPlayers * 1.5 * 25).toLocaleString()}/mo`,
+                label: 'With loyalty (players visit ~1.5× as often)',
+                calc: `${totalPlayers} players × $${spend} × 1.5`,
+                value: `$${Math.round(totalPlayers * spend * 1.5).toLocaleString()}/mo`,
                 highlight: false,
               },
               {
-                scenario: 'Lift from loyalty system alone',
-                result: `Without additional marketing or staff`,
-                value: `+$${Math.round(totalPlayers * 0.5 * 25).toLocaleString()}/mo`,
+                label: 'Additional monthly revenue',
+                calc: 'No extra staff. No extra marketing.',
+                value: `+$${liftRevenue.toLocaleString()}/mo`,
                 highlight: true,
               },
             ].map(row => (
               <div
-                key={row.scenario}
+                key={row.label}
                 className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 px-5 sm:px-8 py-4"
-                style={row.highlight ? { background: `${color}08` } : { background: 'var(--bg-base)' }}
+                style={{ background: row.highlight ? `${color}08` : 'var(--bg-base)' }}
               >
                 <div className="flex-1">
-                  <div className={cn('text-sm font-semibold', row.highlight ? 'text-primary' : 'text-secondary')}>{row.scenario}</div>
-                  <div className="text-xs text-tertiary">{row.result}</div>
+                  <div className={cn('text-sm font-semibold', row.highlight ? 'text-primary' : 'text-secondary')}>{row.label}</div>
+                  <div className="text-xs text-tertiary">{row.calc}</div>
                 </div>
-                <div className={cn('text-xl font-bold flex-shrink-0', row.highlight ? '' : 'text-primary')} style={row.highlight ? { color } : {}}>
+                <div className="text-xl font-bold flex-shrink-0" style={{ color: row.highlight ? color : 'var(--text-primary)' }}>
                   {row.value}
                 </div>
               </div>
             ))}
           </div>
           <div className="px-5 sm:px-8 py-4 bg-elevated border-t border-border-token">
-            <p className="text-xs text-tertiary">
-              Based on industry loyalty program data. Actual results depend on staff engagement and event cadence. The multiplier grows as players invest more time in their account.
-            </p>
+            <p className="text-xs text-tertiary">The 1.5× visit multiplier is conservative — it comes from players returning for their daily spin, chasing their leaderboard rank, and getting event reminders. The more they invest in their account, the stickier they get.</p>
           </div>
         </div>
 
-        {/* ── Before / After ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <div className="rounded-2xl border border-border-token p-6 bg-elevated">
-            <div className="text-xs font-bold uppercase tracking-widest text-tertiary mb-4">Without Hyperbolic XP</div>
-            <div className="space-y-3">
-              {[
-                "You know your regulars by face, not by data",
-                "Event reminders = a post on Instagram, maybe",
-                "Players drift to online stores between events",
-                "No way to reward your most loyal customers",
-                "Staff turnover means losing player relationships",
-                "No idea which of your 5 stores is most engaged",
-              ].map(item => (
-                <div key={item} className="flex items-start gap-2.5 text-sm text-secondary">
-                  <span className="text-red-400 mt-0.5 flex-shrink-0">✕</span>
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-2xl border p-6 bg-elevated" style={{ borderColor: `${color}30` }}>
-            <div className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color }}>With Hyperbolic XP</div>
-            <div className="space-y-3">
-              {[
-                "Every player has an ID, XP history, and game stats",
-                "Event reminders go directly to every player's phone",
-                "Points and rank keep players invested in your store",
-                "Top players get recognized — they evangelize for you",
-                "Player data lives in the system, not in a staff member's head",
-                `See all ${storeCount} stores in one view — compare, act, grow`,
-              ].map(item => (
-                <div key={item} className="flex items-start gap-2.5 text-sm text-secondary">
-                  <span className="text-green-400 mt-0.5 flex-shrink-0">✓</span>
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── The referral flywheel ── */}
-        <div className="rounded-2xl border border-border-token p-6 sm:p-8 bg-elevated">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+        {/* ── Referral — compact ── */}
+        <div className="rounded-2xl border border-border-token p-5 sm:p-6 bg-elevated">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: `${color}20` }}>🔗</div>
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-tertiary mb-3">Built-in growth engine</div>
-              <h3 className="text-xl sm:text-2xl font-bold text-primary mb-3 leading-snug" style={{ fontFamily: 'var(--font-display)' }}>
-                The referral flywheel
-              </h3>
-              <p className="text-secondary text-sm leading-relaxed">
-                Every player who joins gets a referral code. When they bring a friend — who then attends their first event — both players earn bonus XP. Players recruit for you because it's in their interest to.
+              <div className="font-bold text-primary text-sm">Players recruit for you</div>
+              <p className="text-secondary text-sm mt-1 leading-relaxed">
+                Every player gets a referral code at signup. When they bring someone new — who then attends their first event — both earn bonus XP. They invite friends because it helps their own rank. You get new players without spending on acquisition.
               </p>
             </div>
-            <div className="space-y-3">
-              {[
-                { step: '1', label: 'Player joins, gets referral code', color },
-                { step: '2', label: 'Friend signs up with the code', color: '#60a5fa' },
-                { step: '3', label: 'Friend attends first event', color: '#34d399' },
-                { step: '4', label: 'Both earn XP — loyalty deepens', color: '#f59e0b' },
-              ].map(s => (
-                <div key={s.step} className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: `${s.color}20`, color: s.color }}>{s.step}</div>
-                  <div className="text-sm text-secondary">{s.label}</div>
-                </div>
-              ))}
-            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: 'Player refers friend', color },
+              { label: 'Friend attends first event', color: '#34d399' },
+              { label: 'Both earn XP', color: '#60a5fa' },
+              { label: 'Cycle repeats', color: '#f59e0b' },
+            ].map(s => (
+              <div key={s.label} className="px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: `${s.color}15`, color: s.color, border: `1px solid ${s.color}30` }}>
+                {s.label} →
+              </div>
+            ))}
           </div>
         </div>
+
       </div>
     </section>
   );
