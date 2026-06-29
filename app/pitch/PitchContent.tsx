@@ -275,7 +275,7 @@ function HQSection({ cfg, rankColors }: { cfg: PitchConfig; rankColors: string[]
     { name: 'Casey M.', id: `${cfg.hqPrefix}-CMQ033`, xp: 980, game: 'SWU', checkins: 14, status: 'inactive' },
   ];
 
-  const mockPrizes = cfg.prizes.map(p => ({ ...p, active: true, redeemed: Math.floor(Math.random() * 15) }));
+  const [mockPrizes] = useState(() => cfg.prizes.map(p => ({ ...p, active: true, redeemed: Math.floor(Math.random() * 15) })));
 
   return (
     <Section id="hq" dark>
@@ -418,7 +418,7 @@ function HQSection({ cfg, rankColors }: { cfg: PitchConfig; rankColors: string[]
                     <div className="font-bold text-sm" style={{ color: cfg.hqColor }}>{p.xp.toLocaleString()}</div>
                     <div className="text-[10px] text-tertiary">pts</div>
                   </div>
-                  <div className={cn('w-2 h-2 rounded-full flex-shrink-0', p.status === 'active' ? 'bg-green-400' : 'bg-tertiary')} />
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.status === 'active' ? '#4ade80' : 'var(--text-tertiary)' }} />
                 </div>
               ))}
             </div>
@@ -1072,17 +1072,19 @@ export default function PitchContent({ cfg: defaultCfg }: { cfg: PitchConfig }) 
   const [cfg, setCfg] = useState(defaultCfg);
   const [activeStoreId, setActiveStoreId] = useState(defaultCfg.stores[0].id);
 
-  // Load localStorage override on mount (set by /pitch/edit)
+  // Load localStorage override on mount — only when slug matches (editor writes defaultCfg.slug)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(PITCH_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as PitchConfig;
-        setCfg(parsed);
-        setActiveStoreId(parsed.stores[0]?.id ?? defaultCfg.stores[0].id);
+        if (parsed.slug === defaultCfg.slug) {
+          setCfg(parsed);
+          setActiveStoreId(parsed.stores[0]?.id ?? defaultCfg.stores[0].id);
+        }
       }
     } catch { /* ignore corrupt storage */ }
-  }, [defaultCfg.stores]);
+  }, [defaultCfg.slug, defaultCfg.stores]);
 
   const totalPlayers = cfg.stores.reduce((s, g) => s + g.players, 0);
   const totalCheckins = cfg.stores.reduce((s, g) => s + g.weekCheckins, 0);

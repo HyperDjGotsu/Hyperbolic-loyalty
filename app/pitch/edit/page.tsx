@@ -44,7 +44,7 @@ function NumberInput({ value, onChange }: { value: number; onChange: (v: number)
     <input
       type="number"
       value={value}
-      onChange={e => onChange(parseInt(e.target.value) || 0)}
+      onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n)) onChange(n); }}
       className="w-full rounded-xl px-3 py-2.5 text-sm text-primary border border-border-token bg-input outline-none focus:border-accent transition-colors"
     />
   );
