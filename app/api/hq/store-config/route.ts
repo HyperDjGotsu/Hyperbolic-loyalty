@@ -29,11 +29,11 @@ export async function PUT(request: Request) {
 
     // Use update (not upsert) — row is guaranteed to exist from migration seed
     const { data, error } = await supabaseAdmin
-      .from('store_config')
+      .from('store_config' as any)
       .update(updates)
       .eq('id', 1)
-      .select('currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories')
-      .single();
+      .select('*')
+      .maybeSingle();
 
     if (error) {
       console.error('[store-config PUT] update error:', error);

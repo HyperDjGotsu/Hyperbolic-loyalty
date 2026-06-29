@@ -28,21 +28,35 @@ export async function GET(request: Request) {
   void request; // touch request to ensure dynamic rendering
   try {
     const { data, error } = await supabaseAdmin
-      .from('store_config')
-      .select('currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories')
+      .from('store_config' as any)
+      .select('*')
       .eq('id', 1)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      console.log('[store-config GET] no row found, returning defaults. error:', error?.code);
+    if (error) {
+      console.error('[store-config GET] query error:', error.code, error.message);
       return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
     }
 
-    console.log('[store-config GET] returning:', { currency_name: data.currency_name, shop_title: data.shop_title, shop_description: data.shop_description });
-    return NextResponse.json(
-      { ...data, shop_categories: data.shop_categories ?? DEFAULTS.shop_categories },
-      { headers: NO_CACHE }
-    );
+    if (!data) {
+      console.log('[store-config GET] no row found, returning defaults');
+      return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
+    }
+
+    const row = data as Record<string, any>;
+    console.log('[store-config GET] raw row keys:', Object.keys(row));
+
+    const result = {
+      currency_name:    row.currency_name    ?? DEFAULTS.currency_name,
+      currency_icon:    row.currency_icon    ?? DEFAULTS.currency_icon,
+      store_name:       row.store_name       ?? DEFAULTS.store_name,
+      shop_title:       row.shop_title       ?? DEFAULTS.shop_title,
+      shop_description: row.shop_description ?? DEFAULTS.shop_description,
+      shop_categories:  row.shop_categories  ?? DEFAULTS.shop_categories,
+    };
+
+    console.log('[store-config GET] returning:', { shop_title: result.shop_title, shop_description: result.shop_description });
+    return NextResponse.json(result, { headers: NO_CACHE });
   } catch {
     return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
   }
