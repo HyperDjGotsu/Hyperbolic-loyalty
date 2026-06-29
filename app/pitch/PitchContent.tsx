@@ -251,6 +251,245 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* ── HQ mock with interactive tabs ── */
+type HQTab = 'Dashboard' | 'Events' | 'Players' | 'Shop' | 'Settings';
+
+function HQSection({ cfg, rankColors }: { cfg: PitchConfig; rankColors: string[] }) {
+  const [activeTab, setActiveTab] = useState<HQTab>('Dashboard');
+  const store = cfg.stores[0];
+  const tabs: HQTab[] = ['Dashboard', 'Events', 'Players', 'Shop', 'Settings'];
+
+  const mockEvents = [
+    { name: 'One Piece Weekly', day: 'Today', time: '6:00 PM', players: 18, status: 'live' },
+    { name: 'Pokemon League', day: 'Tomorrow', time: '2:00 PM', players: 24, status: 'upcoming' },
+    { name: 'MTG Commander Night', day: 'Fri', time: '6:00 PM', players: 12, status: 'upcoming' },
+    { name: 'Gundam Card Game', day: 'Sat', time: '4:00 PM', players: 8, status: 'upcoming' },
+    { name: 'SWU Weekly', day: 'Thu', time: '6:00 PM', players: 10, status: 'upcoming' },
+  ];
+
+  const mockPlayers = [
+    { name: 'Alex R.', id: `${cfg.hqPrefix}-AXR001`, xp: 4820, game: 'MTG', checkins: 52, status: 'active' },
+    { name: 'Marcus D.', id: `${cfg.hqPrefix}-MRD042`, xp: 3100, game: 'One Piece', checkins: 38, status: 'active' },
+    { name: 'Taylor W.', id: `${cfg.hqPrefix}-TWK019`, xp: 2090, game: 'Pokemon', checkins: 29, status: 'active' },
+    { name: 'Jordan S.', id: `${cfg.hqPrefix}-JRS007`, xp: 1540, game: 'Gundam', checkins: 21, status: 'active' },
+    { name: 'Casey M.', id: `${cfg.hqPrefix}-CMQ033`, xp: 980, game: 'SWU', checkins: 14, status: 'inactive' },
+  ];
+
+  const mockPrizes = cfg.prizes.map(p => ({ ...p, active: true, redeemed: Math.floor(Math.random() * 15) }));
+
+  return (
+    <Section id="hq" dark>
+      <div className="text-center mb-10">
+        <SectionLabel>Store HQ</SectionLabel>
+        <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+          What store managers see
+        </h2>
+        <p className="text-secondary max-w-lg mx-auto">
+          Each store has its own HQ dashboard. Click through the tabs to explore what your managers use every day.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-border-token overflow-hidden bg-elevated">
+        {/* Header */}
+        <div className="px-4 sm:px-6 py-4 border-b border-border-token">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${cfg.hqColor}20` }}>🏪</div>
+              <div className="min-w-0">
+                <div className="font-bold text-primary text-sm truncate">{cfg.hqStoreName} HQ</div>
+                <div className="text-xs text-tertiary">{cfg.hqCity} · Staff View</div>
+              </div>
+            </div>
+            {/* Tabs — desktop */}
+            <div className="hidden sm:flex gap-1 flex-shrink-0">
+              {tabs.map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={tab === activeTab ? { background: cfg.hqColor, color: '#111009' } : { color: 'var(--text-tertiary)' }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            {/* Tabs — mobile: scrollable row below header */}
+          </div>
+          {/* Mobile tab row */}
+          <div className="flex gap-1 mt-3 sm:hidden overflow-x-auto pb-1">
+            {tabs.map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-shrink-0"
+                style={tab === activeTab ? { background: cfg.hqColor, color: '#111009' } : { color: 'var(--text-tertiary)', background: 'var(--bg-base)' }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Dashboard tab ── */}
+        {activeTab === 'Dashboard' && (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border-token border-b border-border-token">
+              {[
+                { label: 'Active Players', value: store.players, icon: '👥' },
+                { label: 'Check-ins This Week', value: store.weekCheckins, icon: '📅' },
+                { label: 'Events Running', value: store.events, icon: '🎮' },
+                { label: 'Prizes Redeemed', value: store.redemptions, icon: '🛍️' },
+              ].map((stat, i) => (
+                <div key={stat.label} className={cn('p-4 sm:p-5', i === 1 ? 'border-l sm:border-l-0 border-border-token' : '')}>
+                  <div className="text-xs text-tertiary mb-1 leading-tight">{stat.label}</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl sm:text-2xl font-bold text-primary">{stat.value}</span>
+                    <span className="text-sm">{stat.icon}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="text-xs text-tertiary uppercase tracking-wide mb-3">Top Players This Month</div>
+              <div className="space-y-2">
+                {cfg.leaderboard.slice(0, 3).map((player, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border-token bg-base">
+                    <span className="text-sm font-bold text-tertiary w-4 text-center flex-shrink-0">{i + 1}</span>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${cfg.hqColor}20` }}>🎮</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-primary text-sm">{player.name}</div>
+                      <div className="text-xs text-tertiary">{cfg.hqPrefix}-{['AXR001','MRD042','TWK019'][i]}</div>
+                    </div>
+                    <div className="font-bold text-sm flex-shrink-0" style={{ color: cfg.hqColor }}>{player.xp.toLocaleString()} pts</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── Events tab ── */}
+        {activeTab === 'Events' && (
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xs text-tertiary uppercase tracking-wide">This Week's Events</div>
+              <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: cfg.hqColor, color: '#111009' }}>
+                + New event
+              </button>
+            </div>
+            <div className="space-y-2">
+              {mockEvents.map(ev => (
+                <div key={ev.name} className="flex items-center gap-3 p-3 rounded-xl border border-border-token bg-base">
+                  <div className="text-xl flex-shrink-0">{ev.status === 'live' ? '🟢' : '📅'}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-primary text-sm">{ev.name}</div>
+                    <div className="text-xs text-tertiary">{ev.day} · {ev.time} · {ev.players} players registered</div>
+                  </div>
+                  {ev.status === 'live' && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: '#22c55e20', color: '#22c55e' }}>LIVE</span>
+                  )}
+                  <button className="text-xs text-tertiary hover:text-secondary transition-colors flex-shrink-0">Check in →</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Players tab ── */}
+        {activeTab === 'Players' && (
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="text"
+                placeholder={`Search by name or ${cfg.hqPrefix}-ID…`}
+                className="flex-1 rounded-xl px-3 py-2 text-sm border border-border-token bg-base text-primary outline-none"
+                readOnly
+              />
+            </div>
+            <div className="space-y-2">
+              {mockPlayers.map(p => (
+                <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-border-token bg-base">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${cfg.hqColor}20` }}>🎮</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-primary text-sm">{p.name}</div>
+                    <div className="text-xs text-tertiary truncate">{p.id} · {p.game} · {p.checkins} events</div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-bold text-sm" style={{ color: cfg.hqColor }}>{p.xp.toLocaleString()}</div>
+                    <div className="text-[10px] text-tertiary">pts</div>
+                  </div>
+                  <div className={cn('w-2 h-2 rounded-full flex-shrink-0', p.status === 'active' ? 'bg-green-400' : 'bg-tertiary')} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Shop tab ── */}
+        {activeTab === 'Shop' && (
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-xs text-tertiary uppercase tracking-wide">Prize Wall Catalog</div>
+              <button className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: cfg.hqColor, color: '#111009' }}>
+                + Add prize
+              </button>
+            </div>
+            <div className="space-y-2">
+              {mockPrizes.map(item => (
+                <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl border border-border-token bg-base">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: `${item.color}20` }}>{item.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-primary text-sm">{item.name}</div>
+                    <div className="text-xs text-tertiary">{item.category} · {item.redeemed} redeemed</div>
+                  </div>
+                  <div className="font-bold text-sm flex-shrink-0" style={{ color: item.color }}>{item.cost.toLocaleString()} pts</div>
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-4 rounded-full relative cursor-pointer" style={{ background: '#22c55e' }}>
+                      <div className="absolute right-0.5 top-0.5 w-3 h-3 rounded-full bg-white" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Settings tab ── */}
+        {activeTab === 'Settings' && (
+          <div className="p-4 sm:p-6">
+            <div className="space-y-4">
+              {[
+                { label: 'Store Name', value: cfg.hqStoreName },
+                { label: 'Player ID Prefix', value: cfg.hqPrefix },
+                { label: 'Currency Name', value: 'Points' },
+                { label: 'City', value: cfg.hqCity },
+              ].map(setting => (
+                <div key={setting.label} className="flex items-center justify-between p-3 rounded-xl border border-border-token bg-base">
+                  <span className="text-sm text-secondary">{setting.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-primary">{setting.value}</span>
+                    <button className="text-xs text-tertiary hover:text-secondary transition-colors">Edit</button>
+                  </div>
+                </div>
+              ))}
+              <div className="p-3 rounded-xl border border-border-token bg-base">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-secondary">Notification Crons</span>
+                  <span className="text-xs text-green-400 font-medium">● Active</span>
+                </div>
+                <div className="text-xs text-tertiary space-y-1">
+                  <div>Daily spin reminder — 10:00 AM PT</div>
+                  <div>Event reminders — 7:00 AM PT day-of</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
 export const PITCH_STORAGE_KEY = 'hxp_pitch_config';
 
 /* ── Shared pitch UI — used by /pitch and /pitch/[slug] ── */
@@ -438,93 +677,7 @@ export default function PitchContent({ cfg: defaultCfg }: { cfg: PitchConfig }) 
       </Section>
 
       {/* ── Store HQ ── */}
-      <Section id="hq" dark>
-        <div className="text-center mb-10">
-          <SectionLabel>Store HQ</SectionLabel>
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-            What store managers see
-          </h2>
-          <p className="text-secondary max-w-lg mx-auto">
-            Each store has its own HQ dashboard. Managers view top players, run events, add prizes, and see this week&apos;s activity at a glance.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-border-token overflow-hidden bg-elevated">
-          {/* HQ Header — tabs hidden on mobile */}
-          <div className="px-4 sm:px-6 py-4 border-b border-border-token">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${cfg.hqColor}20` }}>🏪</div>
-                <div className="min-w-0">
-                  <div className="font-bold text-primary text-sm truncate">{cfg.hqStoreName} HQ</div>
-                  <div className="text-xs text-tertiary">{cfg.hqCity} · Staff View</div>
-                </div>
-              </div>
-              {/* Tabs: desktop only */}
-              <div className="hidden sm:flex gap-1 flex-shrink-0">
-                {['Dashboard', 'Events', 'Players', 'Shop', 'Settings'].map(tab => (
-                  <button key={tab} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', tab === 'Dashboard' ? 'text-accent-fg' : 'text-tertiary hover:text-secondary')} style={tab === 'Dashboard' ? { background: cfg.hqColor } : {}}>
-                    {tab}
-                  </button>
-                ))}
-              </div>
-              {/* Mobile: just show active tab badge */}
-              <div className="sm:hidden px-2.5 py-1 rounded-lg text-xs font-medium flex-shrink-0" style={{ background: cfg.hqColor, color: '#111009' }}>
-                Dashboard
-              </div>
-            </div>
-          </div>
-
-          {/* HQ Stats — 2×2 on mobile, 4 across on desktop */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border-token border-b border-border-token">
-            {[
-              { label: 'Active Players', value: cfg.stores[0].players.toString(), icon: '👥', color: cfg.hqColor },
-              { label: 'Check-ins This Week', value: cfg.stores[0].weekCheckins.toString(), icon: '📅', color: '#34d399' },
-              { label: 'Events Running', value: cfg.stores[0].events.toString(), icon: '🎮', color: '#60a5fa' },
-              { label: 'Prizes Redeemed', value: cfg.stores[0].redemptions.toString(), icon: '🛍️', color: '#f59e0b' },
-            ].map((stat, i) => (
-              <div key={stat.label} className={cn('p-4 sm:p-5', i === 1 ? 'border-l sm:border-l-0 border-border-token' : '')}>
-                <div className="text-xs text-tertiary mb-1 leading-tight">{stat.label}</div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-xl sm:text-2xl font-bold text-primary">{stat.value}</span>
-                  <span className="text-sm">{stat.icon}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Top players */}
-          <div className="p-4 sm:p-6">
-            <div className="text-xs text-tertiary uppercase tracking-wide mb-3">Top Players This Month</div>
-            <div className="space-y-2">
-              {cfg.leaderboard.slice(0, 3).filter(p => p.store === cfg.hqStoreName).length > 0
-                ? cfg.leaderboard.filter(p => p.store === cfg.hqStoreName).slice(0, 3).map((player, i) => (
-                    <div key={player.rank} className="flex items-center gap-3 p-3 rounded-xl border border-border-token bg-base">
-                      <span className="text-sm font-bold text-tertiary w-4 text-center flex-shrink-0">{i + 1}</span>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${cfg.hqColor}20` }}>🎮</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-primary text-sm">{player.name}</div>
-                        <div className="text-xs text-tertiary">{cfg.hqPrefix}-AXR00{i + 1}</div>
-                      </div>
-                      <div className="font-bold text-sm flex-shrink-0" style={{ color: cfg.hqColor }}>{player.xp.toLocaleString()} pts</div>
-                    </div>
-                  ))
-                : cfg.leaderboard.slice(0, 3).map((player, i) => (
-                    <div key={player.rank} className="flex items-center gap-3 p-3 rounded-xl border border-border-token bg-base">
-                      <span className="text-sm font-bold text-tertiary w-4 text-center flex-shrink-0">{i + 1}</span>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: `${cfg.hqColor}20` }}>🎮</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-primary text-sm">{player.name}</div>
-                        <div className="text-xs text-tertiary">{cfg.hqPrefix}-{['AXR001','MRD042','TWK019'][i]}</div>
-                      </div>
-                      <div className="font-bold text-sm flex-shrink-0" style={{ color: cfg.hqColor }}>{player.xp.toLocaleString()} pts</div>
-                    </div>
-                  ))
-              }
-            </div>
-          </div>
-        </div>
-      </Section>
+      <HQSection cfg={cfg} rankColors={rankColors} />
 
       {/* ── Company overview ── */}
       <Section id="company">
