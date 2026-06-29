@@ -436,6 +436,29 @@ export default function HQPage() {
   // null = closed, 'currency' = currency icon, number = category index
   const [iconPickerTarget, setIconPickerTarget] = useState<null | 'currency' | number>(null);
 
+  // Circuit state
+  const [circuitStores, setCircuitStores] = useState<Array<{ id: string; name: string; city: string; color: string; player_id_prefix: string }>>([]);
+  const [circuitQualifiers, setCircuitQualifiers] = useState<any[]>([]);
+  const [circuitLoading, setCircuitLoading] = useState(false);
+  const [circuitCreating, setCircuitCreating] = useState(false);
+  const [circuitEventForm, setCircuitEventForm] = useState({
+    name: 'GGC Circuit Qualifier',
+    store_id: '',
+    game_id: '',
+    scheduled_at: '',
+    max_players: '32',
+    entry_fee: '15',
+    attendance_xp: '30',
+    event_type: 'circuit_qualifier' as 'circuit_qualifier' | 'championship',
+  });
+  const [qualifierEventId, setQualifierEventId] = useState('');
+  const [standings, setStandings] = useState<Array<{ player_id: string; display_name: string; player_display_id: string; placement: number }>>([]);
+  const [standingsSearch, setStandingsSearch] = useState('');
+  const [standingsSearchResults, setStandingsSearchResults] = useState<any[]>([]);
+  const [standingsSearching, setStandingsSearching] = useState(false);
+  const [savingQualifiers, setSavingQualifiers] = useState(false);
+  const [qualifyCount, setQualifyCount] = useState(5);
+
   // Check staff access
   useEffect(() => {
     if (!isLoaded) return;
@@ -456,6 +479,9 @@ export default function HQPage() {
     }
     if (activeTab === 'events') {
       loadHQEvents();
+    }
+    if (activeTab === 'circuit') {
+      loadCircuitData();
     }
   }, [activeTab]);
 
@@ -484,6 +510,113 @@ export default function HQPage() {
       setGames(data.games || []);
     } catch (error) {
       console.error('Failed to load games:', error);
+    }
+  };
+
+  const loadCircuitData = async () => {
+    setCircuitLoading(true);
+    try {
+      const [storesRes, qualRes] = await Promise.all([
+        fetch('/api/circuit/stores?org=ggc'),
+        fetch('/api/circuit/qualifiers'),
+      ]);
+      const storesData = await storesRes.json();
+      const qualData = await qualRes.json();
+      setCircuitStores(storesData.stores || []);
+      setCircuitQualifiers(qualData.qualifiers || []);
+    } catch (e) {
+      console.error('Circuit load error:', e);
+    } finally {
+      setCircuitLoading(false);
+    }
+  };
+
+  const createCircuitEvent = async () => {
+    if (!circuitEventForm.name || !circuitEventForm.scheduled_at || !circuitEventForm.store_id) return;
+    setCircuitCreating(true);
+    try {
+      const res = await fetch('/api/events/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: circuitEventForm.name,
+          event_type: circuitEventForm.event_type,
+          store_id: circuitEventForm.store_id,
+          game_id: circuitEventForm.game_id || null,
+          scheduled_at: new Date(circuitEventForm.scheduled_at).toISOString(),
+          max_players: parseInt(circuitEventForm.max_players) || null,
+          entry_fee: parseFloat(circuitEventForm.entry_fee) || null,
+          attendance_xp: parseInt(circuitEventForm.attendance_xp) || 30,
+        }),
+      });
+      const data = await res.json();
+      if (data.event) {
+        showToast('Event created! Use Events tab to activate it.', 'success');
+        setQualifierEventId(data.event.id);
+      } else {
+        showToast('Failed to create event', 'error');
+      }
+    } catch {
+      showToast('Error creating event', 'error');
+    } finally {
+      setCircuitCreating(false);
+    }
+  };
+
+  const searchForStandings = async (query: string) => {
+    if (query.length < 2) { setStandingsSearchResults([]); return; }
+    setStandingsSearching(true);
+    try {
+      const res = await fetch(`/api/hq/players?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      setStandingsSearchResults(data.players || []);
+    } catch { /* ignore */ } finally {
+      setStandingsSearching(false);
+    }
+  };
+
+  const addToStandings = (player: any) => {
+    if (standings.find(s => s.player_id === player.id)) return;
+    const next = [...standings, {
+      player_id: player.id,
+      display_name: player.display_name,
+      player_display_id: player.player_id,
+      placement: standings.length + 1,
+    }];
+    setStandings(next);
+    setStandingsSearch('');
+    setStandingsSearchResults([]);
+  };
+
+  const saveQualifiers = async () => {
+    if (!qualifierEventId || standings.length === 0) return;
+    const store = circuitStores.find(s => s.id === circuitEventForm.store_id);
+    if (!store) { showToast('Select a store first', 'error'); return; }
+    setSavingQualifiers(true);
+    try {
+      const res = await fetch('/api/circuit/qualifiers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          qualifier_event_id: qualifierEventId,
+          store_id: store.id,
+          qualify_count: qualifyCount,
+          standings: standings.map(s => ({ player_id: s.player_id, placement: s.placement })),
+        }),
+      });
+      const data = await res.json();
+      if (data.qualifiers) {
+        showToast(`${data.count} player${data.count !== 1 ? 's' : ''} qualified for the championship!`, 'success');
+        setStandings([]);
+        setQualifierEventId('');
+        loadCircuitData();
+      } else {
+        showToast('Failed to save qualifiers', 'error');
+      }
+    } catch {
+      showToast('Error saving qualifiers', 'error');
+    } finally {
+      setSavingQualifiers(false);
     }
   };
 
@@ -1621,6 +1754,7 @@ export default function HQPage() {
               { id: 'cotd', label: '🃏 Card of Day', icon: '🃏' },
               { id: 'events', label: '📅 Events', icon: '📅' },
               { id: 'shop', label: '🛒 Shop', icon: '🛒' },
+              { id: 'circuit', label: '🏆 Circuit', icon: '🏆' },
               { id: 'settings', label: '⚙️ Settings', icon: '⚙️' },
             ].map(tab => (
               <button
@@ -3700,6 +3834,243 @@ export default function HQPage() {
           </div>
         )}
         {/* Settings Tab */}
+        {activeTab === 'circuit' && (
+          <div className="space-y-6 max-w-3xl">
+
+            {/* Qualifiers board */}
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <h2 className="font-semibold text-primary mb-1">GGC Circuit — Championship Roster</h2>
+              <p className="text-xs text-tertiary mb-4">Players who have qualified for the championship finals at Trade Emporium.</p>
+              {circuitLoading ? (
+                <div className="text-sm text-tertiary py-4 text-center">Loading…</div>
+              ) : circuitQualifiers.length === 0 ? (
+                <div className="text-sm text-tertiary py-6 text-center rounded-xl border border-dashed border-border-token">
+                  No qualifiers recorded yet. Run a qualifier event at each store and record standings below.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Group by store */}
+                  {circuitStores.map(store => {
+                    const storeQuals = circuitQualifiers.filter(q => q.store_id === store.id);
+                    if (storeQuals.length === 0) return null;
+                    return (
+                      <div key={store.id}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ background: store.color }} />
+                          <span className="text-xs font-semibold text-secondary uppercase tracking-wide">{store.name}</span>
+                          <span className="text-xs text-tertiary">{store.city}</span>
+                        </div>
+                        <div className="rounded-xl border border-border-token overflow-hidden mb-3">
+                          {storeQuals.sort((a, b) => a.placement - b.placement).map((q: any, i: number) => (
+                            <div key={q.id} className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border-token' : ''}`}>
+                              <span className="text-xs font-bold text-tertiary w-5">#{q.placement}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-primary">{q.players?.display_name || 'Unknown'}</div>
+                                <div className="text-xs text-tertiary font-mono">{q.players?.player_id}</div>
+                              </div>
+                              {q.has_bye && (
+                                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${store.color}20`, color: store.color }}>
+                                  R1 Bye
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Create qualifier event */}
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <h2 className="font-semibold text-primary mb-1">Create Qualifier Event</h2>
+              <p className="text-xs text-tertiary mb-5">Creates a circuit_qualifier event in the system. Then activate it from the Events tab and check players in normally.</p>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="col-span-2">
+                  <label className="text-xs font-medium text-secondary block mb-1">Event Name</label>
+                  <input
+                    type="text"
+                    value={circuitEventForm.name}
+                    onChange={e => setCircuitEventForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Store</label>
+                  <select
+                    value={circuitEventForm.store_id}
+                    onChange={e => setCircuitEventForm(f => ({ ...f, store_id: e.target.value }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  >
+                    <option value="">— Select store —</option>
+                    {circuitStores.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Event Type</label>
+                  <select
+                    value={circuitEventForm.event_type}
+                    onChange={e => setCircuitEventForm(f => ({ ...f, event_type: e.target.value as any }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  >
+                    <option value="circuit_qualifier">Circuit Qualifier</option>
+                    <option value="championship">Championship Finals</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Date &amp; Time</label>
+                  <input
+                    type="datetime-local"
+                    value={circuitEventForm.scheduled_at}
+                    onChange={e => setCircuitEventForm(f => ({ ...f, scheduled_at: e.target.value }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Max Players</label>
+                  <input
+                    type="number"
+                    value={circuitEventForm.max_players}
+                    onChange={e => setCircuitEventForm(f => ({ ...f, max_players: e.target.value }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Entry Fee ($)</label>
+                  <input
+                    type="number"
+                    value={circuitEventForm.entry_fee}
+                    onChange={e => setCircuitEventForm(f => ({ ...f, entry_fee: e.target.value }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Attendance XP</label>
+                  <input
+                    type="number"
+                    value={circuitEventForm.attendance_xp}
+                    onChange={e => setCircuitEventForm(f => ({ ...f, attendance_xp: e.target.value }))}
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={createCircuitEvent}
+                disabled={circuitCreating || !circuitEventForm.store_id || !circuitEventForm.scheduled_at}
+                className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {circuitCreating ? 'Creating…' : 'Create Event'}
+              </button>
+
+              {qualifierEventId && (
+                <p className="text-xs text-green-400 mt-3">
+                  ✓ Event created (ID: <span className="font-mono">{qualifierEventId}</span>). Activate it in the Events tab, run your bracket, then record standings below.
+                </p>
+              )}
+            </div>
+
+            {/* Record standings */}
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <h2 className="font-semibold text-primary mb-1">Record Final Standings</h2>
+              <p className="text-xs text-tertiary mb-4">After the qualifier event ends, add players in finish order. Top {qualifyCount} earn a Round 1 bye at the championship.</p>
+
+              <div className="flex items-center gap-3 mb-4">
+                <label className="text-xs font-medium text-secondary whitespace-nowrap">Qualify top</label>
+                <input
+                  type="number"
+                  value={qualifyCount}
+                  min={1} max={16}
+                  onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n)) setQualifyCount(n); }}
+                  className="w-16 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                />
+                <label className="text-xs font-medium text-secondary">players per store</label>
+              </div>
+
+              <div className="flex gap-2 mb-3">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={standingsSearch}
+                    onChange={e => { setStandingsSearch(e.target.value); searchForStandings(e.target.value); }}
+                    placeholder="Search player by name or HYP-ID…"
+                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  />
+                  {standingsSearchResults.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border-token rounded-xl shadow-xl z-20 overflow-hidden">
+                      {standingsSearchResults.slice(0, 6).map((p: any) => (
+                        <button
+                          key={p.id}
+                          onClick={() => addToStandings(p)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-elevated transition-colors border-b border-border-token last:border-0"
+                        >
+                          <div>
+                            <div className="text-sm font-medium text-primary">{p.display_name}</div>
+                            <div className="text-xs text-tertiary font-mono">{p.player_id}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {standings.length > 0 && (
+                <div className="rounded-xl border border-border-token overflow-hidden mb-4">
+                  {standings.map((s, i) => (
+                    <div key={s.player_id} className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border-token' : ''}`}>
+                      <span className="text-xs font-bold text-tertiary w-5">#{s.placement}</span>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-primary">{s.display_name}</div>
+                        <div className="text-xs text-tertiary font-mono">{s.player_display_id}</div>
+                      </div>
+                      {s.placement <= qualifyCount && (
+                        <span className="text-xs text-green-400 font-medium">Qualifies ✓</span>
+                      )}
+                      <button
+                        onClick={() => setStandings(prev => prev.filter(x => x.player_id !== s.player_id).map((x, idx) => ({ ...x, placement: idx + 1 })))}
+                        className="text-xs text-tertiary hover:text-red-400 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {standings.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <label className="text-xs font-medium text-secondary block mb-1">Qualifier Event ID</label>
+                    <input
+                      type="text"
+                      value={qualifierEventId}
+                      onChange={e => setQualifierEventId(e.target.value)}
+                      placeholder="Event UUID from Events tab"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono"
+                    />
+                  </div>
+                  <div className="pt-5">
+                    <button
+                      onClick={saveQualifiers}
+                      disabled={savingQualifiers || !qualifierEventId || !circuitEventForm.store_id}
+                      className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                      {savingQualifiers ? 'Saving…' : `Save ${Math.min(standings.length, qualifyCount)} qualifiers`}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
         {activeTab === 'settings' && (
           <div className="space-y-6 max-w-xl">
 
