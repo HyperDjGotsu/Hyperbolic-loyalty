@@ -251,9 +251,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+export const PITCH_STORAGE_KEY = 'hxp_pitch_config';
+
 /* ── Shared pitch UI — used by /pitch and /pitch/[slug] ── */
-export default function PitchContent({ cfg }: { cfg: PitchConfig }) {
-  const [activeStoreId, setActiveStoreId] = useState(cfg.stores[0].id);
+export default function PitchContent({ cfg: defaultCfg }: { cfg: PitchConfig }) {
+  const [cfg, setCfg] = useState(defaultCfg);
+  const [activeStoreId, setActiveStoreId] = useState(defaultCfg.stores[0].id);
+
+  // Load localStorage override on mount (set by /pitch/edit)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PITCH_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as PitchConfig;
+        setCfg(parsed);
+        setActiveStoreId(parsed.stores[0]?.id ?? defaultCfg.stores[0].id);
+      }
+    } catch { /* ignore corrupt storage */ }
+  }, [defaultCfg.stores]);
 
   const totalPlayers = cfg.stores.reduce((s, g) => s + g.players, 0);
   const totalCheckins = cfg.stores.reduce((s, g) => s + g.weekCheckins, 0);
