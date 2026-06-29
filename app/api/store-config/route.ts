@@ -33,19 +33,11 @@ export async function GET(request: Request) {
       .eq('id', 1)
       .maybeSingle();
 
-    if (error) {
-      console.error('[store-config GET] query error:', error.code, error.message);
-      return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
-    }
-
-    if (!data) {
-      console.log('[store-config GET] no row found, returning defaults');
+    if (error || !data) {
       return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
     }
 
     const row = data as Record<string, any>;
-    console.log('[store-config GET] raw row keys:', Object.keys(row));
-
     const result = {
       currency_name:    row.currency_name    ?? DEFAULTS.currency_name,
       currency_icon:    row.currency_icon    ?? DEFAULTS.currency_icon,
@@ -55,7 +47,6 @@ export async function GET(request: Request) {
       shop_categories:  row.shop_categories  ?? DEFAULTS.shop_categories,
     };
 
-    console.log('[store-config GET] returning:', { shop_title: result.shop_title, shop_description: result.shop_description });
     return NextResponse.json(result, { headers: NO_CACHE });
   } catch {
     return NextResponse.json(DEFAULTS, { headers: NO_CACHE });

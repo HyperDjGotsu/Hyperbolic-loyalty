@@ -891,7 +891,6 @@ export default function HQPage() {
         body: JSON.stringify(storeConfig),
       });
       const data = await res.json();
-      console.log('[saveStoreConfig] response status:', res.status, 'body:', data);
       if (data.error) throw new Error(data.error);
       showToast('Settings saved', 'success');
     } catch {
