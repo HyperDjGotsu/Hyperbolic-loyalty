@@ -7,7 +7,7 @@ export default function SignInPage() {
         <span className="font-display text-2xl font-bold text-primary">Hyperbolic XP</span>
         <p className="text-sm text-secondary mt-1">Welcome back</p>
       </div>
-      <SignIn />
+      <SignIn forceRedirectUrl="/dashboard" />
       <p className="mt-6 text-xs text-tertiary text-center">
         © 2026 Hyperbolic Creative
       </p>

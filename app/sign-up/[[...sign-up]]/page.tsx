@@ -7,7 +7,7 @@ export default function SignUpPage() {
         <span className="font-display text-2xl font-bold text-primary">Hyperbolic XP</span>
         <p className="text-sm text-secondary mt-1">Create your account</p>
       </div>
-      <SignUp />
+      <SignUp forceRedirectUrl="/onboarding" />
       <p className="mt-6 text-xs text-tertiary text-center">
         © 2026 Hyperbolic Creative
       </p>
