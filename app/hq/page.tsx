@@ -1995,11 +1995,11 @@ export default function HQPage() {
                     <div className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2">🏆 Match Wins</div>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { label: '1 Win', xp: 10 },
-                        { label: '2 Wins', xp: 20 },
-                        { label: '3 Wins', xp: 30 },
-                        { label: '4 Wins', xp: 40 },
-                        { label: 'Undefeated', xp: 10 },
+                        { label: '1 Win', xp: 5 },
+                        { label: '2 Wins', xp: 10 },
+                        { label: '3 Wins', xp: 15 },
+                        { label: '4 Wins', xp: 20 },
+                        { label: 'Undefeated', xp: 5 },
                       ].map(item => (
                         <button
                           key={item.label}
