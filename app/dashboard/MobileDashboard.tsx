@@ -10,8 +10,6 @@ import {
   StatCard,
 } from '@/components/ui';
 import { BannerCarousel } from '@/components/BannerCarousel';
-import { DailyGacha } from '@/components/DailyGacha';
-import { CheckInModal } from '@/components/CheckInModal';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { GettingStartedCard } from '@/components/GettingStartedCard';
 import type { Player, ActivityItem, Banner } from '@/lib/types';
@@ -79,10 +77,9 @@ export default function MobileDashboard() {
   const [playerData, setPlayerData] = useState<any>(null);
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
   const [showAllGames, setShowAllGames] = useState(false);
-  const [showGacha, setShowGacha] = useState(false);
-  const [showCheckIn, setShowCheckIn] = useState(false);
   const [hasSpunToday, setHasSpunToday] = useState(false);
-  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinMessage, setSpinMessage] = useState<string | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
@@ -170,31 +167,21 @@ export default function MobileDashboard() {
     loadPlayer();
   }, [isLoaded, user, router]);
 
-  // Load check-in and spin status when player is loaded
+  // Load spin status when player is loaded
   useEffect(() => {
-    async function loadDailyStatus() {
+    async function loadSpinStatus() {
       if (!playerData || !user) return;
-      
       try {
-        // Check check-in status
-        const checkinRes = await fetch('/api/xp/checkin');
-        if (checkinRes.ok) {
-          const checkinData = await checkinRes.json();
-          setHasCheckedInToday(checkinData.hasCheckedInToday || false);
-        }
-        
-        // Check spin status
         const spinRes = await fetch('/api/xp/daily-spin');
         if (spinRes.ok) {
           const spinData = await spinRes.json();
-          setHasSpunToday(spinData.hasSpunToday || false);
+          setHasSpunToday(!spinData.canSpin);
         }
       } catch (error) {
-        console.error('Error loading daily status:', error);
+        console.error('Error loading spin status:', error);
       }
     }
-    
-    loadDailyStatus();
+    loadSpinStatus();
   }, [playerData, user]);
 
   // Load store config
@@ -296,15 +283,22 @@ export default function MobileDashboard() {
     icon: '⭐',
   }));
 
-  // Handle gacha completion
-  const handleGachaComplete = () => {
-    setHasSpunToday(true);
-  };
-
-  // Handle check-in completion
-  const handleCheckInComplete = () => {
-    setHasCheckedInToday(true);
-    // Optionally refresh player data
+  const handleSpin = async () => {
+    if (hasSpunToday || isSpinning) return;
+    setIsSpinning(true);
+    try {
+      const res = await fetch('/api/xp/daily-spin', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setHasSpunToday(true);
+        setSpinMessage(`+${data.prize.xp} XP — ${data.prize.label}`);
+        setTimeout(() => setSpinMessage(null), 3000);
+      }
+    } catch (e) {
+      console.error('Spin error:', e);
+    } finally {
+      setIsSpinning(false);
+    }
   };
 
   if (loading) {
@@ -385,33 +379,25 @@ export default function MobileDashboard() {
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="px-4 -mt-3 relative z-10 flex gap-3">
-        <GlowButton
-          color="green"
-          onClick={() => setShowCheckIn(true)}
-          disabled={hasCheckedInToday}
-          className="flex-1 py-4"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xl">📍</span>
-            <span>{hasCheckedInToday ? 'Checked In!' : 'Check In'}</span>
-          </div>
-        </GlowButton>
+      {/* Daily Spin */}
+      <div className="px-4 -mt-3 relative z-10">
         <GlowButton
           color="purple"
-          onClick={() => setShowGacha(true)}
-          disabled={hasSpunToday}
-          className="flex-1 py-4 relative"
+          onClick={handleSpin}
+          disabled={hasSpunToday || isSpinning}
+          className="w-full py-4 relative"
         >
           <div className="flex items-center justify-center gap-2">
-            <span className="text-xl">⏳</span>
-            <span>{hasSpunToday ? 'Claimed!' : 'Daily Spin'}</span>
+            <span className="text-xl">🎰</span>
+            <span>{hasSpunToday ? (spinMessage || 'Claimed!') : isSpinning ? 'Spinning…' : 'Daily Spin'}</span>
           </div>
-          {!hasSpunToday && (
+          {!hasSpunToday && !isSpinning && (
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
           )}
         </GlowButton>
+        {spinMessage && !hasSpunToday && (
+          <p className="text-center text-xs text-accent mt-1">{spinMessage}</p>
+        )}
       </div>
 
       {/* Getting Started checklist — shown to new players */}
@@ -525,17 +511,6 @@ export default function MobileDashboard() {
         )}
       </div>
 
-      {/* Modals */}
-      {showGacha && (
-        <DailyGacha onComplete={handleGachaComplete} onClose={() => setShowGacha(false)} />
-      )}
-      {showCheckIn && (
-        <CheckInModal
-          hasCheckedIn={hasCheckedInToday}
-          onComplete={handleCheckInComplete}
-          onClose={() => setShowCheckIn(false)}
-        />
-      )}
     </div>
   );
 }

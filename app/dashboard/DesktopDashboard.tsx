@@ -5,8 +5,6 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { Avatar } from '@/components/ui';
-import { DailyGacha } from '@/components/DailyGacha';
-import { CheckInModal } from '@/components/CheckInModal';
 import { CardOfTheDay } from '@/components/CardOfTheDay';
 import NotificationBell from '@/components/NotificationBell';
 import type { Banner } from '@/lib/types';
@@ -568,10 +566,9 @@ export default function DesktopDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [playerData, setPlayerData] = useState<any>(null);
-  const [showGacha, setShowGacha] = useState(false);
-  const [showCheckIn, setShowCheckIn] = useState(false);
   const [hasSpunToday, setHasSpunToday] = useState(false);
-  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinMessage, setSpinMessage] = useState<string | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
@@ -672,29 +669,21 @@ export default function DesktopDashboard() {
     loadPlayer();
   }, [isLoaded, user, router]);
 
-  // Load check-in and spin status
+  // Load spin status
   useEffect(() => {
-    async function loadDailyStatus() {
+    async function loadSpinStatus() {
       if (!playerData || !user) return;
-
       try {
-        const checkinRes = await fetch('/api/xp/checkin');
-        if (checkinRes.ok) {
-          const checkinData = await checkinRes.json();
-          setHasCheckedInToday(checkinData.hasCheckedInToday || false);
-        }
-
         const spinRes = await fetch('/api/xp/daily-spin');
         if (spinRes.ok) {
           const spinData = await spinRes.json();
-          setHasSpunToday(spinData.hasSpunToday || false);
+          setHasSpunToday(!spinData.canSpin);
         }
       } catch (error) {
-        console.error('Error loading daily status:', error);
+        console.error('Error loading spin status:', error);
       }
     }
-
-    loadDailyStatus();
+    loadSpinStatus();
   }, [playerData, user]);
 
   // Load game stats for flippable cards
@@ -840,9 +829,23 @@ export default function DesktopDashboard() {
     return '🎮';
   }
 
-  // Handlers
-  const handleGachaComplete = () => setHasSpunToday(true);
-  const handleCheckInComplete = () => setHasCheckedInToday(true);
+  const handleSpin = async () => {
+    if (hasSpunToday || isSpinning) return;
+    setIsSpinning(true);
+    try {
+      const res = await fetch('/api/xp/daily-spin', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setHasSpunToday(true);
+        setSpinMessage(`+${data.prize.xp} XP — ${data.prize.label}`);
+        setTimeout(() => setSpinMessage(null), 3000);
+      }
+    } catch (e) {
+      console.error('Spin error:', e);
+    } finally {
+      setIsSpinning(false);
+    }
+  };
 
   // Avatar setup
   const avatar = playerData?.avatar || {};
@@ -974,44 +977,31 @@ export default function DesktopDashboard() {
             <div className="grid grid-cols-[1fr_360px] gap-6">
               {/* Left Column: Actions, Banner, My Games */}
               <div className="flex flex-col gap-6">
-                {/* Action Cards */}
-                <div className="animate-card grid grid-cols-2 gap-4">
-                  {/* Check In */}
+                {/* Daily Spin */}
+                <div className="animate-card">
                   <button
-                    onClick={() => setShowCheckIn(true)}
-                    disabled={hasCheckedInToday}
-                    className="bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(34,197,94,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(34,197,94,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div 
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] relative z-10"
-                      style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))' }}
-                    >
-                      📍
-                    </div>
-                    <div className="relative z-10 text-left">
-                      <div className="text-base font-bold text-primary">{hasCheckedInToday ? 'Checked In!' : 'Check In'}</div>
-                      <div className="text-xs text-secondary">Earn daily XP</div>
-                    </div>
-                  </button>
-
-                  {/* Daily Spin */}
-                  <button
-                    onClick={() => setShowGacha(true)}
-                    disabled={hasSpunToday}
-                    className="bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSpin}
+                    disabled={hasSpunToday || isSpinning}
+                    className="w-full bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div 
+                    <div
                       className="w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] relative z-10"
                       style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.1))' }}
                     >
                       🎰
                     </div>
                     <div className="relative z-10 text-left">
-                      <div className="text-base font-bold text-primary">{hasSpunToday ? 'Claimed!' : 'Daily Spin'}</div>
-                      <div className="text-xs text-secondary">Try your luck!</div>
+                      <div className="text-base font-bold text-primary">
+                        {isSpinning ? 'Spinning…' : hasSpunToday ? 'Claimed!' : 'Daily Spin'}
+                      </div>
+                      <div className="text-xs text-secondary">
+                        {spinMessage || (hasSpunToday ? 'Come back tomorrow' : 'Tap to earn XP')}
+                      </div>
                     </div>
+                    {!hasSpunToday && !isSpinning && (
+                      <span className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                    )}
                   </button>
                 </div>
 
@@ -1326,18 +1316,6 @@ export default function DesktopDashboard() {
           </section>
         </main>
       </div>
-
-      {/* Modals */}
-      {showGacha && (
-        <DailyGacha onComplete={handleGachaComplete} onClose={() => setShowGacha(false)} />
-      )}
-      {showCheckIn && (
-        <CheckInModal
-          hasCheckedIn={hasCheckedInToday}
-          onComplete={handleCheckInComplete}
-          onClose={() => setShowCheckIn(false)}
-        />
-      )}
 
       {/* CSS Animations */}
       <style jsx>{`
