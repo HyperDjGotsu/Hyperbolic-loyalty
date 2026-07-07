@@ -6,11 +6,11 @@ import { createNotification } from '@/lib/notifications';
 export const dynamic = 'force-dynamic';
 
 const PRIZES = [
-  { xp: 5,   label: 'Rusty Anchor',     rarity: 'common',    weight: 40 },
-  { xp: 10,  label: "Navigator's Log",  rarity: 'uncommon',  weight: 30 },
-  { xp: 25,  label: 'Rare Find',        rarity: 'rare',      weight: 20 },
-  { xp: 50,  label: 'Treasure Chest',   rarity: 'epic',      weight: 8  },
-  { xp: 100, label: 'JACKPOT',          rarity: 'legendary', weight: 2  },
+  { xp: 5,   label: 'Bronze',   rarity: 'common',    weight: 40 },
+  { xp: 10,  label: 'Silver',   rarity: 'uncommon',  weight: 31 },
+  { xp: 25,  label: 'Gold',     rarity: 'rare',      weight: 20 },
+  { xp: 50,  label: 'Diamond',  rarity: 'epic',      weight: 8  },
+  { xp: 100, label: 'Jackpot',  rarity: 'legendary', weight: 1  },
 ] as const;
 
 const TOTAL_WEIGHT = PRIZES.reduce((sum, p) => sum + p.weight, 0);
