@@ -29,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           colorPrimary:          '#c4b5fd',
           colorBackground:       '#1a1810',
           colorInputBackground:  '#1e1c14',
+          colorInputText:        '#f2efe8',
           colorText:             '#f2efe8',
           colorTextSecondary:    '#8a8070',
           borderRadius:          '10px',
