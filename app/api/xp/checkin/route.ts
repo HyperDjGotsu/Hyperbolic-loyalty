@@ -83,7 +83,7 @@ export async function POST() {
       }, { status: 400 });
     }
 
-    const CHECK_IN_XP = 20;
+    const CHECK_IN_XP = 10;
     
     const { error: insertError } = await supabaseAdmin
       .from('xp_ledger')
