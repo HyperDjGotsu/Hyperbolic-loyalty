@@ -337,6 +337,231 @@ interface HQShopItem {
   created_at: string;
 }
 
+function RedemptionsPanel() {
+  const [code, setCode] = useState('');
+  const [lookup, setLookup] = useState<any>(null);
+  const [lookupError, setLookupError] = useState('');
+  const [looking, setLooking] = useState(false);
+  const [actioning, setActioning] = useState(false);
+  const [actionResult, setActionResult] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [voidReason, setVoidReason] = useState('');
+  const [showVoidInput, setShowVoidInput] = useState(false);
+  const [recentList, setRecentList] = useState<any[]>([]);
+  const [listLoading, setListLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/hq/redemptions')
+      .then(r => r.json())
+      .then(d => setRecentList(d.redemptions || []))
+      .catch(() => {})
+      .finally(() => setListLoading(false));
+  }, [actionResult]);
+
+  const lookupCode = async () => {
+    const normalized = code.trim().toUpperCase();
+    if (!normalized) return;
+    setLooking(true);
+    setLookupError('');
+    setLookup(null);
+    setActionResult(null);
+    setShowVoidInput(false);
+
+    const found = recentList.find((r: any) => r.claim_code === normalized);
+    if (found) {
+      setLookup(found);
+    } else {
+      setLookupError('Code not found');
+    }
+    setLooking(false);
+  };
+
+  const doAction = async (action: 'claim' | 'void') => {
+    if (!lookup) return;
+    setActioning(true);
+    try {
+      const res = await fetch(`/api/hq/redemptions/${lookup.claim_code}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, voidReason: voidReason || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setActionResult({ msg: data.error || 'Failed', type: 'error' });
+      } else {
+        setActionResult({
+          msg: action === 'claim'
+            ? `Claimed! Give ${lookup.item_name} to ${lookup.player?.display_name}`
+            : `Voided. ${data.pointsRefunded} pts refunded to ${lookup.player?.display_name}`,
+          type: 'success',
+        });
+        setLookup(null);
+        setCode('');
+        setShowVoidInput(false);
+        setVoidReason('');
+      }
+    } catch {
+      setActionResult({ msg: 'Network error', type: 'error' });
+    } finally {
+      setActioning(false);
+    }
+  };
+
+  const statusColor: Record<string, string> = {
+    pending: 'text-yellow-400',
+    claimed: 'text-emerald-400',
+    voided: 'text-red-400',
+    expired: 'text-zinc-500',
+  };
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <h2 className="text-lg font-bold text-primary">Prize Redemptions</h2>
+        <p className="text-xs text-tertiary mt-1">Enter a player's claim code to verify and mark as claimed.</p>
+      </div>
+
+      {/* Code lookup */}
+      <div className="bg-surface rounded-xl p-5 border border-border-token space-y-3">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={code}
+            onChange={e => setCode(e.target.value.toUpperCase())}
+            onKeyDown={e => e.key === 'Enter' && lookupCode()}
+            placeholder="XXXX-XXXX"
+            maxLength={9}
+            className="flex-1 bg-input border border-border-token rounded-lg px-4 py-2.5 text-primary font-mono text-lg tracking-widest focus:outline-none focus:border-accent uppercase"
+          />
+          <button
+            onClick={lookupCode}
+            disabled={looking || !code.trim()}
+            className="px-5 py-2.5 bg-accent text-white rounded-lg font-semibold text-sm hover:bg-accent/80 disabled:opacity-50 transition-colors"
+          >
+            {looking ? '…' : 'Look Up'}
+          </button>
+        </div>
+
+        {lookupError && <p className="text-red-400 text-sm">{lookupError}</p>}
+
+        {actionResult && (
+          <div className={`rounded-lg px-4 py-3 text-sm font-medium ${actionResult.type === 'success' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+            {actionResult.msg}
+          </div>
+        )}
+
+        {lookup && (
+          <div className="bg-elevated rounded-xl p-4 space-y-3 border border-border-strong">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-bold text-primary text-lg">{lookup.item_name}</p>
+                <p className="text-secondary text-sm mt-0.5">
+                  {lookup.player?.display_name} · {lookup.player?.player_id}
+                </p>
+                <p className="text-tertiary text-xs mt-1">
+                  {lookup.points_deducted} pts · Created {new Date(lookup.created_at).toLocaleDateString()}
+                  {lookup.item_retail_value ? ` · $${lookup.item_retail_value} retail` : ''}
+                </p>
+              </div>
+              <span className={`text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full border ${
+                lookup.status === 'pending' ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400' :
+                lookup.status === 'claimed' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' :
+                'border-red-500/30 bg-red-500/10 text-red-400'
+              }`}>
+                {lookup.status}
+              </span>
+            </div>
+
+            {lookup.status === 'pending' && (
+              <div className="space-y-2 pt-1">
+                {!showVoidInput ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => doAction('claim')}
+                      disabled={actioning}
+                      className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg font-bold text-sm hover:bg-emerald-400 disabled:opacity-50 transition-colors"
+                    >
+                      {actioning ? '…' : 'Confirm Claim — Hand Over Prize'}
+                    </button>
+                    <button
+                      onClick={() => setShowVoidInput(true)}
+                      className="px-4 py-2.5 bg-red-500/15 text-red-400 rounded-lg font-semibold text-sm hover:bg-red-500/25 transition-colors"
+                    >
+                      Void
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={voidReason}
+                      onChange={e => setVoidReason(e.target.value)}
+                      placeholder="Reason (e.g. out of stock, player request)"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-red-400"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => doAction('void')}
+                        disabled={actioning}
+                        className="flex-1 py-2 bg-red-500/20 text-red-400 rounded-lg font-semibold text-sm hover:bg-red-500/30 disabled:opacity-50 transition-colors"
+                      >
+                        {actioning ? '…' : `Void & Refund ${lookup.points_deducted} pts`}
+                      </button>
+                      <button
+                        onClick={() => setShowVoidInput(false)}
+                        className="px-4 py-2 text-secondary hover:text-primary rounded-lg text-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {lookup.status !== 'pending' && (
+              <p className="text-xs text-tertiary italic">
+                {lookup.status === 'claimed'
+                  ? `Claimed on ${new Date(lookup.claimed_at).toLocaleString()}`
+                  : `Voided — ${lookup.void_reason || 'No reason given'}`}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Recent redemptions list */}
+      <div className="bg-surface rounded-xl border border-border-token overflow-hidden">
+        <div className="px-5 py-3 border-b border-border-token">
+          <p className="text-sm font-semibold text-primary">Recent Redemptions</p>
+        </div>
+        {listLoading ? (
+          <div className="px-5 py-8 text-center text-tertiary text-sm">Loading…</div>
+        ) : recentList.length === 0 ? (
+          <div className="px-5 py-8 text-center text-tertiary text-sm">No redemptions yet</div>
+        ) : (
+          <div className="divide-y divide-border-token">
+            {recentList.slice(0, 20).map((r: any) => (
+              <div
+                key={r.id}
+                className="px-5 py-3 flex items-center justify-between gap-4 hover:bg-elevated/50 cursor-pointer transition-colors"
+                onClick={() => { setCode(r.claim_code); setLookup(r); setActionResult(null); }}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-primary truncate">{r.item_name}</p>
+                  <p className="text-xs text-tertiary">{r.player?.display_name} · {r.claim_code} · {r.points_deducted} pts</p>
+                </div>
+                <span className={`text-xs font-semibold shrink-0 ${statusColor[r.status] || 'text-secondary'}`}>
+                  {r.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function HQPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -1800,6 +2025,7 @@ export default function HQPage() {
               { id: 'cotd', label: '🃏 Card of Day', icon: '🃏' },
               { id: 'events', label: '📅 Events', icon: '📅' },
               { id: 'prize-wall', label: 'Prize Wall', icon: '🏆' },
+              { id: 'redemptions', label: '🎟️ Redemptions', icon: '🎟️' },
               { id: 'circuit', label: '🏆 Circuit', icon: '🏆' },
               { id: 'settings', label: '⚙️ Settings', icon: '⚙️' },
             ].map(tab => (
@@ -4164,6 +4390,10 @@ export default function HQPage() {
             </div>
 
           </div>
+        )}
+
+        {activeTab === 'redemptions' && (
+          <RedemptionsPanel />
         )}
 
         {activeTab === 'settings' && (

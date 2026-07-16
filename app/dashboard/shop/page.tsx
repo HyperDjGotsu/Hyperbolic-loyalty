@@ -1,6 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+const FREE_TIER_GATE = 720;
+
+type PlayerTier = 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
 
 interface PrizeWallItem {
   id: string;
@@ -14,12 +18,58 @@ interface PrizeWallItem {
   is_unlocked: boolean;
 }
 
+interface PassStatus {
+  tier: PlayerTier;
+  lifetimeXp: number;
+  prizePoints: number;
+  multiplier: number;
+}
+
+interface ClaimDetails {
+  claimCode: string;
+  itemName: string;
+  pointsDeducted: number;
+  redemptionId: string;
+}
+
+interface ApiError {
+  error?: string;
+  balance?: number;
+  required?: number;
+  gateRequired?: number;
+  currentBalance?: number;
+}
+
 export default function PrizeWallPage() {
   const [items, setItems] = useState<PrizeWallItem[]>([]);
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [passStatus, setPassStatus] = useState<PassStatus | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<PrizeWallItem | null>(null);
+  const [claimDetails, setClaimDetails] = useState<ClaimDetails | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
+
+  const loadPassStatus = useCallback(async () => {
+    try {
+      setBalanceError(null);
+      const response = await fetch('/api/player/pass-status', { cache: 'no-store' });
+      const data = await response.json() as PassStatus | ApiError;
+
+      if (!response.ok || !('tier' in data)) {
+        throw new Error('error' in data ? data.error : 'Unable to load your balance');
+      }
+
+      setPassStatus(data);
+    } catch (error) {
+      setBalanceError(error instanceof Error ? error.message : 'Unable to load your balance');
+    }
+  }, []);
 
   useEffect(() => {
+    void loadPassStatus();
+
     fetch('/api/prize-wall')
       .then(r => r.json())
       .then(data => {
@@ -28,7 +78,38 @@ export default function PrizeWallPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [loadPassStatus]);
+
+  async function redeemSelectedItem() {
+    if (!selectedItem) return;
+
+    try {
+      setRedeeming(true);
+      setRedeemError(null);
+      const response = await fetch('/api/prize-wall/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: selectedItem.id }),
+      });
+      const data = await response.json() as ClaimDetails | ApiError;
+
+      if (!response.ok || !('claimCode' in data)) {
+        throw new Error('error' in data ? data.error : 'Redemption failed');
+      }
+
+      setSelectedItem(null);
+      setClaimDetails(data);
+    } catch (error) {
+      setRedeemError(error instanceof Error ? error.message : 'Redemption failed');
+    } finally {
+      setRedeeming(false);
+    }
+  }
+
+  async function closeClaimModal() {
+    setClaimDetails(null);
+    await loadPassStatus();
+  }
 
   const floor = items.filter(i => !i.unlock_threshold);
   const locked = items.filter(i => i.unlock_threshold && !i.is_unlocked);
@@ -43,6 +124,8 @@ export default function PrizeWallPage() {
         </p>
       </div>
 
+      <BalanceBar passStatus={passStatus} error={balanceError} onRetry={loadPassStatus} />
+
       {loading ? (
         <div className="text-center py-20 text-tertiary text-sm">Loading…</div>
       ) : items.length === 0 ? (
@@ -56,7 +139,15 @@ export default function PrizeWallPage() {
               <h2 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">
                 Always Available
               </h2>
-              <ItemGrid items={floor} subscriberCount={subscriberCount} />
+              <ItemGrid
+                items={floor}
+                passStatus={passStatus}
+                redeeming={redeeming}
+                onRedeem={item => {
+                  setRedeemError(null);
+                  setSelectedItem(item);
+                }}
+              />
             </section>
           )}
 
@@ -65,7 +156,15 @@ export default function PrizeWallPage() {
               <h2 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">
                 Community Unlocked
               </h2>
-              <ItemGrid items={unlocked} subscriberCount={subscriberCount} />
+              <ItemGrid
+                items={unlocked}
+                passStatus={passStatus}
+                redeeming={redeeming}
+                onRedeem={item => {
+                  setRedeemError(null);
+                  setSelectedItem(item);
+                }}
+              />
             </section>
           )}
 
@@ -87,21 +186,140 @@ export default function PrizeWallPage() {
           )}
         </>
       )}
+
+      {selectedItem && passStatus && (
+        <ConfirmationModal
+          item={selectedItem}
+          balance={passStatus.prizePoints}
+          redeeming={redeeming}
+          error={redeemError}
+          onCancel={() => {
+            setSelectedItem(null);
+            setRedeemError(null);
+          }}
+          onConfirm={redeemSelectedItem}
+        />
+      )}
+
+      {claimDetails && <ClaimCodeModal claim={claimDetails} onDone={closeClaimModal} />}
     </div>
   );
 }
 
-function ItemGrid({ items, subscriberCount }: { items: PrizeWallItem[]; subscriberCount: number }) {
+function BalanceBar({
+  passStatus,
+  error,
+  onRetry,
+}: {
+  passStatus: PassStatus | null;
+  error: string | null;
+  onRetry: () => Promise<void>;
+}) {
+  if (error) {
+    return (
+      <div className="bg-surface rounded-xl p-4 flex items-center justify-between gap-4">
+        <span className="text-sm text-danger">{error}</span>
+        <button className="text-sm text-primary underline" onClick={() => void onRetry()}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!passStatus) {
+    return <div className="h-24 bg-surface rounded-xl animate-pulse" aria-label="Loading balance" />;
+  }
+
+  const gateLocked = passStatus.tier === 'free' && passStatus.prizePoints < FREE_TIER_GATE;
+  const gateProgress = Math.min(100, (passStatus.prizePoints / FREE_TIER_GATE) * 100);
+
+  return (
+    <div className="bg-surface rounded-xl p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-2 py-0.5 rounded-full bg-elevated text-xs font-semibold text-primary uppercase tracking-wide">
+              {passStatus.tier}
+            </span>
+            <span className="font-semibold text-primary">
+              {passStatus.prizePoints.toLocaleString()} Prize Points available
+            </span>
+          </div>
+          <p className="text-xs text-tertiary mt-1">
+            Lifetime XP: {passStatus.lifetimeXp.toLocaleString()}
+          </p>
+        </div>
+      </div>
+      {gateLocked && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-xs text-secondary mb-1.5">
+            <span>Redemptions unlock at {FREE_TIER_GATE} points</span>
+            <span>
+              {passStatus.prizePoints.toLocaleString()} / {FREE_TIER_GATE} pts to unlock redemptions
+            </span>
+          </div>
+          <div className="h-2 bg-elevated rounded-full overflow-hidden">
+            <div
+              className="h-full bg-accent rounded-full transition-all"
+              style={{ width: `${gateProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ItemGrid({
+  items,
+  passStatus,
+  redeeming,
+  onRedeem,
+}: {
+  items: PrizeWallItem[];
+  passStatus: PassStatus | null;
+  redeeming: boolean;
+  onRedeem: (item: PrizeWallItem) => void;
+}) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
       {items.map(item => (
-        <ItemCard key={item.id} item={item} />
+        <ItemCard
+          key={item.id}
+          item={item}
+          passStatus={passStatus}
+          redeeming={redeeming}
+          onRedeem={onRedeem}
+        />
       ))}
     </div>
   );
 }
 
-function ItemCard({ item }: { item: PrizeWallItem }) {
+function ItemCard({
+  item,
+  passStatus,
+  redeeming,
+  onRedeem,
+}: {
+  item: PrizeWallItem;
+  passStatus: PassStatus | null;
+  redeeming: boolean;
+  onRedeem: (item: PrizeWallItem) => void;
+}) {
+  const gateLocked = passStatus?.tier === 'free' && passStatus.prizePoints < FREE_TIER_GATE;
+  const insufficientPoints = passStatus !== null && passStatus.prizePoints < item.xp_cost;
+  const disabledReason = !passStatus
+    ? 'Loading player balance'
+    : !item.is_unlocked
+      ? 'This prize is still locked'
+      : gateLocked
+        ? `Earn ${FREE_TIER_GATE} Prize Points to unlock redemptions`
+        : insufficientPoints
+          ? `You need ${item.xp_cost.toLocaleString()} Prize Points`
+          : null;
+  const disabled = disabledReason !== null || redeeming;
+
   return (
     <div className="bg-surface rounded-xl overflow-hidden">
       <div className="aspect-square bg-elevated">
@@ -130,11 +348,88 @@ function ItemCard({ item }: { item: PrizeWallItem }) {
         {item.quantity != null && (
           <div className="text-xs text-tertiary mt-1">{item.quantity} remaining</div>
         )}
+        <span className="block mt-3" title={disabledReason ?? undefined}>
+          <button
+            className="w-full py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-500 transition-colors disabled:bg-elevated disabled:text-tertiary disabled:cursor-not-allowed"
+            disabled={disabled}
+            onClick={() => onRedeem(item)}
+          >
+            Redeem
+          </button>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmationModal({
+  item,
+  balance,
+  redeeming,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  item: PrizeWallItem;
+  balance: number;
+  redeeming: boolean;
+  error: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="redeem-title">
+      <div className="w-full max-w-md bg-surface border border-border-token rounded-2xl p-6 shadow-2xl">
+        <h2 id="redeem-title" className="text-xl font-bold text-primary">
+          Redeem {item.name} for {item.xp_cost.toLocaleString()} Prize Points?
+        </h2>
+        <p className="text-sm text-secondary mt-3">
+          You&apos;ll have {(balance - item.xp_cost).toLocaleString()} pts left
+        </p>
+        {error && <p className="text-sm text-danger mt-3" role="alert">{error}</p>}
+        <div className="flex gap-3 mt-6">
+          <button
+            className="flex-1 py-2.5 bg-elevated text-primary rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+            disabled={redeeming}
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            className="flex-1 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-500 disabled:opacity-50"
+            disabled={redeeming}
+            onClick={onConfirm}
+          >
+            {redeeming ? 'Redeeming…' : 'Confirm'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClaimCodeModal({ claim, onDone }: { claim: ClaimDetails; onDone: () => Promise<void> }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="claim-title">
+      <div className="w-full max-w-xl text-center">
+        <p id="claim-title" className="text-xl font-semibold text-white mb-6">{claim.itemName}</p>
+        <div className="bg-zinc-800 border border-zinc-600 rounded-2xl px-4 py-10 shadow-2xl">
+          <div className="font-mono text-5xl sm:text-7xl font-bold tracking-wider text-white">
+            {claim.claimCode}
+          </div>
+        </div>
+        <p className="text-base text-zinc-200 mt-6">
+          Show this code to staff at the counter to claim your prize
+        </p>
+        <p className="text-lg font-semibold text-red-400 mt-4">
+          -{claim.pointsDeducted.toLocaleString()} Prize Points
+        </p>
+        <p className="text-sm text-zinc-400 mt-2">Valid for 30 days</p>
         <button
-          className="mt-3 w-full py-2 bg-accent text-accent-fg text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
-          onClick={() => alert('Ask staff at the counter to process your redemption.')}
+          className="w-full sm:w-auto sm:min-w-48 mt-8 py-3 px-8 bg-white text-zinc-950 rounded-lg font-semibold hover:bg-zinc-200"
+          onClick={() => void onDone()}
         >
-          Redeem
+          Done
         </button>
       </div>
     </div>

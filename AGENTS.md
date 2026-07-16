@@ -1,22 +1,16 @@
 <claude-mem-context>
 # Memory Context
 
-# [hyperbolic-app] recent context, 2026-07-16 3:19am PDT
+# [hyperbolic-app] recent context, 2026-07-16 3:44am PDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (17,261t read) | 878,439t work | 98% savings
+Stats: 50 obs (17,063t read) | 771,481t work | 98% savings
 
 ### Apr 26, 2026
-85 9:31p ✅ Hyperbolic Loyalty Repo Cloned into hyperbolic-app Directory
-86 " 🔄 globals.css Visual De-AI-Tell Pass — Color, Glow, Button, and Card Header Overhaul
-88 9:32p 🔄 tailwind.config.ts Design Token Sync — Color Palette, Gradients, and Box Shadows Updated
-89 " 🔄 DesktopDashboard.tsx and layout.tsx Component-Level De-AI-Tell Pass
-90 " 🔄 layout.tsx Full Chrome Cleanup — All Slate Tokens Replaced with Custom Dark Tokens
-91 9:40p 🔴 MobileDashboard Home Page Purple-to-Blue Gradient Background Removed
-92 " 🔴 MobileDashboard Player Card AI-Tell Purge — Level Label, XP Bar, Total XP Widget
+92 9:40p 🔴 MobileDashboard Player Card AI-Tell Purge — Level Label, XP Bar, Total XP Widget
 93 " 🔴 DesktopDashboard "HYPERBOLIC GAMES" Header Title Gradient Removed
 94 9:41p 🔴 DesktopDashboard Hero Section Full AI-Tell Purge — 6 Purple/Gradient Patterns Removed
 97 9:44p 🔴 Home Page Purple-to-Blue Gradient Root Cause Identified and Fixed
@@ -71,21 +65,13 @@ S233 DailyGacha Preview Page Deployed to Production — Commit 5d66a52 (Apr 27, 
 168 9:41p 🟣 DailyGacha Card Visual Preview Page Created at /dev/gacha-preview
 169 " ✅ DailyGacha Preview Page Deployed to Production — Commit 5d66a52
 S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for Visual Approval (Apr 27, 9:41 PM)
-**Investigated**: Font configuration in app/layout.tsx and globals.css/tailwind.config.ts. Confirmed --font-orbitron and --font-rajdhani are declared as CSS custom properties in globals.css (not via next/font) and mapped in tailwind.config.ts as font families. App directory structure examined: api, dashboard, dashboard-desktop, demo, event, hq, onboarding, sign-in, sign-up — no existing dev/ route at session start.
+### Jul 16, 2026
+923 3:19a 🟣 PlayerPassCard Component + Pass Status API — Dual Currency Dashboard Task Dispatched to Codex
+924 " 🔵 Pass Tier Enum Mismatch — Task Spec vs Actual DB Schema
+925 3:20a 🟣 PlayerPassCard Component + Pass Status API Created by Codex
+926 " 🔵 TypeScript Build Fails — lib/points.ts Imports Non-Existent @/lib/supabase-admin
+929 3:21a 🔄 Pass Status API Refactored — Paginated Ledger Reads Replace Single-Shot Fetches
+930 " 🟣 PlayerPassCard + Pass Status API — TypeScript Clean, Final Code Verified
 
-**Learned**: Font variables are declared statically in globals.css as CSS custom properties ('Orbitron', monospace and 'Rajdhani', sans-serif) rather than via Next.js next/font system. This means fonts are referenced by name and must be loaded via a CDN or @font-face — not via Next.js font optimization. The DailyGacha component in components/DailyGacha.tsx uses a simpler card system; the new design in the preview page represents a significant visual upgrade with layered border architecture, per-instance SVG IDs, and rarity-tiered holographic foil.
-
-**Completed**: 1. Created app/dev/gacha-preview/page.tsx — a full visual approval page at route /dev/gacha-preview
-    2. Card system implements three-layer border: white edge catchlight → animated hue-rotating gradient border → inset-shadow weighted inner frame
-    3. Five rarity tiers defined (common/uncommon/rare/epic/legendary) with distinct colors, holo opacity (0.08→0.60), glow, aura, border gradients, and XP values (5/10/25/50/100)
-    4. HoloOverlay: conic-gradient spinning for non-legendary, diagonal rainbow wave at 1.5s for legendary (mixBlendMode: screen)
-    5. GeometrySVG: hexagon (flat-top R=60) + Vesica Piscis (two circles r=32) + pulsing corner diamond pips, with uid-namespaced SVG filter IDs to prevent cross-card bleed
-    6. GrainOverlay: SVG feTurbulence noise at 0.035 opacity
-    7. BackdropPreview: breathing cyan aura + vignette atmosphere section
-    8. TypeScript check passed clean; commit 5d66a52 pushed to main → Vercel auto-deploy triggered
-
-**Next Steps**: Awaiting visual approval from user at /dev/gacha-preview. User will review the three sections (card back, all five prize tier faces, backdrop atmosphere) and provide feedback on what to adjust before the new card design gets wired into the live DailyGacha component flow.
-
-
-Access 878k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 771k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
