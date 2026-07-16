@@ -387,10 +387,9 @@ export default function MobileDashboard() {
             </div>
 
             {/* Quick Stats */}
-            <div className="flex gap-3 mt-4 pt-3 border-t border-border-token">
+            <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-border-token">
               <StatCard icon="🎮" label="Games" value={games.length} />
               <StatCard icon="📋" label="Activity" value={recentActivity.length} />
-              <StatCard icon="⭐" label="Level" value={level} color="text-orange-400" />
               <StatCard icon={storeConfig.currency_icon} label={storeConfig.currency_name} value={playerData?.gems || 0} color="text-accent" />
             </div>
           </div>
