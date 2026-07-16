@@ -35,6 +35,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           borderRadius:          '10px',
           fontFamily:            'Plus Jakarta Sans, sans-serif',
         },
+        elements: {
+          socialButtonsBlockButton:
+            'bg-[#2a2820] border border-[#3a3628] text-[#f2efe8] hover:bg-[#3a3628] transition-colors',
+          socialButtonsBlockButtonText: 'text-[#f2efe8] font-medium',
+          socialButtonsBlockButtonArrow: 'text-[#f2efe8]',
+        },
       }}
     >
       <html lang="en" data-theme="dark" data-tone="warm">

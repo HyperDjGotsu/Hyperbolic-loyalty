@@ -1989,7 +1989,7 @@ export default function HQPage() {
     <div className="min-h-screen bg-base text-primary">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-xl z-50 font-medium ${
+        <div className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm px-4 py-3 rounded-xl z-50 text-center sm:text-left font-medium ${
           toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         }`}>
           {toast.message}
@@ -1998,10 +1998,10 @@ export default function HQPage() {
 
       {/* Header */}
       <div className="border-b border-border-token bg-surface/50">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-accent">
+              <h1 className="text-xl sm:text-2xl font-bold text-accent">
                 HQ Command Center
               </h1>
               <p className="text-secondary text-sm">Staff Only</p>
@@ -2016,36 +2016,37 @@ export default function HQPage() {
       {/* Tabs */}
       <div className="border-b border-border-token">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex gap-2 py-2">
+          <div className="flex gap-2 py-2 overflow-x-auto scrollbar-hide">
             {[
-              { id: 'players', label: '👤 Players', icon: '👤' },
-              { id: 'emperor', label: '👑 Emperor', icon: '👑' },
-              { id: 'bounty', label: '🎯 Bounty', icon: '🎯' },
-              { id: 'banners', label: '🎨 Banners', icon: '🎨' },
-              { id: 'cotd', label: '🃏 Card of Day', icon: '🃏' },
-              { id: 'events', label: '📅 Events', icon: '📅' },
-              { id: 'prize-wall', label: 'Prize Wall', icon: '🏆' },
-              { id: 'redemptions', label: '🎟️ Redemptions', icon: '🎟️' },
-              { id: 'circuit', label: '🏆 Circuit', icon: '🏆' },
-              { id: 'settings', label: '⚙️ Settings', icon: '⚙️' },
+              { id: 'players', label: '👤 Players', icon: '👤', shortLabel: 'Players' },
+              { id: 'emperor', label: '👑 Emperor', icon: '👑', shortLabel: 'Emperor' },
+              { id: 'bounty', label: '🎯 Bounty', icon: '🎯', shortLabel: 'Bounty' },
+              { id: 'banners', label: '🎨 Banners', icon: '🎨', shortLabel: 'Banners' },
+              { id: 'cotd', label: '🃏 Card of Day', icon: '🃏', shortLabel: 'Cards' },
+              { id: 'events', label: '📅 Events', icon: '📅', shortLabel: 'Events' },
+              { id: 'prize-wall', label: 'Prize Wall', icon: '🏆', shortLabel: 'Prizes' },
+              { id: 'redemptions', label: '🎟️ Redemptions', icon: '🎟️', shortLabel: 'Redeem' },
+              { id: 'circuit', label: '🏆 Circuit', icon: '🏆', shortLabel: 'Circuit' },
+              { id: 'settings', label: '⚙️ Settings', icon: '⚙️', shortLabel: 'Settings' },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg font-medium transition-all ${
                   activeTab === tab.id
                     ? 'bg-accent/10 text-accent border border-accent/30'
                     : 'text-secondary hover:text-primary hover:bg-elevated'
                 }`}
               >
-                {tab.label}
+                <span className="sm:hidden">{tab.icon} {tab.shortLabel}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Players Tab */}
         {activeTab === 'players' && (
           <div className="space-y-6">
@@ -2054,7 +2055,7 @@ export default function HQPage() {
               <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                 Search Player
               </h2>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <input
                   type="text"
                   value={searchQuery}
@@ -2066,7 +2067,7 @@ export default function HQPage() {
                 <button
                   onClick={searchPlayer}
                   disabled={searchLoading}
-                  className="px-6 py-3 bg-accent rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 py-3 bg-accent rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
                 >
                   {searchLoading ? 'Searching...' : 'Search'}
                 </button>
@@ -2077,13 +2078,13 @@ export default function HQPage() {
             {playerDetails && (
               <div className="bg-surface rounded-xl border border-border-token overflow-hidden">
                 {/* Player Header */}
-                <div className="p-6 bg-elevated/50 border-b border-border-token">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 sm:p-6 bg-elevated/50 border-b border-border-token">
+                  <div className="flex flex-wrap gap-3 items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold">{playerDetails.player.display_name}</h2>
                       <p className="text-accent font-mono">{playerDetails.player.player_id}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <div className="text-3xl font-bold text-accent">
                         {playerDetails.totalXp.toLocaleString()}
                       </div>
@@ -2093,7 +2094,7 @@ export default function HQPage() {
                 </div>
 
                 {/* Game XP Section - REDESIGNED */}
-                <div className="p-6 border-b border-border-token">
+                <div className="p-4 sm:p-6 border-b border-border-token">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
                       Game XP
@@ -2225,7 +2226,7 @@ export default function HQPage() {
                 </div>
 
                 {/* XP Management - Multi-select Tiles */}
-                <div className="p-6 border-b border-border-token">
+                <div className="p-4 sm:p-6 border-b border-border-token">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
                       Award XP
@@ -2410,7 +2411,7 @@ export default function HQPage() {
                 </div>
 
                 {/* Account Management */}
-                <div className="p-6 border-t border-border-token space-y-6">
+                <div className="p-4 sm:p-6 border-t border-border-token space-y-6">
                   {/* Pass Status */}
                   <div>
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">

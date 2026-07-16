@@ -1,21 +1,16 @@
 <claude-mem-context>
 # Memory Context
 
-# [hyperbolic-app] recent context, 2026-07-16 3:44am PDT
+# [hyperbolic-app] recent context, 2026-07-16 3:51am PDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (17,063t read) | 771,481t work | 98% savings
+Stats: 50 obs (17,751t read) | 589,454t work | 97% savings
 
 ### Apr 26, 2026
-92 9:40p 🔴 MobileDashboard Player Card AI-Tell Purge — Level Label, XP Bar, Total XP Widget
-93 " 🔴 DesktopDashboard "HYPERBOLIC GAMES" Header Title Gradient Removed
-94 9:41p 🔴 DesktopDashboard Hero Section Full AI-Tell Purge — 6 Purple/Gradient Patterns Removed
 97 9:44p 🔴 Home Page Purple-to-Blue Gradient Root Cause Identified and Fixed
-98 " 🔄 DesktopDashboard.tsx De-AI-Tell Pass — Hero Section and Player Card
-99 " ⚖️ Single-Color Brand Token System Established for Hyperbolic-App
 100 9:45p 🔵 Sed Replacement Created Invalid Tailwind Bracket Syntax in DesktopDashboard.tsx
 101 10:14p ✅ Hyperbolic-loyalty Repo Cloned into hyperbolic-app Directory
 106 10:48p 🔵 Landing Page Viewable Without Logout — Route Access Question
@@ -72,6 +67,11 @@ S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for 
 926 " 🔵 TypeScript Build Fails — lib/points.ts Imports Non-Existent @/lib/supabase-admin
 929 3:21a 🔄 Pass Status API Refactored — Paginated Ledger Reads Replace Single-Shot Fetches
 930 " 🟣 PlayerPassCard + Pass Status API — TypeScript Clean, Final Code Verified
+932 3:44a 🟣 Prize Wall Shop — Full Redemption Flow Spec Handed to Codex
+934 3:45a 🔵 Prize Wall Shop Codebase State — Pre-Redemption Audit
+935 3:46a 🟣 Prize Wall Redemption Flow — Full UX Spec for Codex Build
+937 " 🟣 Prize Wall Shop Page — Full Redemption Flow Implemented
+938 " 🔵 Pre-existing TypeScript Errors in checkin route and pass-status — Not Caused by Shop Changes
 
-Access 771k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 589k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
