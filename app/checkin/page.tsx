@@ -23,6 +23,7 @@ function CheckInContent() {
   const [state, setState] = useState<State>('loading');
   const [event, setEvent] = useState<EventInfo | null>(null);
   const [xpAwarded, setXpAwarded] = useState(0);
+  const [prizePointsAwarded, setPrizePointsAwarded] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -56,7 +57,8 @@ function CheckInContent() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setXpAwarded(data.xpAwarded);
+        setXpAwarded(data.lifetimeXpAwarded ?? data.xpAwarded ?? 0);
+        setPrizePointsAwarded(data.prizePointsAwarded ?? 0);
         setState('success');
       } else if (data.alreadyCheckedIn) {
         setState('already');
@@ -116,9 +118,17 @@ function CheckInContent() {
       {event && (
         <p className="text-secondary text-lg">{event.game?.icon} {event.name}</p>
       )}
-      <div className="card-elevated rounded-2xl px-10 py-6">
-        <span className="xp-number text-5xl">+{xpAwarded}</span>
-        <span className="text-secondary text-2xl ml-2">XP</span>
+      <div className="card-elevated rounded-2xl px-10 py-6 flex flex-col items-center gap-2">
+        <div>
+          <span className="xp-number text-5xl">+{xpAwarded}</span>
+          <span className="text-secondary text-2xl ml-2">Lifetime XP</span>
+        </div>
+        {prizePointsAwarded > 0 && (
+          <div>
+            <span className="text-cyan-400 text-4xl font-bold">+{prizePointsAwarded}</span>
+            <span className="text-secondary text-xl ml-2">Prize Points</span>
+          </div>
+        )}
       </div>
       <Link
         href="/dashboard"

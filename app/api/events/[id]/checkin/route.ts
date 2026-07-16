@@ -2,8 +2,92 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
+import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
+
+const ATTENDANCE_LIFETIME_XP = 35;
+const ATTENDANCE_PRIZE_POINTS = 35;
+const WIN_LIFETIME_XP = 5;
+const WIN_PRIZE_POINTS = 5;
+const MAX_ROUNDS = 3;
+const REFERRAL_LIFETIME_XP = 50;
+const REFERRAL_PRIZE_POINTS = 100; // flat, no multiplier
+
+async function awardReferralBonus(
+  playerId: string,
+  storeId: string,
+  staffId: string
+): Promise<{ awarded: boolean; referrerName?: string } | null> {
+  try {
+    const { data: player } = await supabaseAdmin
+      .from('players')
+      .select('id, referred_by, referral_bonus_paid, display_name')
+      .eq('id', playerId)
+      .single();
+
+    if (!player?.referred_by || player.referral_bonus_paid) return null;
+
+    const { count } = await supabaseAdmin
+      .from('xp_ledger')
+      .select('id', { count: 'exact', head: true })
+      .eq('player_id', playerId)
+      .ilike('description', '%Attended%');
+
+    if (count !== 1) return null;
+
+    const { data: referrer } = await supabaseAdmin
+      .from('players')
+      .select('id, display_name')
+      .eq('id', player.referred_by)
+      .single();
+
+    if (!referrer) return null;
+
+    // Lifetime XP for referrer
+    await supabaseAdmin.from('xp_ledger').insert({
+      player_id: referrer.id,
+      game_id: 'general',
+      base_xp: REFERRAL_LIFETIME_XP,
+      final_xp: REFERRAL_LIFETIME_XP,
+      multiplier: 1,
+      description: `Referral reward — ${player.display_name} attended first event`,
+      source: 'referral',
+      awarded_by: staffId,
+      store_id: storeId,
+    } as any);
+
+    // Prize Points for referrer (flat, no multiplier per spec)
+    await logPointTransaction({
+      playerId: referrer.id,
+      storeId,
+      amount: REFERRAL_PRIZE_POINTS,
+      type: 'earn',
+      source: 'referral_bonus',
+      referenceId: playerId,
+      note: `${player.display_name} attended first event`,
+    });
+
+    await supabaseAdmin
+      .from('players')
+      .update({ referral_bonus_paid: true })
+      .eq('id', playerId);
+
+    createNotification(
+      referrer.id,
+      'referral',
+      'Referral bonus earned!',
+      `${player.display_name} attended their first event — you earned +${REFERRAL_LIFETIME_XP} XP and +${REFERRAL_PRIZE_POINTS} Prize Points!`,
+      { new_player_name: player.display_name },
+      'social'
+    ).catch(() => {});
+
+    return { awarded: true, referrerName: referrer.display_name };
+  } catch (err) {
+    console.error('Referral bonus error:', err);
+    return null;
+  }
+}
 
 export async function POST(
   request: Request,
@@ -11,39 +95,48 @@ export async function POST(
 ) {
   try {
     const eventId = params.id;
-    const body = await request.json() as { hyp_id?: string };
+    const body = await request.json() as {
+      hyp_id?: string;
+      rounds_won?: number;
+      store_id?: string;
+    };
+
+    const roundsWon = Math.min(MAX_ROUNDS, Math.max(0, Math.floor(body.rounds_won ?? 0)));
 
     const { data: event } = await supabaseAdmin
       .from('events')
-      .select('id, name, game_id, attendance_xp, status')
+      .select('id, name, game_id, attendance_xp, status, store_id')
       .eq('id', eventId)
       .single();
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
-
     if (event.status !== 'active') {
       return NextResponse.json({ error: 'Event is not active' }, { status: 400 });
     }
 
-    // Two auth paths: HYP-ID (kiosk NFC) or Clerk session (player's phone)
+    // Two auth paths: HYP-ID (kiosk/NFC) or Clerk session (player's phone)
     let playerId: string;
     let playerName: string;
+    let playerTier: string = 'free';
+    let playerHomeStoreId: string | null = null;
+    let staffId: string | null = null;
 
     if (body.hyp_id) {
       const { data: player } = await supabaseAdmin
         .from('players')
-        .select('id, display_name')
+        .select('id, display_name, pass_tier, home_store_id')
         .eq('player_id', body.hyp_id.toUpperCase())
         .single();
 
       if (!player) {
         return NextResponse.json({ error: 'Player not found' }, { status: 404 });
       }
-
       playerId = player.id;
       playerName = player.display_name || body.hyp_id;
+      playerTier = (player as any).pass_tier || 'free';
+      playerHomeStoreId = (player as any).home_store_id;
     } else {
       const { userId } = await auth();
       if (!userId) {
@@ -52,17 +145,22 @@ export async function POST(
 
       const { data: player } = await supabaseAdmin
         .from('players')
-        .select('id, display_name')
+        .select('id, display_name, pass_tier, home_store_id, is_staff')
         .eq('clerk_user_id', userId)
         .single();
 
       if (!player) {
         return NextResponse.json({ error: 'Player not found' }, { status: 404 });
       }
-
       playerId = player.id;
       playerName = player.display_name || 'Player';
+      playerTier = (player as any).pass_tier || 'free';
+      playerHomeStoreId = (player as any).home_store_id;
+      if ((player as any).is_staff) staffId = player.id;
     }
+
+    // Resolve store_id: body override > event store > player home store
+    const storeId: string = body.store_id || (event as any).store_id || playerHomeStoreId || '';
 
     // Deduplicate
     const { data: existing } = await (supabaseAdmin as any)
@@ -73,18 +171,28 @@ export async function POST(
       .maybeSingle();
 
     if (existing) {
-      return NextResponse.json({ error: 'Already checked in', alreadyCheckedIn: true, playerName }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Already checked in', alreadyCheckedIn: true, playerName },
+        { status: 400 }
+      );
     }
 
-    const xpAwarded = event.attendance_xp || 20;
+    // Calculate awards
+    const multiplier = TIER_MULTIPLIERS[playerTier] ?? 1.0;
+    const lifetimeXp = ATTENDANCE_LIFETIME_XP + WIN_LIFETIME_XP * roundsWon;
+    const prizePoints = Math.round(
+      (ATTENDANCE_PRIZE_POINTS + WIN_PRIZE_POINTS * roundsWon) * multiplier
+    );
 
+    // Record attendance
     const { error: attendanceError } = await (supabaseAdmin as any)
       .from('event_attendances')
       .insert({
         event_id: eventId,
         player_id: playerId,
         game_id: event.game_id,
-        xp_awarded: xpAwarded,
+        xp_awarded: lifetimeXp,
+        store_id: storeId || null,
       });
 
     if (attendanceError) {
@@ -92,30 +200,65 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to record attendance' }, { status: 500 });
     }
 
-    // Award XP — uses event_attendance source which exists in the enum
-    await supabaseAdmin
-      .from('xp_ledger')
-      .insert({
-        player_id: playerId,
-        game_id: event.game_id,
-        base_xp: xpAwarded,
-        multiplier: 1,
-        final_xp: xpAwarded,
-        source: 'event_attendance' as any,
-        description: `Event attendance: ${event.name}`,
-      } as any);
+    // Award Lifetime XP (flat, no multiplier ever)
+    const xpDescription = roundsWon > 0
+      ? `Attended ${event.name} — ${roundsWon} round win${roundsWon > 1 ? 's' : ''}`
+      : `Attended ${event.name}`;
 
-    // Post-event recap notification (non-blocking)
+    await supabaseAdmin.from('xp_ledger').insert({
+      player_id: playerId,
+      game_id: event.game_id,
+      base_xp: lifetimeXp,
+      final_xp: lifetimeXp,
+      multiplier: 1,
+      description: xpDescription,
+      source: 'event_attendance' as any,
+      awarded_by: staffId as any,
+      store_id: storeId || null,
+    } as any);
+
+    // Award Prize Points (multiplier applies to event actions)
+    if (storeId) {
+      await logPointTransaction({
+        playerId,
+        storeId,
+        amount: prizePoints,
+        type: 'earn',
+        source: 'event_checkin',
+        referenceId: eventId,
+        note: roundsWon > 0
+          ? `${event.name} — attendance + ${roundsWon} win${roundsWon > 1 ? 's' : ''} (${playerTier} ${multiplier}x)`
+          : `${event.name} — attendance (${playerTier} ${multiplier}x)`,
+      });
+    }
+
+    // Check referral bonus (non-blocking)
+    const referralResult = storeId
+      ? await awardReferralBonus(playerId, storeId, staffId || playerId)
+      : null;
+
     createNotification(
       playerId,
       'event_recap',
       `You attended ${event.name}!`,
-      `Nice work showing up — you earned +${xpAwarded} XP.`,
-      { event_id: String(eventId), event_name: event.name, xp: String(xpAwarded) },
+      `+${lifetimeXp} Lifetime XP${storeId ? ` · +${prizePoints} Prize Points` : ''} earned.`,
+      { event_id: String(eventId), event_name: event.name, xp: String(lifetimeXp) },
       'events'
     ).catch(() => {});
 
-    return NextResponse.json({ success: true, xpAwarded, playerName, eventName: event.name });
+    return NextResponse.json({
+      success: true,
+      playerName,
+      eventName: event.name,
+      lifetimeXpAwarded: lifetimeXp,
+      prizePointsAwarded: prizePoints,
+      roundsWon,
+      multiplier,
+      tier: playerTier,
+      referralBonus: referralResult?.awarded
+        ? { awarded: true, referrerName: referralResult.referrerName }
+        : null,
+    });
   } catch (error) {
     console.error('Event checkin error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

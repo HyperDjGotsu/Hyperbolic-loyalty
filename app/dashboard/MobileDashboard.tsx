@@ -12,6 +12,7 @@ import {
 import { BannerCarousel } from '@/components/BannerCarousel';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { GettingStartedCard } from '@/components/GettingStartedCard';
+import { PlayerPassCard } from '@/components/PlayerPassCard';
 import type { Player, ActivityItem, Banner } from '@/lib/types';
 
 // Type for displayed game data
@@ -83,6 +84,12 @@ export default function MobileDashboard() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
+  const [passStatus, setPassStatus] = useState<{
+    tier: 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
+    lifetimeXp: number;
+    prizePoints: number;
+    multiplier: number;
+  } | null>(null);
 
   const gamesContainerRef = useRef<HTMLDivElement>(null);
   const activityContainerRef = useRef<HTMLDivElement>(null);
@@ -183,6 +190,15 @@ export default function MobileDashboard() {
     }
     loadSpinStatus();
   }, [playerData, user]);
+
+  // Load player pass status (tier, dual currency)
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/player/pass-status')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setPassStatus(data); })
+      .catch(() => {});
+  }, [user]);
 
   // Load store config
   useEffect(() => {
@@ -401,6 +417,17 @@ export default function MobileDashboard() {
           <p className="text-center text-xs text-accent mt-1">{spinMessage}</p>
         )}
       </div>
+
+      {/* Player Pass — tier, dual currency, prize wall CTA */}
+      {passStatus && (
+        <div className="mt-4">
+          <PlayerPassCard
+            tier={passStatus.tier}
+            lifetimeXp={passStatus.lifetimeXp}
+            prizePoints={passStatus.prizePoints}
+          />
+        </div>
+      )}
 
       {/* Getting Started checklist — shown to new players */}
       <div className="mt-4">
