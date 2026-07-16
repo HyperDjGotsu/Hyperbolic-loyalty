@@ -31,7 +31,7 @@ export async function GET() {
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
-      .eq('source', 'check_in')
+      .eq('source', 'check_in' as any)
       .gte('created_at', today.toISOString())
       .limit(1);
 
@@ -72,7 +72,7 @@ export async function POST() {
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
-      .eq('source', 'check_in')
+      .eq('source', 'check_in' as any)
       .gte('created_at', today.toISOString())
       .limit(1);
 
@@ -92,7 +92,7 @@ export async function POST() {
         base_xp: CHECK_IN_XP,
         multiplier: 1,
         final_xp: CHECK_IN_XP,
-        source: 'check_in',
+        source: 'check_in' as any,
         description: 'Daily check-in',
       });
 

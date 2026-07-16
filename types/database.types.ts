@@ -14,6 +14,442 @@ export type Database = {
   }
   public: {
     Tables: {
+      banners: {
+        Row: {
+          background_image: string | null
+          badge: string | null
+          bg_position: string
+          bg_size: string
+          color_from: string | null
+          color_to: string | null
+          created_at: string | null
+          ends_at: string | null
+          event_id: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          link_url: string | null
+          sort_order: number | null
+          starts_at: string | null
+          subtitle: string | null
+          text_color: string | null
+          title: string
+          twitch_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          background_image?: string | null
+          badge?: string | null
+          bg_position?: string
+          bg_size?: string
+          color_from?: string | null
+          color_to?: string | null
+          created_at?: string | null
+          ends_at?: string | null
+          event_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          sort_order?: number | null
+          starts_at?: string | null
+          subtitle?: string | null
+          text_color?: string | null
+          title: string
+          twitch_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          background_image?: string | null
+          badge?: string | null
+          bg_position?: string
+          bg_size?: string
+          color_from?: string | null
+          color_to?: string | null
+          created_at?: string | null
+          ends_at?: string | null
+          event_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_url?: string | null
+          sort_order?: number | null
+          starts_at?: string | null
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string
+          twitch_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banners_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_hunter_events: {
+        Row: {
+          created_at: string | null
+          event_date: string
+          id: string
+          month_key: string
+          opt_in_closes_at: string
+          opt_in_opens_at: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_date: string
+          id?: string
+          month_key: string
+          opt_in_closes_at: string
+          opt_in_opens_at: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_date?: string
+          id?: string
+          month_key?: string
+          opt_in_closes_at?: string
+          opt_in_opens_at?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bounty_hunter_matches: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          id: string
+          loser_id: string | null
+          loser_points: number
+          match_type: string
+          recorded_by: string | null
+          round: number | null
+          winner_id: string | null
+          winner_points: number
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          loser_id?: string | null
+          loser_points: number
+          match_type: string
+          recorded_by?: string | null
+          round?: number | null
+          winner_id?: string | null
+          winner_points: number
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          loser_id?: string | null
+          loser_points?: number
+          match_type?: string
+          recorded_by?: string | null
+          round?: number | null
+          winner_id?: string | null
+          winner_points?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_hunter_matches_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_hunter_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_matches_loser_id_fkey"
+            columns: ["loser_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_matches_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_matches_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_hunter_participants: {
+        Row: {
+          event_id: string | null
+          id: string
+          opted_in_at: string | null
+          player_id: string | null
+          role: string
+        }
+        Insert: {
+          event_id?: string | null
+          id?: string
+          opted_in_at?: string | null
+          player_id?: string | null
+          role: string
+        }
+        Update: {
+          event_id?: string | null
+          id?: string
+          opted_in_at?: string | null
+          player_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_hunter_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_hunter_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_hunter_participants_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_of_the_day_history: {
+        Row: {
+          card_data: Json
+          card_name: string
+          card_number: string | null
+          created_at: string | null
+          featured_date: string
+          game_display: string
+          game_id: string
+          id: string
+          pool_card_id: string | null
+          source: string
+          total_votes: number | null
+          winning_votes: number | null
+        }
+        Insert: {
+          card_data: Json
+          card_name: string
+          card_number?: string | null
+          created_at?: string | null
+          featured_date: string
+          game_display: string
+          game_id: string
+          id?: string
+          pool_card_id?: string | null
+          source?: string
+          total_votes?: number | null
+          winning_votes?: number | null
+        }
+        Update: {
+          card_data?: Json
+          card_name?: string
+          card_number?: string | null
+          created_at?: string | null
+          featured_date?: string
+          game_display?: string
+          game_id?: string
+          id?: string
+          pool_card_id?: string | null
+          source?: string
+          total_votes?: number | null
+          winning_votes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_of_the_day_history_pool_card_id_fkey"
+            columns: ["pool_card_id"]
+            isOneToOne: false
+            referencedRelation: "card_of_the_day_pool"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_of_the_day_pool: {
+        Row: {
+          card_data: Json
+          card_name: string
+          card_number: string | null
+          created_at: string | null
+          featured_date: string | null
+          game_display: string
+          game_id: string
+          id: string
+          nominated_at: string | null
+          nominated_by: string | null
+          status: string
+          updated_at: string | null
+          vote_date: string | null
+          votes_count: number | null
+        }
+        Insert: {
+          card_data: Json
+          card_name: string
+          card_number?: string | null
+          created_at?: string | null
+          featured_date?: string | null
+          game_display: string
+          game_id: string
+          id?: string
+          nominated_at?: string | null
+          nominated_by?: string | null
+          status?: string
+          updated_at?: string | null
+          vote_date?: string | null
+          votes_count?: number | null
+        }
+        Update: {
+          card_data?: Json
+          card_name?: string
+          card_number?: string | null
+          created_at?: string | null
+          featured_date?: string | null
+          game_display?: string
+          game_id?: string
+          id?: string
+          nominated_at?: string | null
+          nominated_by?: string | null
+          status?: string
+          updated_at?: string | null
+          vote_date?: string | null
+          votes_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_of_the_day_pool_nominated_by_fkey"
+            columns: ["nominated_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_of_the_day_votes: {
+        Row: {
+          id: string
+          player_id: string
+          pool_card_id: string
+          vote_date: string
+          voted_at: string | null
+          won: boolean | null
+          xp_awarded: boolean | null
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          pool_card_id: string
+          vote_date: string
+          voted_at?: string | null
+          won?: boolean | null
+          xp_awarded?: boolean | null
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          pool_card_id?: string
+          vote_date?: string
+          voted_at?: string | null
+          won?: boolean | null
+          xp_awarded?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_of_the_day_votes_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_of_the_day_votes_pool_card_id_fkey"
+            columns: ["pool_card_id"]
+            isOneToOne: false
+            referencedRelation: "card_of_the_day_pool"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      circuit_qualifiers: {
+        Row: {
+          championship_event_id: string | null
+          has_bye: boolean | null
+          id: string
+          placement: number
+          player_id: string
+          qualified_at: string | null
+          qualifier_event_id: string
+          store_id: string | null
+        }
+        Insert: {
+          championship_event_id?: string | null
+          has_bye?: boolean | null
+          id?: string
+          placement: number
+          player_id: string
+          qualified_at?: string | null
+          qualifier_event_id: string
+          store_id?: string | null
+        }
+        Update: {
+          championship_event_id?: string | null
+          has_bye?: boolean | null
+          id?: string
+          placement?: number
+          player_id?: string
+          qualified_at?: string | null
+          qualifier_event_id?: string
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "circuit_qualifiers_championship_event_id_fkey"
+            columns: ["championship_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circuit_qualifiers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circuit_qualifiers_qualifier_event_id_fkey"
+            columns: ["qualifier_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "circuit_qualifiers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_spins: {
         Row: {
           created_at: string | null
@@ -52,142 +488,32 @@ export type Database = {
           },
         ]
       }
-      bounty_hunter_events: {
+      economy_config: {
         Row: {
+          config: Json
+          created_at: string
+          created_by: string | null
           id: string
-          event_date: string
-          month_key: string
-          opt_in_opens_at: string
-          opt_in_closes_at: string
-          status: string
-          created_at: string | null
-          updated_at: string | null
+          rationale: string | null
+          version: number
         }
         Insert: {
+          config: Json
+          created_at?: string
+          created_by?: string | null
           id?: string
-          event_date: string
-          month_key: string
-          opt_in_opens_at: string
-          opt_in_closes_at: string
-          status?: string
-          created_at?: string | null
-          updated_at?: string | null
+          rationale?: string | null
+          version?: number
         }
         Update: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
           id?: string
-          event_date?: string
-          month_key?: string
-          opt_in_opens_at?: string
-          opt_in_closes_at?: string
-          status?: string
-          created_at?: string | null
-          updated_at?: string | null
+          rationale?: string | null
+          version?: number
         }
         Relationships: []
-      }
-      bounty_hunter_participants: {
-        Row: {
-          id: string
-          event_id: string
-          player_id: string
-          role: string
-          opted_in_at: string | null
-        }
-        Insert: {
-          id?: string
-          event_id: string
-          player_id: string
-          role: string
-          opted_in_at?: string | null
-        }
-        Update: {
-          id?: string
-          event_id?: string
-          player_id?: string
-          role?: string
-          opted_in_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bounty_hunter_participants_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "bounty_hunter_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bounty_hunter_participants_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      banners: {
-        Row: {
-          id: string
-          title: string
-          subtitle: string | null
-          icon: string | null
-          color_from: string | null
-          color_to: string | null
-          badge: string | null
-          link_url: string | null
-          event_id: string | null
-          is_active: boolean | null
-          sort_order: number | null
-          starts_at: string | null
-          ends_at: string | null
-          twitch_url: string | null
-          youtube_url: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          title: string
-          subtitle?: string | null
-          icon?: string | null
-          color_from?: string | null
-          color_to?: string | null
-          badge?: string | null
-          link_url?: string | null
-          event_id?: string | null
-          is_active?: boolean | null
-          sort_order?: number | null
-          starts_at?: string | null
-          ends_at?: string | null
-          twitch_url?: string | null
-          youtube_url?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          title?: string
-          subtitle?: string | null
-          icon?: string | null
-          color_from?: string | null
-          color_to?: string | null
-          badge?: string | null
-          link_url?: string | null
-          event_id?: string | null
-          is_active?: boolean | null
-          sort_order?: number | null
-          starts_at?: string | null
-          ends_at?: string | null
-          twitch_url?: string | null
-          youtube_url?: string | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "banners_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       emperors: {
         Row: {
@@ -304,6 +630,48 @@ export type Database = {
           },
         ]
       }
+      event_attendances: {
+        Row: {
+          checked_in_at: string
+          event_id: string
+          game_id: string | null
+          id: string
+          player_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          checked_in_at?: string
+          event_id: string
+          game_id?: string | null
+          id?: string
+          player_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          checked_in_at?: string
+          event_id?: string
+          game_id?: string | null
+          id?: string
+          player_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendances_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendances_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_interest: {
         Row: {
           created_at: string | null
@@ -348,6 +716,7 @@ export type Database = {
           description: string | null
           ends_at: string | null
           entry_fee: number | null
+          event_type: string
           game_id: string | null
           gcal_uid: string | null
           has_stream: boolean | null
@@ -358,6 +727,7 @@ export type Database = {
           prizing: string[] | null
           scheduled_at: string
           status: Database["public"]["Enums"]["event_status"] | null
+          store_id: string | null
           twitch_url: string | null
           updated_at: string | null
           win_xp: number | null
@@ -370,6 +740,7 @@ export type Database = {
           description?: string | null
           ends_at?: string | null
           entry_fee?: number | null
+          event_type?: string
           game_id?: string | null
           gcal_uid?: string | null
           has_stream?: boolean | null
@@ -380,6 +751,7 @@ export type Database = {
           prizing?: string[] | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["event_status"] | null
+          store_id?: string | null
           twitch_url?: string | null
           updated_at?: string | null
           win_xp?: number | null
@@ -392,6 +764,7 @@ export type Database = {
           description?: string | null
           ends_at?: string | null
           entry_fee?: number | null
+          event_type?: string
           game_id?: string | null
           gcal_uid?: string | null
           has_stream?: boolean | null
@@ -402,6 +775,7 @@ export type Database = {
           prizing?: string[] | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["event_status"] | null
+          store_id?: string | null
           twitch_url?: string | null
           updated_at?: string | null
           win_xp?: number | null
@@ -413,6 +787,13 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -497,34 +878,34 @@ export type Database = {
       }
       notifications: {
         Row: {
-          id: string
-          player_id: string
-          type: string
-          title: string
-          message: string
-          data: Json | null
-          is_read: boolean
           created_at: string | null
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          message: string
+          player_id: string
+          title: string
+          type: string
         }
         Insert: {
-          id?: string
-          player_id: string
-          type: string
-          title: string
-          message: string
-          data?: Json | null
-          is_read?: boolean
           created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          player_id: string
+          title: string
+          type: string
         }
         Update: {
-          id?: string
-          player_id?: string
-          type?: string
-          title?: string
-          message?: string
-          data?: Json | null
-          is_read?: boolean
           created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          player_id?: string
+          title?: string
+          type?: string
         }
         Relationships: [
           {
@@ -535,6 +916,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          invite_code: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invite_code: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invite_code?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       pass_history: {
         Row: {
@@ -625,6 +1030,69 @@ export type Database = {
           },
         ]
       }
+      player_pass_subscriptions: {
+        Row: {
+          billing_frequency: string
+          cancelled_at: string | null
+          created_at: string
+          diamond_entry_reset_at: string | null
+          diamond_entry_used_this_month: boolean
+          home_store_id: string | null
+          id: string
+          next_renewal_at: string | null
+          player_id: string
+          recurring_amount: number
+          started_at: string
+          status: string
+          tier: string
+        }
+        Insert: {
+          billing_frequency?: string
+          cancelled_at?: string | null
+          created_at?: string
+          diamond_entry_reset_at?: string | null
+          diamond_entry_used_this_month?: boolean
+          home_store_id?: string | null
+          id?: string
+          next_renewal_at?: string | null
+          player_id: string
+          recurring_amount?: number
+          started_at?: string
+          status?: string
+          tier: string
+        }
+        Update: {
+          billing_frequency?: string
+          cancelled_at?: string | null
+          created_at?: string
+          diamond_entry_reset_at?: string | null
+          diamond_entry_used_this_month?: boolean
+          home_store_id?: string | null
+          id?: string
+          next_renewal_at?: string | null
+          player_id?: string
+          recurring_amount?: number
+          started_at?: string
+          status?: string
+          tier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_pass_subscriptions_home_store_id_fkey"
+            columns: ["home_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_pass_subscriptions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           allow_friend_requests: boolean | null
@@ -643,7 +1111,9 @@ export type Database = {
           discord_username: string | null
           display_name: string
           email: string | null
+          favorite_games: Json | null
           gems: number | null
+          home_store_id: string | null
           id: string
           is_banned: boolean | null
           is_founding_member: boolean | null
@@ -651,6 +1121,7 @@ export type Database = {
           is_staff: boolean | null
           last_check_in_at: string | null
           last_seen_at: string | null
+          notification_preferences: Json
           pass_billing_anchor: number | null
           pass_expires_at: string | null
           pass_games: string[] | null
@@ -682,6 +1153,8 @@ export type Database = {
           show_real_name: boolean | null
           show_stats: boolean | null
           square_customer_id: string | null
+          status_text: string | null
+          status_updated_at: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string | null
@@ -703,7 +1176,9 @@ export type Database = {
           discord_username?: string | null
           display_name: string
           email?: string | null
+          favorite_games?: Json | null
           gems?: number | null
+          home_store_id?: string | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
@@ -711,6 +1186,7 @@ export type Database = {
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
+          notification_preferences?: Json
           pass_billing_anchor?: number | null
           pass_expires_at?: string | null
           pass_games?: string[] | null
@@ -742,6 +1218,8 @@ export type Database = {
           show_real_name?: boolean | null
           show_stats?: boolean | null
           square_customer_id?: string | null
+          status_text?: string | null
+          status_updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
@@ -763,7 +1241,9 @@ export type Database = {
           discord_username?: string | null
           display_name?: string
           email?: string | null
+          favorite_games?: Json | null
           gems?: number | null
+          home_store_id?: string | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
@@ -771,6 +1251,7 @@ export type Database = {
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
+          notification_preferences?: Json
           pass_billing_anchor?: number | null
           pass_expires_at?: string | null
           pass_games?: string[] | null
@@ -802,16 +1283,32 @@ export type Database = {
           show_real_name?: boolean | null
           show_stats?: boolean | null
           square_customer_id?: string | null
+          status_text?: string | null
+          status_updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "players_home_store_id_fkey"
+            columns: ["home_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "players_primary_game_id_fkey"
             columns: ["primary_game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "players"
             referencedColumns: ["id"]
           },
         ]
@@ -929,6 +1426,200 @@ export type Database = {
           },
         ]
       }
+      prize_point_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          player_id: string
+          reference_id: string | null
+          source: string
+          store_id: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          player_id: string
+          reference_id?: string | null
+          source: string
+          store_id: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          player_id?: string
+          reference_id?: string | null
+          source?: string
+          store_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prize_point_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prize_point_transactions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prize_wall_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          quantity: number | null
+          retail_value: number | null
+          store_id: string | null
+          unlock_threshold: number | null
+          xp_cost: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          quantity?: number | null
+          retail_value?: number | null
+          store_id?: string | null
+          unlock_threshold?: number | null
+          xp_cost: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          quantity?: number | null
+          retail_value?: number | null
+          store_id?: string | null
+          unlock_threshold?: number | null
+          xp_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prize_wall_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prize_wall_redemptions: {
+        Row: {
+          claim_code: string
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          item_id: string
+          item_name: string
+          item_retail_value: number | null
+          player_id: string
+          points_deducted: number
+          status: string
+          store_id: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          claim_code: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          item_id: string
+          item_name: string
+          item_retail_value?: number | null
+          player_id: string
+          points_deducted: number
+          status?: string
+          store_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          claim_code?: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          item_id?: string
+          item_name?: string
+          item_retail_value?: number | null
+          player_id?: string
+          points_deducted?: number
+          status?: string
+          store_id?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prize_wall_redemptions_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prize_wall_redemptions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "prize_wall_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prize_wall_redemptions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prize_wall_redemptions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prize_wall_redemptions_voided_by_fkey"
+            columns: ["voided_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rank_thresholds: {
         Row: {
           game_id: string | null
@@ -999,6 +1690,92 @@ export type Database = {
           rarity?: string
         }
         Relationships: []
+      }
+      store_config: {
+        Row: {
+          created_at: string | null
+          currency_icon: string
+          currency_name: string
+          id: number
+          player_id_prefix: string
+          shop_categories: Json
+          shop_description: string
+          shop_title: string
+          staff_invite_code: string | null
+          store_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency_icon?: string
+          currency_name?: string
+          id?: number
+          player_id_prefix?: string
+          shop_categories?: Json
+          shop_description?: string
+          shop_title?: string
+          staff_invite_code?: string | null
+          store_name?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency_icon?: string
+          currency_name?: string
+          id?: number
+          player_id_prefix?: string
+          shop_categories?: Json
+          shop_description?: string
+          shop_title?: string
+          staff_invite_code?: string | null
+          store_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      stores: {
+        Row: {
+          city: string | null
+          color: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          org_id: string | null
+          player_id_prefix: string
+          state: string | null
+        }
+        Insert: {
+          city?: string | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          org_id?: string | null
+          player_id_prefix?: string
+          state?: string | null
+        }
+        Update: {
+          city?: string | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          org_id?: string | null
+          player_id_prefix?: string
+          state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -1073,6 +1850,7 @@ export type Database = {
           multiplier: number | null
           player_id: string
           source: Database["public"]["Enums"]["xp_source"]
+          store_id: string | null
           transaction_id: string | null
         }
         Insert: {
@@ -1087,6 +1865,7 @@ export type Database = {
           multiplier?: number | null
           player_id: string
           source: Database["public"]["Enums"]["xp_source"]
+          store_id?: string | null
           transaction_id?: string | null
         }
         Update: {
@@ -1101,6 +1880,7 @@ export type Database = {
           multiplier?: number | null
           player_id?: string
           source?: Database["public"]["Enums"]["xp_source"]
+          store_id?: string | null
           transaction_id?: string | null
         }
         Relationships: [
@@ -1125,43 +1905,14 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "xp_ledger_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
         ]
-      }
-      store_config: {
-        Row: {
-          id: number
-          currency_name: string
-          currency_icon: string
-          store_name: string
-          shop_title: string
-          shop_description: string
-          shop_categories: any
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: number
-          currency_name?: string
-          currency_icon?: string
-          store_name?: string
-          shop_title?: string
-          shop_description?: string
-          shop_categories?: any
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: number
-          currency_name?: string
-          currency_icon?: string
-          store_name?: string
-          shop_title?: string
-          shop_description?: string
-          shop_categories?: any
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
       }
     }
     Views: {
@@ -1245,10 +1996,20 @@ export type Database = {
         }
         Returns: string
       }
+      create_prize_redemption: {
+        Args: { p_item_id: string; p_player_id: string; p_store_id: string }
+        Returns: Json
+      }
+      get_card_of_the_day: { Args: { target_date?: string }; Returns: Json }
       get_pass_multiplier: { Args: { p_player_id: string }; Returns: number }
+      get_player_multiplier: { Args: { p_player_id: string }; Returns: number }
       get_player_rank: {
         Args: { p_game_id: string; p_player_id: string }
         Returns: string
+      }
+      get_user_point_balance: {
+        Args: { p_player_id: string; p_store_id: string }
+        Returns: number
       }
       get_xp_discount: { Args: { p_player_id: string }; Returns: number }
       refresh_xp_aggregates: { Args: never; Returns: undefined }
@@ -1270,7 +2031,6 @@ export type Database = {
         | "manual_adjustment"
         | "bonus_event"
         | "community_contribution"
-        | "check_in"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1414,7 +2174,6 @@ export const Constants = {
         "manual_adjustment",
         "bonus_event",
         "community_contribution",
-        "check_in",
       ],
     },
   },

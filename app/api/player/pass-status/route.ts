@@ -27,6 +27,8 @@ function normalizeTier(tier: string | null): PlayerPassTier {
     : 'free';
 }
 
+const PAGE_SIZE = 1000;
+
 async function getLifetimeXp(playerId: string): Promise<number> {
   let total = 0;
   let page = 0;
