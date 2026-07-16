@@ -88,16 +88,22 @@ function parseICalDate(dateStr: string, tzid?: string): Date {
     const second = parseInt(dateStr.slice(13, 15)) || 0;
     
     // If timezone is America/Los_Angeles (or similar Pacific), create date string
-    // and let the server interpret it. For simplicity, we'll create an ISO string
-    // that represents the intended local time.
+    // and let the server interpret it using the correct DST-aware offset.
     if (tzid?.includes('Los_Angeles') || tzid?.includes('Pacific')) {
-      // Create date string in Pacific time, then convert to UTC
-      // Pacific is UTC-8 (or UTC-7 in DST)
-      const date = new Date(Date.UTC(year, month, day, hour, minute, second));
-      // Add 8 hours to convert from Pacific to UTC (simplified, doesn't account for DST perfectly)
-      const isDST = month >= 2 && month <= 10; // Rough DST check (Mar-Nov)
-      date.setUTCHours(date.getUTCHours() + (isDST ? 7 : 8));
-      return date;
+      const mm = String(month + 1).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
+      const hh = String(hour).padStart(2, '0');
+      const min = String(minute).padStart(2, '0');
+      const ss = String(second).padStart(2, '0');
+      const isoLocal = `${year}-${mm}-${dd}T${hh}:${min}:${ss}`;
+      // Determine whether PDT (-07:00) or PST (-08:00) applies on this exact date
+      // by probing 20:00 UTC (noon Pacific in PDT = 13:00, in PST = 12:00)
+      const probe = new Date(`${year}-${mm}-${dd}T20:00:00Z`);
+      const probeHour = parseInt(
+        probe.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false })
+      );
+      const offset = probeHour === 13 ? '-07:00' : '-08:00'; // 13 = PDT, 12 = PST
+      return new Date(`${isoLocal}${offset}`);
     }
     
     // Default: assume the time is already in the server's timezone
