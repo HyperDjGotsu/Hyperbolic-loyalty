@@ -858,8 +858,13 @@ export default function DesktopDashboard() {
     badge: avatar.badge || null,
   };
 
-  // Get first banner for the live banner section
-  const liveBanner = banners[0];
+  const [bannerIndex, setBannerIndex] = useState(0);
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const t = setInterval(() => setBannerIndex(i => (i + 1) % banners.length), 4000);
+    return () => clearInterval(t);
+  }, [banners.length]);
+  const liveBanner = banners[bannerIndex];
 
   if (loading) {
     return (
@@ -1063,6 +1068,19 @@ export default function DesktopDashboard() {
                         {liveBanner.subtitle}
                       </div>
                     </div>
+
+                    {/* Dot indicators */}
+                    {banners.length > 1 && (
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {banners.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setBannerIndex(i)}
+                            className={`h-1.5 rounded-full transition-all ${i === bannerIndex ? 'bg-white w-4' : 'bg-white/40 w-1.5'}`}
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     {/* Buttons - Bottom Right */}
                     {liveBanner.hasStream && (
