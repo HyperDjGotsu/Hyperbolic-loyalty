@@ -2743,36 +2743,65 @@ export default function HQPage() {
                         )}
                       </div>
                       <p className="text-xs text-tertiary mt-1">Replaces the gradient background on the banner card</p>
-                      <div className="flex items-center gap-3 mt-3">
+                      <div className="space-y-3 mt-3">
                         <div>
-                          <label className="text-xs text-secondary block mb-1">Fit</label>
-                          <select
-                            value={editingBanner.bg_size || 'cover'}
-                            onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_size: e.target.value } : prev)}
-                            className="bg-elevated border border-border-token rounded-lg px-2 py-1.5 text-sm text-primary"
-                          >
-                            <option value="cover">Cover (fill, may crop)</option>
-                            <option value="contain">Contain (show full image)</option>
-                            <option value="100% 100%">Stretch to fill</option>
-                          </select>
+                          <label className="text-xs text-secondary block mb-1">
+                            Fit
+                            <span className="ml-2 font-normal text-tertiary">or type any CSS value</span>
+                          </label>
+                          <div className="flex gap-2">
+                            <div className="flex gap-1">
+                              {['cover', 'contain', '100% 100%'].map(v => (
+                                <button
+                                  key={v}
+                                  type="button"
+                                  onClick={() => setEditingBanner(prev => prev ? { ...prev, bg_size: v } : prev)}
+                                  className={`px-2 py-1 text-xs rounded-lg border transition-colors ${(editingBanner.bg_size || 'cover') === v ? 'border-accent bg-accent/10 text-accent' : 'border-border-token text-secondary hover:text-primary'}`}
+                                >
+                                  {v === 'cover' ? 'Cover' : v === 'contain' ? 'Contain' : 'Stretch'}
+                                </button>
+                              ))}
+                            </div>
+                            <input
+                              type="text"
+                              value={editingBanner.bg_size || 'cover'}
+                              onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_size: e.target.value } : prev)}
+                              placeholder="e.g. 90% or 400px"
+                              className="flex-1 bg-elevated border border-border-token rounded-lg px-2 py-1 text-sm text-primary font-mono"
+                            />
+                          </div>
                         </div>
                         <div>
-                          <label className="text-xs text-secondary block mb-1">Position</label>
-                          <select
-                            value={editingBanner.bg_position || 'center'}
-                            onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_position: e.target.value } : prev)}
-                            className="bg-elevated border border-border-token rounded-lg px-2 py-1.5 text-sm text-primary"
-                          >
-                            <option value="center">Center</option>
-                            <option value="top">Top</option>
-                            <option value="bottom">Bottom</option>
-                            <option value="left">Left</option>
-                            <option value="right">Right</option>
-                            <option value="top left">Top Left</option>
-                            <option value="top right">Top Right</option>
-                            <option value="bottom left">Bottom Left</option>
-                            <option value="bottom right">Bottom Right</option>
-                          </select>
+                          <label className="text-xs text-secondary block mb-1">
+                            Position
+                            <span className="ml-2 font-normal text-tertiary">X% Y% — type to fine-tune</span>
+                          </label>
+                          <div className="flex gap-2">
+                            <div className="grid grid-cols-3 gap-1 flex-shrink-0">
+                              {[
+                                ['top left','↖'],['top','↑'],['top right','↗'],
+                                ['left','←'],['center','·'],['right','→'],
+                                ['bottom left','↙'],['bottom','↓'],['bottom right','↘'],
+                              ].map(([v, label]) => (
+                                <button
+                                  key={v}
+                                  type="button"
+                                  onClick={() => setEditingBanner(prev => prev ? { ...prev, bg_position: v } : prev)}
+                                  className={`w-7 h-7 text-xs rounded flex items-center justify-center transition-colors ${(editingBanner.bg_position || 'center') === v ? 'bg-accent text-accent-fg' : 'bg-elevated text-secondary hover:text-primary'}`}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                            <input
+                              type="text"
+                              value={editingBanner.bg_position || 'center'}
+                              onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_position: e.target.value } : prev)}
+                              placeholder="e.g. 50% 30%"
+                              className="flex-1 bg-elevated border border-border-token rounded-lg px-2 py-1 text-sm text-primary font-mono"
+                            />
+                          </div>
+                          <p className="text-xs text-tertiary mt-1">Tip: 50% 30% shifts the image up — lower % = higher on screen</p>
                         </div>
                       </div>
                     </div>
