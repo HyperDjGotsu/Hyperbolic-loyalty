@@ -2567,7 +2567,7 @@ export default function HQPage() {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setEditingBanner(banner)}
+                          onClick={() => setEditingBanner({ ...banner })}
                           className="px-3 py-1 text-accent hover:bg-accent/10 rounded"
                         >
                           Edit
