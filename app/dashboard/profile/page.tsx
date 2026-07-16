@@ -65,6 +65,7 @@ interface PlayerData {
   passTier: string | null;
   passStatus: string | null;
   passExpiresAt: string | null;
+  isStaff: boolean;
 }
 
 interface ReferralStats {
@@ -218,6 +219,7 @@ export default function ProfilePage() {
               passTier: data.passTier || null,
               passStatus: data.passStatus || null,
               passExpiresAt: data.passExpiresAt || null,
+              isStaff: data.isStaff || false,
             });
             setTempAvatar(invData.avatarConfig || defaultAvatarConfig);
             setOwnedItems(invData.grouped || {});
@@ -1251,6 +1253,23 @@ export default function ProfilePage() {
             </div>
             <span className="text-secondary text-sm">›</span>
           </button>
+
+          {/* Staff-only HQ link */}
+          {playerData.isStaff && (
+            <a
+              href="/hq"
+              className="w-full bg-accent/10 rounded-xl p-4 flex items-center justify-between border border-accent/30 hover:bg-accent/20 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">⚔️</span>
+                <div className="text-left">
+                  <div className="text-accent text-sm font-medium">Staff HQ</div>
+                  <div className="text-tertiary text-xs">Player management & admin</div>
+                </div>
+              </div>
+              <span className="text-accent text-sm">›</span>
+            </a>
+          )}
         </div>
       </div>
 
