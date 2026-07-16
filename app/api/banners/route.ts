@@ -39,6 +39,7 @@ export async function GET() {
       backgroundImage: b.background_image || null,
       bgSize: b.bg_size || 'cover',
       bgPosition: b.bg_position || 'center',
+      textColor: b.text_color || '#ffffff',
     }));
 
     return NextResponse.json(

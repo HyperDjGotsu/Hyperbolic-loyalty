@@ -749,6 +749,7 @@ export default function DesktopDashboard() {
             backgroundImage: b.backgroundImage || null,
             bgSize: b.bgSize || 'cover',
             bgPosition: b.bgPosition || 'center',
+            textColor: b.textColor || '#ffffff',
           }));
           setBanners(transformedBanners);
         }
@@ -1051,8 +1052,9 @@ export default function DesktopDashboard() {
                     {/* Title - Top Center */}
                     <div className="absolute top-4 left-1/2 -translate-x-1/2">
                       <div
-                        className="text-3xl font-bold text-white"
+                        className="text-3xl font-bold"
                         style={{
+                          color: (liveBanner as any).textColor || '#ffffff',
                           textShadow: '-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 0 10px rgba(0,0,0,0.8)'
                         }}
                       >
@@ -1063,8 +1065,9 @@ export default function DesktopDashboard() {
                     {/* Subtitle - Center of banner */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                       <div
-                        className="text-lg font-medium text-white"
+                        className="text-lg font-medium"
                         style={{
+                          color: (liveBanner as any).textColor || '#ffffff',
                           textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 8px rgba(0,0,0,0.8)'
                         }}
                       >

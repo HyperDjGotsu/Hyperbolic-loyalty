@@ -222,6 +222,7 @@ interface Banner {
   background_image: string | null;
   bg_size: string;
   bg_position: string;
+  text_color: string;
 }
 
 interface PrizeWallItem {
@@ -2517,6 +2518,7 @@ export default function HQPage() {
                   background_image: null,
                   bg_size: 'cover',
                   bg_position: 'center',
+                  text_color: '#ffffff',
                 })}
                 className="px-4 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
               >
@@ -2615,11 +2617,11 @@ export default function HQPage() {
                       <div className="relative h-full flex items-center gap-3 px-4">
                         <span className="text-3xl">{editingBanner.icon}</span>
                         <div>
-                          <div className="font-bold text-white">{editingBanner.title || 'Title'}</div>
-                          <div className="text-white/80 text-sm">{editingBanner.subtitle || 'Subtitle'}</div>
+                          <div className="font-bold text-sm" style={{ color: editingBanner.text_color || '#ffffff' }}>{editingBanner.title || 'Title'}</div>
+                          <div className="text-sm opacity-80" style={{ color: editingBanner.text_color || '#ffffff' }}>{editingBanner.subtitle || 'Subtitle'}</div>
                         </div>
                         {editingBanner.badge && (
-                          <span className="ml-auto px-2 py-1 bg-white/20 rounded-full text-xs font-bold text-white">
+                          <span className="ml-auto px-2 py-1 bg-white/20 rounded-full text-xs font-bold" style={{ color: editingBanner.text_color || '#ffffff' }}>
                             {editingBanner.badge}
                           </span>
                         )}
@@ -2712,6 +2714,25 @@ export default function HQPage() {
                           onChange={(e) => setEditingBanner({ ...editingBanner, color_to: e.target.value })}
                           className="w-full h-10 bg-elevated border border-border-token rounded-lg cursor-pointer"
                         />
+                      </div>
+                      <div>
+                        <label className="text-secondary text-sm mb-1 block">Text Color</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={editingBanner.text_color || '#ffffff'}
+                            onChange={(e) => setEditingBanner({ ...editingBanner, text_color: e.target.value })}
+                            className="w-10 h-10 bg-elevated border border-border-token rounded-lg cursor-pointer"
+                          />
+                          <button
+                            onClick={() => setEditingBanner({ ...editingBanner, text_color: '#ffffff' })}
+                            className="px-2 py-1 text-xs rounded border border-border-token text-secondary hover:text-primary"
+                          >White</button>
+                          <button
+                            onClick={() => setEditingBanner({ ...editingBanner, text_color: '#111111' })}
+                            className="px-2 py-1 text-xs rounded border border-border-token text-secondary hover:text-primary"
+                          >Dark</button>
+                        </div>
                       </div>
                     </div>
 

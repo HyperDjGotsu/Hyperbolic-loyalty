@@ -97,13 +97,13 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
           <div className="flex items-center gap-3">
             <div className="text-4xl animate-bounce">{banner.icon}</div>
             <div>
-              <div className="font-black text-white text-lg drop-shadow-lg">{banner.title}</div>
-              <div className="text-white/90 text-sm drop-shadow">{banner.subtitle}</div>
+              <div className="font-black text-lg drop-shadow-lg" style={{ color: (banner as any).textColor || '#ffffff' }}>{banner.title}</div>
+              <div className="text-sm drop-shadow opacity-90" style={{ color: (banner as any).textColor || '#ffffff' }}>{banner.subtitle}</div>
             </div>
           </div>
           {banner.badge && (
             <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-              <span className="text-white text-xs font-bold">{banner.badge}</span>
+              <span className="text-xs font-bold" style={{ color: (banner as any).textColor || '#ffffff' }}>{banner.badge}</span>
             </div>
           )}
         </div>
