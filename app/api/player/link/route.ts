@@ -4,14 +4,16 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-// Generate random HYP-ID
+// Generate random network player ID — prefix is network-branded, chars exclude O/0/I/1
+const PLAYER_ID_PREFIX = 'GGC';
+const PLAYER_ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
 function generatePlayerId(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = 'HYP-';
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  let suffix = '';
+  for (let i = 0; i < 8; i++) {
+    suffix += PLAYER_ID_CHARS.charAt(Math.floor(Math.random() * PLAYER_ID_CHARS.length));
   }
-  return result;
+  return `${PLAYER_ID_PREFIX}-${suffix}`;
 }
 
 // Generate referral code from player ID
