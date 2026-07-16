@@ -134,7 +134,7 @@ export async function POST(_request: NextRequest) {
         multiplier: 1,
         final_xp: prize.xp,
         source: 'daily_spin',
-        description: `🎰 Daily Spin — ${prize.label} (+${prize.xp} XP)`,
+        description: `Daily Spin — ${prize.label} (+${prize.xp} XP)`,
       });
 
     if (ledgerError) {
