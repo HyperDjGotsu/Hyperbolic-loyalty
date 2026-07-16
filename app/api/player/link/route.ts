@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, hypId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode } = body;
+    const { action, hypId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId, managedStoreId } = body;
 
     // Check if user already has a linked player
     const { data: existingLink } = await supabaseAdmin
@@ -154,6 +154,9 @@ export async function POST(request: Request) {
           discord_username: discordUsername || null,
           phone: phone || null,
           primary_game_id: primaryGame || null,
+          // Store assignment
+          home_store_id: homeStoreId || null,
+          managed_store_id: managedStoreId || null,
           // Referral fields
           referred_by: referrerId,
           referral_bonus_paid: false,
@@ -170,7 +173,6 @@ export async function POST(request: Request) {
           allow_friend_requests: true,
           allow_messages: 'friends',
           pass_tier: 'none',
-          // Removed pass_status as 'inactive' is not a valid enum value
         })
         .select()
         .single();

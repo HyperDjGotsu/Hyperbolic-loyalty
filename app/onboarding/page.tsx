@@ -17,11 +17,21 @@ const GAME_OPTIONS = [
 ];
 
 // Inner component that uses useSearchParams
+interface Store {
+  id: string;
+  name: string;
+  city: string;
+  slug: string;
+  is_flagship: boolean;
+  color: string | null;
+}
+
 function OnboardingContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<'choice' | 'link' | 'create'>('choice');
+  const [step, setStep] = useState<'profile' | 'store'>('profile');
   const [hypId, setHypId] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [discordUsername, setDiscordUsername] = useState('');
@@ -31,6 +41,8 @@ function OnboardingContent() {
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [referralChecking, setReferralChecking] = useState(false);
   const [staffInviteCode, setStaffInviteCode] = useState('');
+  const [stores, setStores] = useState<Store[]>([]);
+  const [homeStoreId, setHomeStoreId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkingLink, setCheckingLink] = useState(true);
@@ -74,6 +86,22 @@ function OnboardingContent() {
         setStaffInviteCode(staffParam);
         setMode('create');
       }
+
+      // Load stores for picker
+      fetch('/api/stores')
+        .then(r => r.json())
+        .then(data => {
+          if (data.stores) {
+            setStores(data.stores);
+            // Pre-select store from URL param (?store=trade-emporium)
+            const storeParam = searchParams.get('store');
+            if (storeParam) {
+              const match = data.stores.find((s: Store) => s.slug === storeParam);
+              if (match) setHomeStoreId(match.id);
+            }
+          }
+        })
+        .catch(() => {});
     }
 
     checkExistingLink();
@@ -144,9 +172,18 @@ function OnboardingContent() {
     }
   };
 
-  const handleCreateNew = async () => {
+  const handleProfileNext = () => {
     if (!displayName.trim()) {
       setError('Please enter a display name');
+      return;
+    }
+    setError('');
+    setStep('store');
+  };
+
+  const handleCreateNew = async () => {
+    if (!homeStoreId) {
+      setError('Please select your home store');
       return;
     }
 
@@ -165,6 +202,7 @@ function OnboardingContent() {
           primaryGame: primaryGame || null,
           referralCode: referralCode.trim().toUpperCase() || null,
           staffInviteCode: staffInviteCode || null,
+          homeStoreId,
         }),
       });
 
@@ -175,7 +213,6 @@ function OnboardingContent() {
         return;
       }
 
-      // Success! Store locally and redirect
       localStorage.setItem('hyperbolic_player_id', data.player_id);
       router.push('/dashboard');
     } catch (err) {
@@ -427,16 +464,74 @@ function OnboardingContent() {
             </div>
 
             <button
-              onClick={handleCreateNew}
-              disabled={loading || !displayName.trim()}
+              onClick={handleProfileNext}
+              disabled={!displayName.trim()}
               className="w-full bg-accent text-accent-fg font-bold py-4 rounded-xl disabled:opacity-50 hover:opacity-90 transition-opacity"
             >
-              {loading ? 'Creating...' : 'Create Profile'}
+              Next →
             </button>
 
             <p className="text-tertiary text-xs text-center mt-4">
               You can pick up an NFC card at your next store visit!
             </p>
+          </div>
+        )}
+
+        {/* Store picker step */}
+        {mode === 'create' && step === 'store' && (
+          <div>
+            <button
+              onClick={() => setStep('profile')}
+              className="text-secondary text-sm mb-6 flex items-center gap-1 hover:text-primary transition-colors"
+            >
+              ← Back
+            </button>
+
+            <h2 className="text-primary text-xl font-bold mb-2">Your Home Store</h2>
+            <p className="text-secondary text-sm mb-6">
+              This is where your leaderboard ranking lives. You can still earn points and attend events at any store in the network.
+            </p>
+
+            <div className="space-y-3 mb-6">
+              {stores.map((store) => (
+                <button
+                  key={store.id}
+                  onClick={() => setHomeStoreId(store.id)}
+                  className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
+                    homeStoreId === store.id
+                      ? 'bg-accent/10 border-accent'
+                      : 'bg-input border-border-token hover:border-border-strong'
+                  }`}
+                >
+                  <div>
+                    <div className="text-primary font-semibold flex items-center gap-2">
+                      {store.name}
+                      {store.is_flagship && (
+                        <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full font-medium">
+                          Flagship
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-secondary text-sm">{store.city}, CA</div>
+                  </div>
+                  {homeStoreId === store.id && (
+                    <span className="text-accent text-lg">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {error && (
+              <p className="text-danger text-sm mb-4">{error}</p>
+            )}
+
+            <button
+              onClick={handleCreateNew}
+              disabled={loading || !homeStoreId}
+              className="w-full bg-accent text-accent-fg font-bold py-4 rounded-xl disabled:opacity-50 hover:opacity-90 transition-opacity"
+            >
+              {loading ? 'Creating your profile...' : 'Join the Network'}
+            </button>
           </div>
         )}
       </div>

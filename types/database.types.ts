@@ -1121,6 +1121,7 @@ export type Database = {
           is_staff: boolean | null
           last_check_in_at: string | null
           last_seen_at: string | null
+          managed_store_id: string | null
           notification_preferences: Json
           pass_billing_anchor: number | null
           pass_expires_at: string | null
@@ -1186,6 +1187,7 @@ export type Database = {
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
+          managed_store_id?: string | null
           notification_preferences?: Json
           pass_billing_anchor?: number | null
           pass_expires_at?: string | null
@@ -1251,6 +1253,7 @@ export type Database = {
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
+          managed_store_id?: string | null
           notification_preferences?: Json
           pass_billing_anchor?: number | null
           pass_expires_at?: string | null
@@ -1293,6 +1296,13 @@ export type Database = {
           {
             foreignKeyName: "players_home_store_id_fkey"
             columns: ["home_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_managed_store_id_fkey"
+            columns: ["managed_store_id"]
             isOneToOne: false
             referencedRelation: "stores"
             referencedColumns: ["id"]
@@ -1735,36 +1745,57 @@ export type Database = {
       }
       stores: {
         Row: {
+          address: string | null
           city: string | null
           color: string | null
           created_at: string | null
+          currency_icon: string
+          currency_name: string
+          ical_url: string | null
           id: string
           is_active: boolean | null
+          is_flagship: boolean
           name: string
           org_id: string | null
+          phone: string | null
           player_id_prefix: string
+          slug: string | null
           state: string | null
         }
         Insert: {
+          address?: string | null
           city?: string | null
           color?: string | null
           created_at?: string | null
+          currency_icon?: string
+          currency_name?: string
+          ical_url?: string | null
           id?: string
           is_active?: boolean | null
+          is_flagship?: boolean
           name: string
           org_id?: string | null
+          phone?: string | null
           player_id_prefix?: string
+          slug?: string | null
           state?: string | null
         }
         Update: {
+          address?: string | null
           city?: string | null
           color?: string | null
           created_at?: string | null
+          currency_icon?: string
+          currency_name?: string
+          ical_url?: string | null
           id?: string
           is_active?: boolean | null
+          is_flagship?: boolean
           name?: string
           org_id?: string | null
+          phone?: string | null
           player_id_prefix?: string
+          slug?: string | null
           state?: string | null
         }
         Relationships: [
