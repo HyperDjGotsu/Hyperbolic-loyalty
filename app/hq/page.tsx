@@ -2016,18 +2016,38 @@ export default function HQPage() {
       {/* Tabs */}
       <div className="border-b border-border-token">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex gap-2 py-2 overflow-x-auto scrollbar-hide">
+          {/* Mobile: native select dropdown */}
+          <div className="sm:hidden py-2">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2.5 text-primary focus:outline-none focus:border-accent"
+            >
+              <option value="players">👤 Players</option>
+              <option value="emperor">👑 Emperor</option>
+              <option value="bounty">🎯 Bounty</option>
+              <option value="banners">🎨 Banners</option>
+              <option value="cotd">🃏 Card of Day</option>
+              <option value="events">📅 Events</option>
+              <option value="prize-wall">🏆 Prize Wall</option>
+              <option value="redemptions">🎟️ Redemptions</option>
+              <option value="circuit">🏆 Circuit</option>
+              <option value="settings">⚙️ Settings</option>
+            </select>
+          </div>
+          {/* Desktop: tab buttons */}
+          <div className="hidden sm:flex gap-2 py-2">
             {[
-              { id: 'players', label: '👤 Players', icon: '👤', shortLabel: 'Players' },
-              { id: 'emperor', label: '👑 Emperor', icon: '👑', shortLabel: 'Emperor' },
-              { id: 'bounty', label: '🎯 Bounty', icon: '🎯', shortLabel: 'Bounty' },
-              { id: 'banners', label: '🎨 Banners', icon: '🎨', shortLabel: 'Banners' },
-              { id: 'cotd', label: '🃏 Card of Day', icon: '🃏', shortLabel: 'Cards' },
-              { id: 'events', label: '📅 Events', icon: '📅', shortLabel: 'Events' },
-              { id: 'prize-wall', label: 'Prize Wall', icon: '🏆', shortLabel: 'Prizes' },
-              { id: 'redemptions', label: '🎟️ Redemptions', icon: '🎟️', shortLabel: 'Redeem' },
-              { id: 'circuit', label: '🏆 Circuit', icon: '🏆', shortLabel: 'Circuit' },
-              { id: 'settings', label: '⚙️ Settings', icon: '⚙️', shortLabel: 'Settings' },
+              { id: 'players', label: '👤 Players' },
+              { id: 'emperor', label: '👑 Emperor' },
+              { id: 'bounty', label: '🎯 Bounty' },
+              { id: 'banners', label: '🎨 Banners' },
+              { id: 'cotd', label: '🃏 Card of Day' },
+              { id: 'events', label: '📅 Events' },
+              { id: 'prize-wall', label: '🏆 Prize Wall' },
+              { id: 'redemptions', label: '🎟️ Redemptions' },
+              { id: 'circuit', label: '🏆 Circuit' },
+              { id: 'settings', label: '⚙️ Settings' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -2038,8 +2058,7 @@ export default function HQPage() {
                     : 'text-secondary hover:text-primary hover:bg-elevated'
                 }`}
               >
-                <span className="sm:hidden">{tab.icon} {tab.shortLabel}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
+                {tab.label}
               </button>
             ))}
           </div>
@@ -2051,7 +2070,7 @@ export default function HQPage() {
         {activeTab === 'players' && (
           <div className="space-y-6">
             {/* Search */}
-            <div className="bg-surface rounded-xl p-6 border border-border-token">
+            <div className="bg-surface rounded-xl p-4 sm:p-6 border border-border-token">
               <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                 Search Player
               </h2>
@@ -2382,7 +2401,7 @@ export default function HQPage() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                     Recent Activity
                   </h3>
