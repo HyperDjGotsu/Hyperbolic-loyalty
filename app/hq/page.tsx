@@ -2730,40 +2730,38 @@ export default function HQPage() {
                         )}
                       </div>
                       <p className="text-xs text-tertiary mt-1">Replaces the gradient background on the banner card</p>
-                      {editingBanner.background_image && (
-                        <div className="flex items-center gap-3 mt-3">
-                          <div>
-                            <label className="text-xs text-secondary block mb-1">Fit</label>
-                            <select
-                              value={editingBanner.bg_size}
-                              onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_size: e.target.value } : prev)}
-                              className="bg-elevated border border-border-token rounded-lg px-2 py-1.5 text-sm text-primary"
-                            >
-                              <option value="cover">Cover (fill, may crop)</option>
-                              <option value="contain">Contain (show full image)</option>
-                              <option value="100% 100%">Stretch to fill</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-xs text-secondary block mb-1">Position</label>
-                            <select
-                              value={editingBanner.bg_position}
-                              onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_position: e.target.value } : prev)}
-                              className="bg-elevated border border-border-token rounded-lg px-2 py-1.5 text-sm text-primary"
-                            >
-                              <option value="center">Center</option>
-                              <option value="top">Top</option>
-                              <option value="bottom">Bottom</option>
-                              <option value="left">Left</option>
-                              <option value="right">Right</option>
-                              <option value="top left">Top Left</option>
-                              <option value="top right">Top Right</option>
-                              <option value="bottom left">Bottom Left</option>
-                              <option value="bottom right">Bottom Right</option>
-                            </select>
-                          </div>
+                      <div className="flex items-center gap-3 mt-3">
+                        <div>
+                          <label className="text-xs text-secondary block mb-1">Fit</label>
+                          <select
+                            value={editingBanner.bg_size || 'cover'}
+                            onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_size: e.target.value } : prev)}
+                            className="bg-elevated border border-border-token rounded-lg px-2 py-1.5 text-sm text-primary"
+                          >
+                            <option value="cover">Cover (fill, may crop)</option>
+                            <option value="contain">Contain (show full image)</option>
+                            <option value="100% 100%">Stretch to fill</option>
+                          </select>
                         </div>
-                      )}
+                        <div>
+                          <label className="text-xs text-secondary block mb-1">Position</label>
+                          <select
+                            value={editingBanner.bg_position || 'center'}
+                            onChange={e => setEditingBanner(prev => prev ? { ...prev, bg_position: e.target.value } : prev)}
+                            className="bg-elevated border border-border-token rounded-lg px-2 py-1.5 text-sm text-primary"
+                          >
+                            <option value="center">Center</option>
+                            <option value="top">Top</option>
+                            <option value="bottom">Bottom</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                            <option value="top left">Top Left</option>
+                            <option value="top right">Top Right</option>
+                            <option value="bottom left">Bottom Left</option>
+                            <option value="bottom right">Bottom Right</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Stream URLs */}
