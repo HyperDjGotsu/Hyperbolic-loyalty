@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,19 +16,8 @@ function getCurrentMonthKey(): string {
 // GET - Get current bounty hunter event with participants
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify staff
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
@@ -120,19 +109,8 @@ export async function GET() {
 // POST - Create new bounty hunter event
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify staff
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
@@ -186,19 +164,8 @@ export async function POST(request: NextRequest) {
 // PUT - Update event (status or details)
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify staff
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
@@ -257,19 +224,8 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete event
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify staff
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 import type { Database } from '@/lib/database.types';
 import { createNotification } from '@/lib/notifications';
 import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
@@ -171,20 +171,20 @@ async function checkReferralBonus(playerId: string, staffId: string): Promise<{
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Verify staff
+    // Get the staff member's players record for awarded_by
     const { data: staffCheck } = await supabaseAdmin
       .from('players')
-      .select('id, is_staff, player_id')
-      .eq('clerk_user_id', userId)
+      .select('id, player_id')
+      .eq('clerk_user_id', staffCtx.clerkUserId)
       .single();
 
-    if (!staffCheck?.is_staff) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!staffCheck) {
+      return NextResponse.json({ error: 'Staff record not found' }, { status: 500 });
     }
 
     const body = await request.json();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,19 +17,8 @@ type MatchType = keyof typeof MATCH_POINTS;
 // GET - Get matches for an event
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify staff
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
@@ -86,21 +75,17 @@ export async function GET(request: NextRequest) {
 // POST - Record a new match
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify staff and get their player ID
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('id, is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
+
+    // Get the staff member's players.id for recorded_by
+    const { data: staffPlayer } = await supabaseAdmin
+      .from('players')
+      .select('id')
+      .eq('clerk_user_id', staffCtx.clerkUserId)
+      .single();
 
     const body = await request.json();
     const { event_id, winner_id, loser_id, match_type, round = 1 } = body;
@@ -126,7 +111,7 @@ export async function POST(request: NextRequest) {
         winner_points: points.winner,
         loser_points: points.loser,
         round,
-        recorded_by: staff.id,
+        recorded_by: staffPlayer?.id,
       })
       .select()
       .single();
@@ -211,19 +196,8 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove a match (and reverse XP)
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    // Verify staff
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 

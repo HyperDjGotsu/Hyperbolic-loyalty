@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 // Lightweight player search — returns a list, used by Circuit standings picker
 export async function GET(request: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const { data: staff } = await supabaseAdmin
-    .from('players')
-    .select('is_staff')
-    .eq('clerk_user_id', userId)
-    .single();
-
-  if (!staff?.is_staff) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+  const staffCtx = await requireAnyStaff();
+  if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q')?.trim() || '';

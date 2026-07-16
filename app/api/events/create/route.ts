@@ -1,22 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    // Staff check
-    const { data: player } = await supabaseAdmin
-      .from('players')
-      .select('id, is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!player?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Staff only' }, { status: 403 });
     }
 

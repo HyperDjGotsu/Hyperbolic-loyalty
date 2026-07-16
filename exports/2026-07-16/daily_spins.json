@@ -1,0 +1,12 @@
+[
+  {"id":"b00832e2-d973-42f9-b9d4-87694e5d7c45","player_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","spin_date":"2026-04-26","result_xp":5,"result_rarity":"common","result_description":"Rusty Anchor","created_at":"2026-04-27T06:13:03.611207+00:00"},
+  {"id":"a08ae333-54cf-4c9c-a804-ca1bebe96b0e","player_id":"16ea80c8-3b4c-49ea-8faf-c54739515038","spin_date":"2026-04-27","result_xp":25,"result_rarity":"rare","result_description":"Rare Find","created_at":"2026-04-27T07:04:38.716133+00:00"},
+  {"id":"53b53556-587a-45b8-9747-01b0a8511ded","player_id":"1ede8579-cc1b-4286-9ea7-b363dab57ef6","spin_date":"2026-04-27","result_xp":10,"result_rarity":"uncommon","result_description":"Navigator's Log","created_at":"2026-04-27T11:54:16.651755+00:00"},
+  {"id":"c02ea896-6dcf-4295-878f-dd6fbc12dc96","player_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","spin_date":"2026-04-27","result_xp":5,"result_rarity":"common","result_description":"Rusty Anchor","created_at":"2026-04-28T01:28:06.143204+00:00"},
+  {"id":"586b0e60-c3b1-4d1e-bcda-874aca00dd7f","player_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","spin_date":"2026-04-28","result_xp":5,"result_rarity":"common","result_description":"Rusty Anchor","created_at":"2026-04-28T21:29:13.06631+00:00"},
+  {"id":"a738517e-0d2d-4764-8e8a-28c6d2286027","player_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","spin_date":"2026-04-29","result_xp":5,"result_rarity":"common","result_description":"Rusty Anchor","created_at":"2026-04-30T02:13:19.063299+00:00"},
+  {"id":"03c18905-71bd-461b-95a4-ed03d00765eb","player_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","spin_date":"2026-06-26","result_xp":50,"result_rarity":"epic","result_description":"Treasure Chest","created_at":"2026-06-26T20:34:46.807997+00:00"},
+  {"id":"09d38aaa-6c7c-4901-a4f2-59172055a253","player_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","spin_date":"2026-07-01","result_xp":10,"result_rarity":"uncommon","result_description":"Navigator's Log","created_at":"2026-07-02T05:08:56.123932+00:00"},
+  {"id":"ee6afb9c-d931-4957-87e4-953a3b699852","player_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","spin_date":"2026-07-07","result_xp":10,"result_rarity":"uncommon","result_description":"Navigator's Log","created_at":"2026-07-07T17:46:45.098314+00:00"},
+  {"id":"069bbb39-bb74-4a57-82bb-b41c4c751727","player_id":"d5c35098-93fd-4013-b1d5-50ae4e379c7b","spin_date":"2026-07-15","result_xp":5,"result_rarity":"common","result_description":"Bronze","created_at":"2026-07-15T07:30:14.702554+00:00"}
+]

@@ -1,24 +1,14 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
-
-async function verifyStaff(userId: string | null) {
-  if (!userId) return false;
-  const { data } = await supabaseAdmin
-    .from('players')
-    .select('is_staff')
-    .eq('clerk_user_id', userId)
-    .single();
-  return data?.is_staff === true;
-}
 
 // PATCH — update pass_tier or is_staff
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -54,8 +44,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 // DELETE — remove player and all associated records
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

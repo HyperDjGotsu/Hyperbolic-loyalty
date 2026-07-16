@@ -1,0 +1,5 @@
+[
+  {"id":"84917d8d-5fab-4748-8765-cd71426de770","requester_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","addressee_id":"84651a21-87dc-4508-8c63-5e9511441a84","status":"pending","created_at":"2026-01-11T23:54:55.012426+00:00","updated_at":"2026-01-11T23:54:55.012426+00:00"},
+  {"id":"ca53dca0-24ab-4eea-bae1-6d64de5d972c","requester_id":"16ea80c8-3b4c-49ea-8faf-c54739515038","addressee_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","status":"accepted","created_at":"2026-01-12T00:14:55.992455+00:00","updated_at":"2026-01-12T00:15:08.168+00:00"},
+  {"id":"58db12c9-3f31-4ae1-bb7b-0d0e4dd47ae7","requester_id":"af741fa0-c22e-48f8-af85-21ec1db12d7c","addressee_id":"5a0b24f5-9798-4af9-b02a-f8e15f309791","status":"pending","created_at":"2026-01-13T06:57:59.514066+00:00","updated_at":"2026-01-13T06:57:59.514066+00:00"}
+]

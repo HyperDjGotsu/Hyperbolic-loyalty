@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logPointTransaction } from '@/lib/points';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,16 +10,17 @@ export async function PATCH(
   { params }: { params: { code: string } }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
+    // Get the staff member's players.id for claimed_by / voided_by
     const { data: staff } = await supabaseAdmin
       .from('players')
-      .select('id, is_staff')
-      .eq('clerk_user_id', userId)
+      .select('id')
+      .eq('clerk_user_id', staffCtx.clerkUserId)
       .single();
 
-    if (!staff?.is_staff) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!staff) return NextResponse.json({ error: 'Staff record not found' }, { status: 500 });
 
     const { action, voidReason } = await request.json() as {
       action: 'claim' | 'void';

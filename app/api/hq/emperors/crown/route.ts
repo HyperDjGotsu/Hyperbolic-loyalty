@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 
 export const dynamic = 'force-dynamic';
@@ -26,21 +26,17 @@ function getBounty(totalBerries: number): string {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verify staff and get their player_id
-    const { data: staffCheck } = await supabaseAdmin
-      .from('players')
-      .select('is_staff, id')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staffCheck?.is_staff) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    // Get the staff member's players.id for crowned_by
+    const { data: staffPlayer } = await supabaseAdmin
+      .from('players')
+      .select('id')
+      .eq('clerk_user_id', staffCtx.clerkUserId)
+      .single();
 
     const body = await request.json();
     const { month, monthSort, playerName, playerId, monthlyXp } = body;
@@ -93,7 +89,7 @@ export async function POST(request: Request) {
           berries: totalBerries,
           bounty_display: bountyDisplay,
           crowned_at: new Date().toISOString(),
-          crowned_by: staffCheck.id,
+          crowned_by: staffPlayer?.id,
         })
         .eq('id', existing.id);
 
@@ -115,7 +111,7 @@ export async function POST(request: Request) {
           berries: totalBerries,
           bounty_display: bountyDisplay,
           crowned_at: new Date().toISOString(),
-          crowned_by: staffCheck.id,
+          crowned_by: staffPlayer?.id,
         });
 
       if (error) {

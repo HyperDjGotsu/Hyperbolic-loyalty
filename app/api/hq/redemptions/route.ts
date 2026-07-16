@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { data: staff } = await supabaseAdmin
-      .from('players')
-      .select('id, is_staff')
-      .eq('clerk_user_id', userId)
-      .single();
-
-    if (!staff?.is_staff) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { data, error } = await (supabaseAdmin as any)
       .from('prize_wall_redemptions')

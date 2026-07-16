@@ -1,25 +1,15 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { notifyAllPlayers } from '@/lib/notifications';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
-
-async function verifyStaff(userId: string | null) {
-  if (!userId) return false;
-  const { data: player } = await supabaseAdmin
-    .from('players')
-    .select('is_staff')
-    .eq('clerk_user_id', userId)
-    .single();
-  return player?.is_staff === true;
-}
 
 // GET - List all shop items (including inactive, for staff view)
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -40,8 +30,8 @@ export async function GET() {
 // POST - Create a new shop item
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -88,8 +78,8 @@ export async function POST(request: Request) {
 // PUT - Toggle active status or update item
 export async function PUT(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -118,8 +108,8 @@ export async function PUT(request: Request) {
 // DELETE - Hard delete only if no players own it; otherwise deactivate
 export async function DELETE(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

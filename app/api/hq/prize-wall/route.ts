@@ -1,23 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
-async function verifyStaff(userId: string | null) {
-  if (!userId) return false;
-  const { data } = await supabaseAdmin
-    .from('players')
-    .select('is_staff')
-    .eq('clerk_user_id', userId)
-    .single();
-  return data?.is_staff === true;
-}
-
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -36,8 +26,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -74,8 +64,8 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -109,8 +99,8 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!await verifyStaff(userId)) {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
