@@ -2595,14 +2595,24 @@ export default function HQPage() {
                     </h3>
                   </div>
                   <div className="p-4 space-y-4">
-                    {/* Preview */}
-                    <div
-                      className="p-4 rounded-xl"
-                      style={{
-                        background: `linear-gradient(135deg, ${editingBanner.color_from}, ${editingBanner.color_to})`,
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
+                    {/* Live Preview */}
+                    <div className="relative rounded-xl overflow-hidden" style={{ height: '100px' }}>
+                      {/* Background layer */}
+                      <div
+                        className="absolute inset-0"
+                        style={editingBanner.background_image ? {
+                          backgroundImage: `url('${editingBanner.background_image}')`,
+                          backgroundSize: editingBanner.bg_size || 'cover',
+                          backgroundPosition: editingBanner.bg_position || 'center',
+                        } : {
+                          background: `linear-gradient(135deg, ${editingBanner.color_from}, ${editingBanner.color_to})`,
+                        }}
+                      />
+                      {editingBanner.background_image && (
+                        <div className="absolute inset-0 bg-black/30" />
+                      )}
+                      {/* Content */}
+                      <div className="relative h-full flex items-center gap-3 px-4">
                         <span className="text-3xl">{editingBanner.icon}</span>
                         <div>
                           <div className="font-bold text-white">{editingBanner.title || 'Title'}</div>
@@ -2613,6 +2623,9 @@ export default function HQPage() {
                             {editingBanner.badge}
                           </span>
                         )}
+                      </div>
+                      <div className="absolute top-2 right-2 text-[10px] text-white/50 bg-black/30 px-1.5 py-0.5 rounded">
+                        preview
                       </div>
                     </div>
 
