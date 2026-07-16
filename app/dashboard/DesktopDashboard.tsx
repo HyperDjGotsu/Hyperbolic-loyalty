@@ -1023,7 +1023,8 @@ export default function DesktopDashboard() {
                     }}
                   >
                     {/* Background Image or Gradient */}
-                    <div 
+                    <div
+                      key={`desktop-bg-${liveBanner.id}`}
                       className="absolute inset-0"
                       style={{
                         background: liveBanner.backgroundImage

@@ -72,8 +72,8 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
       {/* Background - either image or gradient */}
       {hasBackgroundImage ? (
         <>
-          {/* Background image with overlay */}
           <div
+            key={`bg-${banner.id}`}
             className="absolute inset-0"
             style={{
               backgroundImage: `url(${banner.backgroundImage})`,
@@ -81,15 +81,14 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
               backgroundPosition: (banner as any).bgPosition || 'center',
             }}
           />
-          {/* Dark overlay for readability - subtle */}
           <div className="absolute inset-0 bg-black/30" />
         </>
       ) : (
-        <div 
+        <div
+          key={`grad-${banner.id}`}
           className={`absolute inset-0 ${gradientClass}`}
           style={gradientStyle}
-        >
-        </div>
+        />
       )}
       
       {/* Content */}
