@@ -37,6 +37,8 @@ export async function GET() {
       youtubeUrl: b.youtube_url,
       hasStream: !!(b.twitch_url || b.youtube_url),
       backgroundImage: b.background_image || null,
+      bgSize: b.bg_size || 'cover',
+      bgPosition: b.bg_position || 'center',
     }));
 
     return NextResponse.json(

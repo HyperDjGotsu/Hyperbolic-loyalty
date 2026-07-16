@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image } = body;
+    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -75,6 +75,8 @@ export async function POST(request: Request) {
         twitch_url,
         youtube_url,
         background_image: background_image || null,
+        bg_size: bg_size || 'cover',
+        bg_position: bg_position || 'center',
       } as any)
       .select()
       .single();
@@ -101,7 +103,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image } = body;
+    const { id, title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Banner ID is required' }, { status: 400 });
@@ -123,6 +125,8 @@ export async function PUT(request: Request) {
         twitch_url,
         youtube_url,
         background_image: background_image ?? null,
+        bg_size: bg_size || 'cover',
+        bg_position: bg_position || 'center',
       } as any)
       .eq('id', id)
       .select()

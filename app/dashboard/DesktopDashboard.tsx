@@ -747,6 +747,8 @@ export default function DesktopDashboard() {
             twitchUrl: b.twitchUrl,
             youtubeUrl: b.youtubeUrl,
             backgroundImage: b.backgroundImage || null,
+            bgSize: b.bgSize || 'cover',
+            bgPosition: b.bgPosition || 'center',
           }));
           setBanners(transformedBanners);
         }
@@ -1024,11 +1026,11 @@ export default function DesktopDashboard() {
                     <div 
                       className="absolute inset-0"
                       style={{
-                        background: liveBanner.backgroundImage 
+                        background: liveBanner.backgroundImage
                           ? `url('${liveBanner.backgroundImage}')`
                           : `linear-gradient(135deg, ${liveBanner.colorFrom}, ${liveBanner.colorTo})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
+                        backgroundSize: (liveBanner as any).bgSize || 'cover',
+                        backgroundPosition: (liveBanner as any).bgPosition || 'center',
                       }}
                     />
                     

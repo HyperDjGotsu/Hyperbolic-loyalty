@@ -73,9 +73,13 @@ export const BannerCarousel = ({ banners }: BannerCarouselProps) => {
       {hasBackgroundImage ? (
         <>
           {/* Background image with overlay */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${banner.backgroundImage})` }}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${banner.backgroundImage})`,
+              backgroundSize: (banner as any).bgSize || 'cover',
+              backgroundPosition: (banner as any).bgPosition || 'center',
+            }}
           />
           {/* Dark overlay for readability - subtle */}
           <div className="absolute inset-0 bg-black/30" />

@@ -221,6 +221,8 @@ export default function MobileDashboard() {
             twitchUrl: b.twitchUrl,
             youtubeUrl: b.youtubeUrl,
             backgroundImage: b.backgroundImage || b.background_image || null,
+            bgSize: b.bgSize || 'cover',
+            bgPosition: b.bgPosition || 'center',
           }));
           setBanners(transformedBanners);
         }
