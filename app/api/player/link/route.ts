@@ -23,13 +23,13 @@ function generateReferralCode(playerId: string): string {
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { action, hypId, displayName, discordUsername, phone, primaryGame, referralCode } = body;
+    const { action, hypId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode } = body;
 
     // Check if user already has a linked player
     const { data: existingLink } = await supabaseAdmin
@@ -39,9 +39,9 @@ export async function POST(request: Request) {
       .single();
 
     if (existingLink) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Account already linked to a player',
-        player_id: existingLink.player_id 
+        player_id: existingLink.player_id
       }, { status: 400 });
     }
 
@@ -64,8 +64,8 @@ export async function POST(request: Request) {
 
       // Check if player is already linked to another Clerk account
       if (player.clerk_user_id && player.clerk_user_id !== userId) {
-        return NextResponse.json({ 
-          error: 'This player is already linked to another account' 
+        return NextResponse.json({
+          error: 'This player is already linked to another account'
         }, { status: 400 });
       }
 
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       // Link the player to this Clerk user and update email if missing
       const { error: updateError } = await supabaseAdmin
         .from('players')
-        .update({ 
+        .update({
           clerk_user_id: userId,
           // Only update email if it's missing in Supabase
           ...(clerkEmail && !player.email ? { email: clerkEmail } : {}),
@@ -88,10 +88,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Failed to link player' }, { status: 500 });
       }
 
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         player_id: player.player_id,
-        displayName: player.display_name 
+        displayName: player.display_name
       });
 
     } else if (action === 'create_new') {
@@ -106,18 +106,18 @@ export async function POST(request: Request) {
       const clerkRealName = [user?.firstName, user?.lastName]
         .filter(Boolean)
         .join(' ') || null;
-      
+
       // Generate unique player_id
       let newPlayerId = generatePlayerId();
       let attempts = 0;
-      
+
       while (attempts < 10) {
         const { data: existing } = await supabaseAdmin
           .from('players')
           .select('id')
           .eq('player_id', newPlayerId)
           .single();
-        
+
         if (!existing) break;
         newPlayerId = generatePlayerId();
         attempts++;
@@ -126,14 +126,14 @@ export async function POST(request: Request) {
       // Look up referrer if referral code provided
       let referrerId: string | null = null;
       let referrerName: string | null = null;
-      
+
       if (referralCode) {
         const { data: referrer } = await supabaseAdmin
           .from('players')
           .select('id, display_name')
           .eq('referral_code', referralCode.toUpperCase())
           .single();
-        
+
         if (referrer) {
           referrerId = referrer.id;
           referrerName = referrer.display_name;
@@ -199,12 +199,32 @@ export async function POST(request: Request) {
             description: `Referral bonus - invited by ${referrerName}`,
             source: 'referral',
           });
-        
+
         console.log(`🎁 Referral bonus: +30 XP awarded to ${displayName} (referred by ${referrerName})`);
       }
 
-      return NextResponse.json({ 
-        success: true, 
+      if (staffInviteCode) {
+        const { data: configRow } = await supabaseAdmin
+          .from('store_config' as any)
+          .select('staff_invite_code')
+          .eq('id', 1)
+          .maybeSingle();
+
+        const cfg = configRow as any;
+        if (
+          cfg?.staff_invite_code &&
+          cfg.staff_invite_code.toLowerCase() === staffInviteCode.toLowerCase()
+        ) {
+          await supabaseAdmin
+            .from('players')
+            .update({ is_staff: true })
+            .eq('id', newPlayer.id);
+          console.log(`Staff invite used for player ${displayName}`);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
         player_id: newPlayer.player_id,
         displayName: newPlayer.display_name,
         referralBonus: referrerId ? 30 : 0,

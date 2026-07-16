@@ -1,317 +1,191 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useState, useEffect } from 'react';
 
-interface ShopItem {
+interface PrizeWallItem {
   id: string;
   name: string;
-  description: string;
-  category: string;
-  price: number;
-  rarity: string;
-  assetData: any;
-  isDefault: boolean;
+  description: string | null;
+  image_url: string | null;
+  xp_cost: number;
+  retail_value: number | null;
+  quantity: number | null;
+  unlock_threshold: number | null;
+  is_unlocked: boolean;
 }
 
-interface ShopCategory {
-  id: string;
-  name: string;
-  icon: string;
-  enabled: boolean;
-}
-
-interface StoreConfig {
-  currency_name: string;
-  currency_icon: string;
-  shop_title: string;
-  shop_description: string;
-  shop_categories: ShopCategory[];
-}
-
-interface PassInfo {
-  tier: string;
-  status: string;
-  isActive: boolean;
-}
-
-function IconRenderer({ value, className }: { value: string; className?: string }) {
-  if (value.startsWith('http')) {
-    return <img src={value} alt="icon" className={className || 'w-5 h-5 object-contain'} />;
-  }
-  return <span className={className}>{value}</span>;
-}
-
-const DEFAULT_CATEGORIES: ShopCategory[] = [
-  { id: 'base', name: 'Base', icon: '😎', enabled: true },
-  { id: 'background', name: 'Background', icon: '🎨', enabled: true },
-  { id: 'frame', name: 'Frame', icon: '✨', enabled: true },
-  { id: 'badge', name: 'Badge', icon: '🏷️', enabled: true },
-  { id: 'title', name: 'Title', icon: '📛', enabled: true },
-];
-
-const rarityColors: Record<string, { border: string; bg: string; text: string }> = {
-  common: { border: 'border-border-token', bg: 'bg-elevated/50', text: 'text-secondary' },
-  uncommon: { border: 'border-green-500', bg: 'bg-green-500/20', text: 'text-green-400' },
-  rare: { border: 'border-blue-500', bg: 'bg-blue-500/20', text: 'text-blue-400' },
-  epic: { border: 'border-purple-500', bg: 'bg-purple-500/20', text: 'text-purple-400' },
-  legendary: { border: 'border-yellow-500', bg: 'bg-yellow-500/20', text: 'text-yellow-400' },
-};
-
-const frameStyles: Record<string, string> = {
-  none: 'border-transparent',
-  silver: 'border-border-strong',
-  gold: 'border-yellow-500',
-  diamond: 'border-cyan-400',
-  fire: 'border-orange-500',
-  pirate: 'border-red-600',
-  electric: 'border-yellow-400',
-  legendary: 'border-purple-500',
-};
-
-export default function ShopPage() {
-  const { user, isLoaded } = useUser();
-  const [balance, setBalance] = useState(0);
-  const [shopItems, setShopItems] = useState<Record<string, ShopItem[]>>({});
-  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
+export default function PrizeWallPage() {
+  const [items, setItems] = useState<PrizeWallItem[]>([]);
+  const [subscriberCount, setSubscriberCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState<string | null>(null);
-  const [storeConfig, setStoreConfig] = useState<StoreConfig>({
-    currency_name: 'Points',
-    currency_icon: '⭐',
-    shop_title: 'Prize Wall',
-    shop_description: 'avatar cosmetics',
-    shop_categories: DEFAULT_CATEGORIES,
-  });
-  const [activeCategory, setActiveCategory] = useState('');
-  const [passInfo, setPassInfo] = useState<PassInfo>({ tier: 'none', status: 'none', isActive: false });
-
-  const visibleCategories = (storeConfig.shop_categories ?? DEFAULT_CATEGORIES).filter(c => c.enabled);
-
-  const loadShopData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [shopRes, invRes, configRes] = await Promise.all([
-        fetch('/api/shop'),
-        fetch('/api/player/inventory'),
-        fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' }),
-      ]);
-
-      if (shopRes.ok) {
-        const shopData = await shopRes.json();
-        setShopItems(shopData.grouped || {});
-      }
-
-      if (invRes.ok) {
-        const invData = await invRes.json();
-        setBalance(invData.gems || 0);
-        const owned = new Set<string>();
-        invData.items?.forEach((item: ShopItem) => owned.add(item.id));
-        setOwnedIds(owned);
-        if (invData.passInfo) setPassInfo(invData.passInfo);
-      }
-
-      if (configRes.ok) {
-        const config = await configRes.json();
-        const categories: ShopCategory[] = config.shop_categories ?? DEFAULT_CATEGORIES;
-        setStoreConfig({ ...config, shop_categories: categories });
-        // Set initial active tab to first enabled category
-        const firstEnabled = categories.find(c => c.enabled);
-        if (firstEnabled) setActiveCategory(firstEnabled.id);
-      }
-    } catch (error) {
-      console.error('Error loading shop data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    if (isLoaded && user) {
-      loadShopData();
-      // Mark getting-started shop task complete
-      if (typeof window !== 'undefined') localStorage.setItem('hxp_done_shop', 'true');
-    }
-  }, [isLoaded, user, loadShopData]);
+    fetch('/api/prize-wall')
+      .then(r => r.json())
+      .then(data => {
+        setItems(data.items || []);
+        setSubscriberCount(data.subscriber_count || 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  const purchaseItem = async (item: ShopItem) => {
-    if (ownedIds.has(item.id) || item.isDefault) return;
-    if (balance < item.price) {
-      alert(`Not enough ${storeConfig.currency_name}!`);
-      return;
-    }
-
-    setPurchasing(item.id);
-    try {
-      const res = await fetch('/api/shop/purchase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: item.id }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setBalance(data.newBalance);
-        setOwnedIds(prev => new Set(prev).add(item.id));
-        alert(`🎉 Purchased ${item.name}!`);
-      } else {
-        alert(data.error || 'Failed to purchase');
-      }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      alert('Failed to purchase item');
-    } finally {
-      setPurchasing(null);
-    }
-  };
-
-  const isOwned = (item: ShopItem) => item.isDefault || ownedIds.has(item.id);
-
-  const ShopItemCard = ({ item }: { item: ShopItem }) => {
-    const owned = isOwned(item);
-    const locked = !passInfo.isActive && !owned && item.price > 0;
-    const rarity = rarityColors[item.rarity] || rarityColors.common;
-
-    return (
-      <button
-        type="button"
-        onClick={() => !owned && !locked && purchaseItem(item)}
-        disabled={owned || locked || purchasing === item.id}
-        className={`relative p-3 rounded-xl border-2 ${rarity.border} ${rarity.bg} text-left transition-all ${
-          owned ? 'opacity-60' : locked ? 'opacity-70' : 'hover:scale-105 active:scale-95'
-        }`}
-      >
-        {owned && (
-          <div className="absolute top-1 right-1 text-green-400 text-xs font-bold">✓ OWNED</div>
-        )}
-        {locked && !owned && (
-          <div className="absolute top-1 right-1 text-xs">🔒</div>
-        )}
-
-        <div className="text-2xl mb-2">
-          {item.category === 'base' && item.assetData?.emoji}
-          {item.category === 'badge' && item.assetData?.emoji}
-          {item.category === 'background' && (
-            <div
-              className="w-8 h-8 rounded-full border-2 border-border-strong"
-              style={{ backgroundColor: item.assetData?.color }}
-            />
-          )}
-          {item.category === 'frame' && (
-            <div className={`w-8 h-8 rounded-full border-4 ${frameStyles[item.assetData?.style] || ''} bg-elevated`} />
-          )}
-          {item.category === 'title' && '📛'}
-        </div>
-
-        <div className="text-primary font-semibold text-sm">{item.name}</div>
-        <div className="text-secondary text-xs mt-0.5">{item.description}</div>
-
-        <div className="flex items-center justify-between mt-2">
-          <span className={`text-xs uppercase ${rarity.text}`}>{item.rarity}</span>
-          {!owned && (
-            <span className="text-primary font-bold text-sm flex items-center gap-1">
-              {item.price} <IconRenderer value={storeConfig.currency_icon} className="w-4 h-4 object-contain" />
-            </span>
-          )}
-        </div>
-
-        {purchasing === item.id && (
-          <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
-            <span className="text-primary animate-pulse">Buying...</span>
-          </div>
-        )}
-      </button>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">🛍️</div>
-          <div className="text-secondary">Loading shop...</div>
-        </div>
-      </div>
-    );
-  }
+  const floor = items.filter(i => !i.unlock_threshold);
+  const locked = items.filter(i => i.unlock_threshold && !i.is_unlocked);
+  const unlocked = items.filter(i => i.unlock_threshold && i.is_unlocked);
 
   return (
-    <div className="flex-1 overflow-auto">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur-sm border-b border-border-token">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold text-primary">{storeConfig.shop_title}</h1>
-              <p className="text-secondary text-sm">
-                Spend your {storeConfig.currency_name} on {storeConfig.shop_description}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 bg-elevated px-4 py-2 rounded-full">
-              <IconRenderer value={storeConfig.currency_icon} className="w-6 h-6 object-contain text-xl" />
-              <span className="text-primary font-bold">{balance.toLocaleString()}</span>
-              <span className="text-secondary text-sm">{storeConfig.currency_name}</span>
-            </div>
-          </div>
-
-          {/* Category tabs — only enabled ones */}
-          {visibleCategories.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {visibleCategories.map(cat => (
-                <button
-                  type="button"
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
-                    activeCategory === cat.id
-                      ? 'bg-accent text-primary'
-                      : 'bg-elevated text-secondary hover:bg-elevated'
-                  }`}
-                >
-                  <IconRenderer value={cat.icon} className="w-4 h-4 object-contain" />
-                  <span>{cat.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
+      <div>
+        <h1 className="text-2xl font-bold text-primary">Prize Wall</h1>
+        <p className="text-secondary text-sm mt-1">
+          Spend your Points on real prizes. Points never expire.
+        </p>
       </div>
 
-      {/* Free Member Banner */}
-      {!passInfo.isActive && (
-        <div className="mx-4 mt-4 bg-accent/10 border border-accent/30 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-xl">🎫</span>
-          <div>
-            <p className="text-sm font-semibold text-primary">Player Pass Required</p>
-            <p className="text-xs text-secondary mt-0.5">
-              Upgrade to a Player Pass in-store to unlock purchases. You can still browse and save up your {storeConfig.currency_name}.
-            </p>
-          </div>
+      {loading ? (
+        <div className="text-center py-20 text-tertiary text-sm">Loading…</div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-20 text-tertiary text-sm">
+          No prizes available yet. Check back soon.
         </div>
+      ) : (
+        <>
+          {floor.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">
+                Always Available
+              </h2>
+              <ItemGrid items={floor} subscriberCount={subscriberCount} />
+            </section>
+          )}
+
+          {unlocked.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">
+                Community Unlocked
+              </h2>
+              <ItemGrid items={unlocked} subscriberCount={subscriberCount} />
+            </section>
+          )}
+
+          {locked.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-1">
+                Community Goals
+              </h2>
+              <p className="text-xs text-tertiary mb-4">
+                {subscriberCount} active {subscriberCount === 1 ? 'subscriber' : 'subscribers'} across
+                the network. Grow the community to unlock these.
+              </p>
+              <div className="space-y-3">
+                {locked.map(item => (
+                  <LockedItem key={item.id} item={item} subscriberCount={subscriberCount} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
+    </div>
+  );
+}
 
-      {/* Shop Items */}
-      <div className="p-4">
-        <div className="grid grid-cols-2 gap-3">
-          {(shopItems[activeCategory] || []).map(item => (
-            <ShopItemCard key={item.id} item={item} />
-          ))}
-        </div>
+function ItemGrid({ items, subscriberCount }: { items: PrizeWallItem[]; subscriberCount: number }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      {items.map(item => (
+        <ItemCard key={item.id} item={item} />
+      ))}
+    </div>
+  );
+}
 
-        {(!shopItems[activeCategory] || shopItems[activeCategory].length === 0) && (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">🏪</div>
-            <div className="text-secondary">No items in this category</div>
+function ItemCard({ item }: { item: PrizeWallItem }) {
+  return (
+    <div className="bg-surface rounded-xl overflow-hidden">
+      <div className="aspect-square bg-elevated">
+        {item.image_url ? (
+          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-tertiary text-xs">
+            No image
           </div>
         )}
       </div>
+      <div className="p-4">
+        <div className="font-semibold text-primary text-sm leading-tight">{item.name}</div>
+        {item.description && (
+          <div className="text-xs text-tertiary mt-1 leading-snug">{item.description}</div>
+        )}
+        <div className="mt-3 flex items-end justify-between gap-2">
+          <div>
+            <span className="text-lg font-bold text-primary">{item.xp_cost.toLocaleString()}</span>
+            <span className="text-xs text-secondary ml-1">pts</span>
+          </div>
+          {item.retail_value != null && (
+            <span className="text-xs text-tertiary">${item.retail_value} value</span>
+          )}
+        </div>
+        {item.quantity != null && (
+          <div className="text-xs text-tertiary mt-1">{item.quantity} remaining</div>
+        )}
+        <button
+          className="mt-3 w-full py-2 bg-accent text-accent-fg text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
+          onClick={() => alert('Ask staff at the counter to process your redemption.')}
+        >
+          Redeem
+        </button>
+      </div>
+    </div>
+  );
+}
 
-      {/* Tip */}
-      <div className="p-4 pt-0">
-        <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
-          <p className="text-secondary text-sm">
-            💡 Go to <span className="text-accent">Profile</span> to customize your avatar with purchased items
-          </p>
+function LockedItem({ item, subscriberCount }: { item: PrizeWallItem; subscriberCount: number }) {
+  const threshold = item.unlock_threshold!;
+  const pct = Math.min(100, Math.round((subscriberCount / threshold) * 100));
+
+  return (
+    <div className="bg-surface rounded-xl p-4 flex gap-4 opacity-70">
+      <div className="w-16 h-16 bg-elevated rounded-lg flex-shrink-0 overflow-hidden">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="w-full h-full object-cover grayscale"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-tertiary text-xs">
+            —
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <div className="font-semibold text-primary text-sm">{item.name}</div>
+            {item.description && (
+              <div className="text-xs text-tertiary mt-0.5">{item.description}</div>
+            )}
+          </div>
+          <div className="text-right flex-shrink-0">
+            <div className="text-sm font-bold text-primary">{item.xp_cost.toLocaleString()} pts</div>
+            {item.retail_value != null && (
+              <div className="text-xs text-tertiary">${item.retail_value} value</div>
+            )}
+          </div>
+        </div>
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-xs text-tertiary mb-1">
+            <span>Unlocks at {threshold} subscribers</span>
+            <span>{subscriberCount} / {threshold}</span>
+          </div>
+          <div className="h-1.5 bg-elevated rounded-full overflow-hidden">
+            <div
+              className="h-full bg-accent rounded-full transition-all"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
         </div>
       </div>
     </div>

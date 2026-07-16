@@ -219,6 +219,21 @@ interface Banner {
   ends_at: string | null;
   twitch_url: string | null;
   youtube_url: string | null;
+  background_image: string | null;
+}
+
+interface PrizeWallItem {
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  xp_cost: number;
+  retail_value: number | null;
+  quantity: number | null;
+  store_id: string | null;
+  unlock_threshold: number | null;
+  is_active: boolean;
+  created_at: string;
 }
 
 interface EmperorRanking {
@@ -397,40 +412,32 @@ export default function HQPage() {
   const [cotdAddingToPool, setCotdAddingToPool] = useState(false);
   const [cotdFinalizingVote, setCotdFinalizingVote] = useState(false);
 
-  // Shop management state
-  const [shopItems, setShopItems] = useState<HQShopItem[]>([]);
-  const [shopLoading, setShopLoading] = useState(false);
-  const [shopSaving, setShopSaving] = useState(false);
-  const [shopCategoryFilter, setShopCategoryFilter] = useState('all');
-  const [shopForm, setShopForm] = useState({
+  // Prize wall state
+  const [prizeItems, setPrizeItems] = useState<PrizeWallItem[]>([]);
+  const [prizeLoading, setPrizeLoading] = useState(false);
+  const [prizeSaving, setPrizeSaving] = useState(false);
+  const [prizeFormOpen, setPrizeFormOpen] = useState(false);
+  const [prizeDeleteConfirm, setPrizeDeleteConfirm] = useState<string | null>(null);
+  const [prizeForm, setPrizeForm] = useState({
     name: '',
     description: '',
-    category: 'base',
-    price: '',
-    rarity: 'common',
-    asset_emoji: '',
-    asset_color: '#6366f1',
-    asset_frame: 'silver',
-    asset_title: '',
+    image_url: '',
+    xp_cost: '',
+    retail_value: '',
+    quantity: '',
+    unlock_threshold: '',
+    is_active: true,
   });
-  const [shopFormOpen, setShopFormOpen] = useState(false);
-  const [shopDeleteConfirm, setShopDeleteConfirm] = useState<string | null>(null);
+  const [prizeImageUploading, setPrizeImageUploading] = useState(false);
+  const [bannerImageUploading, setBannerImageUploading] = useState(false);
 
   // Store settings state
   const [storeConfig, setStoreConfig] = useState({
     currency_name: 'Points',
     currency_icon: '⭐',
     store_name: 'Hyperbolic XP',
-    shop_title: 'Prize Wall',
-    shop_description: 'avatar cosmetics',
     player_id_prefix: 'HYP',
-    shop_categories: [
-      { id: 'base', name: 'Base', icon: '😎', enabled: true },
-      { id: 'background', name: 'Background', icon: '🎨', enabled: true },
-      { id: 'frame', name: 'Frame', icon: '✨', enabled: true },
-      { id: 'badge', name: 'Badge', icon: '🏷️', enabled: true },
-      { id: 'title', name: 'Title', icon: '📛', enabled: true },
-    ] as Array<{ id: string; name: string; icon: string; enabled: boolean }>,
+    staff_invite_code: '',
   });
   const [settingsSaving, setSettingsSaving] = useState(false);
   // null = closed, 'currency' = currency icon, number = category index
@@ -991,8 +998,8 @@ export default function HQPage() {
     if (activeTab === 'bounty') {
       loadBountyData();
     }
-    if (activeTab === 'shop') {
-      loadShopItems();
+    if (activeTab === 'prize-wall') {
+      loadPrizeItems();
     }
     if (activeTab === 'settings') {
       loadStoreConfig();
@@ -1008,10 +1015,10 @@ export default function HQPage() {
   // Store settings functions
   const loadStoreConfig = async () => {
     try {
-      const res = await fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/hq/store-config?t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        setStoreConfig(prev => ({ ...prev, ...data, shop_categories: data.shop_categories ?? prev.shop_categories }));
+        setStoreConfig(prev => ({ ...prev, ...data }));
       }
     } catch { /* use defaults */ }
   };
@@ -1117,93 +1124,128 @@ export default function HQPage() {
   };
 
   // Shop management functions
-  const loadShopItems = async () => {
-    setShopLoading(true);
+  const loadPrizeItems = async () => {
+    setPrizeLoading(true);
     try {
-      const res = await fetch('/api/hq/shop');
+      const res = await fetch('/api/hq/prize-wall');
       const data = await res.json();
-      setShopItems(data.items || []);
+      setPrizeItems(data.items || []);
     } catch {
-      showToast('Failed to load shop items', 'error');
+      showToast('Failed to load prize wall items', 'error');
     } finally {
-      setShopLoading(false);
+      setPrizeLoading(false);
     }
   };
 
-  const buildAssetData = () => {
-    const { category, asset_emoji, asset_color, asset_frame, asset_title } = shopForm;
-    if (category === 'base' || category === 'badge' || category === 'effect') return { emoji: asset_emoji };
-    if (category === 'background') return { color: asset_color };
-    if (category === 'frame') return { style: asset_frame };
-    if (category === 'title') return { text: asset_title };
-    return { emoji: asset_emoji };
-  };
-
-  const saveShopItem = async () => {
-    if (!shopForm.name || !shopForm.price) {
-      showToast('Name and price are required', 'error');
+  const savePrizeItem = async () => {
+    if (!prizeForm.name || !prizeForm.xp_cost) {
+      showToast('Name and point cost are required', 'error');
       return;
     }
-    setShopSaving(true);
+    setPrizeSaving(true);
     try {
-      const res = await fetch('/api/hq/shop', {
+      const res = await fetch('/api/hq/prize-wall', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: shopForm.name,
-          description: shopForm.description || null,
-          category: shopForm.category,
-          price: Number(shopForm.price),
-          rarity: shopForm.rarity,
-          asset_data: buildAssetData(),
+          name: prizeForm.name,
+          description: prizeForm.description || null,
+          image_url: prizeForm.image_url || null,
+          xp_cost: Number(prizeForm.xp_cost),
+          retail_value: prizeForm.retail_value ? Number(prizeForm.retail_value) : null,
+          quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
+          unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
+          is_active: prizeForm.is_active,
         }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setShopItems(prev => [...prev, data.item]);
-      setShopForm({ name: '', description: '', category: 'base', price: '', rarity: 'common', asset_emoji: '', asset_color: '#6366f1', asset_frame: 'silver', asset_title: '' });
-      setShopFormOpen(false);
-      showToast('Item added to shop', 'success');
+      setPrizeItems(prev => [data.item, ...prev]);
+      setPrizeForm({ name: '', description: '', image_url: '', xp_cost: '', retail_value: '', quantity: '', unlock_threshold: '', is_active: true });
+      setPrizeFormOpen(false);
+      showToast('Item added to prize wall', 'success');
     } catch (err: any) {
       showToast(err.message || 'Failed to save item', 'error');
     } finally {
-      setShopSaving(false);
+      setPrizeSaving(false);
     }
   };
 
-  const toggleShopItemActive = async (item: HQShopItem) => {
+  const togglePrizeItemActive = async (item: PrizeWallItem) => {
     try {
-      const res = await fetch('/api/hq/shop', {
+      const res = await fetch('/api/hq/prize-wall', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: item.id, active: !item.active }),
+        body: JSON.stringify({ id: item.id, is_active: !item.is_active }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setShopItems(prev => prev.map(i => i.id === item.id ? data.item : i));
-      showToast(`Item ${!item.active ? 'activated' : 'deactivated'}`, 'success');
+      setPrizeItems(prev => prev.map(i => i.id === item.id ? data.item : i));
+      showToast(`Item ${!item.is_active ? 'activated' : 'deactivated'}`, 'success');
     } catch {
       showToast('Failed to update item', 'error');
     }
   };
 
-  const deleteShopItem = async (id: string) => {
+  const deletePrizeItem = async (id: string) => {
     try {
-      const res = await fetch(`/api/hq/shop?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/hq/prize-wall?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      if (data.deleted) {
-        setShopItems(prev => prev.filter(i => i.id !== id));
-        showToast('Item removed from shop', 'success');
-      } else {
-        // Was owned by players — just deactivated
-        setShopItems(prev => prev.map(i => i.id === id ? data.item : i));
-        showToast('Item is owned by players — deactivated instead of deleted', 'success');
-      }
-    } catch {
-      showToast('Failed to remove item', 'error');
+      setPrizeItems(prev => prev.filter(i => i.id !== id));
+      showToast('Item removed', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to remove item', 'error');
     } finally {
-      setShopDeleteConfirm(null);
+      setPrizeDeleteConfirm(null);
+    }
+  };
+
+  const uploadPrizeItemImage = async (file: File) => {
+    setPrizeImageUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/hq/upload-prize-item', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setPrizeForm(prev => ({ ...prev, image_url: data.url }));
+    } catch (err: any) {
+      showToast(err.message || 'Image upload failed', 'error');
+    } finally {
+      setPrizeImageUploading(false);
+    }
+  };
+
+  const uploadBannerImage = async (file: File) => {
+    setBannerImageUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/hq/upload-banner', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setEditingBanner(prev => prev ? { ...prev, background_image: data.url } : prev);
+    } catch (err: any) {
+      showToast(err.message || 'Image upload failed', 'error');
+    } finally {
+      setBannerImageUploading(false);
+    }
+  };
+
+  const generateStaffCode = async () => {
+    try {
+      const res = await fetch('/api/hq/store-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate_staff_code' }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setStoreConfig(prev => ({ ...prev, staff_invite_code: data.staff_invite_code }));
+      showToast('New staff invite code generated', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to generate code', 'error');
     }
   };
 
@@ -1753,7 +1795,7 @@ export default function HQPage() {
               { id: 'banners', label: '🎨 Banners', icon: '🎨' },
               { id: 'cotd', label: '🃏 Card of Day', icon: '🃏' },
               { id: 'events', label: '📅 Events', icon: '📅' },
-              { id: 'shop', label: '🛒 Shop', icon: '🛒' },
+              { id: 'prize-wall', label: 'Prize Wall', icon: '🏆' },
               { id: 'circuit', label: '🏆 Circuit', icon: '🏆' },
               { id: 'settings', label: '⚙️ Settings', icon: '⚙️' },
             ].map(tab => (
@@ -2470,6 +2512,7 @@ export default function HQPage() {
                   ends_at: null,
                   twitch_url: null,
                   youtube_url: null,
+                  background_image: null,
                 })}
                 className="px-4 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
               >
@@ -2653,6 +2696,36 @@ export default function HQPage() {
                           className="w-full h-10 bg-elevated border border-border-token rounded-lg cursor-pointer"
                         />
                       </div>
+                    </div>
+
+                    {/* Event Image */}
+                    <div>
+                      <label className="text-secondary text-sm mb-1 block">Event Image</label>
+                      <div className="flex items-center gap-3">
+                        {editingBanner.background_image && (
+                          <img src={editingBanner.background_image} alt="banner bg" className="h-14 w-24 object-cover rounded-lg border border-border-token" />
+                        )}
+                        <label className="cursor-pointer flex items-center gap-2 px-3 py-2 bg-elevated border border-border-token rounded-lg text-sm text-secondary hover:text-primary hover:border-accent transition-colors">
+                          {bannerImageUploading ? 'Uploading…' : editingBanner.background_image ? 'Replace image' : 'Upload image'}
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/gif"
+                            className="hidden"
+                            disabled={bannerImageUploading}
+                            onChange={e => { const f = e.target.files?.[0]; if (f) uploadBannerImage(f); }}
+                          />
+                        </label>
+                        {editingBanner.background_image && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingBanner(prev => prev ? { ...prev, background_image: null } : prev)}
+                            className="text-xs text-red-400 hover:text-red-300"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-tertiary mt-1">Replaces the gradient background on the banner card</p>
                     </div>
 
                     {/* Stream URLs */}
@@ -3532,301 +3605,223 @@ export default function HQPage() {
         )}
 
         {/* Shop Tab */}
-        {activeTab === 'shop' && (
+        {activeTab === 'prize-wall' && (
           <div className="space-y-6">
-
-            {/* Pricing Formula Reference */}
-            <div className="bg-surface rounded-xl p-6 border border-border-token">
-              <h2 className="text-sm font-medium text-secondary uppercase tracking-wider mb-1">Pricing Formula</h2>
-              <p className="text-xs text-tertiary mb-4">Upper management sets the item spec — staff enters it here. Use these ranges as your guide.</p>
-              <div className="grid grid-cols-5 gap-3 mb-4">
-                {[
-                  { rarity: 'Common', range: '100–250', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/20', desc: 'Basic cosmetics, accessible to most players' },
-                  { rarity: 'Uncommon', range: '300–600', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20', desc: 'Takes a few events to earn' },
-                  { rarity: 'Rare', range: '750–1,200', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', desc: 'Dedicated players, ~2 weeks of play' },
-                  { rarity: 'Epic', range: '1,500–2,500', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', desc: 'Monthly milestone feel' },
-                  { rarity: 'Legendary', range: '3,000+', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20', desc: 'Top earners only — prestige tier' },
-                ].map(r => (
-                  <div key={r.rarity} className={`rounded-lg p-3 border ${r.bg}`}>
-                    <div className={`text-xs font-bold ${r.color} mb-1`}>{r.rarity}</div>
-                    <div className="text-sm font-mono font-semibold text-primary">{r.range} <span className="text-xs text-tertiary">pts</span></div>
-                    <div className="text-xs text-tertiary mt-1 leading-tight">{r.desc}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-border-token pt-4">
-                <div className="text-xs font-medium text-secondary mb-2">Category Guide</div>
-                <div className="grid grid-cols-3 gap-2 text-xs text-tertiary">
-                  <div><span className="text-primary font-medium">Base</span> — Avatar body emoji (e.g. 🧙 🤖 🦊)</div>
-                  <div><span className="text-primary font-medium">Background</span> — Color behind avatar (hex code)</div>
-                  <div><span className="text-primary font-medium">Frame</span> — Border style around avatar</div>
-                  <div><span className="text-primary font-medium">Badge</span> — Small emoji shown on profile (e.g. ⭐ 💎)</div>
-                  <div><span className="text-primary font-medium">Title</span> — Text under player name (e.g. "The Collector")</div>
-                  <div><span className="text-primary font-medium">Effect</span> — Special visual effect emoji or key</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Item List */}
             <div className="bg-surface rounded-xl border border-border-token overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-border-token">
                 <div className="flex items-center gap-3">
-                  <h2 className="font-semibold text-primary">Shop Items</h2>
+                  <h2 className="font-semibold text-primary">Prize Wall</h2>
                   <span className="text-xs text-tertiary bg-elevated px-2 py-0.5 rounded-full">
-                    {shopItems.filter(i => i.active).length} active / {shopItems.length} total
+                    {prizeItems.filter(i => i.is_active).length} active / {prizeItems.length} total
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <select
-                    value={shopCategoryFilter}
-                    onChange={e => setShopCategoryFilter(e.target.value)}
-                    className="text-sm bg-elevated border border-border-token rounded-lg px-3 py-1.5 text-primary"
-                  >
-                    <option value="all">All categories</option>
-                    <option value="base">Base</option>
-                    <option value="background">Background</option>
-                    <option value="frame">Frame</option>
-                    <option value="badge">Badge</option>
-                    <option value="title">Title</option>
-                    <option value="effect">Effect</option>
-                  </select>
-                  <button
-                    onClick={() => setShopFormOpen(true)}
-                    className="bg-accent text-accent-fg text-sm font-medium px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
-                  >
-                    + Add Item
-                  </button>
-                </div>
+                <button
+                  onClick={() => setPrizeFormOpen(true)}
+                  className="bg-accent text-accent-fg text-sm font-medium px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+                >
+                  + Add Item
+                </button>
               </div>
 
-              {shopLoading ? (
-                <div className="p-8 text-center text-tertiary text-sm">Loading items…</div>
-              ) : shopItems.filter(i => shopCategoryFilter === 'all' || i.category === shopCategoryFilter).length === 0 ? (
-                <div className="p-8 text-center text-tertiary text-sm">No items found.</div>
+              {prizeLoading ? (
+                <div className="p-8 text-center text-tertiary text-sm">Loading…</div>
+              ) : prizeItems.length === 0 ? (
+                <div className="p-8 text-center text-tertiary text-sm">No items yet. Add your first prize wall item.</div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border-token text-left">
-                      <th className="px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Item</th>
-                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Category</th>
-                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Rarity</th>
-                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Price</th>
+                      <th className="px-6 py-3 text-xs font-medium text-secondary uppercase tracking-wider w-16">Image</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Item</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Cost</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Retail</th>
+                      <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Unlock</th>
                       <th className="px-4 py-3 text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
                       <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
-                    {shopItems
-                      .filter(i => shopCategoryFilter === 'all' || i.category === shopCategoryFilter)
-                      .map(item => {
-                        const rarityColor: Record<string, string> = {
-                          common: 'text-slate-400', uncommon: 'text-green-400',
-                          rare: 'text-blue-400', epic: 'text-purple-400', legendary: 'text-yellow-400',
-                        };
-                        return (
-                          <tr key={item.id} className={`hover:bg-elevated/50 transition-colors ${!item.active ? 'opacity-50' : ''}`}>
-                            <td className="px-6 py-3">
-                              <div className="font-medium text-primary">{item.name}</div>
-                              {item.description && <div className="text-xs text-tertiary mt-0.5">{item.description}</div>}
-                            </td>
-                            <td className="px-4 py-3 text-secondary capitalize">{item.category}</td>
-                            <td className="px-4 py-3">
-                              <span className={`capitalize font-medium ${rarityColor[item.rarity] || 'text-secondary'}`}>
-                                {item.rarity}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-primary font-mono">{item.price.toLocaleString()} pts</td>
-                            <td className="px-4 py-3">
-                              <button
-                                onClick={() => toggleShopItemActive(item)}
-                                disabled={item.is_default}
-                                className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${
-                                  item.is_default ? 'bg-elevated text-tertiary cursor-not-allowed' :
-                                  item.active ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25' :
-                                  'bg-elevated text-tertiary hover:bg-elevated'
-                                }`}
-                              >
-                                {item.is_default ? 'Default' : item.active ? 'Active' : 'Inactive'}
-                              </button>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              {!item.is_default && (
-                                shopDeleteConfirm === item.id ? (
-                                  <div className="flex items-center gap-2 justify-end">
-                                    <span className="text-xs text-tertiary">Remove?</span>
-                                    <button onClick={() => deleteShopItem(item.id)} className="text-xs text-red-400 hover:text-red-300 font-medium">Yes</button>
-                                    <button onClick={() => setShopDeleteConfirm(null)} className="text-xs text-secondary hover:text-primary">Cancel</button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => setShopDeleteConfirm(item.id)}
-                                    className="text-xs text-tertiary hover:text-red-400 transition-colors"
-                                  >
-                                    Remove
-                                  </button>
-                                )
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                    {prizeItems.map(item => (
+                      <tr key={item.id} className={`hover:bg-elevated/50 transition-colors ${!item.is_active ? 'opacity-50' : ''}`}>
+                        <td className="px-6 py-3">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded-lg" />
+                          ) : (
+                            <div className="w-12 h-12 bg-elevated rounded-lg" />
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-primary">{item.name}</div>
+                          {item.description && <div className="text-xs text-tertiary mt-0.5">{item.description}</div>}
+                          {item.quantity != null && <div className="text-xs text-tertiary mt-0.5">Qty: {item.quantity}</div>}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-primary">{item.xp_cost.toLocaleString()} pts</td>
+                        <td className="px-4 py-3 text-secondary">{item.retail_value != null ? `$${item.retail_value}` : '—'}</td>
+                        <td className="px-4 py-3 text-secondary">{item.unlock_threshold != null ? `${item.unlock_threshold} subs` : 'Always'}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => togglePrizeItemActive(item)}
+                            className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${
+                              item.is_active ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25' : 'bg-elevated text-tertiary hover:bg-elevated'
+                            }`}
+                          >
+                            {item.is_active ? 'Active' : 'Inactive'}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {prizeDeleteConfirm === item.id ? (
+                            <div className="flex items-center gap-2 justify-end">
+                              <span className="text-xs text-tertiary">Delete?</span>
+                              <button onClick={() => deletePrizeItem(item.id)} className="text-xs text-red-400 hover:text-red-300 font-medium">Yes</button>
+                              <button onClick={() => setPrizeDeleteConfirm(null)} className="text-xs text-secondary hover:text-primary">No</button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setPrizeDeleteConfirm(item.id)}
+                              className="text-xs text-tertiary hover:text-red-400 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               )}
             </div>
 
             {/* Add Item Form */}
-            {shopFormOpen && (
+            {prizeFormOpen && (
               <div className="bg-surface rounded-xl p-6 border border-accent/30">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-semibold text-primary">New Shop Item</h3>
-                  <button onClick={() => setShopFormOpen(false)} className="text-secondary hover:text-primary text-sm">Cancel</button>
+                  <h3 className="font-semibold text-primary">New Prize Wall Item</h3>
+                  <button onClick={() => setPrizeFormOpen(false)} className="text-secondary hover:text-primary text-sm">Cancel</button>
                 </div>
+
+                {/* Image upload */}
+                <div className="mb-5">
+                  <label className="text-xs font-medium text-secondary block mb-2">Item Image</label>
+                  <div className="flex items-center gap-4">
+                    {prizeForm.image_url ? (
+                      <img src={prizeForm.image_url} alt="preview" className="w-24 h-24 object-cover rounded-lg border border-border-token" />
+                    ) : (
+                      <div className="w-24 h-24 bg-elevated rounded-lg border border-border-token flex items-center justify-center text-tertiary text-xs">No image</div>
+                    )}
+                    <div className="space-y-2">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-elevated border border-border-token rounded-lg text-sm text-secondary hover:text-primary hover:border-accent transition-colors">
+                        {prizeImageUploading ? 'Uploading…' : prizeForm.image_url ? 'Replace image' : 'Upload image'}
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/gif"
+                          className="hidden"
+                          disabled={prizeImageUploading}
+                          onChange={e => { const f = e.target.files?.[0]; if (f) uploadPrizeItemImage(f); }}
+                        />
+                      </label>
+                      {prizeForm.image_url && (
+                        <button
+                          type="button"
+                          onClick={() => setPrizeForm(f => ({ ...f, image_url: '' }))}
+                          className="block text-xs text-red-400 hover:text-red-300"
+                        >
+                          Remove image
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-medium text-secondary block mb-1">Item Name *</label>
                     <input
                       type="text"
-                      value={shopForm.name}
-                      onChange={e => setShopForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="e.g. Golden Dragon Frame"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      value={prizeForm.name}
+                      onChange={e => setPrizeForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="e.g. Booster Pack"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-secondary block mb-1">Description</label>
                     <input
                       type="text"
-                      value={shopForm.description}
-                      onChange={e => setShopForm(f => ({ ...f, description: e.target.value }))}
-                      placeholder="Optional short description"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      value={prizeForm.description}
+                      onChange={e => setPrizeForm(f => ({ ...f, description: e.target.value }))}
+                      placeholder="Optional"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-secondary block mb-1">Category *</label>
-                    <select
-                      value={shopForm.category}
-                      onChange={e => setShopForm(f => ({ ...f, category: e.target.value }))}
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
-                    >
-                      <option value="base">Base — avatar body emoji</option>
-                      <option value="background">Background — color behind avatar</option>
-                      <option value="frame">Frame — border style</option>
-                      <option value="badge">Badge — small emoji on profile</option>
-                      <option value="title">Title — text under name</option>
-                      <option value="effect">Effect — visual effect</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-secondary block mb-1">Rarity *</label>
-                    <select
-                      value={shopForm.rarity}
-                      onChange={e => setShopForm(f => ({ ...f, rarity: e.target.value }))}
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
-                    >
-                      <option value="common">Common (100–250 pts)</option>
-                      <option value="uncommon">Uncommon (300–600 pts)</option>
-                      <option value="rare">Rare (750–1,200 pts)</option>
-                      <option value="epic">Epic (1,500–2,500 pts)</option>
-                      <option value="legendary">Legendary (3,000+ pts)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-secondary block mb-1">
-                      Price (points) *
-                      <span className="ml-2 text-tertiary font-normal">
-                        {shopForm.rarity === 'common' ? '100–250' : shopForm.rarity === 'uncommon' ? '300–600' : shopForm.rarity === 'rare' ? '750–1,200' : shopForm.rarity === 'epic' ? '1,500–2,500' : '3,000+'}
-                      </span>
-                    </label>
+                    <label className="text-xs font-medium text-secondary block mb-1">Point Cost *</label>
                     <input
                       type="number"
                       min="0"
-                      value={shopForm.price}
-                      onChange={e => setShopForm(f => ({ ...f, price: e.target.value }))}
-                      placeholder="e.g. 500"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                      value={prizeForm.xp_cost}
+                      onChange={e => setPrizeForm(f => ({ ...f, xp_cost: e.target.value }))}
+                      placeholder="e.g. 350"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Retail Value ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={prizeForm.retail_value}
+                      onChange={e => setPrizeForm(f => ({ ...f, retail_value: e.target.value }))}
+                      placeholder="e.g. 7.00"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={prizeForm.quantity}
+                      onChange={e => setPrizeForm(f => ({ ...f, quantity: e.target.value }))}
+                      placeholder="Leave blank for unlimited"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Community Unlock (# subscribers)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={prizeForm.unlock_threshold}
+                      onChange={e => setPrizeForm(f => ({ ...f, unlock_threshold: e.target.value }))}
+                      placeholder="Leave blank = always available"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    />
+                  </div>
+                </div>
 
-                  {/* Asset data — context-sensitive by category */}
-                  {(shopForm.category === 'base' || shopForm.category === 'badge' || shopForm.category === 'effect') && (
-                    <div>
-                      <label className="text-xs font-medium text-secondary block mb-1">Emoji *</label>
-                      <input
-                        type="text"
-                        value={shopForm.asset_emoji}
-                        onChange={e => setShopForm(f => ({ ...f, asset_emoji: e.target.value }))}
-                        placeholder="e.g. 🧙"
-                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
-                      />
-                    </div>
-                  )}
-                  {shopForm.category === 'background' && (
-                    <div>
-                      <label className="text-xs font-medium text-secondary block mb-1">Color *</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={shopForm.asset_color}
-                          onChange={e => setShopForm(f => ({ ...f, asset_color: e.target.value }))}
-                          className="w-10 h-9 rounded border border-border-token bg-input cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={shopForm.asset_color}
-                          onChange={e => setShopForm(f => ({ ...f, asset_color: e.target.value }))}
-                          placeholder="#6366f1"
-                          className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {shopForm.category === 'frame' && (
-                    <div>
-                      <label className="text-xs font-medium text-secondary block mb-1">Frame Style *</label>
-                      <select
-                        value={shopForm.asset_frame}
-                        onChange={e => setShopForm(f => ({ ...f, asset_frame: e.target.value }))}
-                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
-                      >
-                        <option value="silver">Silver</option>
-                        <option value="gold">Gold</option>
-                        <option value="diamond">Diamond</option>
-                        <option value="fire">Fire</option>
-                        <option value="pirate">Pirate</option>
-                        <option value="electric">Electric</option>
-                        <option value="legendary">Legendary</option>
-                      </select>
-                    </div>
-                  )}
-                  {shopForm.category === 'title' && (
-                    <div>
-                      <label className="text-xs font-medium text-secondary block mb-1">Title Text *</label>
-                      <input
-                        type="text"
-                        value={shopForm.asset_title}
-                        onChange={e => setShopForm(f => ({ ...f, asset_title: e.target.value }))}
-                        placeholder="e.g. The Collector"
-                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
-                      />
-                    </div>
-                  )}
+                <div className="flex items-center gap-3 mt-4">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary">
+                    <input
+                      type="checkbox"
+                      checked={prizeForm.is_active}
+                      onChange={e => setPrizeForm(f => ({ ...f, is_active: e.target.checked }))}
+                      className="w-4 h-4 rounded"
+                    />
+                    Active immediately
+                  </label>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-border-token">
-                  <button
-                    onClick={() => setShopFormOpen(false)}
-                    className="text-sm text-secondary hover:text-primary px-4 py-2"
-                  >
+                  <button onClick={() => setPrizeFormOpen(false)} className="text-sm text-secondary hover:text-primary px-4 py-2">
                     Cancel
                   </button>
                   <button
-                    onClick={saveShopItem}
-                    disabled={shopSaving}
+                    onClick={savePrizeItem}
+                    disabled={prizeSaving}
                     className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                   >
-                    {shopSaving ? 'Saving…' : 'Add to Shop'}
+                    {prizeSaving ? 'Saving…' : 'Add to Prize Wall'}
                   </button>
                 </div>
               </div>
@@ -4140,111 +4135,44 @@ export default function HQPage() {
               </div>
             </div>
 
-            {/* Shop Page */}
+            {/* Staff Invite Link */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">
-              <h2 className="font-semibold text-primary mb-1">Shop Page</h2>
+              <h2 className="font-semibold text-primary mb-1">Staff Invite Link</h2>
               <p className="text-xs text-tertiary mb-5">
-                Controls the player-facing Prize Wall — title, redemption copy, and which filters appear.
+                Share this link so new staff sign up with automatic staff access. No Supabase edits needed.
               </p>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-secondary block mb-1">Page Title</label>
-                  <input
-                    type="text"
-                    value={storeConfig.shop_title}
-                    onChange={e => setStoreConfig(c => ({ ...c, shop_title: e.target.value }))}
-                    placeholder="Prize Wall"
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-secondary block mb-1">
-                    Redemption Description
-                    <span className="ml-2 font-normal text-tertiary">
-                      Fills in: "Spend your {storeConfig.currency_name} on ___"
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    value={storeConfig.shop_description}
-                    onChange={e => setStoreConfig(c => ({ ...c, shop_description: e.target.value }))}
-                    placeholder="avatar cosmetics"
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
-                  />
-                  <p className="text-xs text-tertiary mt-1">
-                    Preview: &ldquo;Spend your {storeConfig.currency_name} on {storeConfig.shop_description || '…'}&rdquo;
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-secondary block mb-3">
-                    Category Filters
-                    <span className="ml-2 font-normal text-tertiary">Toggle and rename each filter tab</span>
-                  </label>
-                  <div className="space-y-2">
-                    {storeConfig.shop_categories.map((cat, i) => (
-                      <div key={cat.id} className="flex items-center gap-3 bg-elevated/50 rounded-lg px-3 py-2">
-                        {/* Enable/disable toggle */}
-                        <button
-                          type="button"
-                          onClick={() => setStoreConfig(c => ({
-                            ...c,
-                            shop_categories: c.shop_categories.map((x, j) =>
-                              j === i ? { ...x, enabled: !x.enabled } : x
-                            ),
-                          }))}
-                          className={`w-9 h-5 rounded-full transition-colors relative flex-shrink-0 ${
-                            cat.enabled ? 'bg-accent' : 'bg-elevated'
-                          }`}
-                        >
-                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${
-                            cat.enabled ? 'left-4' : 'left-0.5'
-                          }`} />
-                        </button>
-                        {/* Icon picker */}
-                        <div className="relative flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setIconPickerTarget(t => t === i ? null : i)}
-                            className="w-8 h-8 rounded-lg bg-elevated hover:border hover:border-accent transition-all flex items-center justify-center text-base"
-                            title="Change icon"
-                          >
-                            <IconRenderer value={cat.icon} className="w-5 h-5 object-contain" />
-                          </button>
-                          {iconPickerTarget === i && (
-                            <IconPicker
-                              current={cat.icon}
-                              onSelect={v => setStoreConfig(c => ({
-                                ...c,
-                                shop_categories: c.shop_categories.map((x, j) =>
-                                  j === i ? { ...x, icon: v } : x
-                                ),
-                              }))}
-                              onClose={() => setIconPickerTarget(null)}
-                            />
-                          )}
-                        </div>
-                        {/* Name input */}
-                        <input
-                          type="text"
-                          value={cat.name}
-                          onChange={e => setStoreConfig(c => ({
-                            ...c,
-                            shop_categories: c.shop_categories.map((x, j) =>
-                              j === i ? { ...x, name: e.target.value } : x
-                            ),
-                          }))}
-                          className="flex-1 bg-transparent text-sm text-primary border-b border-border-token focus:border-accent outline-none py-0.5"
-                        />
-                        <span className={`text-xs ${cat.enabled ? 'text-accent' : 'text-tertiary'}`}>
-                          {cat.enabled ? 'visible' : 'hidden'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className="space-y-3">
+                {storeConfig.staff_invite_code ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 bg-elevated border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono break-all">
+                        {typeof window !== 'undefined' ? `${window.location.origin}/onboarding?staff=${storeConfig.staff_invite_code}` : `/onboarding?staff=${storeConfig.staff_invite_code}`}
+                      </code>
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/onboarding?staff=${storeConfig.staff_invite_code}`;
+                          navigator.clipboard.writeText(url);
+                          showToast('Link copied', 'success');
+                        }}
+                        className="px-3 py-2 bg-elevated border border-border-token rounded-lg text-sm text-secondary hover:text-primary hover:border-accent transition-colors whitespace-nowrap"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <p className="text-xs text-tertiary">Code: <span className="font-mono text-primary">{storeConfig.staff_invite_code}</span></p>
+                  </>
+                ) : (
+                  <p className="text-sm text-tertiary">No code generated yet.</p>
+                )}
+                <button
+                  onClick={generateStaffCode}
+                  className="text-sm text-accent hover:underline"
+                >
+                  {storeConfig.staff_invite_code ? 'Regenerate code' : 'Generate staff invite code'}
+                </button>
+                {storeConfig.staff_invite_code && (
+                  <p className="text-xs text-tertiary">Regenerating invalidates the old link immediately.</p>
+                )}
               </div>
             </div>
 

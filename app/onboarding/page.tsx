@@ -30,6 +30,7 @@ function OnboardingContent() {
   const [referralCode, setReferralCode] = useState('');
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [referralChecking, setReferralChecking] = useState(false);
+  const [staffInviteCode, setStaffInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkingLink, setCheckingLink] = useState(true);
@@ -62,11 +63,16 @@ function OnboardingContent() {
         setDisplayName(user.username);
       }
 
-      // Check for referral code in URL (e.g., ?ref=REF-XXXXXXXX)
       const refParam = searchParams.get('ref');
       if (refParam) {
         setReferralCode(refParam.toUpperCase());
         validateReferralCode(refParam.toUpperCase());
+      }
+
+      const staffParam = searchParams.get('staff');
+      if (staffParam) {
+        setStaffInviteCode(staffParam);
+        setMode('create');
       }
     }
 
@@ -158,6 +164,7 @@ function OnboardingContent() {
           phone: phone.trim() || null,
           primaryGame: primaryGame || null,
           referralCode: referralCode.trim().toUpperCase() || null,
+          staffInviteCode: staffInviteCode || null,
         }),
       });
 
