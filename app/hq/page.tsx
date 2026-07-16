@@ -354,7 +354,7 @@ export default function HQPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [dangerLoading, setDangerLoading] = useState(false);
   const [assignPassOpen, setAssignPassOpen] = useState(false);
-  const [assignPassTier, setAssignPassTier] = useState<'player' | 'none'>('player');
+  const [assignPassTier, setAssignPassTier] = useState<'free' | 'bronze' | 'silver' | 'gold' | 'diamond' | 'none'>('bronze');
   const [assignPassExpiry, setAssignPassExpiry] = useState('');
   const [assigningPass, setAssigningPass] = useState(false);
   const [selectedGame, setSelectedGame] = useState('');
@@ -1049,15 +1049,16 @@ export default function HQPage() {
     if (!playerDetails) return;
     setAssigningPass(true);
     try {
-      const expiresAt = assignPassTier === 'player'
+      const isPaid = assignPassTier !== 'none' && assignPassTier !== 'free';
+      const expiresAt = isPaid
         ? (assignPassExpiry
             ? new Date(assignPassExpiry).toISOString()
             : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())
         : null;
       const body = {
-        pass_tier: assignPassTier,
+        pass_tier: assignPassTier === 'none' ? 'none' : assignPassTier,
         pass_status: assignPassTier === 'none' ? 'cancelled' : 'active',
-        pass_started_at: assignPassTier === 'player' ? new Date().toISOString() : null,
+        pass_started_at: isPaid ? new Date().toISOString() : null,
         pass_expires_at: expiresAt,
       };
       const res = await fetch(`/api/hq/player/${playerDetails.player.id}`, {
@@ -1074,7 +1075,7 @@ export default function HQPage() {
       showToast(
         assignPassTier === 'none'
           ? 'Pass removed — player reverted to free tier'
-          : `Player Pass assigned${expiresAt ? ` — renews ${new Date(expiresAt).toLocaleDateString()}` : ''}`,
+          : `${assignPassTier.charAt(0).toUpperCase() + assignPassTier.slice(1)} Pass assigned${expiresAt ? ` — renews ${new Date(expiresAt).toLocaleDateString()}` : ''}`,
         'success'
       );
       setAssignPassOpen(false);
@@ -2229,7 +2230,7 @@ export default function HQPage() {
                     {!assignPassOpen && (
                       <button
                         type="button"
-                        onClick={() => { setAssignPassOpen(true); setAssignPassTier('player'); setAssignPassExpiry(''); }}
+                        onClick={() => { setAssignPassOpen(true); setAssignPassTier('bronze'); setAssignPassExpiry(''); }}
                         className="px-4 py-2 text-sm font-medium rounded-lg bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors"
                       >
                         Assign / Change Pass
@@ -2238,34 +2239,34 @@ export default function HQPage() {
 
                     {assignPassOpen && (
                       <div className="bg-elevated border border-border-strong rounded-xl p-4 space-y-3">
-                        <p className="text-sm font-medium text-primary">Assign Pass</p>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setAssignPassTier('player')}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                              assignPassTier === 'player'
-                                ? 'bg-accent/20 text-accent border-accent/50'
-                                : 'bg-surface text-secondary border-border-token hover:border-border-strong'
-                            }`}
-                          >
-                            Player Pass
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAssignPassTier('none')}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
-                              assignPassTier === 'none'
-                                ? 'bg-surface text-primary border-border-strong'
-                                : 'bg-surface text-secondary border-border-token hover:border-border-strong'
-                            }`}
-                          >
-                            Free Member
-                          </button>
+                        <p className="text-sm font-medium text-primary">Assign Player Pass Tier</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { value: 'bronze', label: 'Bronze', color: 'text-amber-600', price: '$10/mo' },
+                            { value: 'silver', label: 'Silver', color: 'text-slate-300', price: '$15/mo' },
+                            { value: 'gold', label: 'Gold', color: 'text-yellow-400', price: '$20/mo' },
+                            { value: 'diamond', label: 'Diamond', color: 'text-cyan-400', price: '$30/mo' },
+                            { value: 'free', label: 'Free', color: 'text-gray-400', price: 'No sub' },
+                            { value: 'none', label: 'Remove', color: 'text-red-400', price: 'Cancel' },
+                          ] as const).map(tier => (
+                            <button
+                              key={tier.value}
+                              type="button"
+                              onClick={() => setAssignPassTier(tier.value)}
+                              className={`py-2 px-1 text-xs font-semibold rounded-lg border transition-colors flex flex-col items-center gap-0.5 ${
+                                assignPassTier === tier.value
+                                  ? 'bg-accent/20 border-accent/50 text-accent'
+                                  : 'bg-surface border-border-token hover:border-border-strong text-secondary'
+                              }`}
+                            >
+                              <span className={assignPassTier === tier.value ? '' : tier.color}>{tier.label}</span>
+                              <span className="text-[10px] opacity-60">{tier.price}</span>
+                            </button>
+                          ))}
                         </div>
-                        {assignPassTier === 'player' && (
+                        {assignPassTier !== 'none' && assignPassTier !== 'free' && (
                           <div>
-                            <label className="text-xs text-secondary block mb-1">Renewal Date (leave blank for 30 days)</label>
+                            <label className="text-xs text-secondary block mb-1">Next renewal date (leave blank = 30 days)</label>
                             <input
                               type="date"
                               value={assignPassExpiry}

@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
 import { createNotification } from '@/lib/notifications';
+import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
 
@@ -187,7 +188,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { playerId, gameId, amount, reason } = body;
+    const { playerId, gameId, amount, reason, storeId } = body;
 
     if (!playerId || !gameId || amount === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -210,6 +211,44 @@ export async function POST(request: Request) {
     if (insertError) {
       console.error('XP insert error:', insertError);
       return NextResponse.json({ error: 'Failed to add XP' }, { status: 500 });
+    }
+
+    // ================================================
+    // PRIZE POINTS: Award for event tiles (with tier multiplier)
+    // ================================================
+    const TILE_PP: Record<string, number> = {
+      'Attended': 35,
+      '1 Win': 5,
+      '2 Wins': 10,
+      '3 Wins': 15,
+      '4 Wins': 20,
+    };
+
+    let prizePointsAwarded = 0;
+    if (reason && storeId) {
+      const labels = reason.split(',').map((s: string) => s.trim());
+      const basePP = labels.reduce((sum: number, label: string) => sum + (TILE_PP[label] ?? 0), 0);
+
+      if (basePP > 0) {
+        const { data: playerRow } = await supabaseAdmin
+          .from('players')
+          .select('pass_tier')
+          .eq('id', playerId)
+          .single();
+
+        const tier = (playerRow as any)?.pass_tier || 'free';
+        const multiplier = TIER_MULTIPLIERS[tier] ?? 1.0;
+        prizePointsAwarded = Math.round(basePP * multiplier);
+
+        await logPointTransaction({
+          playerId,
+          storeId,
+          amount: prizePointsAwarded,
+          type: 'earn',
+          source: 'event_checkin',
+          note: `${reason} (${tier} ${multiplier}x)`,
+        });
+      }
     }
 
     // ================================================
@@ -276,13 +315,12 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      // Pirate's Life / Hyperlife bonus
+      prizePointsAwarded,
       bonusAwarded,
       achievementName: bonusAwarded ? achievementName : null,
       bonusXp: bonusAwarded ? MONTHLY_BONUS_XP : 0,
-      // Referral bonus
       referralBonusAwarded,
       referralInfo,
       referralBonusXp: referralBonusAwarded ? REFERRAL_FIRST_EVENT_BONUS : 0,

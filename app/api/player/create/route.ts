@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-
 export const dynamic = 'force-dynamic';
-// Characters for HYP ID (no ambiguous 0/O/1/I/L)
+
 const ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+// Staff invite codes — grant is_staff: true on account creation
+const STAFF_INVITE_CODES = new Set(['HYPSTAFF2026', 'GGCSTAFF2026']);
 
 function generateHypId(): string {
   let id = 'HYP-';
@@ -17,24 +19,25 @@ function generateHypId(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { displayName, games, avatar } = body;
+    const { displayName, games, avatar, staffInviteCode } = body;
 
     if (!displayName?.trim()) {
       return NextResponse.json({ error: 'Display name required' }, { status: 400 });
     }
 
-    // Generate unique HYP ID
+    const isStaff = typeof staffInviteCode === 'string' &&
+      STAFF_INVITE_CODES.has(staffInviteCode.trim().toUpperCase());
+
     let hypId = generateHypId();
     let attempts = 0;
-    
-    // Check for uniqueness (retry up to 10 times)
+
     while (attempts < 10) {
       const { data: existing } = await supabaseAdmin
         .from('players')
         .select('id')
         .eq('player_id', hypId)
         .single();
-      
+
       if (!existing) break;
       hypId = generateHypId();
       attempts++;
@@ -44,7 +47,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to generate unique ID' }, { status: 500 });
     }
 
-    // Create the player
     const { data: player, error } = await supabaseAdmin
       .from('players')
       .insert({
@@ -56,6 +58,7 @@ export async function POST(request: NextRequest) {
         avatar_badge: avatar?.badge || null,
         pass_tier: 'none',
         profile_visibility: 'public',
+        is_staff: isStaff,
       })
       .select()
       .single();
@@ -65,13 +68,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create player' }, { status: 500 });
     }
 
-    // If games were selected, we can track those for personalization later
-    // For now, we just return the new player
-
     return NextResponse.json({
       id: player.id,
       hyp_id: player.player_id,
       displayName: player.display_name,
+      isStaff,
       avatar: {
         emoji: player.avatar_base,
         background: player.avatar_background,
