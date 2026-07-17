@@ -165,6 +165,10 @@ export default function CommunityPage() {
   const [requestSent, setRequestSent] = useState<Set<string>>(new Set());
   const [unfriending, setUnfriending] = useState<string | null>(null);
   
+  // Store/Network scope for leaderboard
+  const [leaderboardScope, setLeaderboardScope] = useState<'store' | 'network'>('store');
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+
   // One Piece tab state
   const [onePieceLeaderboard, setOnePieceLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [currentEmperor, setCurrentEmperor] = useState<Emperor | null>(null);
@@ -204,11 +208,12 @@ export default function CommunityPage() {
     }
   }, []);
 
-  const loadLeaderboard = useCallback(async (game: string = 'overall') => {
+  const loadLeaderboard = useCallback(async (game: string = 'overall', storeId?: string | null) => {
     setLeaderboardLoading(true);
     try {
       const gameParam = game === 'overall' ? '' : `&game=${game}`;
-      const res = await fetch(`/api/community/leaderboard?limit=50${gameParam}`);
+      const storeParam = storeId ? `&store_id=${storeId}` : '';
+      const res = await fetch(`/api/community/leaderboard?limit=50${gameParam}${storeParam}`);
       if (res.ok) {
         const data = await res.json();
         setLeaderboard(data.leaderboard || []);
@@ -283,7 +288,7 @@ export default function CommunityPage() {
       loadFriends();
       loadFriendRequests(); // Also load requests for inline display
     } else if (tab === 'leaderboard') {
-      loadLeaderboard(leaderboardGame);
+      loadLeaderboard(leaderboardGame, leaderboardScope === 'store' ? selectedStoreId : null);
     } else if (tab === 'one_piece') {
       loadOnePieceData();
     }
@@ -292,7 +297,13 @@ export default function CommunityPage() {
   // Handle leaderboard game change
   const handleGameChange = (game: string) => {
     setLeaderboardGame(game);
-    loadLeaderboard(game);
+    loadLeaderboard(game, leaderboardScope === 'store' ? selectedStoreId : null);
+  };
+
+  // Handle scope toggle (Store vs Network)
+  const handleScopeChange = (scope: 'store' | 'network') => {
+    setLeaderboardScope(scope);
+    loadLeaderboard(leaderboardGame, scope === 'store' ? selectedStoreId : null);
   };
 
   // Load current player ID
@@ -318,9 +329,13 @@ export default function CommunityPage() {
     }
   }, [isLoaded, user]);
 
-  // Initial data load
+  // Read selected store from localStorage (set by MobileDashboard store switcher)
   useEffect(() => {
-    loadLeaderboard();
+    const storeId = localStorage.getItem('ggc_selected_store_id');
+    setSelectedStoreId(storeId);
+    // Default to store scope if they have a store, network if not
+    setLeaderboardScope(storeId ? 'store' : 'network');
+    loadLeaderboard('overall', storeId || null);
   }, [loadLeaderboard]);
 
   useEffect(() => {
@@ -453,7 +468,7 @@ export default function CommunityPage() {
       });
       if (res.ok) {
         setShowPrivacySettings(false);
-        loadLeaderboard();
+        loadLeaderboard(leaderboardGame, leaderboardScope === 'store' ? selectedStoreId : null);
       }
     } catch (error) {
       console.error('Error saving privacy settings:', error);
@@ -914,6 +929,31 @@ export default function CommunityPage() {
         {/* Leaderboard Tab */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-3">
+            {/* Store / Network scope toggle */}
+            <div className="flex bg-elevated rounded-xl p-1 gap-1">
+              <button
+                onClick={() => handleScopeChange('store')}
+                disabled={!selectedStoreId}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                  leaderboardScope === 'store'
+                    ? 'bg-accent text-accent-fg'
+                    : 'text-secondary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed'
+                }`}
+              >
+                🏪 My Store
+              </button>
+              <button
+                onClick={() => handleScopeChange('network')}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                  leaderboardScope === 'network'
+                    ? 'bg-accent text-accent-fg'
+                    : 'text-secondary hover:text-primary'
+                }`}
+              >
+                🌐 Network
+              </button>
+            </div>
+
             {/* Game Selector */}
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide items-center">
               {visibleGames.map((game) => (

@@ -145,6 +145,11 @@ export default function MobileDashboard() {
             const store = data.homeStore ?? null;
             setHomeStore(store);
             setSelectedStore(store); // start browsing context at home store
+            if (store) {
+              localStorage.setItem('ggc_selected_store_id', store.id);
+            } else {
+              localStorage.removeItem('ggc_selected_store_id');
+            }
             // Guardrail: legacy players may have no home store yet
             if (!data.homeStoreId) {
               setShowStoreSwitcher(true);
@@ -455,6 +460,7 @@ export default function MobileDashboard() {
               setHomeStore(store);
             }
             setSelectedStore(store);
+            localStorage.setItem('ggc_selected_store_id', store.id);
             setShowStoreSwitcher(false);
           }}
           onClose={() => setShowStoreSwitcher(false)}
