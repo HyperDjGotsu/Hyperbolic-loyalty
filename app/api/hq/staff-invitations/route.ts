@@ -73,9 +73,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Inviter app_users record not found' }, { status: 500 });
     }
 
+    // Fail closed in production if email is not configured
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && !process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not set — cannot send staff invitation in production');
+      return NextResponse.json(
+        { error: 'Email service is not configured. Contact the network administrator.' },
+        { status: 503 }
+      );
+    }
+
     const rawToken = generateToken();
     const tokenHash = hashToken(rawToken);
     const normalizedEmail = email.toLowerCase().trim();
+    // 72-hour expiry: short enough to limit exposure, long enough to be practical
+    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
 
     const { data: invitation, error: insertErr } = await supabaseAdmin
       .from('staff_invitations' as any)
@@ -85,6 +97,7 @@ export async function POST(request: Request) {
         role,
         token_hash: tokenHash,
         invited_by: inviterUser.id,
+        expires_at: expiresAt,
       })
       .select('id, email, store_id, role, expires_at, created_at')
       .single();
@@ -100,30 +113,37 @@ export async function POST(request: Request) {
       throw insertErr;
     }
 
-    // Send the invitation email (non-blocking; log failures but don't fail the request)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hyperbolic-loyalty.vercel.app';
     const acceptUrl = `${appUrl}/staff/accept-invite?token=${rawToken}`;
+    const roleLabel = role === 'store_manager' ? 'Store Manager' : 'Store Staff';
+    const storeName = (store as any).name as string;
 
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       resend.emails.send({
         from: 'Hyperbolic XP <noreply@hyperbolic-loyalty.vercel.app>',
         to: normalizedEmail,
-        subject: `You've been invited to join ${(store as any).name} on Hyperbolic XP`,
+        subject: `You've been invited to join ${storeName} on Hyperbolic XP`,
         html: `
-          <p>You have been invited to join <strong>${(store as any).name}</strong>
-          as <strong>${role === 'store_manager' ? 'Store Manager' : 'Store Staff'}</strong>
-          on Hyperbolic XP.</p>
-          <p><a href="${acceptUrl}" style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Accept Invitation</a></p>
-          <p>This link expires in 7 days and can only be used once.</p>
+          <p>You have been invited to join <strong>${storeName}</strong>
+          as <strong>${roleLabel}</strong> on Hyperbolic XP.</p>
+          <p>
+            <a href="${acceptUrl}"
+               style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:6px;
+                      text-decoration:none;display:inline-block">
+              Accept Invitation
+            </a>
+          </p>
+          <p>This link expires in 72 hours and can only be used once by the account
+          signed in with this email address.</p>
           <p>If you did not expect this invitation, you can safely ignore it.</p>
         `,
       }).catch((err: unknown) => {
         console.error('Invitation email failed to send:', err);
       });
     } else {
-      // Dev mode: log the accept URL so you can test without a real email
-      console.log(`[DEV] Staff invitation accept URL: ${acceptUrl}`);
+      // Development only — never logged in production (blocked above)
+      console.log(`[DEV] Staff invitation accept URL for ${normalizedEmail}: ${acceptUrl}`);
     }
 
     return NextResponse.json({ invitation }, { status: 201 });

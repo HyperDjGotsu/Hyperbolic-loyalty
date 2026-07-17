@@ -1,16 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
+
+const ERROR_MESSAGES: Record<string, { message: string; status: number }> = {
+  NOT_FOUND:       { message: 'Invitation not found or invalid token',        status: 404 },
+  REVOKED:         { message: 'This invitation has been revoked',              status: 410 },
+  ALREADY_ACCEPTED:{ message: 'This invitation has already been accepted',     status: 410 },
+  EXPIRED:         { message: 'This invitation has expired',                   status: 410 },
+  EMAIL_MISMATCH:  { message: 'This invitation was sent to a different email address', status: 403 },
+};
 
 function hashToken(raw: string): string {
   return createHash('sha256').update(raw).digest('hex');
 }
 
-// POST — accept a staff invitation
-// Body: { token: string }
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
@@ -23,92 +29,45 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { token } = body as { token?: string };
-
     if (!token) {
       return NextResponse.json({ error: 'token is required' }, { status: 400 });
     }
 
+    // Collect verified email addresses from Clerk
+    const clerkUser = await currentUser();
+    const verifiedEmails = (clerkUser?.emailAddresses ?? [])
+      .filter((ea) => ea.verification?.status === 'verified')
+      .map((ea) => ea.emailAddress);
+
+    if (verifiedEmails.length === 0) {
+      return NextResponse.json(
+        { error: 'Your account has no verified email address. Verify your email before accepting an invitation.' },
+        { status: 403 }
+      );
+    }
+
     const tokenHash = hashToken(token);
 
-    // Look up the invitation by hash
-    const { data: invitation, error: invErr } = await supabaseAdmin
-      .from('staff_invitations' as any)
-      .select('id, email, store_id, role, expires_at, accepted_at, revoked_at')
-      .eq('token_hash', tokenHash)
-      .single();
-
-    if (invErr || !invitation) {
-      return NextResponse.json({ error: 'Invitation not found or invalid token' }, { status: 404 });
-    }
-
-    const inv = invitation as any;
-
-    if (inv.revoked_at) {
-      return NextResponse.json({ error: 'This invitation has been revoked' }, { status: 410 });
-    }
-    if (inv.accepted_at) {
-      return NextResponse.json({ error: 'This invitation has already been accepted' }, { status: 410 });
-    }
-    if (new Date(inv.expires_at) < new Date()) {
-      return NextResponse.json({ error: 'This invitation has expired' }, { status: 410 });
-    }
-
-    // Find or create an app_users record for the Clerk user
-    let { data: appUser, error: appUserErr } = await supabaseAdmin
-      .from('app_users')
-      .select('id')
-      .eq('clerk_user_id', userId)
-      .maybeSingle();
-
-    if (appUserErr) throw appUserErr;
-
-    if (!appUser) {
-      const { data: created, error: createErr } = await supabaseAdmin
-        .from('app_users')
-        .insert({ clerk_user_id: userId })
-        .select('id')
-        .single();
-
-      if (createErr) throw createErr;
-      appUser = created;
-    }
-
-    // Check if this role assignment already exists (idempotent accept)
-    const { data: existingRole } = await supabaseAdmin
-      .from('staff_store_roles')
-      .select('id')
-      .eq('user_id', appUser!.id)
-      .eq('store_id', inv.store_id)
-      .eq('role', inv.role)
-      .maybeSingle();
-
-    if (!existingRole) {
-      const { error: roleErr } = await supabaseAdmin
-        .from('staff_store_roles')
-        .insert({
-          user_id: appUser!.id,
-          store_id: inv.store_id,
-          role: inv.role,
-          granted_by: null, // invitation flow; inviter reference lives on the invitation record
-        });
-
-      if (roleErr) throw roleErr;
-    }
-
-    // Mark invitation as accepted
-    const { error: acceptErr } = await supabaseAdmin
-      .from('staff_invitations' as any)
-      .update({ accepted_at: new Date().toISOString() })
-      .eq('id', inv.id);
-
-    if (acceptErr) throw acceptErr;
-
-    return NextResponse.json({
-      accepted: true,
-      store_id: inv.store_id,
-      role: inv.role,
-      already_had_role: !!existingRole,
+    // Atomic: lock, validate, email-bind, find-or-create, assign, mark accepted
+    const { data, error } = await supabaseAdmin.rpc('accept_staff_invitation', {
+      p_token_hash:      tokenHash,
+      p_clerk_user_id:   userId,
+      p_verified_emails: verifiedEmails,
     });
+
+    if (error) throw error;
+
+    const result = data as { ok: boolean; code?: string; store_id?: string; role?: string };
+
+    if (!result.ok) {
+      const mapped = ERROR_MESSAGES[result.code ?? ''];
+      return NextResponse.json(
+        { error: mapped?.message ?? 'Invitation could not be accepted' },
+        { status: mapped?.status ?? 400 }
+      );
+    }
+
+    return NextResponse.json({ accepted: true, store_id: result.store_id, role: result.role });
   } catch (err) {
     console.error('accept-invite POST error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

@@ -4,6 +4,13 @@ import { useState, useEffect, Suspense } from 'react';
 import { useUser, SignInButton } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+// Strip the token from the browser address bar after use
+function clearTokenFromUrl() {
+  if (typeof window !== 'undefined') {
+    window.history.replaceState({}, '', '/staff/accept-invite');
+  }
+}
+
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 function AcceptInviteContent() {
@@ -14,14 +21,17 @@ function AcceptInviteContent() {
 
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
-  const [storeId, setStoreId] = useState('');
+  const [role, setRole] = useState('');
 
   useEffect(() => {
     if (!isLoaded || !token) return;
-    if (!isSignedIn) return; // wait for sign-in
+    if (!isSignedIn) return;
     if (status !== 'idle') return;
 
     setStatus('loading');
+    // Strip token from URL immediately before the network request
+    clearTokenFromUrl();
+
     fetch('/api/player/accept-invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -34,11 +44,11 @@ function AcceptInviteContent() {
           setMessage(data.error ?? 'Failed to accept invitation');
         } else {
           setStatus('success');
-          setStoreId(data.store_id);
+          setRole(data.role ?? '');
           setMessage(
-            data.already_had_role
-              ? 'You already have this role — no changes needed.'
-              : `Role accepted! You are now ${data.role === 'store_manager' ? 'a Store Manager' : 'Store Staff'}.`
+            data.role === 'store_manager'
+              ? 'You are now a Store Manager.'
+              : 'You are now Store Staff.'
           );
         }
       })
@@ -63,9 +73,12 @@ function AcceptInviteContent() {
           <div className="text-4xl mb-4">🎮</div>
           <h1 className="text-2xl font-bold text-white mb-2">Staff Invitation</h1>
           <p className="text-gray-400 mb-6">
-            Sign in to accept your invitation and join the team.
+            Sign in with the email address this invitation was sent to.
           </p>
-          <SignInButton mode="redirect" fallbackRedirectUrl={`/staff/accept-invite?token=${token}`}>
+          <SignInButton
+            mode="redirect"
+            fallbackRedirectUrl={`/staff/accept-invite?token=${token}`}
+          >
             <button className="w-full py-3 px-6 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-semibold transition-colors">
               Sign In to Accept
             </button>
