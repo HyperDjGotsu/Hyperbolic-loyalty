@@ -1,13 +1,25 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 // PATCH — update pass_tier or is_staff
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const staffCtx = await requireAnyStaff();
+    // Load player to get home_store_id for scoped authorization
+    const { data: player } = await supabaseAdmin
+      .from('players')
+      .select('home_store_id')
+      .eq('id', params.id)
+      .single();
+
+    // Use requireStoreAccess if the player has a home store; otherwise fall back
+    // TODO: scope to store_id once per-store player data model lands
+    const staffCtx = player?.home_store_id
+      ? await requireStoreAccess(player.home_store_id)
+      : await requireAnyStaff();
+
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

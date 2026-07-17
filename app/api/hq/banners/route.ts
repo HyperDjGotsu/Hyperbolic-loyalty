@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +32,7 @@ export async function GET() {
 // POST - Create new banner
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 // PUT - Update banner
 export async function PUT(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -133,7 +133,7 @@ export async function PUT(request: Request) {
 // DELETE - Delete banner
 export async function DELETE(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

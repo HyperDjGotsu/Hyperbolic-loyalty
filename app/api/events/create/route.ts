@@ -25,6 +25,14 @@ export async function POST(request: Request) {
       store_id,
     } = body;
 
+    if (!store_id) {
+      return NextResponse.json({ error: 'store_id is required' }, { status: 400 });
+    }
+
+    if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(store_id)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     if (!name || !scheduled_at) {
       return NextResponse.json({ error: 'name and scheduled_at are required' }, { status: 400 });
     }

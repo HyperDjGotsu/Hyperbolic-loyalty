@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,9 +75,10 @@ export async function GET(request: NextRequest) {
 // POST - Record a new match
 export async function POST(request: NextRequest) {
   try {
-    const staffCtx = await requireAnyStaff();
+    // TODO: scope to store_id once per-store bounty_hunter_matches data model lands
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get the staff member's players.id for recorded_by
@@ -196,9 +197,10 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove a match (and reverse XP)
 export async function DELETE(request: NextRequest) {
   try {
-    const staffCtx = await requireAnyStaff();
+    // TODO: scope to store_id once per-store bounty_hunter_matches data model lands
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

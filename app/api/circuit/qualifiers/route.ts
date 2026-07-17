@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 // GET — fetch all qualifiers for a championship event (or all if no championship yet)
 export async function GET(request: Request) {
+  const staffCtx = await requireNetworkAdmin();
+  if (!staffCtx) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const qualifierEventId = searchParams.get('qualifier_event_id');
   const championshipEventId = searchParams.get('championship_event_id');
@@ -43,12 +48,12 @@ export async function GET(request: Request) {
   return NextResponse.json({ qualifiers: data || [] });
 }
 
-// POST — record final standings for a qualifier event (staff only)
+// POST — record final standings for a qualifier event (network admin only)
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
-      return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,13 +9,30 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const eventId = params.id;
+
+    // Load event from DB to get its store_id (prevents store-spoofing)
+    const { data: event, error: eventError } = await supabaseAdmin
+      .from('events')
+      .select('store_id')
+      .eq('id', eventId)
+      .single();
+
+    if (eventError || !event) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    // Scope to the event's store; fall back to any-staff if store not yet set
+    // TODO: scope to store_id once all events require a store_id
+    const staffCtx = event.store_id
+      ? await requireStoreAccess(event.store_id)
+      : await requireAnyStaff();
+
     if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
     const { action } = await request.json() as { action: 'start' | 'end' };
-    const eventId = params.id;
 
     if (action === 'start') {
       // End any currently active event first

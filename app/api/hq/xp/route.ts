@@ -194,6 +194,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Validate that the staff member has access to the store where XP is being awarded
+    if (storeId && !staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(storeId)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Add XP entry
     const { error: insertError } = await supabaseAdmin
       .from('xp_ledger')

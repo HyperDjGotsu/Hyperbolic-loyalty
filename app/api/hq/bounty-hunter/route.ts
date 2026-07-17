@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,9 +109,10 @@ export async function GET() {
 // POST - Create new bounty hunter event
 export async function POST(request: NextRequest) {
   try {
-    const staffCtx = await requireAnyStaff();
+    // TODO: scope to store_id once per-store bounty_hunter_events data model lands
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -164,9 +165,10 @@ export async function POST(request: NextRequest) {
 // PUT - Update event (status or details)
 export async function PUT(request: NextRequest) {
   try {
-    const staffCtx = await requireAnyStaff();
+    // TODO: scope to store_id once per-store bounty_hunter_events data model lands
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -224,9 +226,10 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete event
 export async function DELETE(request: NextRequest) {
   try {
-    const staffCtx = await requireAnyStaff();
+    // TODO: scope to store_id once per-store bounty_hunter_events data model lands
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

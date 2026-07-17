@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logPointTransaction } from '@/lib/points';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,23 @@ export async function PATCH(
   { params }: { params: { code: string } }
 ) {
   try {
-    const staffCtx = await requireAnyStaff();
+    // Load the redemption first to get its store_id for scoped authorization
+    const { data: redemption, error: fetchError } = await (supabaseAdmin as any)
+      .from('prize_wall_redemptions')
+      .select('id, status, player_id, store_id, points_deducted, item_name, expires_at')
+      .eq('claim_code', params.code.toUpperCase())
+      .single();
+
+    if (fetchError || !redemption) {
+      return NextResponse.json({ error: 'Redemption not found' }, { status: 404 });
+    }
+
+    // Use requireStoreAccess when the redemption has a store_id
+    // TODO: scope to store_id once per-store redemption data model is fully enforced
+    const staffCtx = redemption.store_id
+      ? await requireStoreAccess(redemption.store_id)
+      : await requireAnyStaff();
+
     if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     // Get the staff member's players.id for claimed_by / voided_by
@@ -29,16 +45,6 @@ export async function PATCH(
 
     if (action !== 'claim' && action !== 'void') {
       return NextResponse.json({ error: 'action must be claim or void' }, { status: 400 });
-    }
-
-    const { data: redemption, error: fetchError } = await (supabaseAdmin as any)
-      .from('prize_wall_redemptions')
-      .select('id, status, player_id, store_id, points_deducted, item_name, expires_at')
-      .eq('claim_code', params.code.toUpperCase())
-      .single();
-
-    if (fetchError || !redemption) {
-      return NextResponse.json({ error: 'Redemption not found' }, { status: 404 });
     }
 
     if (redemption.status !== 'pending') {

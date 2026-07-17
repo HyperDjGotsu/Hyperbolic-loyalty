@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { notifyAllPlayers } from '@/lib/notifications';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +30,7 @@ export async function GET() {
 // POST - Create a new shop item
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 // PUT - Toggle active status or update item
 export async function PUT(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -108,7 +108,7 @@ export async function PUT(request: Request) {
 // DELETE - Hard delete only if no players own it; otherwise deactivate
 export async function DELETE(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
