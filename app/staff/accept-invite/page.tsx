@@ -45,11 +45,14 @@ function AcceptInviteContent() {
         } else {
           setStatus('success');
           setRole(data.role ?? '');
-          setMessage(
-            data.role === 'store_manager'
-              ? 'You are now a Store Manager.'
-              : 'You are now Store Staff.'
-          );
+          const roleLabel = data.role === 'store_manager' ? 'Store Manager' : 'Store Staff';
+          if (data.code === 'ALREADY_ASSIGNED') {
+            setMessage(`You already have the ${roleLabel} role at this store.`);
+          } else if (data.code === 'UPGRADED') {
+            setMessage(`Your role has been upgraded to ${roleLabel}.`);
+          } else {
+            setMessage(`You are now ${roleLabel}.`);
+          }
         }
       })
       .catch(() => {

@@ -6,11 +6,12 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 const ERROR_MESSAGES: Record<string, { message: string; status: number }> = {
-  NOT_FOUND:       { message: 'Invitation not found or invalid token',        status: 404 },
-  REVOKED:         { message: 'This invitation has been revoked',              status: 410 },
-  ALREADY_ACCEPTED:{ message: 'This invitation has already been accepted',     status: 410 },
-  EXPIRED:         { message: 'This invitation has expired',                   status: 410 },
-  EMAIL_MISMATCH:  { message: 'This invitation was sent to a different email address', status: 403 },
+  NOT_FOUND:        { message: 'Invitation not found or invalid token',                          status: 404 },
+  REVOKED:          { message: 'This invitation has been revoked',                               status: 410 },
+  ALREADY_ACCEPTED: { message: 'This invitation has already been accepted',                      status: 410 },
+  EXPIRED:          { message: 'This invitation has expired',                                    status: 410 },
+  EMAIL_MISMATCH:   { message: 'This invitation was sent to a different email address',          status: 403 },
+  WOULD_DOWNGRADE:  { message: 'You already have a higher role at this store — no change made',  status: 409 },
 };
 
 function hashToken(raw: string): string {
@@ -57,7 +58,14 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
-    const result = data as { ok: boolean; code?: string; store_id?: string; role?: string };
+    const result = data as {
+      ok: boolean;
+      code?: string;
+      store_id?: string;
+      role?: string;
+      existing_role?: string;
+      invited_role?: string;
+    };
 
     if (!result.ok) {
       const mapped = ERROR_MESSAGES[result.code ?? ''];
@@ -67,7 +75,13 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ accepted: true, store_id: result.store_id, role: result.role });
+    // ok=true covers: new assignment, ALREADY_ASSIGNED (idempotent), UPGRADED
+    return NextResponse.json({
+      accepted: true,
+      store_id: result.store_id,
+      role: result.role,
+      code: result.code ?? 'ASSIGNED',
+    });
   } catch (err) {
     console.error('accept-invite POST error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
