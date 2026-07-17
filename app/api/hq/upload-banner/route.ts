@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
+    const storeId = formData.get('storeId') as string | null;
+
+    // storeId present → store-scoped upload; absent → network-wide upload
+    const staffCtx = storeId
+      ? await requireStoreManager(storeId)
+      : await requireNetworkAdmin();
+
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireNetworkAdmin } from '@/lib/auth-helpers';
 import { notifyAllPlayers } from '@/lib/notifications';
 
 
@@ -457,11 +457,21 @@ function parseICal(icalData: string): ParsedEvent[] {
 
 export async function POST(request: Request) {
   try {
-    // Optional: require auth for sync
-    // const { userId } = await auth();
-    // if (!userId) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Require network admin to run the sync
+    const staffCtx = await requireNetworkAdmin();
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Require a storeId so events are always scoped to a store
+    const body = await request.json().catch(() => ({})) as { storeId?: string };
+    const storeId = body?.storeId;
+    if (!storeId) {
+      return NextResponse.json(
+        { error: 'storeId is required to scope synced events to a store' },
+        { status: 400 }
+      );
+    }
 
     console.log('Starting calendar sync...');
     
@@ -554,6 +564,7 @@ export async function POST(request: Request) {
               attendance_xp: event.attendance_xp,
               win_xp: event.win_xp,
               prizing: event.prizing,
+              store_id: storeId,
             })
             .eq('id', existing.id);
           
@@ -581,6 +592,7 @@ export async function POST(request: Request) {
             status: 'scheduled' as const,
             current_players: 0,
             prizing: event.prizing,
+            store_id: storeId,
           };
           const { error } = await supabaseAdmin
             .from('events')

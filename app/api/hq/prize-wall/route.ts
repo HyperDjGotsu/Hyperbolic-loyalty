@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,13 +26,17 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
+    const body = await request.json();
+    const { name, xp_cost, description, image_url, retail_value, quantity, store_id, unlock_threshold, is_active } = body;
+
+    // store_id present → store-scoped item; null/absent → network-wide item
+    const staffCtx = store_id
+      ? await requireStoreManager(store_id)
+      : await requireNetworkAdmin();
+
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    const body = await request.json();
-    const { name, xp_cost, description, image_url, retail_value, quantity, store_id, unlock_threshold, is_active } = body;
 
     if (!name || xp_cost === undefined || xp_cost === null) {
       return NextResponse.json({ error: 'name and xp_cost are required' }, { status: 400 });
@@ -64,16 +68,31 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { id, ...fields } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
+    // Load the item to get its actual store_id
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('prize_wall_items' as any)
+      .select('id, store_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: 'Prize wall item not found' }, { status: 404 });
+    }
+
+    const itemStoreId = (existing as any).store_id as string | null;
+    const staffCtx = itemStoreId
+      ? await requireStoreManager(itemStoreId)
+      : await requireNetworkAdmin();
+
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const allowed = ['name', 'description', 'image_url', 'xp_cost', 'retail_value', 'quantity', 'store_id', 'unlock_threshold', 'is_active'];
@@ -99,16 +118,31 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
       return NextResponse.json({ error: 'id query param is required' }, { status: 400 });
+    }
+
+    // Load the item to get its actual store_id
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('prize_wall_items' as any)
+      .select('id, store_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: 'Prize wall item not found' }, { status: 404 });
+    }
+
+    const itemStoreId = (existing as any).store_id as string | null;
+    const staffCtx = itemStoreId
+      ? await requireStoreManager(itemStoreId)
+      : await requireNetworkAdmin();
+
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { count, error: checkError } = await supabaseAdmin

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,13 +32,17 @@ export async function GET() {
 // POST - Create new banner
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
+    const body = await request.json();
+    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position, text_color, store_id } = body;
+
+    // store_id present → store-scoped banner; null/absent → network-wide banner
+    const staffCtx = store_id
+      ? await requireStoreManager(store_id)
+      : await requireNetworkAdmin();
+
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    const body = await request.json();
-    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position, text_color } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -63,6 +67,7 @@ export async function POST(request: Request) {
         bg_size: bg_size || 'cover',
         bg_position: bg_position || 'center',
         text_color: text_color || '#ffffff',
+        store_id: store_id ?? null,
       } as any)
       .select()
       .single();
@@ -82,16 +87,31 @@ export async function POST(request: Request) {
 // PUT - Update banner
 export async function PUT(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { id, title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position, text_color } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Banner ID is required' }, { status: 400 });
+    }
+
+    // Load the banner to get its actual store_id
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('banners')
+      .select('id, store_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: 'Banner not found' }, { status: 404 });
+    }
+
+    const bannerStoreId = (existing as any).store_id as string | null;
+    const staffCtx = bannerStoreId
+      ? await requireStoreManager(bannerStoreId)
+      : await requireNetworkAdmin();
+
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { data, error } = await supabaseAdmin
@@ -133,16 +153,31 @@ export async function PUT(request: Request) {
 // DELETE - Delete banner
 export async function DELETE(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
       return NextResponse.json({ error: 'Banner ID is required' }, { status: 400 });
+    }
+
+    // Load the banner to get its actual store_id
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('banners')
+      .select('id, store_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: 'Banner not found' }, { status: 404 });
+    }
+
+    const bannerStoreId = (existing as any).store_id as string | null;
+    const staffCtx = bannerStoreId
+      ? await requireStoreManager(bannerStoreId)
+      : await requireNetworkAdmin();
+
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { error } = await supabaseAdmin

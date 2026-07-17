@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { notifyAllPlayers } from '@/lib/notifications';
-import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,13 +30,17 @@ export async function GET() {
 // POST - Create a new shop item
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
+    const body = await request.json();
+    const { name, description, category, price, rarity, asset_data, store_id } = body;
+
+    // store_id present → store-scoped item; null/absent → network-wide item
+    const staffCtx = store_id
+      ? await requireStoreManager(store_id)
+      : await requireNetworkAdmin();
+
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    const body = await request.json();
-    const { name, description, category, price, rarity, asset_data } = body;
 
     if (!name || !category || price == null || !rarity || !asset_data) {
       return NextResponse.json({ error: 'name, category, price, rarity, and asset_data are required' }, { status: 400 });
@@ -78,16 +82,31 @@ export async function POST(request: Request) {
 // PUT - Toggle active status or update item
 export async function PUT(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const body = await request.json();
     const { id, active } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
+    }
+
+    // Load the item to get its actual store_id
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('shop_items')
+      .select('id, store_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: 'Shop item not found' }, { status: 404 });
+    }
+
+    const itemStoreId = (existing as any).store_id as string | null;
+    const staffCtx = itemStoreId
+      ? await requireStoreManager(itemStoreId)
+      : await requireNetworkAdmin();
+
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { data, error } = await supabaseAdmin
@@ -108,16 +127,31 @@ export async function PUT(request: Request) {
 // DELETE - Hard delete only if no players own it; otherwise deactivate
 export async function DELETE(request: Request) {
   try {
-    const staffCtx = await requireNetworkAdmin();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
       return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
+    }
+
+    // Load the item to get its actual store_id
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('shop_items')
+      .select('id, store_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: 'Shop item not found' }, { status: 404 });
+    }
+
+    const itemStoreId = (existing as any).store_id as string | null;
+    const staffCtx = itemStoreId
+      ? await requireStoreManager(itemStoreId)
+      : await requireNetworkAdmin();
+
+    if (!staffCtx) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Check if any player owns this item

@@ -21,8 +21,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Redemption not found' }, { status: 404 });
     }
 
-    // Use requireStoreAccess when the redemption has a store_id
-    // TODO: scope to store_id once per-store redemption data model is fully enforced
+    // Scope authorization to the redemption's store when present.
+    // Null store_id is rare (legacy data) — fall back to any staff.
     const staffCtx = redemption.store_id
       ? await requireStoreAccess(redemption.store_id)
       : await requireAnyStaff();

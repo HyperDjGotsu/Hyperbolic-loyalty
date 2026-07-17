@@ -58,6 +58,7 @@ export type Database = {
           link_url: string | null
           sort_order: number | null
           starts_at: string | null
+          store_id: string | null
           subtitle: string | null
           text_color: string | null
           title: string
@@ -80,6 +81,7 @@ export type Database = {
           link_url?: string | null
           sort_order?: number | null
           starts_at?: string | null
+          store_id?: string | null
           subtitle?: string | null
           text_color?: string | null
           title: string
@@ -102,6 +104,7 @@ export type Database = {
           link_url?: string | null
           sort_order?: number | null
           starts_at?: string | null
+          store_id?: string | null
           subtitle?: string | null
           text_color?: string | null
           title?: string
@@ -114,6 +117,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banners_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -1578,6 +1588,7 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          fulfillment_store_id: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -1591,6 +1602,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description?: string | null
+          fulfillment_store_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -1604,6 +1616,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string | null
+          fulfillment_store_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -1615,6 +1628,13 @@ export type Database = {
           xp_cost?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "prize_wall_items_fulfillment_store_id_fkey"
+            columns: ["fulfillment_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "prize_wall_items_store_id_fkey"
             columns: ["store_id"]
@@ -1745,6 +1765,50 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seasons: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          name: string
+          starts_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name?: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasons_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
             referencedColumns: ["id"]
           },
         ]
@@ -2016,6 +2080,7 @@ export type Database = {
           id: string
           multiplier: number | null
           player_id: string
+          season_id: string | null
           source: Database["public"]["Enums"]["xp_source"]
           store_id: string | null
           transaction_id: string | null
@@ -2031,6 +2096,7 @@ export type Database = {
           id?: string
           multiplier?: number | null
           player_id: string
+          season_id?: string | null
           source: Database["public"]["Enums"]["xp_source"]
           store_id?: string | null
           transaction_id?: string | null
@@ -2046,6 +2112,7 @@ export type Database = {
           id?: string
           multiplier?: number | null
           player_id?: string
+          season_id?: string | null
           source?: Database["public"]["Enums"]["xp_source"]
           store_id?: string | null
           transaction_id?: string | null
@@ -2070,6 +2137,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xp_ledger_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
             referencedColumns: ["id"]
           },
           {

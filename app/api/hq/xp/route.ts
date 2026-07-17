@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 import type { Database } from '@/lib/database.types';
 import { createNotification } from '@/lib/notifications';
 import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
@@ -194,9 +194,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Validate that the staff member has access to the store where XP is being awarded
-    if (storeId && !staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(storeId)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Validate store access.
+    // - storeId provided: staff must belong to that store (or be network admin).
+    // - storeId absent: only network admins may award XP without a store context
+    //   (e.g. manual network-level adjustments). Store staff must always supply a store.
+    if (storeId) {
+      if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(storeId)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      // No storeId — require network admin
+      const adminCtx = await requireNetworkAdmin();
+      if (!adminCtx) {
+        return NextResponse.json(
+          { error: 'storeId is required for store staff' },
+          { status: 400 }
+        );
+      }
     }
 
     // Add XP entry
