@@ -92,7 +92,13 @@ export default function MobileDashboard() {
     multiplier: number;
   } | null>(null);
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
+  // homeStore: DB-persisted primary store — only changes via explicit "Change Home Store" action
   const [homeStore, setHomeStore] = useState<{
+    id: string; name: string; city: string; slug: string;
+    is_flagship: boolean; color: string | null;
+  } | null>(null);
+  // selectedStore: temporary browsing context — controls events, leaderboard, banners, prize wall
+  const [selectedStore, setSelectedStore] = useState<{
     id: string; name: string; city: string; slug: string;
     is_flagship: boolean; color: string | null;
   } | null>(null);
@@ -136,7 +142,9 @@ export default function MobileDashboard() {
             localStorage.setItem('hyperbolic_player_id', data.hyp_id);
             localStorage.setItem('hyperbolic_player_uuid', data.id);
             setPlayerData(data);
-            setHomeStore(data.homeStore ?? null);
+            const store = data.homeStore ?? null;
+            setHomeStore(store);
+            setSelectedStore(store); // start browsing context at home store
             // Guardrail: legacy players may have no home store yet
             if (!data.homeStoreId) {
               setShowStoreSwitcher(true);
@@ -227,19 +235,21 @@ export default function MobileDashboard() {
     loadStoreConfig();
   }, []);
 
-  // Load banners for carousel
+  // Load banners — re-runs when selected store changes so carousel reflects current context:
+  // network-wide banners + banners for the selected store
   useEffect(() => {
     async function loadBanners() {
       try {
-        const res = await fetch('/api/banners');
+        const url = selectedStore
+          ? `/api/banners?store_id=${selectedStore.id}`
+          : '/api/banners';
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
-          // Transform to match Banner type expected by BannerCarousel
           const transformedBanners = (data.banners || []).map((b: any) => ({
             id: b.id,
             title: b.title,
             subtitle: b.subtitle || '',
-            // Pass actual color values for inline style gradient
             colorFrom: b.colorFrom || '#8b5cf6',
             colorTo: b.colorTo || '#ec4899',
             icon: b.icon || '🎮',
@@ -258,7 +268,7 @@ export default function MobileDashboard() {
       }
     }
     loadBanners();
-  }, []);
+  }, [selectedStore?.id]);
 
   // Derive display values from real data
   const totalXp = playerData?.xp || 0;
@@ -404,8 +414,8 @@ export default function MobileDashboard() {
               <StatCard icon={storeConfig.currency_icon} label={storeConfig.currency_name} value={playerData?.gems || 0} color="text-accent" />
             </div>
 
-            {/* Home Store Badge */}
-            {homeStore && (
+            {/* Store Context — shows selected (browsing) store, not home store */}
+            {(selectedStore || homeStore) && (
               <button
                 onClick={() => setShowStoreSwitcher(true)}
                 className="mt-3 pt-3 border-t border-border-token w-full flex items-center justify-between text-left group"
@@ -413,14 +423,17 @@ export default function MobileDashboard() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: homeStore.color ?? '#7c3aed' }}
+                    style={{ backgroundColor: (selectedStore ?? homeStore)!.color ?? '#7c3aed' }}
                   />
-                  <span className="text-secondary text-xs">{homeStore.name}</span>
-                  {homeStore.is_flagship && (
-                    <span className="text-xs text-yellow-400 border border-yellow-500/30 bg-yellow-500/10 px-1 py-0.5 rounded leading-none">
-                      Flagship
-                    </span>
-                  )}
+                  <div>
+                    <span className="text-tertiary text-xs">Viewing </span>
+                    <span className="text-secondary text-xs font-medium">{(selectedStore ?? homeStore)!.name}</span>
+                    {(selectedStore ?? homeStore)!.is_flagship && (
+                      <span className="ml-1 text-xs text-yellow-400 border border-yellow-500/30 bg-yellow-500/10 px-1 py-0.5 rounded leading-none">
+                        Flagship
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span className="text-tertiary text-xs group-hover:text-secondary transition-colors">Switch →</span>
               </button>
@@ -432,10 +445,16 @@ export default function MobileDashboard() {
       {/* Store Switcher Modal */}
       {showStoreSwitcher && (
         <StoreSwitcherModal
-          currentStoreId={homeStore?.id ?? null}
+          currentStoreId={selectedStore?.id ?? null}
+          homeStoreId={homeStore?.id ?? null}
           required={!homeStore}
           onSwitch={(store) => {
-            setHomeStore(store);
+            if (!homeStore) {
+              // Null-home-store guardrail: this IS the permanent home store selection
+              // The PATCH is called inside the modal only in this mode
+              setHomeStore(store);
+            }
+            setSelectedStore(store);
             setShowStoreSwitcher(false);
           }}
           onClose={() => setShowStoreSwitcher(false)}

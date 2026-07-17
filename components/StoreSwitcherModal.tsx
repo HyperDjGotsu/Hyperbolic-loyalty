@@ -12,16 +12,23 @@ interface Store {
 }
 
 interface Props {
-  currentStoreId: string | null;
+  currentStoreId: string | null;   // currently selected (browsing context)
+  homeStoreId: string | null;      // DB-persisted home store (display only)
   onSwitch: (store: Store) => void;
   onClose: () => void;
-  required?: boolean; // when true, backdrop click does not dismiss
+  required?: boolean; // true during null-home-store onboarding: backdrop does not dismiss
 }
 
-export function StoreSwitcherModal({ currentStoreId, onSwitch, onClose, required = false }: Props) {
+export function StoreSwitcherModal({
+  currentStoreId,
+  homeStoreId,
+  onSwitch,
+  onClose,
+  required = false,
+}: Props) {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
-  const [switching, setSwitching] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetch('/api/stores')
@@ -32,21 +39,26 @@ export function StoreSwitcherModal({ currentStoreId, onSwitch, onClose, required
   }, []);
 
   async function handleSelect(store: Store) {
-    if (store.id === currentStoreId || switching) return;
-    setSwitching(store.id);
-    try {
-      const res = await fetch('/api/player/home-store', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ store_id: store.id }),
-      });
-      if (res.ok) {
-        onSwitch(store);
+    if (store.id === currentStoreId || saving) return;
+
+    if (required) {
+      // Null-home-store onboarding path: persist to DB
+      setSaving(true);
+      try {
+        const res = await fetch('/api/player/home-store', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ store_id: store.id }),
+        });
+        if (res.ok) onSwitch(store);
+      } catch {
+        // stay open on error
+      } finally {
+        setSaving(false);
       }
-    } catch {
-      // silent — modal stays open on error
-    } finally {
-      setSwitching(null);
+    } else {
+      // Normal browsing-context switch — no DB write
+      onSwitch(store);
     }
   }
 
@@ -61,12 +73,12 @@ export function StoreSwitcherModal({ currentStoreId, onSwitch, onClose, required
       >
         {!required && <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />}
         <h2 className="text-white font-bold text-lg mb-1">
-          {required ? 'Choose Your Home Store' : 'Home Store'}
+          {required ? 'Choose Your Home Store' : 'Browse a Store'}
         </h2>
         <p className="text-gray-400 text-sm mb-4">
           {required
-            ? 'Pick the store you play at most. This sets your local leaderboard and events calendar.'
-            : 'Your home store sets your local leaderboard and events calendar.'}
+            ? 'Pick the store you play at most. This sets your local notifications and default dashboard.'
+            : "Switch which store's events, leaderboard, and prizes you're viewing. Your home store is not changed."}
         </p>
 
         {loading ? (
@@ -77,12 +89,12 @@ export function StoreSwitcherModal({ currentStoreId, onSwitch, onClose, required
           <div className="space-y-2">
             {stores.map(store => {
               const isCurrent = store.id === currentStoreId;
-              const isLoading = switching === store.id;
+              const isHome = store.id === homeStoreId;
               return (
                 <button
                   key={store.id}
                   onClick={() => handleSelect(store)}
-                  disabled={isCurrent || !!switching}
+                  disabled={isCurrent || saving}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
                     isCurrent
                       ? 'border-purple-500 bg-purple-500/10'
@@ -91,7 +103,7 @@ export function StoreSwitcherModal({ currentStoreId, onSwitch, onClose, required
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-3 h-3 rounded-full"
+                      className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: store.color ?? '#7c3aed' }}
                     />
                     <div>
@@ -104,9 +116,16 @@ export function StoreSwitcherModal({ currentStoreId, onSwitch, onClose, required
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isCurrent && <span className="text-purple-400 text-xs font-semibold">Current</span>}
-                    {isLoading && (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isHome && !isCurrent && (
+                      <span className="text-gray-500 text-xs">Home</span>
+                    )}
+                    {isCurrent && (
+                      <span className="text-purple-400 text-xs font-semibold">
+                        {required ? 'Selected' : 'Viewing'}
+                      </span>
+                    )}
+                    {saving && store.id === currentStoreId && (
                       <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                     )}
                   </div>

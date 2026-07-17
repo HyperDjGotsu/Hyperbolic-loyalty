@@ -3,18 +3,34 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 
 export const dynamic = 'force-dynamic';
-// Public API - returns active banners for the dashboard
-export async function GET() {
+
+// Public player-facing banners.
+// Returns: all active network-wide banners (store_id IS NULL)
+//        + active banners for the requested store (?store_id=<uuid>)
+// The HQ management route (/api/hq/banners) is separate and staff-gated.
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const storeId = searchParams.get('store_id');
     const now = new Date().toISOString();
-    
-    const { data: banners, error } = await supabaseAdmin
+
+    let query = supabaseAdmin
       .from('banners')
       .select('*')
       .eq('is_active', true)
       .or(`starts_at.is.null,starts_at.lte.${now}`)
       .or(`ends_at.is.null,ends_at.gte.${now}`)
       .order('sort_order', { ascending: true });
+
+    if (storeId) {
+      // Network-wide banners + banners for this specific store
+      query = (query as any).or(`store_id.is.null,store_id.eq.${storeId}`);
+    } else {
+      // No store context: network-wide only
+      query = query.is('store_id', null);
+    }
+
+    const { data: banners, error } = await query;
 
     if (error) {
       console.error('Banners fetch error:', error);
