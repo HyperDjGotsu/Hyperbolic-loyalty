@@ -12,10 +12,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { data: banners, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('banners')
       .select('*')
       .order('sort_order', { ascending: true });
+
+    // Network admins see all banners; store staff see network-wide + their stores only
+    if (!staffCtx.isNetworkAdmin) {
+      query = query.or(`store_id.is.null,store_id.in.(${staffCtx.allStoreIds.join(',')})`);
+    }
+
+    const { data: banners, error } = await query;
 
     if (error) {
       console.error('Banners fetch error:', error);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireNetworkAdmin } from '@/lib/auth-helpers';
+// TODO (Phase 4): change to requireStoreManager(storeId) once per-store iCal config is in place
 import { notifyAllPlayers } from '@/lib/notifications';
 
 

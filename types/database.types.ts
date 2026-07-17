@@ -764,7 +764,7 @@ export type Database = {
           prizing: string[] | null
           scheduled_at: string
           status: Database["public"]["Enums"]["event_status"] | null
-          store_id: string | null
+          store_id: string
           twitch_url: string | null
           updated_at: string | null
           win_xp: number | null
@@ -788,7 +788,7 @@ export type Database = {
           prizing?: string[] | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["event_status"] | null
-          store_id?: string | null
+          store_id: string
           twitch_url?: string | null
           updated_at?: string | null
           win_xp?: number | null
@@ -812,7 +812,7 @@ export type Database = {
           prizing?: string[] | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["event_status"] | null
-          store_id?: string | null
+          store_id?: string
           twitch_url?: string | null
           updated_at?: string | null
           win_xp?: number | null

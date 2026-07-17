@@ -11,10 +11,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('prize_wall_items' as any)
       .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
       .order('created_at', { ascending: false });
+
+    // Network admins see all items; store staff see network-wide + their stores only
+    if (!staffCtx.isNetworkAdmin) {
+      query = (query as any).or(`store_id.is.null,store_id.in.(${staffCtx.allStoreIds.join(',')})`);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return NextResponse.json(data);
