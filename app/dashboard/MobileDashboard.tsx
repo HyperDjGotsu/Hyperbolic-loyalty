@@ -13,6 +13,7 @@ import { BannerCarousel } from '@/components/BannerCarousel';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { GettingStartedCard } from '@/components/GettingStartedCard';
 import { PlayerPassCard } from '@/components/PlayerPassCard';
+import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import type { Player, ActivityItem, Banner } from '@/lib/types';
 
 // Type for displayed game data
@@ -90,6 +91,11 @@ export default function MobileDashboard() {
     prizePoints: number;
     multiplier: number;
   } | null>(null);
+  const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
+  const [homeStore, setHomeStore] = useState<{
+    id: string; name: string; city: string; slug: string;
+    is_flagship: boolean; color: string | null;
+  } | null>(null);
 
   const gamesContainerRef = useRef<HTMLDivElement>(null);
   const activityContainerRef = useRef<HTMLDivElement>(null);
@@ -130,6 +136,11 @@ export default function MobileDashboard() {
             localStorage.setItem('hyperbolic_player_id', data.hyp_id);
             localStorage.setItem('hyperbolic_player_uuid', data.id);
             setPlayerData(data);
+            setHomeStore(data.homeStore ?? null);
+            // Guardrail: legacy players may have no home store yet
+            if (!data.homeStoreId) {
+              setShowStoreSwitcher(true);
+            }
             setLoading(false);
             return;
           } else {
@@ -392,9 +403,44 @@ export default function MobileDashboard() {
               <StatCard icon="📋" label="Activity" value={recentActivity.length} />
               <StatCard icon={storeConfig.currency_icon} label={storeConfig.currency_name} value={playerData?.gems || 0} color="text-accent" />
             </div>
+
+            {/* Home Store Badge */}
+            {homeStore && (
+              <button
+                onClick={() => setShowStoreSwitcher(true)}
+                className="mt-3 pt-3 border-t border-border-token w-full flex items-center justify-between text-left group"
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: homeStore.color ?? '#7c3aed' }}
+                  />
+                  <span className="text-secondary text-xs">{homeStore.name}</span>
+                  {homeStore.is_flagship && (
+                    <span className="text-xs text-yellow-400 border border-yellow-500/30 bg-yellow-500/10 px-1 py-0.5 rounded leading-none">
+                      Flagship
+                    </span>
+                  )}
+                </div>
+                <span className="text-tertiary text-xs group-hover:text-secondary transition-colors">Switch →</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Store Switcher Modal */}
+      {showStoreSwitcher && (
+        <StoreSwitcherModal
+          currentStoreId={homeStore?.id ?? null}
+          required={!homeStore}
+          onSwitch={(store) => {
+            setHomeStore(store);
+            setShowStoreSwitcher(false);
+          }}
+          onClose={() => setShowStoreSwitcher(false)}
+        />
+      )}
 
       {/* Daily Spin */}
       <div className="px-4 -mt-3 relative z-10">

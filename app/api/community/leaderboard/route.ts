@@ -23,15 +23,19 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
     const game = searchParams.get('game');
+    const storeId = searchParams.get('store_id');
 
     let leaderboard: any[] = [];
 
     if (!game || game === 'overall') {
       // Overall leaderboard - everyone appears
-      const { data: players, error } = await supabaseAdmin
+      let playersQuery = supabaseAdmin
         .from('players')
-        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous')
-        .order('created_at', { ascending: true });
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous');
+      if (storeId) {
+        playersQuery = playersQuery.eq('home_store_id', storeId);
+      }
+      const { data: players, error } = await playersQuery.order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching players:', error);
@@ -73,9 +77,13 @@ export async function GET(request: NextRequest) {
 
     } else {
       // Game-specific leaderboard - everyone appears
-      const { data: players, error: playersError } = await supabaseAdmin
+      let gamePlayersQuery = supabaseAdmin
         .from('players')
         .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous');
+      if (storeId) {
+        gamePlayersQuery = gamePlayersQuery.eq('home_store_id', storeId);
+      }
+      const { data: players, error: playersError } = await gamePlayersQuery;
 
       if (playersError) {
         console.error('Error fetching players:', playersError);

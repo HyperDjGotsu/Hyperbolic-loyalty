@@ -60,6 +60,12 @@ export async function GET(request: Request) {
     }
     // 'all' returns everything
 
+    // Optional store filter — pass ?store_id=<uuid> to scope to one store
+    const storeId = searchParams.get('store_id');
+    if (storeId) {
+      query = query.eq('store_id', storeId);
+    }
+
     const { data: events, error } = await query;
 
     if (error) {

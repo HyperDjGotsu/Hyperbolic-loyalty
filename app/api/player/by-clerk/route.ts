@@ -195,6 +195,17 @@ export async function GET() {
       });
     }
 
+    // Look up home store details
+    let homeStore: { id: string; name: string; city: string | null; slug: string | null; is_flagship: boolean; color: string | null } | null = null;
+    if (player.home_store_id) {
+      const { data: store } = await supabaseAdmin
+        .from('stores')
+        .select('id, name, city, slug, is_flagship, color')
+        .eq('id', player.home_store_id)
+        .single();
+      homeStore = store ?? null;
+    }
+
     // Get current month boundaries for attendance tracking
     const { start: monthStart, end: monthEnd, monthKey } = getCurrentMonthBoundaries();
 
@@ -311,6 +322,8 @@ export async function GET() {
       isFoundingMember: player.is_founding_member,
       isShadowVip: player.is_shadow_vip,
       createdAt: player.created_at,
+      homeStoreId: player.home_store_id,
+      homeStore,
       // Include current month info for display
       currentMonth: monthKey,
     });
