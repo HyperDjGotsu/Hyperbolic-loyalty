@@ -142,14 +142,55 @@ export default function MobileDashboard() {
             localStorage.setItem('hyperbolic_player_id', data.hyp_id);
             localStorage.setItem('hyperbolic_player_uuid', data.id);
             setPlayerData(data);
-            const store = data.homeStore ?? null;
-            setHomeStore(store);
-            setSelectedStore(store); // start browsing context at home store
-            if (store) {
-              localStorage.setItem('ggc_selected_store_id', store.id);
+            const homeStoreFromDb = data.homeStore ?? null;
+            setHomeStore(homeStoreFromDb);
+
+            // Restore selected-store from localStorage (player may have switched stores).
+            // Priority: localStorage → homeStore fallback.
+            // NEVER overwrite a valid saved selection with homeStore on every load.
+            const savedStoreId = localStorage.getItem('ggc_selected_store_id');
+            const savedStoreName = localStorage.getItem('ggc_selected_store_name');
+
+            if (savedStoreId && savedStoreName) {
+              // Validate: fetch active stores and confirm saved id is still valid
+              try {
+                const storesRes = await fetch('/api/stores');
+                if (storesRes.ok) {
+                  const storesData = await storesRes.json();
+                  const activeStores: Array<{ id: string; name: string; city: string; slug: string; is_flagship: boolean; color: string | null }> = storesData.stores || [];
+                  const matched = activeStores.find((s) => s.id === savedStoreId);
+                  if (matched) {
+                    // Valid saved selection — use it, don't touch homeStore
+                    setSelectedStore(matched);
+                    // Refresh the cached name in case it changed
+                    localStorage.setItem('ggc_selected_store_name', matched.name);
+                  } else {
+                    // Saved store no longer active — fall back to homeStore
+                    setSelectedStore(homeStoreFromDb);
+                    if (homeStoreFromDb) {
+                      localStorage.setItem('ggc_selected_store_id', homeStoreFromDb.id);
+                      localStorage.setItem('ggc_selected_store_name', homeStoreFromDb.name);
+                    } else {
+                      localStorage.removeItem('ggc_selected_store_id');
+                      localStorage.removeItem('ggc_selected_store_name');
+                    }
+                  }
+                } else {
+                  // API error — use homeStore as safe fallback
+                  setSelectedStore(homeStoreFromDb);
+                }
+              } catch {
+                setSelectedStore(homeStoreFromDb);
+              }
+            } else if (homeStoreFromDb) {
+              // No saved selection — seed from homeStore
+              setSelectedStore(homeStoreFromDb);
+              localStorage.setItem('ggc_selected_store_id', homeStoreFromDb.id);
+              localStorage.setItem('ggc_selected_store_name', homeStoreFromDb.name);
             } else {
-              localStorage.removeItem('ggc_selected_store_id');
+              setSelectedStore(null);
             }
+
             // Guardrail: legacy players may have no home store yet
             if (!data.homeStoreId) {
               setShowStoreSwitcher(true);
@@ -461,6 +502,7 @@ export default function MobileDashboard() {
             }
             setSelectedStore(store);
             localStorage.setItem('ggc_selected_store_id', store.id);
+            localStorage.setItem('ggc_selected_store_name', store.name);
             setShowStoreSwitcher(false);
           }}
           onClose={() => setShowStoreSwitcher(false)}

@@ -168,6 +168,7 @@ export default function CommunityPage() {
   // Store/Network scope for leaderboard
   const [leaderboardScope, setLeaderboardScope] = useState<'store' | 'network'>('store');
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+  const [selectedStoreName, setSelectedStoreName] = useState<string | null>(null);
 
   // One Piece tab state
   const [onePieceLeaderboard, setOnePieceLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -332,7 +333,9 @@ export default function CommunityPage() {
   // Read selected store from localStorage (set by MobileDashboard store switcher)
   useEffect(() => {
     const storeId = localStorage.getItem('ggc_selected_store_id');
+    const storeName = localStorage.getItem('ggc_selected_store_name');
     setSelectedStoreId(storeId);
+    setSelectedStoreName(storeName);
     // Default to store scope if they have a store, network if not
     setLeaderboardScope(storeId ? 'store' : 'network');
     loadLeaderboard('overall', storeId || null);
@@ -934,13 +937,13 @@ export default function CommunityPage() {
               <button
                 onClick={() => handleScopeChange('store')}
                 disabled={!selectedStoreId}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all truncate ${
                   leaderboardScope === 'store'
                     ? 'bg-accent text-accent-fg'
                     : 'text-secondary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed'
                 }`}
               >
-                🏪 My Store
+                🏪 {selectedStoreName || 'My Store'}
               </button>
               <button
                 onClick={() => handleScopeChange('network')}

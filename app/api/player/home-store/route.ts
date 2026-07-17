@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
       .from('stores')
       .select('id, name, city, slug, is_flagship, color')
       .eq('id', store_id)
-      .eq('active', true)
+      .eq('is_active', true)
       .single();
 
     if (storeErr || !store) {
