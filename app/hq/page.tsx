@@ -4588,15 +4588,25 @@ export default function HQPage() {
                   <div className="bg-elevated border border-border-token rounded-lg p-3 space-y-2">
                     <p className="text-xs text-secondary font-medium">Invite link — share directly with staff:</p>
                     <code className="block text-xs text-primary font-mono break-all">{lastAcceptUrl}</code>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(lastAcceptUrl);
-                        showToast('Link copied', 'success');
-                      }}
-                      className="text-xs text-accent hover:underline"
-                    >
-                      Copy link
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(lastAcceptUrl);
+                          showToast('Link copied', 'success');
+                        }}
+                        className="text-xs text-accent hover:underline"
+                      >
+                        Copy link
+                      </button>
+                      <a
+                        href={lastAcceptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-secondary hover:text-primary hover:underline"
+                      >
+                        Open in new tab
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
