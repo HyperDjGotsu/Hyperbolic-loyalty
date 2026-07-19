@@ -29,17 +29,20 @@ export function useHQStore(staffContext: StaffContextInput): UseHQStoreReturn {
   const [activeStoreId, setActiveStoreIdState] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const storesJson = staffContext ? JSON.stringify(staffContext.stores) : null;
+  const primaryStoreId = staffContext?.primaryStoreId ?? null;
+
   const availableStores = staffContext?.stores ?? [];
   const activeStore = availableStores.find(s => s.id === activeStoreId) ?? null;
 
   useEffect(() => {
-    if (!staffContext) {
+    if (storesJson === null) {
       setActiveStoreIdState(null);
       setIsInitialized(false);
       return;
     }
 
-    const stores = staffContext.stores;
+    const stores: StaffStore[] = JSON.parse(storesJson);
 
     if (stores.length === 0) {
       setActiveStoreIdState(null);
@@ -57,17 +60,17 @@ export function useHQStore(staffContext: StaffContextInput): UseHQStoreReturn {
     }
 
     let resolved: string;
-    if (isValid && saved) {
-      resolved = saved;
+    if (isValid) {
+      resolved = saved as string;
     } else if (stores.length === 1) {
       resolved = stores[0].id;
     } else {
-      resolved = staffContext.primaryStoreId ?? stores[0].id;
+      resolved = primaryStoreId ?? stores[0].id;
     }
 
     setActiveStoreIdState(resolved);
     setIsInitialized(true);
-  }, [staffContext]);
+  }, [storesJson, primaryStoreId]);
 
   function setActiveStoreId(id: string): void {
     if (!availableStores.some(s => s.id === id)) return;
