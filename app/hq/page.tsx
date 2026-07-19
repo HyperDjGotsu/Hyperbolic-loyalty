@@ -671,6 +671,7 @@ export default function HQPage() {
   const [allStores, setAllStores] = useState<Array<{ id: string; name: string }>>([]);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'store_staff', store_id: '' });
   const [inviteSending, setInviteSending] = useState(false);
+  const [lastAcceptUrl, setLastAcceptUrl] = useState<string | null>(null);
   const [invitations, setInvitations] = useState<Array<{
     id: string; email: string; store_id: string; role: string;
     expires_at: string; accepted_at: string | null; revoked_at: string | null; created_at: string;
@@ -1511,7 +1512,8 @@ export default function HQPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to send invite');
       setInviteForm(f => ({ ...f, email: '' }));
-      showToast(`Invite sent to ${inviteForm.email}`, 'success');
+      setLastAcceptUrl(data.acceptUrl || null);
+      showToast(`Invite created for ${inviteForm.email}`, 'success');
       loadInvitations();
     } catch (err: any) {
       showToast(err.message || 'Failed to send invite', 'error');
@@ -4580,8 +4582,23 @@ export default function HQPage() {
                   disabled={inviteSending || !inviteForm.email || !inviteForm.store_id}
                   className="w-full py-2 px-4 bg-accent text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 >
-                  {inviteSending ? 'Sending...' : 'Send Invite'}
+                  {inviteSending ? 'Creating...' : 'Create Invite'}
                 </button>
+                {lastAcceptUrl && (
+                  <div className="bg-elevated border border-border-token rounded-lg p-3 space-y-2">
+                    <p className="text-xs text-secondary font-medium">Invite link — share directly with staff:</p>
+                    <code className="block text-xs text-primary font-mono break-all">{lastAcceptUrl}</code>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(lastAcceptUrl);
+                        showToast('Link copied', 'success');
+                      }}
+                      className="text-xs text-accent hover:underline"
+                    >
+                      Copy link
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Pending invitations list */}
