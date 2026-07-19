@@ -567,6 +567,12 @@ export default function HQPage() {
   const router = useRouter();
   
   const [isStaff, setIsStaff] = useState<boolean | null>(null);
+  const [staffContext, setStaffContext] = useState<{
+    isNetworkAdmin: boolean;
+    stores: Array<{ id: string; name: string; role: string }>;
+    primaryStoreId: string | null;
+  } | null>(null);
+  const [welcomeBanner, setWelcomeBanner] = useState(false);
   const [activeTab, setActiveTab] = useState('players');
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -734,13 +740,22 @@ export default function HQPage() {
     try {
       const res = await fetch('/api/hq/auth');
       const data = await res.json();
-      
+
       if (!data.isStaff) {
         router.push('/dashboard');
         return;
       }
-      
+
       setIsStaff(true);
+      setStaffContext({
+        isNetworkAdmin: data.isNetworkAdmin ?? false,
+        stores: data.stores ?? [],
+        primaryStoreId: data.primaryStoreId ?? null,
+      });
+      if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('welcome') === 'staff') {
+        setWelcomeBanner(true);
+        window.history.replaceState({}, '', '/hq');
+      }
       setLoading(false);
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -2052,6 +2067,19 @@ export default function HQPage() {
         </div>
       )}
 
+      {/* Welcome banner */}
+      {welcomeBanner && (
+        <div className="bg-green-600 text-white px-4 py-3 flex items-center justify-between">
+          <span className="text-sm font-medium">
+            ✅ Staff access activated
+            {staffContext && !staffContext.isNetworkAdmin && staffContext.stores[0]
+              ? ` — ${staffContext.stores[0].name}`
+              : ''}
+          </span>
+          <button onClick={() => setWelcomeBanner(false)} className="text-white/70 hover:text-white text-lg leading-none">×</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b border-border-token bg-surface/50">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
@@ -2060,7 +2088,15 @@ export default function HQPage() {
               <h1 className="text-xl sm:text-2xl font-bold text-accent">
                 HQ Command Center
               </h1>
-              <p className="text-secondary text-sm">Staff Only</p>
+              <p className="text-secondary text-sm">
+                {staffContext?.isNetworkAdmin
+                  ? 'Network Administration'
+                  : staffContext?.stores.length === 1
+                    ? `${staffContext.stores[0].name} · ${staffContext.stores[0].role === 'store_manager' ? 'Manager' : 'Staff'}`
+                    : staffContext && staffContext.stores.length > 1
+                      ? `${staffContext.stores.length} stores`
+                      : 'Staff Only'}
+              </p>
             </div>
             <a href="/dashboard" className="text-secondary hover:text-primary text-sm">
               ← Back to Dashboard
