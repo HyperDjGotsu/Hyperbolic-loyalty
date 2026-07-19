@@ -665,8 +665,17 @@ export default function HQPage() {
     currency_icon: '⭐',
     store_name: 'Hyperbolic XP',
     player_id_prefix: 'HYP',
-    staff_invite_code: '',
   });
+
+  // Staff invitations state
+  const [allStores, setAllStores] = useState<Array<{ id: string; name: string }>>([]);
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'store_staff', store_id: '' });
+  const [inviteSending, setInviteSending] = useState(false);
+  const [invitations, setInvitations] = useState<Array<{
+    id: string; email: string; store_id: string; role: string;
+    expires_at: string; accepted_at: string | null; revoked_at: string | null; created_at: string;
+  }>>([]);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
   // null = closed, 'currency' = currency icon, number = category index
   const [iconPickerTarget, setIconPickerTarget] = useState<null | 'currency' | number>(null);
@@ -1231,6 +1240,8 @@ export default function HQPage() {
     }
     if (activeTab === 'settings') {
       loadStoreConfig();
+      loadInvitations();
+      loadAllStores();
     }
   }, [activeTab]);
 
@@ -1462,19 +1473,62 @@ export default function HQPage() {
     }
   };
 
-  const generateStaffCode = async () => {
+  const loadAllStores = async () => {
     try {
-      const res = await fetch('/api/hq/store-config', {
+      const res = await fetch('/api/stores');
+      if (res.ok) {
+        const data = await res.json();
+        setAllStores(data.stores || []);
+        if (data.stores?.length > 0 && !inviteForm.store_id) {
+          setInviteForm(f => ({ ...f, store_id: data.stores[0].id }));
+        }
+      }
+    } catch { /* ignore */ }
+  };
+
+  const loadInvitations = async () => {
+    setInvitationsLoading(true);
+    try {
+      const res = await fetch('/api/hq/staff-invitations');
+      if (res.ok) {
+        const data = await res.json();
+        setInvitations(data.invitations || []);
+      }
+    } catch { /* ignore */ } finally {
+      setInvitationsLoading(false);
+    }
+  };
+
+  const sendInvite = async () => {
+    if (!inviteForm.email || !inviteForm.store_id || !inviteForm.role) return;
+    setInviteSending(true);
+    try {
+      const res = await fetch('/api/hq/staff-invitations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_staff_code' }),
+        body: JSON.stringify(inviteForm),
       });
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setStoreConfig(prev => ({ ...prev, staff_invite_code: data.staff_invite_code }));
-      showToast('New staff invite code generated', 'success');
+      if (!res.ok) throw new Error(data.error || 'Failed to send invite');
+      setInviteForm(f => ({ ...f, email: '' }));
+      showToast(`Invite sent to ${inviteForm.email}`, 'success');
+      loadInvitations();
     } catch (err: any) {
-      showToast(err.message || 'Failed to generate code', 'error');
+      showToast(err.message || 'Failed to send invite', 'error');
+    } finally {
+      setInviteSending(false);
+    }
+  };
+
+  const revokeInvite = async (id: string) => {
+    try {
+      const res = await fetch(`/api/hq/staff-invitations?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to revoke');
+      showToast('Invite revoked', 'success');
+      loadInvitations();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to revoke invite', 'error');
     }
   };
 
@@ -4485,43 +4539,84 @@ export default function HQPage() {
               </div>
             </div>
 
-            {/* Staff Invite Link */}
+            {/* Staff Invitations */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">
-              <h2 className="font-semibold text-primary mb-1">Staff Invite Link</h2>
+              <h2 className="font-semibold text-primary mb-1">Staff Invitations</h2>
               <p className="text-xs text-tertiary mb-5">
-                Share this link so new staff sign up with automatic staff access. No Supabase edits needed.
+                Send a secure invite link to a new staff member. The link expires in 72 hours and can only be used once.
               </p>
-              <div className="space-y-3">
-                {storeConfig.staff_invite_code ? (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-elevated border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono break-all">
-                        {typeof window !== 'undefined' ? `${window.location.origin}/onboarding?staff=${storeConfig.staff_invite_code}` : `/onboarding?staff=${storeConfig.staff_invite_code}`}
-                      </code>
-                      <button
-                        onClick={() => {
-                          const url = `${window.location.origin}/onboarding?staff=${storeConfig.staff_invite_code}`;
-                          navigator.clipboard.writeText(url);
-                          showToast('Link copied', 'success');
-                        }}
-                        className="px-3 py-2 bg-elevated border border-border-token rounded-lg text-sm text-secondary hover:text-primary hover:border-accent transition-colors whitespace-nowrap"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                    <p className="text-xs text-tertiary">Code: <span className="font-mono text-primary">{storeConfig.staff_invite_code}</span></p>
-                  </>
-                ) : (
-                  <p className="text-sm text-tertiary">No code generated yet.</p>
-                )}
+
+              {/* Invite form */}
+              <div className="space-y-3 mb-6">
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={inviteForm.email}
+                  onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                />
+                <div className="flex gap-3">
+                  <select
+                    value={inviteForm.role}
+                    onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
+                    className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  >
+                    <option value="store_staff">Store Staff</option>
+                    <option value="store_manager">Store Manager</option>
+                  </select>
+                  <select
+                    value={inviteForm.store_id}
+                    onChange={e => setInviteForm(f => ({ ...f, store_id: e.target.value }))}
+                    className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  >
+                    {allStores.length === 0 && <option value="">Loading stores...</option>}
+                    {allStores.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <button
-                  onClick={generateStaffCode}
-                  className="text-sm text-accent hover:underline"
+                  onClick={sendInvite}
+                  disabled={inviteSending || !inviteForm.email || !inviteForm.store_id}
+                  className="w-full py-2 px-4 bg-accent text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 >
-                  {storeConfig.staff_invite_code ? 'Regenerate code' : 'Generate staff invite code'}
+                  {inviteSending ? 'Sending...' : 'Send Invite'}
                 </button>
-                {storeConfig.staff_invite_code && (
-                  <p className="text-xs text-tertiary">Regenerating invalidates the old link immediately.</p>
+              </div>
+
+              {/* Pending invitations list */}
+              <div>
+                <h3 className="text-xs font-medium text-secondary mb-3 uppercase tracking-wide">Pending Invites</h3>
+                {invitationsLoading ? (
+                  <p className="text-sm text-tertiary">Loading...</p>
+                ) : invitations.filter(i => !i.accepted_at && !i.revoked_at).length === 0 ? (
+                  <p className="text-sm text-tertiary">No pending invites.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {invitations
+                      .filter(i => !i.accepted_at && !i.revoked_at)
+                      .map(inv => {
+                        const store = allStores.find(s => s.id === inv.store_id);
+                        const expired = new Date(inv.expires_at) < new Date();
+                        return (
+                          <div key={inv.id} className="flex items-center justify-between bg-elevated rounded-lg px-3 py-2 border border-border-token">
+                            <div className="min-w-0">
+                              <p className="text-sm text-primary truncate">{inv.email}</p>
+                              <p className="text-xs text-tertiary">
+                                {inv.role === 'store_manager' ? 'Manager' : 'Staff'} · {store?.name ?? inv.store_id}
+                                {expired && <span className="ml-2 text-red-400">Expired</span>}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => revokeInvite(inv.id)}
+                              className="ml-3 text-xs text-red-400 hover:text-red-300 whitespace-nowrap"
+                            >
+                              Revoke
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
                 )}
               </div>
             </div>
