@@ -121,7 +121,7 @@ export async function POST(request: Request) {
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       resend.emails.send({
-        from: 'Hyperbolic XP <noreply@hyperbolic-loyalty.vercel.app>',
+        from: 'Hyperbolic XP <onboarding@resend.dev>',
         to: normalizedEmail,
         subject: `You've been invited to join ${storeName} on Hyperbolic XP`,
         html: `
