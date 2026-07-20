@@ -864,7 +864,7 @@ export default function HQPage() {
     loadGames();
   }, [isLoaded, user]);
 
-  // Load COTD data when tab changes
+  // Reload store-scoped tabs when tab changes or active store switches
   useEffect(() => {
     if (activeTab === 'cotd') {
       loadUpcomingCOTD();
@@ -876,7 +876,7 @@ export default function HQPage() {
     if (activeTab === 'circuit') {
       loadCircuitData();
     }
-  }, [activeTab]);
+  }, [activeTab, hqStore.activeStoreId]);
 
   const checkStaffAccess = async () => {
     try {
@@ -1490,7 +1490,7 @@ export default function HQPage() {
       setSelectedMonth(months[0].value);
       loadEmperorRankings(months[0].value);
     }
-    if (activeTab === 'banners' && banners.length === 0) {
+    if (activeTab === 'banners') {
       loadBanners();
     }
     if (activeTab === 'bounty') {
@@ -1504,7 +1504,7 @@ export default function HQPage() {
       loadInvitations();
       loadAllStores();
     }
-  }, [activeTab]);
+  }, [activeTab, hqStore.activeStoreId]);
 
   useEffect(() => {
     if (selectedMonth) {
@@ -2354,6 +2354,11 @@ export default function HQPage() {
                   setStoreTransitioning(true);
                   setPlayerDetails(null);
                   setPlayersDataset({ storeId: null, status: 'idle' });
+                  setPrizeItems([]);
+                  setBanners([]);
+                  setPrizeWallDataset({ storeId: null, status: 'idle' });
+                  setBannersDataset({ storeId: null, status: 'idle' });
+                  setEventsDataset({ storeId: null, status: 'idle' });
                   hqStore.setActiveStoreId(id);
                   showToast(`Switched to ${storeName}`, 'success');
                   setStoreTransitioning(false);
