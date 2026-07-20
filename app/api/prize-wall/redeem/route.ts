@@ -27,7 +27,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const resolvedStoreId = storeId || (player as any).home_store_id || null;
+    const resolvedStoreId: string | null = storeId || (player as any).home_store_id || null;
+
+    if (!resolvedStoreId) {
+      return NextResponse.json({ error: 'No store selected — visit a store first' }, { status: 400 });
+    }
 
     // Check free tier gate server-side
     if ((player as any).pass_tier === 'free' || (player as any).pass_tier === 'none') {
