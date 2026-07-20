@@ -7,14 +7,16 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as {
+    const rawBody = await request.json() as Record<string, unknown>;
+    if (!('storeId' in rawBody)) {
+      return NextResponse.json({ error: 'storeId is required (use null for network-level adjustments)' }, { status: 400 });
+    }
+    const { playerId, amount, reason, storeId } = rawBody as {
       playerId: string;
       amount: number;
       reason: string;
       storeId: string | null;
     };
-
-    const { playerId, amount, reason, storeId } = body;
 
     if (!playerId || amount === undefined || !reason?.trim()) {
       return NextResponse.json(
