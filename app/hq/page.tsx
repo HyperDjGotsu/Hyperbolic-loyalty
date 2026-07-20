@@ -864,7 +864,7 @@ export default function HQPage() {
     loadGames();
   }, [isLoaded, user]);
 
-  // Reload store-scoped tabs when tab changes or active store switches
+  // Tab navigation effect — fires when the active tab changes only
   useEffect(() => {
     if (activeTab === 'cotd') {
       loadUpcomingCOTD();
@@ -876,7 +876,7 @@ export default function HQPage() {
     if (activeTab === 'circuit') {
       loadCircuitData();
     }
-  }, [activeTab, hqStore.activeStoreId]);
+  }, [activeTab]);
 
   const checkStaffAccess = async () => {
     try {
@@ -1504,7 +1504,17 @@ export default function HQPage() {
       loadInvitations();
       loadAllStores();
     }
-  }, [activeTab, hqStore.activeStoreId]);
+  }, [activeTab]);
+
+  // Store-context effect — fires when the active store changes, reloads only store-scoped tabs
+  // COTD, circuit, emperor, and bounty are network-wide — excluded intentionally
+  useEffect(() => {
+    if (!hqStore.isInitialized || !hqStore.activeStoreId) return;
+    if (activeTab === 'events') loadHQEvents();
+    else if (activeTab === 'banners') loadBanners();
+    else if (activeTab === 'prize-wall') loadPrizeItems();
+    else if (activeTab === 'settings') { loadStoreConfig(); loadInvitations(); loadAllStores(); }
+  }, [hqStore.activeStoreId]);
 
   useEffect(() => {
     if (selectedMonth) {
