@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { auth } from '@clerk/nextjs/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const storeId = searchParams.get('storeId');
+
+    if (!storeId) {
+      return NextResponse.json({ error: 'storeId is required' }, { status: 400 });
+    }
+
     const [itemsResult, subscriberResult] = await Promise.all([
-      supabaseAdmin
-        .from('prize_wall_items' as any)
+      (supabaseAdmin as any)
+        .from('prize_wall_items')
         .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
         .eq('is_active', true)
+        .or(`store_id.is.null,store_id.eq.${storeId}`)
         .order('xp_cost', { ascending: true }),
       supabaseAdmin
         .from('players')

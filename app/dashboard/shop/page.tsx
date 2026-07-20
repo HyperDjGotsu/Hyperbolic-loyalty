@@ -23,6 +23,7 @@ interface PassStatus {
   lifetimeXp: number;
   prizePoints: number;
   multiplier: number;
+  homeStoreId: string | null;
 }
 
 interface ClaimDetails {
@@ -45,6 +46,7 @@ export default function PrizeWallPage() {
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [passStatus, setPassStatus] = useState<PassStatus | null>(null);
+  const [homeStoreId, setHomeStoreId] = useState<string | null | undefined>(undefined);
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<PrizeWallItem | null>(null);
   const [claimDetails, setClaimDetails] = useState<ClaimDetails | null>(null);
@@ -62,15 +64,26 @@ export default function PrizeWallPage() {
       }
 
       setPassStatus(data);
+      setHomeStoreId(data.homeStoreId ?? null);
     } catch (error) {
       setBalanceError(error instanceof Error ? error.message : 'Unable to load your balance');
+      setHomeStoreId(null);
     }
   }, []);
 
   useEffect(() => {
     void loadPassStatus();
+  }, [loadPassStatus]);
 
-    fetch('/api/prize-wall')
+  useEffect(() => {
+    // Wait until pass-status has resolved (undefined = still loading)
+    if (homeStoreId === undefined) return;
+    if (!homeStoreId) {
+      setLoading(false);
+      return;
+    }
+
+    fetch(`/api/prize-wall?storeId=${encodeURIComponent(homeStoreId)}`)
       .then(r => r.json())
       .then(data => {
         setItems(data.items || []);
@@ -78,7 +91,7 @@ export default function PrizeWallPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [loadPassStatus]);
+  }, [homeStoreId]);
 
   async function redeemSelectedItem() {
     if (!selectedItem) return;
@@ -126,7 +139,11 @@ export default function PrizeWallPage() {
 
       <BalanceBar passStatus={passStatus} error={balanceError} onRetry={loadPassStatus} />
 
-      {loading ? (
+      {!loading && homeStoreId === null ? (
+        <div className="text-center text-secondary py-12">
+          <p>No store selected. Visit a store to access the Prize Wall.</p>
+        </div>
+      ) : loading ? (
         <div className="text-center py-20 text-tertiary text-sm">Loading…</div>
       ) : items.length === 0 ? (
         <div className="text-center py-20 text-tertiary text-sm">
