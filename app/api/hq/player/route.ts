@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireStoreAccess } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,13 +74,18 @@ function getRank(gameId: string, xp: number): string {
 
 export async function GET(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const { searchParams } = new URL(request.url);
+    const storeId = searchParams.get('storeId');
+    const query = searchParams.get('q');
+
+    if (!storeId) {
+      return NextResponse.json({ error: 'storeId is required' }, { status: 400 });
+    }
+
+    const staffCtx = await requireStoreAccess(storeId);
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q');
 
     if (!query) {
       return NextResponse.json({ error: 'Search query required' }, { status: 400 });

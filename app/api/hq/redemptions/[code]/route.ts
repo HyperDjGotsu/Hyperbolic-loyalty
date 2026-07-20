@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logPointTransaction } from '@/lib/points';
-import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
+import { requireStoreAccess } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,17 @@ export async function PATCH(
   { params }: { params: { code: string } }
 ) {
   try {
-    // Load the redemption first to get its store_id for scoped authorization
+    const { searchParams } = new URL(request.url);
+    const requestedStoreId = searchParams.get('storeId');
+
+    if (!requestedStoreId) {
+      return NextResponse.json({ error: 'storeId is required' }, { status: 400 });
+    }
+
+    // Auth against the requested store before revealing anything about the code
+    const staffCtx = await requireStoreAccess(requestedStoreId);
+    if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     const { data: redemption, error: fetchError } = await (supabaseAdmin as any)
       .from('prize_wall_redemptions')
       .select('id, status, player_id, store_id, points_deducted, item_name, expires_at')
@@ -21,13 +31,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Redemption not found' }, { status: 404 });
     }
 
-    // Scope authorization to the redemption's store when present.
-    // Null store_id is rare (legacy data) — fall back to any staff.
-    const staffCtx = redemption.store_id
-      ? await requireStoreAccess(redemption.store_id)
-      : await requireAnyStaff();
-
-    if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Cross-store disclosure: code belongs to a different store — return generic not-found.
+    // Network admins bypass this check.
+    if (redemption.store_id && redemption.store_id !== requestedStoreId && !staffCtx.isNetworkAdmin) {
+      return NextResponse.json({ error: 'Redemption not found for the selected store.' }, { status: 404 });
+    }
 
     // Get the staff member's players.id for claimed_by / voided_by
     const { data: staff } = await supabaseAdmin
