@@ -585,6 +585,25 @@ function StoreIndicator({
   onStoreChange: (id: string) => void;
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function handleOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setDropdownOpen(false);
+    }
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [dropdownOpen]);
 
   if (!hqStore.activeStore) {
     return (
@@ -612,7 +631,7 @@ function StoreIndicator({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setDropdownOpen(v => !v)}
         disabled={storeTransitioning}
@@ -800,6 +819,7 @@ export default function HQPage() {
   useEffect(() => {
     activeStoreRef.current = hqStore.activeStoreId;
   }, [hqStore.activeStoreId]);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const [storeTransitioning, setStoreTransitioning] = useState(false);
   const [playersDataset, setPlayersDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
@@ -1068,8 +1088,11 @@ export default function HQPage() {
   const searchPlayer = async () => {
     if (!searchQuery.trim() || !hqStore.activeStoreId) return;
 
-    const requestedStoreId = hqStore.activeStoreId;
+    searchAbortRef.current?.abort();
     const controller = new AbortController();
+    searchAbortRef.current = controller;
+
+    const requestedStoreId = hqStore.activeStoreId;
 
     setSearchLoading(true);
     setPlayerDetails(null);
@@ -2203,6 +2226,7 @@ export default function HQPage() {
                 isNetworkAdmin={staffContext?.isNetworkAdmin ?? false}
                 storeTransitioning={storeTransitioning}
                 onStoreChange={(id) => {
+                  searchAbortRef.current?.abort();
                   const storeName = hqStore.availableStores.find(s => s.id === id)?.name ?? id;
                   setStoreTransitioning(true);
                   setPlayerDetails(null);
@@ -2286,13 +2310,13 @@ export default function HQPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && searchPlayer()}
+                  onKeyDown={(e) => e.key === 'Enter' && hqStore.activeStoreId && searchPlayer()}
                   placeholder="Enter Player ID (HYP-XXXXX) or name..."
                   className="flex-1 bg-elevated border border-border-token rounded-lg px-4 py-3 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                 />
                 <button
                   onClick={searchPlayer}
-                  disabled={searchLoading}
+                  disabled={searchLoading || !hqStore.activeStoreId}
                   className="w-full sm:w-auto px-6 py-3 bg-accent rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
                 >
                   {searchLoading ? 'Searching...' : 'Search'}
