@@ -4405,7 +4405,8 @@ export default function HQPage() {
                         <td className="px-4 py-3">
                           <button
                             onClick={() => togglePrizeItemActive(item)}
-                            className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${
+                            disabled={item.store_id === null && !staffContext?.isNetworkAdmin}
+                            className={`text-xs px-2 py-1 rounded-full font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
                               item.is_active ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25' : 'bg-elevated text-tertiary hover:bg-elevated'
                             }`}
                           >
