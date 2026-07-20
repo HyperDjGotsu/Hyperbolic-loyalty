@@ -1,30 +1,43 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff, requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin, requireStoreManager, requireStoreAccess } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const { searchParams } = new URL(request.url);
+    const storeId = searchParams.get('storeId');
+
+    if (!storeId) {
+      // Network admin can omit storeId to see all items
+      const staffCtx = await requireNetworkAdmin();
+      if (!staffCtx) {
+        return NextResponse.json({ error: 'storeId is required' }, { status: 400 });
+      }
+      // Network admin unfiltered list
+      const { data, error } = await supabaseAdmin
+        .from('prize_wall_items' as any)
+        .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return NextResponse.json({ items: data ?? [] });
+    }
+
+    const staffCtx = await requireStoreAccess(storeId);
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    let query = supabaseAdmin
-      .from('prize_wall_items' as any)
+    // Return network-wide items + items belonging to this store
+    const { data, error } = await (supabaseAdmin as any)
+      .from('prize_wall_items')
       .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
+      .or(`store_id.is.null,store_id.eq.${storeId}`)
       .order('created_at', { ascending: false });
 
-    // Network admins see all items; store staff see network-wide + their stores only
-    if (!staffCtx.isNetworkAdmin) {
-      query = (query as any).or(`store_id.is.null,store_id.in.(${staffCtx.allStoreIds.join(',')})`);
-    }
-
-    const { data, error } = await query;
-
     if (error) throw error;
-    return NextResponse.json(data);
+    return NextResponse.json({ items: data ?? [] });
   } catch (err) {
     console.error('prize-wall GET error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

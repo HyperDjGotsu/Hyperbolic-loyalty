@@ -830,6 +830,7 @@ export default function HQPage() {
 
   const [storeTransitioning, setStoreTransitioning] = useState(false);
   const [playersDataset, setPlayersDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
+  const [prizeWallDataset, setPrizeWallDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
 
   // Check staff access
   useEffect(() => {
@@ -1585,12 +1586,21 @@ export default function HQPage() {
 
   // Shop management functions
   const loadPrizeItems = async () => {
+    if (!hqStore.activeStoreId && !staffContext?.isNetworkAdmin) return;
+    const requestedStoreId = hqStore.activeStoreId;
     setPrizeLoading(true);
+    setPrizeWallDataset({ storeId: requestedStoreId, status: 'loading' });
     try {
-      const res = await fetch('/api/hq/prize-wall');
+      const url = requestedStoreId
+        ? `/api/hq/prize-wall?storeId=${encodeURIComponent(requestedStoreId)}`
+        : '/api/hq/prize-wall';
+      const res = await fetch(url);
+      if (requestedStoreId !== activeStoreRef.current) return;
       const data = await res.json();
       setPrizeItems(data.items || []);
+      setPrizeWallDataset({ storeId: requestedStoreId, status: 'ready' });
     } catch {
+      setPrizeWallDataset({ storeId: requestedStoreId, status: 'error' });
       showToast('Failed to load prize wall items', 'error');
     } finally {
       setPrizeLoading(false);
@@ -1616,6 +1626,8 @@ export default function HQPage() {
           quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
           unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
           is_active: prizeForm.is_active,
+          // Store managers create store-scoped items; network admins create network-wide items
+          store_id: staffContext?.isNetworkAdmin ? null : (hqStore.activeStoreId ?? null),
         }),
       });
       const data = await res.json();
@@ -4340,6 +4352,11 @@ export default function HQPage() {
                           <div className="font-medium text-primary">{item.name}</div>
                           {item.description && <div className="text-xs text-tertiary mt-0.5">{item.description}</div>}
                           {item.quantity != null && <div className="text-xs text-tertiary mt-0.5">Qty: {item.quantity}</div>}
+                          {item.store_id === null && !staffContext?.isNetworkAdmin && (
+                            <span className="text-xs text-secondary border border-border-token rounded px-1.5 py-0.5 mt-1 inline-block">
+                              Network Reward · Read Only
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 font-mono text-primary">{item.xp_cost.toLocaleString()} pts</td>
                         <td className="px-4 py-3 text-secondary">{item.retail_value != null ? `$${item.retail_value}` : '—'}</td>
@@ -4364,7 +4381,8 @@ export default function HQPage() {
                           ) : (
                             <button
                               onClick={() => setPrizeDeleteConfirm(item.id)}
-                              className="text-xs text-tertiary hover:text-red-400 transition-colors"
+                              disabled={item.store_id === null && !staffContext?.isNetworkAdmin}
+                              className="text-xs text-tertiary hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-tertiary"
                             >
                               Delete
                             </button>
