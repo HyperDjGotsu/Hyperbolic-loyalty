@@ -345,7 +345,7 @@ type StoreDatasetState = {
   error?: string;
 };
 
-function RedemptionsPanel() {
+function RedemptionsPanel({ activeStoreId }: { activeStoreId: string | null }) {
   const [code, setCode] = useState('');
   const [lookup, setLookup] = useState<any>(null);
   const [lookupError, setLookupError] = useState('');
@@ -358,12 +358,14 @@ function RedemptionsPanel() {
   const [listLoading, setListLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/hq/redemptions')
+    if (!activeStoreId) return;
+    setListLoading(true);
+    fetch(`/api/hq/redemptions?storeId=${encodeURIComponent(activeStoreId)}`)
       .then(r => r.json())
       .then(d => setRecentList(d.redemptions || []))
       .catch(() => {})
       .finally(() => setListLoading(false));
-  }, [actionResult]);
+  }, [actionResult, activeStoreId]);
 
   const lookupCode = async () => {
     const normalized = code.trim().toUpperCase();
@@ -387,7 +389,8 @@ function RedemptionsPanel() {
     if (!lookup) return;
     setActioning(true);
     try {
-      const res = await fetch(`/api/hq/redemptions/${lookup.claim_code}`, {
+      const storeParam = activeStoreId ? `?storeId=${encodeURIComponent(activeStoreId)}` : '';
+      const res = await fetch(`/api/hq/redemptions/${lookup.claim_code}${storeParam}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, voidReason: voidReason || undefined }),
@@ -1173,6 +1176,7 @@ export default function HQPage() {
           gameId: selectedGame,
           amount: totalXp,
           reason: reason,
+          storeId: hqStore.activeStoreId,
         }),
       });
       
@@ -1215,6 +1219,7 @@ export default function HQPage() {
           gameId: selectedGame,
           amount: xp,
           reason: xpReason || (xp > 0 ? 'Custom bonus' : 'Custom correction'),
+          storeId: hqStore.activeStoreId,
         }),
       });
       
@@ -4615,7 +4620,7 @@ export default function HQPage() {
         )}
 
         {activeTab === 'redemptions' && (
-          <RedemptionsPanel />
+          <RedemptionsPanel activeStoreId={hqStore.activeStoreId} />
         )}
 
         {activeTab === 'settings' && (
