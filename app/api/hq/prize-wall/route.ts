@@ -115,7 +115,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const allowed = ['name', 'description', 'image_url', 'xp_cost', 'retail_value', 'quantity', 'store_id', 'unlock_threshold', 'is_active'];
+    const allowed = ['name', 'description', 'image_url', 'xp_cost', 'retail_value', 'quantity', 'unlock_threshold', 'is_active'];
     const updates: Record<string, unknown> = {};
     for (const key of allowed) {
       if (key in fields) updates[key] = fields[key];
