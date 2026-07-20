@@ -697,7 +697,14 @@ export default function HQPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [gameFilter, setGameFilter] = useState('with_xp'); // 'all', 'with_xp', or specific game_id
   const [selectedTiles, setSelectedTiles] = useState<Array<{ label: string; xp: number }>>([]); // Multi-select XP tiles
-  
+
+  // Prize Points state
+  const [ppAmount, setPpAmount] = useState('');
+  const [ppReason, setPpReason] = useState('');
+  const [ppBalance, setPpBalance] = useState<number | null>(null);
+  const [ppLoading, setPpLoading] = useState(false);
+  const [ppAdjusting, setPpAdjusting] = useState(false);
+
   // Emperor state
   const [selectedMonth, setSelectedMonth] = useState('');
   const [monthlyRankings, setMonthlyRankings] = useState<EmperorRanking[]>([]);
@@ -1114,6 +1121,8 @@ export default function HQPage() {
         showToast(data.error, 'error');
       } else {
         setPlayerDetails(data);
+        setPpBalance(null); // clear stale balance
+        loadPlayerBalance(data.player.id);
         setPlayersDataset({ storeId: requestedStoreId, status: 'ready' });
         if (data.gameXp?.length > 0) {
           setSelectedGame(data.gameXp[0].game_id);
@@ -1130,6 +1139,68 @@ export default function HQPage() {
       showToast('Search failed', 'error');
     } finally {
       setSearchLoading(false);
+    }
+  };
+
+  // Prize Points helpers
+  const loadPlayerBalance = async (playerId: string) => {
+    if (!hqStore.activeStoreId) return;
+    setPpLoading(true);
+    try {
+      const res = await fetch(
+        `/api/hq/prize-points?playerId=${playerId}&storeId=${encodeURIComponent(hqStore.activeStoreId)}`
+      );
+      const data = await res.json();
+      if (!data.error) setPpBalance(data.balance);
+    } catch {
+      // silently ignore — balance stays null
+    } finally {
+      setPpLoading(false);
+    }
+  };
+
+  const adjustPrizePoints = async () => {
+    if (!playerDetails || !ppReason.trim()) {
+      showToast('Reason is required', 'error');
+      return;
+    }
+    const amount = parseInt(ppAmount);
+    if (!amount || amount === 0) {
+      showToast('Enter a non-zero integer amount', 'error');
+      return;
+    }
+
+    // Client-side guard: negative balance check (server also validates)
+    if (amount < 0 && ppBalance !== null && ppBalance + amount < 0) {
+      showToast(`Cannot deduct ${Math.abs(amount)} pts — current balance is ${ppBalance}`, 'error');
+      return;
+    }
+
+    setPpAdjusting(true);
+    try {
+      const res = await fetch('/api/hq/prize-points', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: playerDetails.player.id,
+          amount,
+          reason: ppReason.trim(),
+          storeId: hqStore.activeStoreId,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        setPpBalance(data.newBalance);
+        setPpAmount('');
+        setPpReason('');
+        showToast(`${amount > 0 ? '+' : ''}${amount} pts — new balance: ${data.newBalance}`, 'success');
+      }
+    } catch {
+      showToast('Failed to adjust points', 'error');
+    } finally {
+      setPpAdjusting(false);
     }
   };
 
@@ -2628,6 +2699,44 @@ export default function HQPage() {
                       </button>
                     </div>
                     <p className="text-xs text-secondary mt-2">Use negative numbers to remove XP (e.g., -25)</p>
+                  </div>
+                </div>
+
+                {/* Prize Points */}
+                <div className="p-4 sm:p-6 border-t border-border-token">
+                  <div className="bg-surface rounded-xl border border-border-token p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-primary">Prize Points</h3>
+                      {ppBalance !== null && (
+                        <span className="text-accent font-bold text-sm">{ppBalance} pts</span>
+                      )}
+                      {ppBalance === null && ppLoading && (
+                        <span className="text-secondary text-xs">Loading…</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={ppAmount}
+                        onChange={e => setPpAmount(e.target.value)}
+                        placeholder="±amount (e.g. 50 or -25)"
+                        className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={ppReason}
+                      onChange={e => setPpReason(e.target.value)}
+                      placeholder="Reason (required)"
+                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                    />
+                    <button
+                      onClick={adjustPrizePoints}
+                      disabled={ppAdjusting || !ppAmount || !ppReason.trim() || !hqStore.activeStoreId}
+                      className="w-full py-2 bg-accent text-accent-fg text-sm font-semibold rounded-lg hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    >
+                      {ppAdjusting ? 'Adjusting…' : 'Adjust Prize Points'}
+                    </button>
                   </div>
                 </div>
 
