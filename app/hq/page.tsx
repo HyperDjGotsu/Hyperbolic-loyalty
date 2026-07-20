@@ -1063,30 +1063,44 @@ export default function HQPage() {
 
   // Player search
   const searchPlayer = async () => {
-    if (!searchQuery.trim()) return;
-    
+    if (!searchQuery.trim() || !hqStore.activeStoreId) return;
+
+    const requestedStoreId = hqStore.activeStoreId;
+    const controller = new AbortController();
+
     setSearchLoading(true);
     setPlayerDetails(null);
-    
+    setPlayersDataset({ storeId: requestedStoreId, status: 'loading' });
+
     try {
-      const res = await fetch(`/api/hq/player?q=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(
+        `/api/hq/player?q=${encodeURIComponent(searchQuery)}&storeId=${encodeURIComponent(requestedStoreId)}`,
+        { signal: controller.signal }
+      );
+
+      // Discard result if store changed while request was in flight
+      if (requestedStoreId !== activeStoreRef.current) return;
+
       const data = await res.json();
-      
+
       if (data.error) {
+        setPlayersDataset({ storeId: requestedStoreId, status: 'error', error: data.error });
         showToast(data.error, 'error');
       } else {
         setPlayerDetails(data);
+        setPlayersDataset({ storeId: requestedStoreId, status: 'ready' });
         if (data.gameXp?.length > 0) {
           setSelectedGame(data.gameXp[0].game_id);
         }
-        // Default to favorites if player has them, otherwise show games with XP
         if (data.player?.favorite_games?.length > 0) {
           setGameFilter('favorites');
         } else {
           setGameFilter('with_xp');
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') return;
+      setPlayersDataset({ storeId: requestedStoreId, status: 'error' });
       showToast('Search failed', 'error');
     } finally {
       setSearchLoading(false);
