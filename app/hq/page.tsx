@@ -355,7 +355,7 @@ function RedemptionsPanel({ activeStoreId }: { activeStoreId: string | null }) {
   const [voidReason, setVoidReason] = useState('');
   const [showVoidInput, setShowVoidInput] = useState(false);
   const [recentList, setRecentList] = useState<any[]>([]);
-  const [listLoading, setListLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
 
   useEffect(() => {
     if (!activeStoreId) return;

@@ -11,7 +11,18 @@ export async function GET() {
 
     let stores: Array<{ id: string; name: string; role: string }> = [];
 
-    if (ctx.allStoreIds.length > 0) {
+    if (ctx.isNetworkAdmin) {
+      // Network admins see all active stores
+      const { data } = await supabaseAdmin
+        .from('stores')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+
+      if (data) {
+        stores = data.map(s => ({ id: s.id, name: s.name, role: 'network_admin' }));
+      }
+    } else if (ctx.allStoreIds.length > 0) {
       const { data } = await supabaseAdmin
         .from('stores')
         .select('id, name')
