@@ -345,7 +345,13 @@ type StoreDatasetState = {
   error?: string;
 };
 
-function RedemptionsPanel({ activeStoreId }: { activeStoreId: string | null }) {
+function RedemptionsPanel({
+  activeStoreId,
+  onDatasetChange,
+}: {
+  activeStoreId: string | null;
+  onDatasetChange: (state: StoreDatasetState) => void;
+}) {
   const [code, setCode] = useState('');
   const [lookup, setLookup] = useState<any>(null);
   const [lookupError, setLookupError] = useState('');
@@ -358,12 +364,22 @@ function RedemptionsPanel({ activeStoreId }: { activeStoreId: string | null }) {
   const [listLoading, setListLoading] = useState(false);
 
   useEffect(() => {
-    if (!activeStoreId) return;
+    if (!activeStoreId) {
+      onDatasetChange({ storeId: null, status: 'idle' });
+      return;
+    }
+    const requestedStoreId = activeStoreId;
     setListLoading(true);
-    fetch(`/api/hq/redemptions?storeId=${encodeURIComponent(activeStoreId)}`)
+    onDatasetChange({ storeId: requestedStoreId, status: 'loading' });
+    fetch(`/api/hq/redemptions?storeId=${encodeURIComponent(requestedStoreId)}`)
       .then(r => r.json())
-      .then(d => setRecentList(d.redemptions || []))
-      .catch(() => {})
+      .then(d => {
+        setRecentList(d.redemptions || []);
+        onDatasetChange({ storeId: requestedStoreId, status: 'ready' });
+      })
+      .catch(() => {
+        onDatasetChange({ storeId: requestedStoreId, status: 'error' });
+      })
       .finally(() => setListLoading(false));
   }, [actionResult, activeStoreId]);
 
@@ -831,6 +847,7 @@ export default function HQPage() {
   const [storeTransitioning, setStoreTransitioning] = useState(false);
   const [playersDataset, setPlayersDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
   const [prizeWallDataset, setPrizeWallDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
+  const [redemptionsDataset, setRedemptionsDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
 
   // Check staff access
   useEffect(() => {
@@ -4771,7 +4788,10 @@ export default function HQPage() {
         )}
 
         {activeTab === 'redemptions' && (
-          <RedemptionsPanel activeStoreId={hqStore.activeStoreId} />
+          <RedemptionsPanel
+            activeStoreId={hqStore.activeStoreId}
+            onDatasetChange={setRedemptionsDataset}
+          />
         )}
 
         {activeTab === 'settings' && (
