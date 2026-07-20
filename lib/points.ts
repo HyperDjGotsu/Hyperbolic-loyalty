@@ -4,7 +4,7 @@ type PointTransactionType = 'earn' | 'spend' | 'refund' | 'admin_adjust';
 
 type LogPointTransactionParams = {
   playerId: string;
-  storeId: string;
+  storeId: string | null;  // null = network-level adjustment (network admin only)
   amount: number;
   type: PointTransactionType;
   source: string;
