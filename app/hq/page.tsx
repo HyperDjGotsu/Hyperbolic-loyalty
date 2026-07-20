@@ -570,6 +570,79 @@ function RedemptionsPanel() {
   );
 }
 
+function StoreIndicator({
+  hqStore,
+  isNetworkAdmin,
+  storeTransitioning,
+  onStoreChange,
+}: {
+  hqStore: UseHQStoreReturn;
+  isNetworkAdmin: boolean;
+  storeTransitioning: boolean;
+  onStoreChange: (id: string) => void;
+}) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  if (!hqStore.activeStore) {
+    return (
+      <div className="flex items-center gap-2 text-yellow-400 text-sm">
+        <span>⚠</span>
+        <span>No authorized store access</span>
+      </div>
+    );
+  }
+
+  const roleLabel = isNetworkAdmin
+    ? '· Network Admin'
+    : hqStore.activeStore.role === 'store_manager'
+      ? '· Manager'
+      : '· Staff';
+
+  if (!hqStore.canSwitchStores) {
+    return (
+      <span className="inline-flex items-center gap-2 bg-accent/15 border border-accent/40 text-accent rounded-full px-3 py-1 text-sm">
+        <span className="w-2 h-2 rounded-full bg-accent inline-block" />
+        <span className="font-semibold">{hqStore.activeStore.name}</span>
+        <span className="text-accent/70 font-normal">{roleLabel}</span>
+      </span>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setDropdownOpen(v => !v)}
+        disabled={storeTransitioning}
+        className="inline-flex items-center gap-2 bg-accent/15 border border-accent/40 text-accent rounded-full px-3 py-1 text-sm hover:bg-accent/25 transition-colors disabled:opacity-50"
+      >
+        <span className="w-2 h-2 rounded-full bg-accent inline-block" />
+        <span className="font-semibold">{hqStore.activeStore.name}</span>
+        <span className="text-accent/70 font-normal">{roleLabel}</span>
+        <span className="text-accent/50 text-xs">▼</span>
+      </button>
+      {dropdownOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-surface border border-border-token rounded-xl shadow-xl z-50 min-w-[220px] overflow-hidden">
+          {hqStore.availableStores.map(store => (
+            <button
+              key={store.id}
+              onClick={() => {
+                setDropdownOpen(false);
+                if (store.id !== hqStore.activeStoreId) onStoreChange(store.id);
+              }}
+              className={`w-full text-left px-4 py-3 text-sm hover:bg-elevated transition-colors flex items-center justify-between ${
+                store.id === hqStore.activeStoreId ? 'text-accent font-semibold' : 'text-primary'
+              }`}
+            >
+              <span>{store.name}</span>
+              {store.id === hqStore.activeStoreId && <span className="text-accent text-xs">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HQPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -2098,23 +2171,28 @@ export default function HQPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="border-b border-border-token bg-surface/50">
+      {/* Header — sticky so store pill stays visible on scroll */}
+      <div className="sticky top-0 z-40 border-b border-border-token bg-surface/80 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex flex-col gap-1.5">
               <h1 className="text-xl sm:text-2xl font-bold text-accent">
                 HQ Command Center
               </h1>
-              <p className="text-secondary text-sm">
-                {staffContext?.isNetworkAdmin
-                  ? 'Network Administration'
-                  : staffContext?.stores.length === 1
-                    ? `${staffContext.stores[0].name} · ${staffContext.stores[0].role === 'store_manager' ? 'Manager' : 'Staff'}`
-                    : staffContext && staffContext.stores.length > 1
-                      ? `${staffContext.stores.length} stores`
-                      : 'Staff Only'}
-              </p>
+              <StoreIndicator
+                hqStore={hqStore}
+                isNetworkAdmin={staffContext?.isNetworkAdmin ?? false}
+                storeTransitioning={storeTransitioning}
+                onStoreChange={(id) => {
+                  const storeName = hqStore.availableStores.find(s => s.id === id)?.name ?? id;
+                  setStoreTransitioning(true);
+                  setPlayerDetails(null);
+                  setPlayersDataset({ storeId: null, status: 'idle' });
+                  hqStore.setActiveStoreId(id);
+                  showToast(`Switched to ${storeName}`, 'success');
+                  setStoreTransitioning(false);
+                }}
+              />
             </div>
             <a href="/dashboard" className="text-secondary hover:text-primary text-sm">
               ← Back to Dashboard
