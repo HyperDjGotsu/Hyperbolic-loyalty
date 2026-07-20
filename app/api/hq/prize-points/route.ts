@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
-import { logPointTransaction, getPlayerBalance } from '@/lib/points';
+import { getPlayerBalance } from '@/lib/points';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Verify player exists
+    // Verify player exists before calling the RPC.
     const { data: player, error: playerErr } = await supabaseAdmin
       .from('players')
       .select('id')
@@ -53,28 +53,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Negative corrections must not result in a negative balance
-    if (amount < 0) {
-      const currentBalance = await getPlayerBalance(playerId, storeId ?? undefined);
-      if (currentBalance + amount < 0) {
-        return NextResponse.json(
-          { error: `Cannot deduct ${Math.abs(amount)} pts — current balance is ${currentBalance}` },
-          { status: 400 }
-        );
-      }
-    }
-
-    await logPointTransaction({
-      playerId,
-      storeId,
-      amount,
-      type: 'admin_adjust',
-      source: 'hq_manual',
-      note: reason.trim(),
+    // Atomic adjustment: advisory lock + balance check + insert in one SQL function.
+    // Prevents concurrent adjustments from both passing the negative-balance guard.
+    const { data: result, error: rpcErr } = await (supabaseAdmin as any).rpc('adjust_prize_points', {
+      p_player_id: playerId,
+      p_store_id:  storeId,
+      p_amount:    amount,
+      p_reason:    reason.trim(),
     });
 
-    const newBalance = await getPlayerBalance(playerId, storeId ?? undefined);
-    return NextResponse.json({ success: true, newBalance });
+    if (rpcErr) {
+      console.error('adjust_prize_points RPC error:', rpcErr);
+      return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    }
+
+    if (result?.error) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, newBalance: result.new_balance });
   } catch (err) {
     console.error('prize-points POST error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
