@@ -225,6 +225,7 @@ interface Banner {
   bg_size: string;
   bg_position: string;
   text_color: string;
+  store_id: string | null;
 }
 
 interface PrizeWallItem {
@@ -848,6 +849,8 @@ export default function HQPage() {
   const [playersDataset, setPlayersDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
   const [prizeWallDataset, setPrizeWallDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
   const [redemptionsDataset, setRedemptionsDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
+  const [bannersDataset, setBannersDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
+  const [eventsDataset, setEventsDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
 
   // Check staff access
   useEffect(() => {
@@ -1020,13 +1023,21 @@ export default function HQPage() {
   };
 
   const loadHQEvents = async () => {
+    const requestedStoreId = hqStore.activeStoreId;
     setEventsLoading(true);
+    setEventsDataset({ storeId: requestedStoreId, status: 'loading' });
     try {
       // Load upcoming + active events for the next 48 hours
+      // Pass store_id to scope events to the active store when one is selected
+      const eventsUrl = requestedStoreId
+        ? `/api/events?status=upcoming&limit=20&store_id=${encodeURIComponent(requestedStoreId)}`
+        : '/api/events?status=upcoming&limit=20';
       const [eventsRes, activeRes] = await Promise.all([
-        fetch('/api/events?status=upcoming&limit=20'),
+        fetch(eventsUrl),
         fetch('/api/events/active'),
       ]);
+      // Stale-response guard: discard if store switched while awaiting
+      if (requestedStoreId !== activeStoreRef.current) return;
       const eventsData = await eventsRes.json();
       const activeData = await activeRes.json();
 
@@ -1062,7 +1073,9 @@ export default function HQPage() {
       }
 
       setHqEvents(events);
+      setEventsDataset({ storeId: requestedStoreId, status: 'ready' });
     } catch (error) {
+      setEventsDataset({ storeId: requestedStoreId, status: 'error' });
       console.error('Failed to load events:', error);
     } finally {
       setEventsLoading(false);
@@ -1406,12 +1419,22 @@ export default function HQPage() {
 
   // Load banners
   const loadBanners = async () => {
+    if (!hqStore.activeStoreId && !staffContext?.isNetworkAdmin) return;
+    const requestedStoreId = hqStore.activeStoreId;
     setBannerLoading(true);
+    setBannersDataset({ storeId: requestedStoreId, status: 'loading' });
     try {
-      const res = await fetch('/api/hq/banners');
+      const url = requestedStoreId
+        ? `/api/hq/banners?storeId=${encodeURIComponent(requestedStoreId)}`
+        : '/api/hq/banners';
+      const res = await fetch(url);
+      // Stale-response guard: discard if store switched while awaiting
+      if (requestedStoreId !== activeStoreRef.current) return;
       const data = await res.json();
       setBanners(data.banners || []);
-    } catch (error) {
+      setBannersDataset({ storeId: requestedStoreId, status: 'ready' });
+    } catch {
+      setBannersDataset({ storeId: requestedStoreId, status: 'error' });
       showToast('Failed to load banners', 'error');
     } finally {
       setBannerLoading(false);
@@ -3135,6 +3158,7 @@ export default function HQPage() {
                   bg_size: 'cover',
                   bg_position: 'center',
                   text_color: '#ffffff',
+                  store_id: staffContext?.isNetworkAdmin ? null : (hqStore.activeStoreId ?? null),
                 })}
                 className="px-4 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
               >

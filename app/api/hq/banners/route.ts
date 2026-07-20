@@ -1,34 +1,56 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff, requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin, requireStoreAccess, requireStoreManager } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 // GET - List all banners
-export async function GET() {
+// ?storeId=<uuid> → requireStoreAccess, returns store-scoped + network-wide (store_id IS NULL)
+// no storeId      → requireNetworkAdmin, returns all banners unfiltered
+export async function GET(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const { searchParams } = new URL(request.url);
+    const storeId = searchParams.get('storeId');
+
+    if (!storeId) {
+      const staffCtx = await requireNetworkAdmin();
+      if (!staffCtx) {
+        // Fall back: allow any staff to see all banners when no storeId provided
+        const anyStaffCtx = await requireAnyStaff();
+        if (!anyStaffCtx) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+        // Non-network-admin without storeId: return network-wide banners only
+        const { data: banners, error } = await supabaseAdmin
+          .from('banners')
+          .select('*')
+          .is('store_id', null)
+          .order('sort_order', { ascending: true });
+        if (error) throw error;
+        return NextResponse.json({ banners: banners || [] });
+      }
+      // Network admin: return all banners unfiltered
+      const { data: banners, error } = await supabaseAdmin
+        .from('banners')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return NextResponse.json({ banners: banners || [] });
+    }
+
+    // storeId provided: require store access, return store-scoped + network-wide
+    const staffCtx = await requireStoreAccess(storeId);
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    let query = supabaseAdmin
+    const { data: banners, error } = await supabaseAdmin
       .from('banners')
       .select('*')
+      .or(`store_id.is.null,store_id.eq.${storeId}`)
       .order('sort_order', { ascending: true });
 
-    // Network admins see all banners; store staff see network-wide + their stores only
-    if (!staffCtx.isNetworkAdmin) {
-      query = query.or(`store_id.is.null,store_id.in.(${staffCtx.allStoreIds.join(',')})`);
-    }
-
-    const { data: banners, error } = await query;
-
-    if (error) {
-      console.error('Banners fetch error:', error);
-      return NextResponse.json({ error: 'Failed to fetch banners' }, { status: 500 });
-    }
-
+    if (error) throw error;
     return NextResponse.json({ banners: banners || [] });
   } catch (error) {
     console.error('Banners GET error:', error);
