@@ -2352,6 +2352,7 @@ export default function HQPage() {
                   searchAbortRef.current?.abort();
                   const storeName = hqStore.availableStores.find(s => s.id === id)?.name ?? id;
                   setStoreTransitioning(true);
+                  // Clear all store-scoped data — no object from the previous store survives
                   setPlayerDetails(null);
                   setPlayersDataset({ storeId: null, status: 'idle' });
                   setPrizeItems([]);
@@ -2359,6 +2360,18 @@ export default function HQPage() {
                   setPrizeWallDataset({ storeId: null, status: 'idle' });
                   setBannersDataset({ storeId: null, status: 'idle' });
                   setEventsDataset({ storeId: null, status: 'idle' });
+                  // Close any open editors / detail panels
+                  setEditingBanner(null);
+                  setEditingEvent(false);
+                  setPrizeFormOpen(false);
+                  setPrizeDeleteConfirm(null);
+                  setAssignPassOpen(false);
+                  // Clear player-specific inputs
+                  setSelectedGame('');
+                  setSelectedTiles([]);
+                  setPpAmount('');
+                  setPpReason('');
+                  setPpBalance(null);
                   hqStore.setActiveStoreId(id);
                   showToast(`Switched to ${storeName}`, 'success');
                   setStoreTransitioning(false);
