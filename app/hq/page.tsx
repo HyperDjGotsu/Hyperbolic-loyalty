@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { useHQStore } from '@/lib/hooks/useHQStore';
+import type { UseHQStoreReturn } from '@/lib/hooks/useHQStore';
 
 // ── Icon Picker ────────────────────────────────────────────────────────────────
 
@@ -336,6 +338,12 @@ interface HQShopItem {
   active: boolean;
   created_at: string;
 }
+
+type StoreDatasetState = {
+  storeId: string | null;
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  error?: string;
+};
 
 function RedemptionsPanel() {
   const [code, setCode] = useState('');
@@ -709,6 +717,16 @@ export default function HQPage() {
   const [standingsSearching, setStandingsSearching] = useState(false);
   const [savingQualifiers, setSavingQualifiers] = useState(false);
   const [qualifyCount, setQualifyCount] = useState(5);
+
+  // Store context hook — initialized from staffContext once auth resolves
+  const hqStore = useHQStore(staffContext);
+  const activeStoreRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeStoreRef.current = hqStore.activeStoreId;
+  }, [hqStore.activeStoreId]);
+
+  const [storeTransitioning, setStoreTransitioning] = useState(false);
+  const [playersDataset, setPlayersDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
 
   // Check staff access
   useEffect(() => {
@@ -2046,7 +2064,7 @@ export default function HQPage() {
     return options;
   };
 
-  if (loading || isStaff === null) {
+  if (loading || isStaff === null || !hqStore.isInitialized) {
     return (
       <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="text-accent text-xl">Verifying access...</div>
