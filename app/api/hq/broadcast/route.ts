@@ -101,7 +101,7 @@ export async function GET(request: Request) {
     const ctx = await requireStoreAccess(storeId);
     if (!ctx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabaseAdmin
       .from('broadcasts')
       .select('id, store_id, scope, title, message, player_count, created_at')
       .or(`store_id.eq.${storeId},scope.eq.network`)
