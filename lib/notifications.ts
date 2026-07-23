@@ -33,7 +33,8 @@ export async function createNotification(
   title: string,
   message: string,
   data: Record<string, string | null> | null,
-  category: NotificationCategory
+  category: NotificationCategory,
+  storeId?: string
 ): Promise<void> {
   try {
     const prefs = await getPrefs(playerId);
@@ -46,26 +47,30 @@ export async function createNotification(
       message,
       data: data as any,
       is_read: false,
+      store_id: storeId ?? null,
     });
   } catch (err) {
     console.error('createNotification error:', err);
   }
 }
 
-// Notify all players who have the given category enabled
-export async function notifyAllPlayers(
+// Send a notification to all players at a specific store (filtered by home_store_id).
+// Returns the number of players actually notified (after preference filtering).
+export async function notifyStorePlayers(
+  storeId: string,
   type: string,
   title: string,
   message: string,
   data: Record<string, string | null> | null,
   category: NotificationCategory
-): Promise<void> {
+): Promise<number> {
   try {
     const { data: players } = await (supabaseAdmin as any)
       .from('players')
-      .select('id, notification_preferences');
+      .select('id, notification_preferences')
+      .eq('home_store_id', storeId);
 
-    if (!players?.length) return;
+    if (!players?.length) return 0;
 
     const eligible = (players as { id: string; notification_preferences: Partial<NotificationPrefs> | null }[])
       .filter((p) => {
@@ -73,10 +78,11 @@ export async function notifyAllPlayers(
         return prefs[category];
       });
 
-    if (!eligible.length) return;
+    if (!eligible.length) return 0;
 
     const rows = eligible.map((p) => ({
       player_id: p.id,
+      store_id: storeId,
       type,
       title,
       message,
@@ -84,11 +90,58 @@ export async function notifyAllPlayers(
       is_read: false,
     }));
 
-    // Insert in batches of 100 to avoid request size limits
     for (let i = 0; i < rows.length; i += 100) {
       await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100) as any);
     }
+
+    return eligible.length;
+  } catch (err) {
+    console.error('notifyStorePlayers error:', err);
+    return 0;
+  }
+}
+
+// Send a notification to all players across the entire network.
+// Returns the number of players actually notified (after preference filtering).
+export async function notifyAllPlayers(
+  type: string,
+  title: string,
+  message: string,
+  data: Record<string, string | null> | null,
+  category: NotificationCategory
+): Promise<number> {
+  try {
+    const { data: players } = await (supabaseAdmin as any)
+      .from('players')
+      .select('id, notification_preferences');
+
+    if (!players?.length) return 0;
+
+    const eligible = (players as { id: string; notification_preferences: Partial<NotificationPrefs> | null }[])
+      .filter((p) => {
+        const prefs = { ...DEFAULT_PREFS, ...(p.notification_preferences ?? {}) };
+        return prefs[category];
+      });
+
+    if (!eligible.length) return 0;
+
+    const rows = eligible.map((p) => ({
+      player_id: p.id,
+      store_id: null,
+      type,
+      title,
+      message,
+      data: data as any,
+      is_read: false,
+    }));
+
+    for (let i = 0; i < rows.length; i += 100) {
+      await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100) as any);
+    }
+
+    return eligible.length;
   } catch (err) {
     console.error('notifyAllPlayers error:', err);
+    return 0;
   }
 }
