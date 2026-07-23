@@ -852,6 +852,23 @@ export default function HQPage() {
   const [bannersDataset, setBannersDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
   const [eventsDataset, setEventsDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
 
+  // Broadcasts tab state
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastScope, setBroadcastScope] = useState<'store' | 'network'>('store');
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  const [broadcastHistory, setBroadcastHistory] = useState<Array<{
+    id: string;
+    store_id: string | null;
+    scope: 'store' | 'network';
+    title: string;
+    message: string;
+    player_count: number;
+    created_at: string;
+  }>>([]);
+  const [broadcastsDataset, setBroadcastsDataset] = useState<StoreDatasetState>({ storeId: null, status: 'idle' });
+  const [broadcastHistoryLoading, setBroadcastHistoryLoading] = useState(false);
+
   // Check staff access
   useEffect(() => {
     if (!isLoaded) return;
@@ -875,6 +892,9 @@ export default function HQPage() {
     }
     if (activeTab === 'circuit') {
       loadCircuitData();
+    }
+    if (activeTab === 'broadcasts') {
+      loadBroadcastHistory();
     }
   }, [activeTab]);
 
@@ -1504,6 +1524,9 @@ export default function HQPage() {
       loadInvitations();
       loadAllStores();
     }
+    if (activeTab === 'broadcasts') {
+      loadBroadcastHistory();
+    }
   }, [activeTab]);
 
   // Store-context effect — fires when the active store changes, reloads only store-scoped tabs
@@ -1514,6 +1537,7 @@ export default function HQPage() {
     else if (activeTab === 'banners') loadBanners();
     else if (activeTab === 'prize-wall') loadPrizeItems();
     else if (activeTab === 'settings') { loadStoreConfig(); loadInvitations(); loadAllStores(); }
+    else if (activeTab === 'broadcasts') loadBroadcastHistory();
   }, [hqStore.activeStoreId]);
 
   useEffect(() => {
@@ -1631,6 +1655,65 @@ export default function HQPage() {
       showToast(err.message || 'Failed', 'error');
     } finally {
       setDangerLoading(false);
+    }
+  };
+
+  const loadBroadcastHistory = async () => {
+    if (!hqStore.activeStoreId && !staffContext?.isNetworkAdmin) return;
+    const requestedStoreId = hqStore.activeStoreId;
+    setBroadcastHistoryLoading(true);
+    setBroadcastsDataset({ storeId: requestedStoreId, status: 'loading' });
+    try {
+      const url = requestedStoreId
+        ? `/api/hq/broadcast?storeId=${encodeURIComponent(requestedStoreId)}`
+        : '/api/hq/broadcast';
+      const res = await fetch(url);
+      if (requestedStoreId !== activeStoreRef.current) return;
+      const data = await res.json();
+      setBroadcastHistory(data.broadcasts || []);
+      setBroadcastsDataset({ storeId: requestedStoreId, status: 'ready' });
+    } catch {
+      setBroadcastsDataset({ storeId: requestedStoreId, status: 'error' });
+      showToast('Failed to load broadcast history', 'error');
+    } finally {
+      setBroadcastHistoryLoading(false);
+    }
+  };
+
+  const sendBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastMessage.trim()) {
+      showToast('Title and message are required', 'error');
+      return;
+    }
+    if (broadcastScope === 'store' && !hqStore.activeStoreId) {
+      showToast('No active store selected', 'error');
+      return;
+    }
+    setBroadcastSending(true);
+    try {
+      const res = await fetch('/api/hq/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: broadcastTitle.trim(),
+          message: broadcastMessage.trim(),
+          scope: broadcastScope,
+          storeId: broadcastScope === 'store' ? hqStore.activeStoreId : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showToast(data.error, 'error');
+      } else {
+        setBroadcastTitle('');
+        setBroadcastMessage('');
+        showToast(`Sent to ${data.playerCount} player${data.playerCount !== 1 ? 's' : ''}`, 'success');
+        loadBroadcastHistory();
+      }
+    } catch {
+      showToast('Failed to send broadcast', 'error');
+    } finally {
+      setBroadcastSending(false);
     }
   };
 
@@ -2370,6 +2453,8 @@ export default function HQPage() {
                   setPrizeWallDataset({ storeId: null, status: 'idle' });
                   setBannersDataset({ storeId: null, status: 'idle' });
                   setEventsDataset({ storeId: null, status: 'idle' });
+                  setBroadcastHistory([]);
+                  setBroadcastsDataset({ storeId: null, status: 'idle' });
                   // Close any open editors / detail panels
                   setEditingBanner(null);
                   setEditingEvent(false);
@@ -2414,6 +2499,7 @@ export default function HQPage() {
               <option value="prize-wall">🏆 Prize Wall</option>
               <option value="redemptions">🎟️ Redemptions</option>
               <option value="circuit">🏆 Circuit</option>
+              <option value="broadcasts">📢 Broadcasts</option>
               <option value="settings">⚙️ Settings</option>
             </select>
           </div>
@@ -2429,6 +2515,7 @@ export default function HQPage() {
               { id: 'prize-wall', label: '🏆 Prize Wall' },
               { id: 'redemptions', label: '🎟️ Redemptions' },
               { id: 'circuit', label: '🏆 Circuit' },
+              { id: 'broadcasts', label: '📢 Broadcasts' },
               { id: 'settings', label: '⚙️ Settings' },
             ].map(tab => (
               <button
@@ -4845,6 +4932,110 @@ export default function HQPage() {
             activeStoreId={hqStore.activeStoreId}
             onDatasetChange={setRedemptionsDataset}
           />
+        )}
+
+        {activeTab === 'broadcasts' && (
+          <div className="space-y-6 max-w-xl">
+            {/* Compose */}
+            <div className="bg-surface rounded-xl border border-border-token p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-primary">Send Message to Players</h2>
+
+              {staffContext?.isNetworkAdmin && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setBroadcastScope('store')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                      broadcastScope === 'store'
+                        ? 'bg-accent/10 text-accent border-accent/30'
+                        : 'bg-transparent text-secondary border-border-token hover:border-accent'
+                    }`}
+                  >
+                    My Store
+                  </button>
+                  <button
+                    onClick={() => setBroadcastScope('network')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                      broadcastScope === 'network'
+                        ? 'bg-accent/10 text-accent border-accent/30'
+                        : 'bg-transparent text-secondary border-border-token hover:border-accent'
+                    }`}
+                  >
+                    All Network
+                  </button>
+                </div>
+              )}
+
+              <input
+                type="text"
+                value={broadcastTitle}
+                onChange={e => setBroadcastTitle(e.target.value)}
+                placeholder="Title (e.g. Weekend Sale, Event Reminder)"
+                maxLength={80}
+                className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+              />
+
+              <textarea
+                value={broadcastMessage}
+                onChange={e => setBroadcastMessage(e.target.value)}
+                placeholder="Message body…"
+                rows={3}
+                maxLength={500}
+                className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent resize-none"
+              />
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-secondary">
+                  {broadcastScope === 'network'
+                    ? 'All network players will be notified'
+                    : hqStore.activeStoreId
+                    ? 'Notifies players with this store as home store'
+                    : 'No store selected'}
+                </span>
+                <button
+                  onClick={sendBroadcast}
+                  disabled={
+                    broadcastSending ||
+                    !broadcastTitle.trim() ||
+                    !broadcastMessage.trim() ||
+                    (broadcastScope === 'store' && !hqStore.activeStoreId)
+                  }
+                  className="px-4 py-2 bg-accent text-accent-fg text-sm font-semibold rounded-lg hover:opacity-90 disabled:opacity-40 transition-opacity"
+                >
+                  {broadcastSending ? 'Sending…' : 'Send'}
+                </button>
+              </div>
+            </div>
+
+            {/* History */}
+            <div className="bg-surface rounded-xl border border-border-token p-5 space-y-3">
+              <h2 className="text-sm font-semibold text-primary">Sent History</h2>
+
+              {broadcastHistoryLoading && (
+                <p className="text-sm text-secondary">Loading…</p>
+              )}
+
+              {!broadcastHistoryLoading && broadcastHistory.length === 0 && (
+                <p className="text-sm text-secondary">No broadcasts sent yet.</p>
+              )}
+
+              {broadcastHistory.map(b => (
+                <div key={b.id} className="border border-border-token rounded-lg p-3 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-primary truncate">{b.title}</span>
+                    <span className="shrink-0 text-xs text-secondary">
+                      {b.scope === 'network' ? 'All Network' : 'Store'} · {b.player_count} player{b.player_count !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <p className="text-xs text-secondary line-clamp-2">{b.message}</p>
+                  <p className="text-xs text-tertiary">
+                    {new Date(b.created_at).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {activeTab === 'settings' && (
