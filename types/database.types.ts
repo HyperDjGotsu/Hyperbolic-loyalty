@@ -268,6 +268,50 @@ export type Database = {
           },
         ]
       }
+      broadcasts: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          notification_type: string
+          player_count: number
+          scope: string
+          sent_by_clerk_id: string
+          store_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          notification_type?: string
+          player_count?: number
+          scope: string
+          sent_by_clerk_id: string
+          store_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          notification_type?: string
+          player_count?: number
+          scope?: string
+          sent_by_clerk_id?: string
+          store_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcasts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_of_the_day_history: {
         Row: {
           card_data: Json
@@ -981,6 +1025,7 @@ export type Database = {
           is_read: boolean | null
           message: string
           player_id: string
+          store_id: string | null
           title: string
           type: string
         }
@@ -991,6 +1036,7 @@ export type Database = {
           is_read?: boolean | null
           message: string
           player_id: string
+          store_id?: string | null
           title: string
           type: string
         }
@@ -1001,6 +1047,7 @@ export type Database = {
           is_read?: boolean | null
           message?: string
           player_id?: string
+          store_id?: string | null
           title?: string
           type?: string
         }
@@ -1010,6 +1057,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -1542,7 +1596,7 @@ export type Database = {
           player_id: string
           reference_id: string | null
           source: string
-          store_id: string
+          store_id: string | null
           type: string
         }
         Insert: {
@@ -1553,7 +1607,7 @@ export type Database = {
           player_id: string
           reference_id?: string | null
           source: string
-          store_id: string
+          store_id?: string | null
           type: string
         }
         Update: {
@@ -1564,7 +1618,7 @@ export type Database = {
           player_id?: string
           reference_id?: string | null
           source?: string
-          store_id?: string
+          store_id?: string | null
           type?: string
         }
         Relationships: [
@@ -2284,6 +2338,15 @@ export type Database = {
           p_clerk_user_id: string
           p_token_hash: string
           p_verified_emails: string[]
+        }
+        Returns: Json
+      }
+      adjust_prize_points: {
+        Args: {
+          p_amount: number
+          p_player_id: string
+          p_reason: string
+          p_store_id: string
         }
         Returns: Json
       }

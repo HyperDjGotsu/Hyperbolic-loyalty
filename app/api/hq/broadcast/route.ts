@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       );
     }
 
-    await (supabaseAdmin as any).from('broadcasts').insert({
+    await supabaseAdmin.from('broadcasts').insert({
       store_id: scope === 'store' ? storeId : null,
       scope,
       title: title.trim(),
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
       const ctx = await requireNetworkAdmin();
       if (!ctx) return NextResponse.json({ error: 'storeId required' }, { status: 400 });
 
-      const { data, error } = await (supabaseAdmin as any)
+      const { data, error } = await supabaseAdmin
         .from('broadcasts')
         .select('id, store_id, scope, title, message, player_count, created_at')
         .order('created_at', { ascending: false })
