@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     const { data, error } = await supabaseAdmin
-      .from('store_config' as any)
+      .from('store_config')
       .select('id, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, updated_at')
       .eq('id', 1)
       .maybeSingle();
@@ -63,7 +63,7 @@ export async function PUT(request: Request) {
     };
 
     const { data, error } = await supabaseAdmin
-      .from('store_config' as any)
+      .from('store_config')
       .update(updates)
       .eq('id', 1)
       .select('id, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, updated_at')
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       const code = generateStaffCode();
 
       const { error } = await supabaseAdmin
-        .from('store_config' as any)
+        .from('store_config')
         .update({ staff_invite_code: code, updated_at: new Date().toISOString() })
         .eq('id', 1);
 

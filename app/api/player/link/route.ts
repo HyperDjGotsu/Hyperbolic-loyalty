@@ -4,16 +4,15 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-// Generate random network player ID — prefix is network-branded, chars exclude O/0/I/1
-const PLAYER_ID_PREFIX = 'GGC';
+// Generate random network player ID — prefix comes from the player's home store, chars exclude O/0/I/1
 const PLAYER_ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-function generatePlayerId(): string {
+function generatePlayerId(prefix: string): string {
   let suffix = '';
   for (let i = 0; i < 8; i++) {
     suffix += PLAYER_ID_CHARS.charAt(Math.floor(Math.random() * PLAYER_ID_CHARS.length));
   }
-  return `${PLAYER_ID_PREFIX}-${suffix}`;
+  return `${prefix}-${suffix}`;
 }
 
 // Generate referral code from player ID
@@ -109,8 +108,19 @@ export async function POST(request: Request) {
         .filter(Boolean)
         .join(' ') || null;
 
+      // Resolve prefix from the player's home store (falls back to 'HYP' if not found)
+      let idPrefix = 'HYP';
+      if (homeStoreId) {
+        const { data: storeRow } = await supabaseAdmin
+          .from('stores')
+          .select('player_id_prefix')
+          .eq('id', homeStoreId)
+          .maybeSingle();
+        if (storeRow?.player_id_prefix) idPrefix = storeRow.player_id_prefix;
+      }
+
       // Generate unique player_id
-      let newPlayerId = generatePlayerId();
+      let newPlayerId = generatePlayerId(idPrefix);
       let attempts = 0;
 
       while (attempts < 10) {
@@ -121,7 +131,7 @@ export async function POST(request: Request) {
           .single();
 
         if (!existing) break;
-        newPlayerId = generatePlayerId();
+        newPlayerId = generatePlayerId(idPrefix);
         attempts++;
       }
 
@@ -209,15 +219,14 @@ export async function POST(request: Request) {
 
       if (staffInviteCode) {
         const { data: configRow } = await supabaseAdmin
-          .from('store_config' as any)
+          .from('store_config')
           .select('staff_invite_code')
           .eq('id', 1)
           .maybeSingle();
 
-        const cfg = configRow as any;
         if (
-          cfg?.staff_invite_code &&
-          cfg.staff_invite_code.toLowerCase() === staffInviteCode.toLowerCase()
+          configRow?.staff_invite_code &&
+          configRow.staff_invite_code.toLowerCase() === staffInviteCode.toLowerCase()
         ) {
           await supabaseAdmin
             .from('players')
