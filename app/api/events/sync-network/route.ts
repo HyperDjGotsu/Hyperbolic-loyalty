@@ -147,13 +147,16 @@ export async function POST(request: Request) {
         .from('events').select('id').eq('gcal_uid', event.gcal_uid).single();
 
       if (existing) {
-        await supabaseAdmin.from('events').update({
+        await (supabaseAdmin as any).from('events').update({
           name: event.name, game_id: event.game_id, description: event.description,
           scheduled_at: event.scheduled_at, ends_at: event.ends_at, store_id: null,
         }).eq('id', existing.id);
       } else {
-        await supabaseAdmin.from('events').insert({
-          ...event, store_id: null, entry_fee: null, max_players: null,
+        await (supabaseAdmin as any).from('events').insert({
+          gcal_uid: event.gcal_uid, name: event.name, game_id: event.game_id,
+          description: event.description, scheduled_at: event.scheduled_at,
+          ends_at: event.ends_at, status: event.status,
+          store_id: null, entry_fee: null, max_players: null,
           has_stream: false, attendance_xp: 50, win_xp: 15,
           current_players: 0, prizing: null,
         });

@@ -1562,9 +1562,9 @@ export default function HQPage() {
 
   // Calendar URL functions
   const loadCalendarUrl = async () => {
-    if (!activeStoreId) return;
+    if (!hqStore.activeStoreId) return;
     try {
-      const res = await fetch(`/api/hq/store-calendar?storeId=${encodeURIComponent(activeStoreId)}`);
+      const res = await fetch(`/api/hq/store-calendar?storeId=${encodeURIComponent(hqStore.activeStoreId!)}`);
       if (res.ok) {
         const data = await res.json();
         setCalendarUrl(data.ical_url || '');
@@ -1573,10 +1573,10 @@ export default function HQPage() {
   };
 
   const saveCalendarUrl = async () => {
-    if (!activeStoreId) return;
+    if (!hqStore.activeStoreId) return;
     setCalendarUrlSaving(true);
     try {
-      const res = await fetch(`/api/hq/store-calendar?storeId=${encodeURIComponent(activeStoreId)}`, {
+      const res = await fetch(`/api/hq/store-calendar?storeId=${encodeURIComponent(hqStore.activeStoreId!)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ical_url: calendarUrl }),
@@ -1588,14 +1588,14 @@ export default function HQPage() {
   };
 
   const syncCalendar = async () => {
-    if (!activeStoreId) return;
+    if (!hqStore.activeStoreId) return;
     setCalendarSyncing(true);
     setCalendarSyncMsg(null);
     try {
       const res = await fetch('/api/events/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storeId: activeStoreId }),
+        body: JSON.stringify({ storeId: hqStore.activeStoreId }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -4483,7 +4483,7 @@ export default function HQPage() {
             </div>
 
             {/* Network Calendar Sync — network admins only */}
-            {hqStore.isNetworkAdmin && (
+            {staffContext?.isNetworkAdmin && (
               <div className="bg-surface rounded-xl p-4 border border-yellow-500/30 space-y-3">
                 <div>
                   <div className="font-semibold text-primary">🌐 Network Calendar</div>
@@ -5447,7 +5447,7 @@ export default function HQPage() {
             </div>
 
             {/* Network Calendar URL — network admins only */}
-            {hqStore.isNetworkAdmin && (
+            {staffContext?.isNetworkAdmin && (
               <div className="bg-surface rounded-xl p-5 border border-yellow-500/30">
                 <h3 className="font-semibold text-primary mb-1">🌐 Network Calendar URL</h3>
                 <p className="text-xs text-secondary mb-3">Secret iCal URL for the company-wide calendar (card shows, circuit championships, regional events). Visible at all stores.</p>
