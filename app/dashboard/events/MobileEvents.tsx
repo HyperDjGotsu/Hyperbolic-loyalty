@@ -405,7 +405,12 @@ function EventsPageContent() {
     setSyncMessage(null);
     
     try {
-      const res = await fetch('/api/events/sync', { method: 'POST' });
+      const storeIdForSync = localStorage.getItem('ggc_selected_store_id') || '';
+      const res = await fetch('/api/events/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storeId: storeIdForSync }),
+      });
       const data = await res.json();
       
       if (res.ok) {
