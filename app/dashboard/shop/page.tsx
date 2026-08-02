@@ -16,7 +16,11 @@ interface PrizeWallItem {
   quantity: number | null;
   unlock_threshold: number | null;
   is_unlocked: boolean;
+  is_network_prize: boolean;
+  store_id: string | null;
 }
+
+const TRADE_EMPORIUM_ID = '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d';
 
 interface PassStatus {
   tier: PlayerTier;
@@ -161,6 +165,7 @@ export default function PrizeWallPage() {
                 items={floor}
                 passStatus={passStatus}
                 redeeming={redeeming}
+                selectedStoreId={selectedStoreId}
                 onRedeem={item => {
                   setRedeemError(null);
                   setSelectedItem(item);
@@ -178,6 +183,7 @@ export default function PrizeWallPage() {
                 items={unlocked}
                 passStatus={passStatus}
                 redeeming={redeeming}
+                selectedStoreId={selectedStoreId}
                 onRedeem={item => {
                   setRedeemError(null);
                   setSelectedItem(item);
@@ -293,11 +299,13 @@ function ItemGrid({
   passStatus,
   redeeming,
   onRedeem,
+  selectedStoreId,
 }: {
   items: PrizeWallItem[];
   passStatus: PassStatus | null;
   redeeming: boolean;
   onRedeem: (item: PrizeWallItem) => void;
+  selectedStoreId: string | null | undefined;
 }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -308,6 +316,7 @@ function ItemGrid({
           passStatus={passStatus}
           redeeming={redeeming}
           onRedeem={onRedeem}
+          selectedStoreId={selectedStoreId}
         />
       ))}
     </div>
@@ -319,12 +328,15 @@ function ItemCard({
   passStatus,
   redeeming,
   onRedeem,
+  selectedStoreId,
 }: {
   item: PrizeWallItem;
   passStatus: PassStatus | null;
   redeeming: boolean;
   onRedeem: (item: PrizeWallItem) => void;
+  selectedStoreId: string | null | undefined;
 }) {
+  const isGrailViewedElsewhere = item.is_network_prize && selectedStoreId !== TRADE_EMPORIUM_ID;
   const gateLocked = passStatus?.tier === 'free' && (passStatus.lifetimeXp ?? 0) < FREE_TIER_GATE;
   const insufficientPoints = passStatus !== null && passStatus.prizePoints < item.xp_cost;
   const disabledReason = !passStatus
@@ -340,13 +352,18 @@ function ItemCard({
 
   return (
     <div className="bg-surface rounded-xl overflow-hidden">
-      <div className="aspect-square bg-elevated">
+      <div className="aspect-square bg-elevated relative">
         {item.image_url ? (
           <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-tertiary text-xs">
             No image
           </div>
+        )}
+        {item.is_network_prize && (
+          <span className="absolute top-2 left-2 text-xs bg-yellow-500/90 text-black font-semibold px-1.5 py-0.5 rounded">
+            Grail
+          </span>
         )}
       </div>
       <div className="p-4">
@@ -366,15 +383,21 @@ function ItemCard({
         {item.quantity != null && (
           <div className="text-xs text-tertiary mt-1">{item.quantity} remaining</div>
         )}
-        <span className="block mt-3" title={disabledReason ?? undefined}>
-          <button
-            className="w-full py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-500 transition-colors disabled:bg-elevated disabled:text-tertiary disabled:cursor-not-allowed"
-            disabled={disabled}
-            onClick={() => onRedeem(item)}
-          >
-            Redeem
-          </button>
-        </span>
+        {isGrailViewedElsewhere ? (
+          <div className="mt-3 text-center py-2 px-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <p className="text-xs text-yellow-400 font-medium">Only redeemable at Trade Emporium</p>
+          </div>
+        ) : (
+          <span className="block mt-3" title={disabledReason ?? undefined}>
+            <button
+              className="w-full py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-500 transition-colors disabled:bg-elevated disabled:text-tertiary disabled:cursor-not-allowed"
+              disabled={disabled}
+              onClick={() => onRedeem(item)}
+            >
+              Redeem
+            </button>
+          </span>
+        )}
       </div>
     </div>
   );
