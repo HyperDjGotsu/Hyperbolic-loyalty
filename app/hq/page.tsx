@@ -393,11 +393,16 @@ function RedemptionsPanel({
     setActionResult(null);
     setShowVoidInput(false);
 
-    const found = recentList.find((r: any) => r.claim_code === normalized);
-    if (found) {
-      setLookup(found);
-    } else {
-      setLookupError('Code not found');
+    try {
+      const res = await fetch(`/api/hq/redemptions/${encodeURIComponent(normalized)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setLookupError(data.error || 'Code not found');
+      } else {
+        setLookup(data.redemption);
+      }
+    } catch {
+      setLookupError('Network error — try again');
     }
     setLooking(false);
   };

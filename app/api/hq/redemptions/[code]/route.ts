@@ -1,9 +1,44 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logPointTransaction } from '@/lib/points';
-import { requireStoreAccess } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
+
+export async function GET(
+  _request: Request,
+  { params }: { params: { code: string } }
+) {
+  try {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const { data: redemption, error } = await (supabaseAdmin as any)
+      .from('prize_wall_redemptions')
+      .select(`
+        id, claim_code, status, item_name, item_retail_value,
+        points_deducted, created_at, expires_at, claimed_at, voided_at, void_reason,
+        player:player_id (id, display_name, player_id),
+        store:store_id (id, name)
+      `)
+      .eq('claim_code', params.code.toUpperCase())
+      .single();
+
+    if (error || !redemption) {
+      return NextResponse.json({ error: 'Code not found' }, { status: 404 });
+    }
+
+    // Store staff can only see codes belonging to a store they have access to
+    if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(redemption.store?.id)) {
+      return NextResponse.json({ error: 'Code not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ redemption });
+  } catch (err) {
+    console.error('Redemption GET error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 
 export async function PATCH(
   request: Request,
