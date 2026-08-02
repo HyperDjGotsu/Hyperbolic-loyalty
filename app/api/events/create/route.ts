@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Staff only' }, { status: 403 });
-    }
-
     const body = await request.json();
     const {
       name,
@@ -25,12 +20,17 @@ export async function POST(request: Request) {
       store_id,
     } = body;
 
+    // Network events (null store_id) require network-admin — checked before anything else
     if (!store_id) {
-      return NextResponse.json({ error: 'store_id is required' }, { status: 400 });
-    }
-
-    if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(store_id)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      const ctx = await requireNetworkAdmin();
+      if (!ctx) return NextResponse.json({ error: 'Network admin required for network events' }, { status: 403 });
+    } else {
+      // Store events require access to that specific store
+      const staffCtx = await requireAnyStaff();
+      if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+      if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(store_id)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     if (!name || !scheduled_at) {
