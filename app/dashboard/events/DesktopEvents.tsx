@@ -506,6 +506,7 @@ function EventsPageContent() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [calendarScope, setCalendarScope] = useState<'store' | 'network'>('store');
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set(['all']));
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -571,7 +572,7 @@ function EventsPageContent() {
     setError(null);
     
     try {
-      const storeId = localStorage.getItem('ggc_selected_store_id');
+      const storeId = calendarScope === 'store' ? localStorage.getItem('ggc_selected_store_id') : null;
       const storeParam = storeId ? `&store_id=${storeId}` : '';
       const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}`);
       const data = await res.json();
@@ -591,7 +592,7 @@ function EventsPageContent() {
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [calendarScope]);
 
   // Sync from Google Calendar
   const handleSync = async () => {
@@ -1041,7 +1042,24 @@ function EventsPageContent() {
       <div className="border-b border-border-token bg-base/95 backdrop-blur-sm sticky top-0 z-10">
         <div className="px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-secondary text-sm">Tap to see details</p>
+            <div className="flex gap-1 bg-elevated rounded-lg p-1">
+              <button
+                onClick={() => setCalendarScope('store')}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  calendarScope === 'store' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
+                }`}
+              >
+                My Store
+              </button>
+              <button
+                onClick={() => setCalendarScope('network')}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  calendarScope === 'network' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
+                }`}
+              >
+                All Stores
+              </button>
+            </div>
             <button
               onClick={handleSync}
               disabled={syncing}

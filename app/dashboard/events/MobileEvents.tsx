@@ -341,6 +341,7 @@ function EventsPageContent() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [calendarScope, setCalendarScope] = useState<'store' | 'network'>('store');
   const [selectedGame, setSelectedGame] = useState('all');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -365,7 +366,7 @@ function EventsPageContent() {
     setError(null);
     
     try {
-      const storeId = localStorage.getItem('ggc_selected_store_id');
+      const storeId = calendarScope === 'store' ? localStorage.getItem('ggc_selected_store_id') : null;
       const storeParam = storeId ? `&store_id=${storeId}` : '';
       const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}`);
       const data = await res.json();
@@ -394,7 +395,7 @@ function EventsPageContent() {
 
   useEffect(() => {
     loadEvents();
-  }, [selectedGame]);
+  }, [selectedGame, calendarScope]);
 
   // Sync from Google Calendar
   const handleSync = async () => {
@@ -808,8 +809,28 @@ function EventsPageContent() {
               {syncMessage}
             </div>
           )}
+
+          {/* Store / Network tabs */}
+          <div className="flex gap-1 mt-3 bg-elevated rounded-lg p-1">
+            <button
+              onClick={() => setCalendarScope('store')}
+              className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                calendarScope === 'store' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
+              }`}
+            >
+              My Store
+            </button>
+            <button
+              onClick={() => setCalendarScope('network')}
+              className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                calendarScope === 'network' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
+              }`}
+            >
+              All Stores
+            </button>
+          </div>
         </div>
-        
+
         {/* Game Filter */}
         <div className="px-4 pb-3 flex gap-2 overflow-x-auto">
           {GAME_FILTERS.map(game => (
