@@ -270,9 +270,9 @@ function BalanceBar({
       {gateLocked && (
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs text-secondary mb-1.5">
-            <span>Redemptions unlock at {FREE_TIER_GATE} points</span>
+            <span>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} lifetime points</span>
             <span>
-              {passStatus.prizePoints.toLocaleString()} / {FREE_TIER_GATE} pts to unlock redemptions
+              {passStatus.prizePoints.toLocaleString()} / {FREE_TIER_GATE} pts
             </span>
           </div>
           <div className="h-2 bg-elevated rounded-full overflow-hidden">
@@ -331,7 +331,7 @@ function ItemCard({
     : !item.is_unlocked
       ? 'This prize is still locked'
       : gateLocked
-        ? `Earn ${FREE_TIER_GATE} Prize Points to unlock redemptions`
+        ? `Reach ${FREE_TIER_GATE} lifetime points to redeem your 1-month Bronze trial`
         : insufficientPoints
           ? `You need ${item.xp_cost.toLocaleString()} Prize Points`
           : null;

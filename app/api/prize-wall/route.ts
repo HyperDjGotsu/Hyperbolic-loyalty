@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     if (itemsResult.error) throw itemsResult.error;
     if (subscriberResult.error) throw subscriberResult.error;
 
-    const subscriber_count = 17; // TEMP: visual preview only — revert after check
+    const subscriber_count = subscriberResult.count ?? 0;
 
     const items = (itemsResult.data ?? []).map((item: any) => ({
       ...item,
