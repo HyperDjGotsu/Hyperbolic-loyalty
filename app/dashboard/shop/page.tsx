@@ -142,7 +142,12 @@ export default function PrizeWallPage() {
         </p>
       </div>
 
-      <BalanceBar passStatus={passStatus} error={balanceError} onRetry={loadPassStatus} />
+      <BalanceBar
+        passStatus={passStatus}
+        error={balanceError}
+        onRetry={loadPassStatus}
+        onClaimTrial={loadPassStatus}
+      />
 
       {!loading && selectedStoreId === null ? (
         <div className="text-center text-secondary py-12">
@@ -234,11 +239,16 @@ function BalanceBar({
   passStatus,
   error,
   onRetry,
+  onClaimTrial,
 }: {
   passStatus: PassStatus | null;
   error: string | null;
   onRetry: () => Promise<void>;
+  onClaimTrial: () => Promise<void>;
 }) {
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+
   if (error) {
     return (
       <div className="bg-surface rounded-xl p-4 flex items-center justify-between gap-4">
@@ -255,7 +265,23 @@ function BalanceBar({
   }
 
   const gateLocked = passStatus.tier === 'free' && passStatus.lifetimeXp < FREE_TIER_GATE;
+  const trialReady = passStatus.tier === 'free' && passStatus.lifetimeXp >= FREE_TIER_GATE;
   const gateProgress = Math.min(100, (passStatus.lifetimeXp / FREE_TIER_GATE) * 100);
+
+  async function handleClaimTrial() {
+    try {
+      setClaiming(true);
+      setClaimError(null);
+      const res = await fetch('/api/player/claim-trial', { method: 'POST' });
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok || !data.success) throw new Error(data.error ?? 'Failed to claim trial');
+      await onClaimTrial();
+    } catch (err) {
+      setClaimError(err instanceof Error ? err.message : 'Failed to claim trial');
+    } finally {
+      setClaiming(false);
+    }
+  }
 
   return (
     <div className="bg-surface rounded-xl p-4">
@@ -277,9 +303,9 @@ function BalanceBar({
       {gateLocked && (
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs text-secondary mb-1.5">
-            <span>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} lifetime points</span>
+            <span>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} lifetime XP</span>
             <span>
-              {passStatus.lifetimeXp.toLocaleString()} / {FREE_TIER_GATE} lifetime XP
+              {passStatus.lifetimeXp.toLocaleString()} / {FREE_TIER_GATE}
             </span>
           </div>
           <div className="h-2 bg-elevated rounded-full overflow-hidden">
@@ -288,6 +314,24 @@ function BalanceBar({
               style={{ width: `${gateProgress}%` }}
             />
           </div>
+        </div>
+      )}
+      {trialReady && (
+        <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+          <p className="text-sm font-semibold text-amber-400 mb-1">
+            You&apos;ve unlocked a 30-day Bronze Trial!
+          </p>
+          <p className="text-xs text-secondary mb-3">
+            Claim your trial to start earning Prize Points and access exclusive perks.
+          </p>
+          {claimError && <p className="text-xs text-danger mb-2">{claimError}</p>}
+          <button
+            onClick={() => void handleClaimTrial()}
+            disabled={claiming}
+            className="w-full py-2 bg-amber-500 text-black text-sm font-semibold rounded-lg hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {claiming ? 'Activating…' : 'Claim Bronze Trial — Free for 30 Days'}
+          </button>
         </div>
       )}
     </div>

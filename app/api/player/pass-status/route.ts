@@ -22,9 +22,10 @@ const MULTIPLIERS: Record<PlayerPassTier, number> = {
 };
 
 function normalizeTier(tier: string | null): PlayerPassTier {
-  return tier === 'bronze' || tier === 'silver' || tier === 'gold' || tier === 'diamond'
-    ? tier
-    : 'free';
+  if (tier === 'access') return 'bronze';
+  if (tier === 'player') return 'silver';
+  if (tier === 'all_access' || tier === 'shadow_vip') return 'gold';
+  return 'free';
 }
 
 const PAGE_SIZE = 1000;
