@@ -285,6 +285,11 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(10);
 
+    // Get live point balance from ledger (network-wide, source of truth)
+    const { data: balanceData } = await supabaseAdmin
+      .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null } as any);
+    const liveGems = typeof balanceData === 'number' ? balanceData : (player.gems || 0);
+
     // Parse avatar
     const avatarConfig = parseAvatarConfig(player.avatar_config);
     
@@ -314,7 +319,7 @@ export async function GET() {
       passExpiresAt: player.pass_expires_at,
       passStartedAt: player.pass_started_at,
       xp: totalXp,
-      gems: player.gems || 0,
+      gems: liveGems,
       gameXP,
       recentActivity: activity || [],
       primaryGameId: player.primary_game_id,
