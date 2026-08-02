@@ -1,11 +1,13 @@
 import webpush from 'web-push';
 import { supabaseAdmin } from '@/lib/supabase';
 
-webpush.setVapidDetails(
-  'mailto:admin@hyperbolic-loyalty.vercel.app',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+function initVapid() {
+  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !priv) return false;
+  webpush.setVapidDetails('mailto:admin@hyperbolic-loyalty.vercel.app', pub, priv);
+  return true;
+}
 
 interface PushPayload {
   title: string;
@@ -18,6 +20,8 @@ interface PushPayload {
 // Send a web push to all active subscriptions for a player.
 // Silently removes any subscriptions that have expired or been revoked.
 export async function sendPushToPlayer(playerId: string, payload: PushPayload): Promise<void> {
+  if (!initVapid()) return; // VAPID keys not configured — skip silently
+
   const { data: subs } = await supabaseAdmin
     .from('push_subscriptions')
     .select('id, endpoint, p256dh, auth')
