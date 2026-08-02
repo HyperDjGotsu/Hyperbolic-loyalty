@@ -89,3 +89,25 @@ Thumbs.db
 *.sqlite
 *.db
 .cache/
+
+# ========================================
+# 📱 EXPO / REACT NATIVE
+# ========================================
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+*.orig.*
+web-build/
+expo-env.d.ts
+# Expo EAS
+.easignore
+# Metro bundler
+.metro-health-check*
+# Android
+android/
+apps/mobile/android/
+# iOS
+ios/
+apps/mobile/ios/
