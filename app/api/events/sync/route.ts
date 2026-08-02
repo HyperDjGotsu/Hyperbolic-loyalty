@@ -200,10 +200,11 @@ function parsePrizing(text: string): string[] | null {
 // Expand recurring events into individual instances
 // Supports WEEKLY recurrence for the next 4 weeks
 function expandRecurringEvent(
-  baseEvent: ParsedEvent, 
-  rrule: string, 
+  baseEvent: ParsedEvent,
+  rrule: string,
   startDate: Date,
-  endDate: Date | null
+  endDate: Date | null,
+  exdates: Set<string> = new Set()
 ): ParsedEvent[] {
   const events: ParsedEvent[] = [];
   const now = new Date();
@@ -246,27 +247,32 @@ function expandRecurringEvent(
   if (freq === 'WEEKLY') {
     let currentDate = new Date(startDate);
     let count = 0;
-    
+
     while (currentDate <= fourWeeksFromNow && count < maxCount) {
       // Check UNTIL
       if (untilDate && currentDate > untilDate) break;
-      
-      // Only add if in the future (or today)
-      const cutoff = new Date();
-      cutoff.setHours(cutoff.getHours() - 2); // Allow events from 2 hours ago
-      
-      if (currentDate >= cutoff) {
-        const instanceEnd = new Date(currentDate.getTime() + duration);
-        const instanceUid = `${baseEvent.gcal_uid}_${currentDate.toISOString().slice(0, 10)}`;
-        
-        events.push({
-          ...baseEvent,
-          gcal_uid: instanceUid,
-          scheduled_at: currentDate.toISOString(),
-          ends_at: instanceEnd.toISOString(),
-        });
+
+      const dateKey = currentDate.toISOString().slice(0, 10);
+
+      // Skip dates excluded via EXDATE or modified via RECURRENCE-ID
+      if (!exdates.has(dateKey)) {
+        // Only add if in the future (or today)
+        const cutoff = new Date();
+        cutoff.setHours(cutoff.getHours() - 2); // Allow events from 2 hours ago
+
+        if (currentDate >= cutoff) {
+          const instanceEnd = new Date(currentDate.getTime() + duration);
+          const instanceUid = `${baseEvent.gcal_uid}_${dateKey}`;
+
+          events.push({
+            ...baseEvent,
+            gcal_uid: instanceUid,
+            scheduled_at: currentDate.toISOString(),
+            ends_at: instanceEnd.toISOString(),
+          });
+        }
       }
-      
+
       // Move to next week
       currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
       count++;
@@ -274,25 +280,29 @@ function expandRecurringEvent(
   } else if (freq === 'DAILY') {
     let currentDate = new Date(startDate);
     let count = 0;
-    
+
     while (currentDate <= fourWeeksFromNow && count < maxCount) {
       if (untilDate && currentDate > untilDate) break;
-      
-      const cutoff = new Date();
-      cutoff.setHours(cutoff.getHours() - 2);
-      
-      if (currentDate >= cutoff) {
-        const instanceEnd = new Date(currentDate.getTime() + duration);
-        const instanceUid = `${baseEvent.gcal_uid}_${currentDate.toISOString().slice(0, 10)}`;
-        
-        events.push({
-          ...baseEvent,
-          gcal_uid: instanceUid,
-          scheduled_at: currentDate.toISOString(),
-          ends_at: instanceEnd.toISOString(),
-        });
+
+      const dateKey = currentDate.toISOString().slice(0, 10);
+
+      if (!exdates.has(dateKey)) {
+        const cutoff = new Date();
+        cutoff.setHours(cutoff.getHours() - 2);
+
+        if (currentDate >= cutoff) {
+          const instanceEnd = new Date(currentDate.getTime() + duration);
+          const instanceUid = `${baseEvent.gcal_uid}_${dateKey}`;
+
+          events.push({
+            ...baseEvent,
+            gcal_uid: instanceUid,
+            scheduled_at: currentDate.toISOString(),
+            ends_at: instanceEnd.toISOString(),
+          });
+        }
       }
-      
+
       currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
       count++;
     }
@@ -336,7 +346,7 @@ function parseICal(icalData: string): ParsedEvent[] {
     
     if (line === 'END:VEVENT') {
       inEvent = false;
-      
+
       // Process the event
       const summary = currentEvent['SUMMARY'] || '';
       const description = currentEvent['DESCRIPTION'] || '';
@@ -344,12 +354,21 @@ function parseICal(icalData: string): ParsedEvent[] {
       const dtstart = currentEvent['DTSTART'];
       const dtend = currentEvent['DTEND'];
       const rrule = currentEvent['RRULE'];
-      
+      const recurrenceId = currentEvent['RECURRENCE-ID'];
+
       // Mark cancelled events — handled by caller
       if (currentEvent['STATUS'] === 'CANCELLED') {
         if (uid && !uid.startsWith('unknown_')) {
           (events as any)._cancelledUids = (events as any)._cancelledUids || [];
+          // If RECURRENCE-ID present, cancelled uid is uid_date so prefix match works;
+          // always store the base UID — deletion uses prefix matching.
           (events as any)._cancelledUids.push(uid);
+          // Also push the uid_date variant if recurrence-id is known
+          if (recurrenceId) {
+            const recDate = parseICalDate(recurrenceId.replace(/^.*:/, ''));
+            const recDateKey = recDate.toISOString().slice(0, 10);
+            (events as any)._cancelledUids.push(`${uid}_${recDateKey}`);
+          }
         }
         continue;
       }
@@ -364,14 +383,29 @@ function parseICal(icalData: string): ParsedEvent[] {
       const dtstartRaw = currentEvent['DTSTART_RAW'] || '';
       const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
       const tzid = tzidMatch ? tzidMatch[1] : undefined;
-      
+
       // Parse dates
       const startDate = parseICalDate(dtstart, tzid);
       const endDate = dtend ? parseICalDate(dtend, tzid) : null;
-      
+
+      // Parse EXDATE list — may be comma-separated and/or multi-line (accumulated with comma join)
+      const exdates = new Set<string>();
+      const exdateRaw = currentEvent['EXDATE'] || '';
+      if (exdateRaw) {
+        for (const part of exdateRaw.split(',')) {
+          const cleaned = part.trim().replace(/^[^:]*:/, ''); // strip TZID= prefix if present
+          if (cleaned) {
+            try {
+              const d = parseICalDate(cleaned, tzid);
+              exdates.add(d.toISOString().slice(0, 10));
+            } catch { /* ignore unparseable EXDATE entries */ }
+          }
+        }
+      }
+
       // Detect game
       const gameId = detectGameId(summary);
-      
+
       // Parse price and players from description (or title)
       const combinedText = `${summary}\n${description}`;
       let entryFee = parseExplicitPrice(combinedText);
@@ -379,10 +413,10 @@ function parseICal(icalData: string): ParsedEvent[] {
       let attendanceXp = 30;
       let winXp = 10;
       let hasStream = false;
-      
+
       // Parse prizing from description
       const prizing = parsePrizing(combinedText);
-      
+
       // Apply overrides based on event title
       for (const override of EVENT_OVERRIDES) {
         if (override.pattern.test(summary)) {
@@ -394,7 +428,7 @@ function parseICal(icalData: string): ParsedEvent[] {
           break; // Use first matching override
         }
       }
-      
+
       // Clean up description (remove parsed fields for display)
       let cleanDescription = description
         .replace(/\\n/g, '\n')
@@ -404,10 +438,18 @@ function parseICal(icalData: string): ParsedEvent[] {
         .replace(/players?\s*(?::|is)?\s*\d+/gi, '')
         .replace(/prizing\s*(?::|is|-)\s*.+?(?:\n|$)/gi, '')
         .trim();
-      
+
+      // For detached instances (RECURRENCE-ID present, no RRULE), use uid_originalDate
+      // so it matches the existing expanded row in the DB.
+      let effectiveUid = uid;
+      if (recurrenceId && !rrule) {
+        const recDate = parseICalDate(recurrenceId.replace(/^[^:]*:/, ''), tzid);
+        effectiveUid = `${uid}_${recDate.toISOString().slice(0, 10)}`;
+      }
+
       // Create base event
       const baseEvent: ParsedEvent = {
-        gcal_uid: uid,
+        gcal_uid: effectiveUid,
         name: summary,
         game_id: gameId,
         description: cleanDescription || null,
@@ -421,16 +463,16 @@ function parseICal(icalData: string): ParsedEvent[] {
         status: 'scheduled',
         prizing: prizing,
       };
-      
+
       // Handle recurring events
       if (rrule) {
-        const expandedEvents = expandRecurringEvent(baseEvent, rrule, startDate, endDate);
+        const expandedEvents = expandRecurringEvent(baseEvent, rrule, startDate, endDate, exdates);
         events.push(...expandedEvents);
       } else {
-        // Non-recurring event - check if it's in the future
+        // Non-recurring or detached instance — check if it's in the future
         const cutoff = new Date();
         cutoff.setHours(cutoff.getHours() - 2);
-        
+
         if (startDate >= cutoff) {
           events.push(baseEvent);
         }
@@ -450,9 +492,15 @@ function parseICal(icalData: string): ParsedEvent[] {
       // Extract base key (remove parameters like TZID)
       const key = fullKey.split(';')[0];
       
-      currentEvent[key] = value;
+      // EXDATE can appear multiple times — accumulate with comma separator
+      if (key === 'EXDATE') {
+        const prev = currentEvent['EXDATE'];
+        currentEvent['EXDATE'] = prev ? `${prev},${value}` : value;
+      } else {
+        currentEvent[key] = value;
+      }
       currentKey = key;
-      
+
       // Store raw line for DTSTART/DTEND to extract timezone later
       if (key === 'DTSTART' || key === 'DTEND') {
         currentEvent[`${key}_RAW`] = fullKey;
@@ -532,13 +580,15 @@ export async function POST(request: Request) {
       });
     }
     
-    // Delete cancelled events (STATUS:CANCELLED in iCal feed)
+    // Delete cancelled events (STATUS:CANCELLED in iCal feed).
+    // Match both exact UID and uid_date variants (from recurring expansion).
     const cancelledUids: string[] = (parsedEvents as any)._cancelledUids || [];
-    if (cancelledUids.length > 0) {
-      await (supabaseAdmin as any)
+    for (const cancelUid of cancelledUids) {
+      // Exact match covers one-off cancellations; prefix match covers expanded recurring instances.
+      await supabaseAdmin
         .from('events')
         .delete()
-        .in('gcal_uid', cancelledUids)
+        .or(`gcal_uid.eq.${cancelUid},gcal_uid.like.${cancelUid}_%`)
         .in('status', ['scheduled']); // never delete active/completed events
     }
 
