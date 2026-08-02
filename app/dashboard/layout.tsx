@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/ui';
+import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 
 const navItems = [
   {
@@ -118,6 +119,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isStaff, setIsStaff] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
+  const [selectedStoreName, setSelectedStoreName] = useState<string | null>(null);
+  const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
+  const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -139,7 +144,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     fetch('/api/player/by-clerk')
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.isStaff) setIsStaff(true); })
+      .then((d) => {
+        if (!d) return;
+        if (d.isStaff) setIsStaff(true);
+        if (d.homeStore?.id) setHomeStoreId(d.homeStore.id);
+
+        // Seed store from localStorage; fall back to homeStore
+        const savedId = localStorage.getItem('ggc_selected_store_id');
+        const savedName = localStorage.getItem('ggc_selected_store_name');
+        if (savedId && savedName) {
+          setSelectedStoreId(savedId);
+          setSelectedStoreName(savedName);
+        } else if (d.homeStore) {
+          localStorage.setItem('ggc_selected_store_id', d.homeStore.id);
+          localStorage.setItem('ggc_selected_store_name', d.homeStore.name);
+          setSelectedStoreId(d.homeStore.id);
+          setSelectedStoreName(d.homeStore.name);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -153,7 +175,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-56 bg-surface border-r border-border-token z-30">
         <div className="px-4 py-5 border-b border-border-token flex items-center justify-between">
-          <span className="font-display font-bold text-lg text-primary">Hyperbolic XP</span>
+          <button
+            onClick={() => setShowStoreSwitcher(true)}
+            className="flex items-center gap-1.5 min-w-0 group text-left"
+            title="Switch store"
+          >
+            <span className="font-display font-bold text-sm text-primary truncate leading-tight">
+              {selectedStoreName ?? 'Hyperbolic XP'}
+            </span>
+            <svg
+              width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              className="flex-shrink-0 text-tertiary group-hover:text-secondary transition-colors"
+            >
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
           <ThemeToggle />
         </div>
         <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
@@ -197,6 +234,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </div>
       </nav>
+
+      {showStoreSwitcher && (
+        <StoreSwitcherModal
+          currentStoreId={selectedStoreId}
+          homeStoreId={homeStoreId}
+          onSwitch={(store) => {
+            localStorage.setItem('ggc_selected_store_id', store.id);
+            localStorage.setItem('ggc_selected_store_name', store.name);
+            setSelectedStoreId(store.id);
+            setSelectedStoreName(store.name);
+            setShowStoreSwitcher(false);
+            window.location.reload();
+          }}
+          onClose={() => setShowStoreSwitcher(false)}
+        />
+      )}
     </div>
   );
 }
