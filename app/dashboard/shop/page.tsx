@@ -46,7 +46,7 @@ export default function PrizeWallPage() {
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [passStatus, setPassStatus] = useState<PassStatus | null>(null);
-  const [homeStoreId, setHomeStoreId] = useState<string | null | undefined>(undefined);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null | undefined>(undefined);
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<PrizeWallItem | null>(null);
   const [claimDetails, setClaimDetails] = useState<ClaimDetails | null>(null);
@@ -64,10 +64,12 @@ export default function PrizeWallPage() {
       }
 
       setPassStatus(data);
-      setHomeStoreId(data.homeStoreId ?? null);
+      // Use selected store from localStorage (browsing context); fall back to home store
+      const saved = localStorage.getItem('ggc_selected_store_id');
+      setSelectedStoreId(saved || data.homeStoreId || null);
     } catch (error) {
       setBalanceError(error instanceof Error ? error.message : 'Unable to load your balance');
-      setHomeStoreId(null);
+      setSelectedStoreId(null);
     }
   }, []);
 
@@ -76,14 +78,13 @@ export default function PrizeWallPage() {
   }, [loadPassStatus]);
 
   useEffect(() => {
-    // Wait until pass-status has resolved (undefined = still loading)
-    if (homeStoreId === undefined) return;
-    if (!homeStoreId) {
+    if (selectedStoreId === undefined) return;
+    if (!selectedStoreId) {
       setLoading(false);
       return;
     }
 
-    fetch(`/api/prize-wall?storeId=${encodeURIComponent(homeStoreId)}`)
+    fetch(`/api/prize-wall?storeId=${encodeURIComponent(selectedStoreId)}`)
       .then(r => r.json())
       .then(data => {
         setItems(data.items || []);
@@ -91,7 +92,7 @@ export default function PrizeWallPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [homeStoreId]);
+  }, [selectedStoreId]);
 
   async function redeemSelectedItem() {
     if (!selectedItem) return;
@@ -139,7 +140,7 @@ export default function PrizeWallPage() {
 
       <BalanceBar passStatus={passStatus} error={balanceError} onRetry={loadPassStatus} />
 
-      {!loading && homeStoreId === null ? (
+      {!loading && selectedStoreId === null ? (
         <div className="text-center text-secondary py-12">
           <p>No store selected. Visit a store to access the Prize Wall.</p>
         </div>

@@ -789,6 +789,7 @@ export default function HQPage() {
     quantity: '',
     unlock_threshold: '',
     is_active: true,
+    is_network_prize: false,
   });
   const [prizeImageUploading, setPrizeImageUploading] = useState(false);
   const [bannerImageUploading, setBannerImageUploading] = useState(false);
@@ -1742,7 +1743,7 @@ export default function HQPage() {
   };
 
   const resetPrizeForm = () => {
-    setPrizeForm({ name: '', description: '', image_url: '', xp_cost: '', retail_value: '', quantity: '', unlock_threshold: '', is_active: true });
+    setPrizeForm({ name: '', description: '', image_url: '', xp_cost: '', retail_value: '', quantity: '', unlock_threshold: '', is_active: true, is_network_prize: false });
     setPrizeEditingId(null);
     setPrizeFormOpen(false);
   };
@@ -1757,6 +1758,7 @@ export default function HQPage() {
       quantity: item.quantity != null ? String(item.quantity) : '',
       unlock_threshold: item.unlock_threshold != null ? String(item.unlock_threshold) : '',
       is_active: item.is_active,
+      is_network_prize: (item as any).is_network_prize ?? false,
     });
     setPrizeEditingId(item.id);
     setPrizeFormOpen(true);
@@ -1770,6 +1772,8 @@ export default function HQPage() {
     setPrizeSaving(true);
     try {
       const isEditing = prizeEditingId !== null;
+      const FLAGSHIP_STORE_ID = '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d';
+      const isTEM = hqStore.activeStoreId === FLAGSHIP_STORE_ID;
       const body = isEditing
         ? {
             id: prizeEditingId,
@@ -1781,6 +1785,7 @@ export default function HQPage() {
             quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
             unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
             is_active: prizeForm.is_active,
+            is_network_prize: isTEM ? prizeForm.is_network_prize : false,
           }
         : {
             name: prizeForm.name,
@@ -1791,6 +1796,7 @@ export default function HQPage() {
             quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
             unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
             is_active: prizeForm.is_active,
+            is_network_prize: isTEM ? prizeForm.is_network_prize : false,
             store_id: hqStore.activeStoreId ?? null,
           };
 
@@ -4545,14 +4551,16 @@ export default function HQPage() {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-primary">{item.name}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-primary">{item.name}</span>
+                            {(item as any).is_network_prize && (
+                              <span className="text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded">
+                                Grail
+                              </span>
+                            )}
+                          </div>
                           {item.description && <div className="text-xs text-tertiary mt-0.5">{item.description}</div>}
                           {item.quantity != null && <div className="text-xs text-tertiary mt-0.5">Qty: {item.quantity}</div>}
-                          {item.store_id === null && !staffContext?.isNetworkAdmin && (
-                            <span className="text-xs text-secondary border border-border-token rounded px-1.5 py-0.5 mt-1 inline-block">
-                              Network Reward · Read Only
-                            </span>
-                          )}
                         </td>
                         <td className="px-4 py-3 font-mono text-primary">{item.xp_cost.toLocaleString()} pts</td>
                         <td className="px-4 py-3 text-secondary">{item.retail_value != null ? `$${item.retail_value}` : '—'}</td>
@@ -4709,7 +4717,7 @@ export default function HQPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 mt-4">
+                <div className="flex items-center gap-4 mt-4 flex-wrap">
                   <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary">
                     <input
                       type="checkbox"
@@ -4719,6 +4727,20 @@ export default function HQPage() {
                     />
                     Active immediately
                   </label>
+                  {hqStore.activeStoreId === '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d' && (
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={prizeForm.is_network_prize}
+                        onChange={e => setPrizeForm(f => ({ ...f, is_network_prize: e.target.checked }))}
+                        className="w-4 h-4 rounded"
+                      />
+                      <span>
+                        Network Grail
+                        <span className="text-tertiary text-xs ml-1">(shows on all stores' prize walls)</span>
+                      </span>
+                    </label>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-border-token">

@@ -18,18 +18,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'storeId is required' }, { status: 400 });
     }
 
-    // Flagship (Trade Emporium) serves as the company-wide prize wall — its items show to all stores
-    const FLAGSHIP_STORE_ID = '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d';
-    const orFilter = storeId === FLAGSHIP_STORE_ID
-      ? `store_id.is.null,store_id.eq.${storeId}`
-      : `store_id.is.null,store_id.eq.${storeId},store_id.eq.${FLAGSHIP_STORE_ID}`;
-
     const [itemsResult, subscriberResult] = await Promise.all([
       (supabaseAdmin as any)
         .from('prize_wall_items')
-        .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
+        .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, is_network_prize, created_at')
         .eq('is_active', true)
-        .or(orFilter)
+        .or(`store_id.eq.${storeId},is_network_prize.eq.true`)
         .order('xp_cost', { ascending: true }),
       supabaseAdmin
         .from('players')

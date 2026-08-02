@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, xp_cost, description, image_url, retail_value, quantity, store_id, unlock_threshold, is_active } = body;
+    const { name, xp_cost, description, image_url, retail_value, quantity, store_id, unlock_threshold, is_active, is_network_prize } = body;
 
     // store_id present → store-scoped item; null/absent → network-wide item
     const staffCtx = store_id
@@ -74,8 +74,9 @@ export async function POST(request: Request) {
         store_id: store_id ?? null,
         unlock_threshold: unlock_threshold ?? null,
         is_active: is_active !== undefined ? is_active : true,
+        is_network_prize: is_network_prize ?? false,
       })
-      .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
+      .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, is_network_prize, created_at')
       .single();
 
     if (error) throw error;
@@ -115,7 +116,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const allowed = ['name', 'description', 'image_url', 'xp_cost', 'retail_value', 'quantity', 'unlock_threshold', 'is_active'];
+    const allowed = ['name', 'description', 'image_url', 'xp_cost', 'retail_value', 'quantity', 'unlock_threshold', 'is_active', 'is_network_prize'];
     const updates: Record<string, unknown> = {};
     for (const key of allowed) {
       if (key in fields) updates[key] = fields[key];
