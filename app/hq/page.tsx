@@ -1765,7 +1765,7 @@ export default function HQPage() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setPrizeItems(prev => [data.item, ...prev]);
+      setPrizeItems(prev => [data, ...prev]);
       setPrizeForm({ name: '', description: '', image_url: '', xp_cost: '', retail_value: '', quantity: '', unlock_threshold: '', is_active: true });
       setPrizeFormOpen(false);
       showToast('Item added to prize wall', 'success');
