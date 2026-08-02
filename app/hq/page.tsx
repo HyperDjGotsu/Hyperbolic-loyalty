@@ -778,6 +778,7 @@ export default function HQPage() {
   const [prizeLoading, setPrizeLoading] = useState(false);
   const [prizeSaving, setPrizeSaving] = useState(false);
   const [prizeFormOpen, setPrizeFormOpen] = useState(false);
+  const [prizeEditingId, setPrizeEditingId] = useState<string | null>(null);
   const [prizeDeleteConfirm, setPrizeDeleteConfirm] = useState<string | null>(null);
   const [prizeForm, setPrizeForm] = useState({
     name: '',
@@ -1740,6 +1741,27 @@ export default function HQPage() {
     }
   };
 
+  const resetPrizeForm = () => {
+    setPrizeForm({ name: '', description: '', image_url: '', xp_cost: '', retail_value: '', quantity: '', unlock_threshold: '', is_active: true });
+    setPrizeEditingId(null);
+    setPrizeFormOpen(false);
+  };
+
+  const openEditForm = (item: PrizeWallItem) => {
+    setPrizeForm({
+      name: item.name,
+      description: item.description || '',
+      image_url: item.image_url || '',
+      xp_cost: String(item.xp_cost),
+      retail_value: item.retail_value != null ? String(item.retail_value) : '',
+      quantity: item.quantity != null ? String(item.quantity) : '',
+      unlock_threshold: item.unlock_threshold != null ? String(item.unlock_threshold) : '',
+      is_active: item.is_active,
+    });
+    setPrizeEditingId(item.id);
+    setPrizeFormOpen(true);
+  };
+
   const savePrizeItem = async () => {
     if (!prizeForm.name || !prizeForm.xp_cost) {
       showToast('Name and point cost are required', 'error');
@@ -1747,28 +1769,46 @@ export default function HQPage() {
     }
     setPrizeSaving(true);
     try {
+      const isEditing = prizeEditingId !== null;
+      const body = isEditing
+        ? {
+            id: prizeEditingId,
+            name: prizeForm.name,
+            description: prizeForm.description || null,
+            image_url: prizeForm.image_url || null,
+            xp_cost: Number(prizeForm.xp_cost),
+            retail_value: prizeForm.retail_value ? Number(prizeForm.retail_value) : null,
+            quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
+            unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
+            is_active: prizeForm.is_active,
+          }
+        : {
+            name: prizeForm.name,
+            description: prizeForm.description || null,
+            image_url: prizeForm.image_url || null,
+            xp_cost: Number(prizeForm.xp_cost),
+            retail_value: prizeForm.retail_value ? Number(prizeForm.retail_value) : null,
+            quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
+            unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
+            is_active: prizeForm.is_active,
+            store_id: hqStore.activeStoreId ?? null,
+          };
+
       const res = await fetch('/api/hq/prize-wall', {
-        method: 'POST',
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: prizeForm.name,
-          description: prizeForm.description || null,
-          image_url: prizeForm.image_url || null,
-          xp_cost: Number(prizeForm.xp_cost),
-          retail_value: prizeForm.retail_value ? Number(prizeForm.retail_value) : null,
-          quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
-          unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
-          is_active: prizeForm.is_active,
-          // Store managers scope to their store; network admins scope to Trade Emporium (company wall)
-          store_id: hqStore.activeStoreId ?? null,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setPrizeItems(prev => [data, ...prev]);
-      setPrizeForm({ name: '', description: '', image_url: '', xp_cost: '', retail_value: '', quantity: '', unlock_threshold: '', is_active: true });
-      setPrizeFormOpen(false);
-      showToast('Item added to prize wall', 'success');
+      if (isEditing) {
+        setPrizeItems(prev => prev.map(i => i.id === prizeEditingId ? data : i));
+        showToast('Item updated', 'success');
+      } else {
+        setPrizeItems(prev => [data, ...prev]);
+        showToast('Item added to prize wall', 'success');
+      }
+      resetPrizeForm();
     } catch (err: any) {
       showToast(err.message || 'Failed to save item', 'error');
     } finally {
@@ -4536,13 +4576,21 @@ export default function HQPage() {
                               <button onClick={() => setPrizeDeleteConfirm(null)} className="text-xs text-secondary hover:text-primary">No</button>
                             </div>
                           ) : (
-                            <button
-                              onClick={() => setPrizeDeleteConfirm(item.id)}
-                              disabled={item.store_id === null && !staffContext?.isNetworkAdmin}
-                              className="text-xs text-tertiary hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-tertiary"
-                            >
-                              Delete
-                            </button>
+                            <div className="flex items-center gap-3 justify-end">
+                              <button
+                                onClick={() => openEditForm(item)}
+                                className="text-xs text-secondary hover:text-primary transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => setPrizeDeleteConfirm(item.id)}
+                                disabled={item.store_id === null && !staffContext?.isNetworkAdmin}
+                                className="text-xs text-tertiary hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-tertiary"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -4552,12 +4600,12 @@ export default function HQPage() {
               )}
             </div>
 
-            {/* Add Item Form */}
+            {/* Add / Edit Item Form */}
             {prizeFormOpen && (
               <div className="bg-surface rounded-xl p-6 border border-accent/30">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-semibold text-primary">New Prize Wall Item</h3>
-                  <button onClick={() => setPrizeFormOpen(false)} className="text-secondary hover:text-primary text-sm">Cancel</button>
+                  <h3 className="font-semibold text-primary">{prizeEditingId ? 'Edit Prize Wall Item' : 'New Prize Wall Item'}</h3>
+                  <button onClick={resetPrizeForm} className="text-secondary hover:text-primary text-sm">Cancel</button>
                 </div>
 
                 {/* Image upload */}
@@ -4674,7 +4722,7 @@ export default function HQPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-border-token">
-                  <button onClick={() => setPrizeFormOpen(false)} className="text-sm text-secondary hover:text-primary px-4 py-2">
+                  <button onClick={resetPrizeForm} className="text-sm text-secondary hover:text-primary px-4 py-2">
                     Cancel
                   </button>
                   <button
@@ -4682,7 +4730,7 @@ export default function HQPage() {
                     disabled={prizeSaving}
                     className="bg-accent text-accent-fg text-sm font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                   >
-                    {prizeSaving ? 'Saving…' : 'Add to Prize Wall'}
+                    {prizeSaving ? 'Saving…' : prizeEditingId ? 'Save Changes' : 'Add to Prize Wall'}
                   </button>
                 </div>
               </div>
