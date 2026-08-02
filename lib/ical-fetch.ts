@@ -3,6 +3,7 @@ import { promises as dns } from 'dns';
 
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB
 const FETCH_TIMEOUT_MS = 10_000; // 10 seconds
+const MAX_REDIRECTS = 3;
 
 // Checks both literal IP strings and resolved DNS addresses
 function isBlockedIp(ip: string): boolean {
@@ -44,7 +45,6 @@ async function resolveAndValidateHost(hostname: string): Promise<void> {
     const v6 = await dns.resolve6(hostname).catch(() => [] as string[]);
     results.push(...v4, ...v6);
   } catch {
-    // If DNS resolution fails entirely, block the request
     throw new Error('Could not resolve calendar URL hostname');
   }
 
@@ -78,44 +78,69 @@ export async function validateICalUrl(raw: string): Promise<string> {
 }
 
 export async function fetchICalSafe(rawUrl: string): Promise<string> {
-  const url = await validateICalUrl(rawUrl);
+  // Validate the initial URL (DNS resolution included)
+  let currentUrl = await validateICalUrl(rawUrl);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   let response: Response;
+  let hopsRemaining = MAX_REDIRECTS;
+
   try {
-    response = await fetch(url, {
-      cache: 'no-store',
-      redirect: 'follow',
-      signal: controller.signal,
-      headers: { 'User-Agent': 'HyperbolicLoyalty/1.0' },
-    });
-  } catch (err: any) {
-    clearTimeout(timer);
-    if (err?.name === 'AbortError') throw new Error('Calendar fetch timed out');
-    throw new Error('Failed to reach calendar URL');
+    // Manual redirect loop: validate each redirect destination before following,
+    // preventing DNS-rebinding attacks where a redirect could point to an
+    // internal address that was not present during the initial validation.
+    while (true) {
+      try {
+        response = await fetch(currentUrl, {
+          cache: 'no-store',
+          redirect: 'manual', // never auto-follow — we validate each hop
+          signal: controller.signal,
+          headers: { 'User-Agent': 'HyperbolicLoyalty/1.0' },
+        });
+      } catch (err: any) {
+        if (err?.name === 'AbortError') throw new Error('Calendar fetch timed out');
+        throw new Error('Failed to reach calendar URL');
+      }
+
+      // Follow redirect only after validating the destination
+      if (response.status >= 300 && response.status < 400) {
+        if (hopsRemaining <= 0) {
+          throw new Error('Too many redirects');
+        }
+        hopsRemaining--;
+
+        const location = response.headers.get('location');
+        if (!location) throw new Error('Redirect with no Location header');
+
+        // Resolve relative redirects against the current URL
+        const redirectUrl = new URL(location, currentUrl).toString();
+
+        // Validate destination before issuing the next request —
+        // this is the key difference from redirect:'follow', which would
+        // connect to the redirect target before we can check it.
+        currentUrl = await validateICalUrl(redirectUrl);
+        continue;
+      }
+
+      break; // non-redirect response
+    }
   } finally {
     clearTimeout(timer);
   }
 
-  if (!response.ok) {
-    throw new Error(`Calendar returned HTTP ${response.status}`);
-  }
-
-  // Re-validate redirect destination — DNS-resolves the final host too
-  const finalUrl = response.url;
-  if (finalUrl && finalUrl !== url) {
-    await validateICalUrl(finalUrl); // includes DNS resolution
+  if (!response!.ok) {
+    throw new Error(`Calendar returned HTTP ${response!.status}`);
   }
 
   // Size guard — stream up to MAX_RESPONSE_BYTES, reject if exceeded
-  const contentLength = response.headers.get('content-length');
+  const contentLength = response!.headers.get('content-length');
   if (contentLength && parseInt(contentLength) > MAX_RESPONSE_BYTES) {
     throw new Error('Calendar response too large');
   }
 
-  const reader = response.body?.getReader();
+  const reader = response!.body?.getReader();
   if (!reader) {
     throw new Error('No response body');
   }

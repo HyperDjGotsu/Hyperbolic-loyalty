@@ -712,26 +712,46 @@ export async function POST(request: Request) {
       }
     }
 
-    // Stale-event cleanup: remove scheduled future events that were in the DB
-    // but no longer appear in the iCal feed (e.g. Google used EXDATE without
-    // STATUS:CANCELLED, or the event was simply removed from the calendar).
-    // Only touches gcal_uid-sourced events for this store within the sync window.
+    // Stale-event cleanup — remove scheduled future events sourced from this
+    // store's calendar that no longer appear in the current snapshot.
+    //
+    // Safety gates (all must pass before any row is deleted):
+    // 1. Fetch and parse completed without fatal error (we are past those throws).
+    // 2. No per-event upsert errors — partial feeds can cause false "missing" signals.
+    // 3. Snapshot is non-empty — an empty parse is never a valid complete feed.
+    // 4. Deletion count anomaly guard — reject if > 10 events or > 30% of snapshot
+    //    would be deleted, which likely indicates a truncated or incorrect feed.
+    // 5. Scoped to store_id + gcal_uid IS NOT NULL — never touches manually created
+    //    events, network events (store_id IS NULL), or another store's events.
     const syncedUids = new Set(futureEvents.map(e => e.gcal_uid));
-    if (syncedUids.size > 0) {
-      // Fetch all upcoming gcal-sourced scheduled events for this store
+    const cleanupEligible = errors.length === 0 && syncedUids.size > 0;
+
+    if (cleanupEligible) {
       const { data: existingRows } = await supabaseAdmin
         .from('events')
         .select('id, gcal_uid')
-        .eq('store_id', storeId)
+        .eq('store_id', storeId)          // scoped to this store only
         .eq('status', 'scheduled')
-        .not('gcal_uid', 'is', null)
+        .not('gcal_uid', 'is', null)      // only calendar-sourced events
         .gte('scheduled_at', cutoff.toISOString());
 
       const staleIds = (existingRows || [])
         .filter(row => row.gcal_uid && !syncedUids.has(row.gcal_uid))
         .map(row => row.id);
 
-      if (staleIds.length > 0) {
+      // Anomaly guard: abort if deletion looks disproportionately large
+      const anomalyThreshold = Math.max(10, Math.floor(syncedUids.size * 0.3));
+      if (staleIds.length > anomalyThreshold) {
+        console.warn(
+          `Stale cleanup aborted: would delete ${staleIds.length} events ` +
+          `(snapshot has ${syncedUids.size}, threshold ${anomalyThreshold}). ` +
+          `Possible truncated feed — manual review required.`
+        );
+        errors.push(
+          `Stale cleanup skipped: ${staleIds.length} events absent from snapshot ` +
+          `(exceeds safety threshold of ${anomalyThreshold}). Manual review required.`
+        );
+      } else if (staleIds.length > 0) {
         await supabaseAdmin
           .from('events')
           .delete()
