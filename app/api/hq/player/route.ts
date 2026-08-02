@@ -96,8 +96,12 @@ export async function GET(request: Request) {
       .from('players')
       .select('id, player_id, display_name, email, is_staff, created_at, favorite_games, pass_tier, pass_status, pass_expires_at, pass_started_at') as any;
 
-    if (query.includes('-')) {
-      playerQuery = playerQuery.ilike('player_id', `%${query}%`);
+    // Player IDs follow the pattern: 2-6 uppercase letters, hyphen, 8 uppercase alphanumeric chars
+    // e.g. GGOB-VUE6YFGH, GOM-ABC12345, TEM-XXXXXXXX
+    const isPlayerId = /^[A-Z]{2,6}-[A-Z0-9]{6,10}$/i.test(query.trim());
+
+    if (isPlayerId) {
+      playerQuery = playerQuery.ilike('player_id', `%${query.trim()}%`);
     } else {
       playerQuery = playerQuery.ilike('display_name', `%${query}%`);
     }

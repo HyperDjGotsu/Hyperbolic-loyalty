@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireNetworkAdmin } from '@/lib/auth-helpers';
-// TODO (Phase 4): change to requireStoreManager(storeId) once per-store iCal config is in place
+import { fetchICalSafe } from '@/lib/ical-fetch';
 import { notifyAllPlayers } from '@/lib/notifications';
 
 
@@ -345,6 +345,15 @@ function parseICal(icalData: string): ParsedEvent[] {
       const dtend = currentEvent['DTEND'];
       const rrule = currentEvent['RRULE'];
       
+      // Mark cancelled events — handled by caller
+      if (currentEvent['STATUS'] === 'CANCELLED') {
+        if (uid && !uid.startsWith('unknown_')) {
+          (events as any)._cancelledUids = (events as any)._cancelledUids || [];
+          (events as any)._cancelledUids.push(uid);
+        }
+        continue;
+      }
+
       // Skip events matching skip patterns
       const shouldSkip = SKIP_PATTERNS.some(pattern => pattern.test(summary));
       if (shouldSkip || !dtstart) {
@@ -493,37 +502,15 @@ export async function POST(request: Request) {
     }
 
     console.log('Fetching calendar...');
-    
-    // Fetch the iCal feed
-    let response;
+
+    let icalData: string;
     try {
-      response = await fetch(ICAL_URL, {
-        cache: 'no-store', // Always fetch fresh
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; HyperbolicLoyalty/1.0)',
-        },
-      });
-    } catch (fetchError) {
-      console.error('Fetch threw error:', fetchError);
-      return NextResponse.json({ 
-        error: 'Failed to fetch calendar - network error',
-        details: String(fetchError)
-      }, { status: 500 });
+      icalData = await fetchICalSafe(ICAL_URL);
+    } catch (fetchError: any) {
+      console.error('Calendar fetch error:', fetchError?.message);
+      return NextResponse.json({ error: fetchError?.message || 'Failed to fetch calendar' }, { status: 500 });
     }
-    
-    console.log('Response status:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Could not read response');
-      console.error('Failed to fetch calendar:', response.status, errorText);
-      return NextResponse.json({ 
-        error: 'Failed to fetch calendar',
-        status: response.status,
-        details: errorText.slice(0, 500)
-      }, { status: 500 });
-    }
-    
-    const icalData = await response.text();
+
     console.log('Fetched iCal data, length:', icalData.length);
     
     // Parse events
@@ -545,6 +532,16 @@ export async function POST(request: Request) {
       });
     }
     
+    // Delete cancelled events (STATUS:CANCELLED in iCal feed)
+    const cancelledUids: string[] = (parsedEvents as any)._cancelledUids || [];
+    if (cancelledUids.length > 0) {
+      await (supabaseAdmin as any)
+        .from('events')
+        .delete()
+        .in('gcal_uid', cancelledUids)
+        .in('status', ['scheduled']); // never delete active/completed events
+    }
+
     // Upsert events to Supabase
     let synced = 0;
     let errors: string[] = [];

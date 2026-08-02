@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,11 +22,10 @@ export async function POST(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // Scope to the event's store; fall back to any-staff if store not yet set
-    // TODO: scope to store_id once all events require a store_id
+    // Network events (store_id = null) require network-admin; store events require store access
     const staffCtx = event.store_id
       ? await requireStoreAccess(event.store_id)
-      : await requireAnyStaff();
+      : await requireNetworkAdmin();
 
     if (!staffCtx) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });

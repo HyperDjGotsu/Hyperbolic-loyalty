@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireNetworkAdmin } from '@/lib/auth-helpers';
+import { fetchICalSafe } from '@/lib/ical-fetch';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,10 +136,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No network calendar URL configured. Set it in HQ → Settings → Network Calendar.' }, { status: 400 });
     }
 
-    const response = await fetch(icalUrl, { cache: 'no-store', headers: { 'User-Agent': 'HyperbolicLoyalty/1.0' } });
-    if (!response.ok) return NextResponse.json({ error: 'Failed to fetch network calendar' }, { status: 500 });
+    let icalData: string;
+    try {
+      icalData = await fetchICalSafe(icalUrl);
+    } catch (err: any) {
+      return NextResponse.json({ error: err?.message || 'Failed to fetch network calendar' }, { status: 500 });
+    }
 
-    const parsedEvents = parseICal(await response.text());
+    const parsedEvents = parseICal(icalData);
     if (!parsedEvents.length) return NextResponse.json({ message: 'No upcoming network events found', synced: 0 });
 
     let synced = 0;
