@@ -5,7 +5,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-base text-primary flex flex-col">
       {/* Nav */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-border-token">
-        <span className="font-display text-xl font-bold tracking-tight">Hyperbolic XP</span>
+        <span className="font-display text-xl font-bold tracking-tight">GSHC Player Pass</span>
         <div className="flex items-center gap-3">
           <Link
             href="/sign-in"
@@ -36,7 +36,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="text-lg text-secondary max-w-md mb-10">
-          Hyperbolic XP rewards you for every event, match, and purchase. Track your progress, compete on the leaderboard, and unlock rewards.
+          GSHC Player Pass rewards you for every event, match, and purchase. Track your progress, compete on the leaderboard, and unlock rewards.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs mx-auto">
