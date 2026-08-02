@@ -181,7 +181,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             title="Switch store"
           >
             <span className="font-display font-bold text-sm text-primary truncate leading-tight">
-              {selectedStoreName ?? 'Hyperbolic XP'}
+              {selectedStoreName ?? 'GSHC Player Pass'}
             </span>
             <svg
               width="12" height="12" viewBox="0 0 24 24" fill="none"

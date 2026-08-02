@@ -415,9 +415,9 @@ export default function MobileDashboard() {
         {/* Logo */}
         <div className="text-center mb-4">
           <div className="text-2xl font-black text-secondary font-display">
-            HYPERBOLIC
+            GSHC
           </div>
-          <div className="text-orange-400 text-xs font-bold tracking-widest">— GAMES —</div>
+          <div className="text-orange-400 text-xs font-bold tracking-widest">— PLAYER PASS —</div>
         </div>
 
         {/* Player Card */}

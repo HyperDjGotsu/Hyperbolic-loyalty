@@ -572,7 +572,7 @@ export default function DesktopDashboard() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
-  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
+  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'GSHC Player Pass' });
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -896,7 +896,7 @@ export default function DesktopDashboard() {
               <h1 
                 className="text-[22px] font-extrabold font-display text-accent"
               >
-                HYPERBOLIC GAMES
+                {storeConfig.store_name}
               </h1>
               <div className="flex gap-2.5 items-center">
                 <NotificationBell />
