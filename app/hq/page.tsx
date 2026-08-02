@@ -1726,12 +1726,9 @@ export default function HQPage() {
     setPrizeLoading(true);
     setPrizeWallDataset({ storeId: requestedStoreId, status: 'loading' });
     try {
-      const FLAGSHIP_STORE_ID = '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d';
-      const isTEM = requestedStoreId === FLAGSHIP_STORE_ID;
-      // TEM (network admin) sees all items across every store to manage grail status
-      const url = (!requestedStoreId || isTEM)
-        ? '/api/hq/prize-wall'
-        : `/api/hq/prize-wall?storeId=${encodeURIComponent(requestedStoreId)}`;
+      const url = requestedStoreId
+        ? `/api/hq/prize-wall?storeId=${encodeURIComponent(requestedStoreId)}`
+        : '/api/hq/prize-wall';
       const res = await fetch(url);
       if (requestedStoreId !== activeStoreRef.current) return;
       const data = await res.json();
@@ -4564,9 +4561,6 @@ export default function HQPage() {
                           </div>
                           {item.description && <div className="text-xs text-tertiary mt-0.5">{item.description}</div>}
                           {item.quantity != null && <div className="text-xs text-tertiary mt-0.5">Qty: {item.quantity}</div>}
-                          {item.store_id && item.store_id !== hqStore.activeStoreId && (
-                            <div className="text-xs text-tertiary mt-0.5 italic">From another store</div>
-                          )}
                         </td>
                         <td className="px-4 py-3 font-mono text-primary">{item.xp_cost.toLocaleString()} pts</td>
                         <td className="px-4 py-3 text-secondary">{item.retail_value != null ? `$${item.retail_value}` : '—'}</td>
