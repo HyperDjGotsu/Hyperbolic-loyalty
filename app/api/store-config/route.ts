@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   try {
     const { data, error } = await supabaseAdmin
       .from('store_config' as any)
-      .select('*')
+      .select('currency_name, currency_icon, store_name, shop_title, shop_description, player_id_prefix, shop_categories')
       .eq('id', 1)
       .maybeSingle();
 
