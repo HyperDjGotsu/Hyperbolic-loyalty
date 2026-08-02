@@ -13,7 +13,7 @@ interface StoreConfig {
 }
 
 const DEFAULT_CONFIG: StoreConfig = {
-  store_name: 'Hyperbolic XP',
+  store_name: 'GSHC Player Pass',
   shop_title: 'Prize Wall',
   shop_description: 'avatar cosmetics — backgrounds, frames, badges, and more',
   player_id_prefix: 'HYP',

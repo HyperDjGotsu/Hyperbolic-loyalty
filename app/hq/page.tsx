@@ -809,7 +809,7 @@ export default function HQPage() {
   const [storeConfig, setStoreConfig] = useState({
     currency_name: 'Points',
     currency_icon: '⭐',
-    store_name: 'Hyperbolic XP',
+    store_name: 'GSHC Player Pass',
     player_id_prefix: 'HYP',
     network_calendar_url: '',
   });

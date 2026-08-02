@@ -3,12 +3,12 @@ import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Hyperbolic XP',
+  title: 'GSHC Player Pass',
   description: 'Level up your TCG journey. Earn XP, unlock rewards, and compete with the community.',
   keywords: ['TCG', 'loyalty', 'gaming', 'One Piece', 'Pokemon', 'MTG'],
-  authors: [{ name: 'Hyperbolic Games' }],
+  authors: [{ name: 'GSHC' }],
   openGraph: {
-    title: 'Hyperbolic XP',
+    title: 'GSHC Player Pass',
     description: 'Level up your TCG journey',
     type: 'website',
   },
