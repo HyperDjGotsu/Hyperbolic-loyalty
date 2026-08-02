@@ -582,29 +582,9 @@ export async function POST(request: Request) {
       });
     }
     
-    // Delete cancelled events (STATUS:CANCELLED in iCal feed).
-    // uid_date entries (single occurrence): exact match only.
-    // Bare UIDs (whole event): exact + prefix match to catch all expanded instances.
-    const cancelledUids: string[] = (parsedEvents as any)._cancelledUids || [];
-    for (const cancelUid of cancelledUids) {
-      const isSpecificOccurrence = /^.+_\d{4}-\d{2}-\d{2}$/.test(cancelUid);
-      if (isSpecificOccurrence) {
-        await supabaseAdmin
-          .from('events')
-          .delete()
-          .eq('gcal_uid', cancelUid)
-          .in('status', ['scheduled']);
-      } else {
-        // Whole series cancelled — exact match + prefix match for expanded instances
-        await supabaseAdmin
-          .from('events')
-          .delete()
-          .or(`gcal_uid.eq.${cancelUid},gcal_uid.like.${cancelUid}_%`)
-          .in('status', ['scheduled']);
-      }
-    }
-
-    // Upsert events to Supabase
+    // Upsert events to Supabase first, then delete cancellations.
+    // Deletion runs last so that even if EXDATE parsing misses a cancelled date,
+    // the STATUS:CANCELLED cleanup still wins.
     let synced = 0;
     let errors: string[] = [];
     
@@ -691,7 +671,29 @@ export async function POST(request: Request) {
       }
     }
     
-    return NextResponse.json({ 
+    // Delete cancelled events after upsert so STATUS:CANCELLED always wins
+    // even if EXDATE parsing failed to exclude a date from the RRULE expansion.
+    // uid_date entries (single occurrence): exact match only.
+    // Bare UIDs (whole series): exact + prefix match to catch all expanded instances.
+    const cancelledUids: string[] = (parsedEvents as any)._cancelledUids || [];
+    for (const cancelUid of cancelledUids) {
+      const isSpecificOccurrence = /^.+_\d{4}-\d{2}-\d{2}$/.test(cancelUid);
+      if (isSpecificOccurrence) {
+        await supabaseAdmin
+          .from('events')
+          .delete()
+          .eq('gcal_uid', cancelUid)
+          .in('status', ['scheduled']);
+      } else {
+        await supabaseAdmin
+          .from('events')
+          .delete()
+          .or(`gcal_uid.eq.${cancelUid},gcal_uid.like.${cancelUid}_%`)
+          .in('status', ['scheduled']);
+      }
+    }
+
+    return NextResponse.json({
       message: `Synced ${synced} events from Google Calendar`,
       synced,
       total: futureEvents.length,
