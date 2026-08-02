@@ -43,6 +43,7 @@ interface CalendarEvent {
   isStartingSoon: boolean;
   isLive: boolean;
   prizing: string[] | null;
+  isNetworkEvent: boolean;
 }
 
 interface Friend {
@@ -553,8 +554,11 @@ function EventsPageContent() {
             {event.game?.icon || '🎮'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-primary font-bold truncate">{event.name}</span>
+              {event.isNetworkEvent && (
+                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30 whitespace-nowrap">🌐 GGC Network</span>
+              )}
               {event.isLive && (
                 <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
               )}

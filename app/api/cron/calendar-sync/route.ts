@@ -39,11 +39,25 @@ export async function GET(request: Request) {
     }
   }
 
-  const totalSynced = results.reduce((sum, r) => sum + (r.synced ?? 0), 0);
-  console.log('Calendar auto-sync complete:', results);
+  // Also sync the network calendar
+  let networkResult: { synced?: number; error?: string } = {};
+  try {
+    const res = await fetch(`${baseUrl}/api/events/sync-network`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${process.env.CRON_SECRET}` },
+    });
+    const data = await res.json();
+    networkResult = { synced: data.synced ?? 0, error: data.error };
+  } catch (err) {
+    networkResult = { error: String(err) };
+  }
+
+  const totalSynced = results.reduce((sum, r) => sum + (r.synced ?? 0), 0) + (networkResult.synced ?? 0);
+  console.log('Calendar auto-sync complete:', { stores: results, network: networkResult });
 
   return NextResponse.json({
-    message: `Auto-synced ${stores.length} store calendars — ${totalSynced} events upserted`,
+    message: `Auto-synced ${stores.length} store calendars + network calendar — ${totalSynced} events upserted`,
     results,
+    network: networkResult,
   });
 }

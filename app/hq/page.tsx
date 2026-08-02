@@ -811,6 +811,7 @@ export default function HQPage() {
     currency_icon: '⭐',
     store_name: 'Hyperbolic XP',
     player_id_prefix: 'HYP',
+    network_calendar_url: '',
   });
 
   // Staff invitations state
@@ -4481,6 +4482,36 @@ export default function HQPage() {
               )}
             </div>
 
+            {/* Network Calendar Sync — network admins only */}
+            {hqStore.isNetworkAdmin && (
+              <div className="bg-surface rounded-xl p-4 border border-yellow-500/30 space-y-3">
+                <div>
+                  <div className="font-semibold text-primary">🌐 Network Calendar</div>
+                  <div className="text-secondary text-sm mt-0.5">Card shows, circuit championships, regional partnerships — visible at all stores. Set the URL in Settings.</div>
+                </div>
+                <button
+                  onClick={async () => {
+                    setCalendarSyncing(true);
+                    setCalendarSyncMsg(null);
+                    try {
+                      const res = await fetch('/api/events/sync-network', { method: 'POST' });
+                      const data = await res.json();
+                      setCalendarSyncMsg({ text: res.ok ? `✅ ${data.message}` : `❌ ${data.error}`, ok: res.ok });
+                      if (res.ok) loadHQEvents();
+                    } catch { setCalendarSyncMsg({ text: '❌ Network error', ok: false }); }
+                    finally { setCalendarSyncing(false); }
+                  }}
+                  disabled={calendarSyncing}
+                  className="w-full py-2 bg-yellow-500/10 text-yellow-400 rounded-lg text-sm font-medium hover:bg-yellow-500/20 disabled:opacity-40 border border-yellow-500/20"
+                >
+                  {calendarSyncing ? '🔄 Syncing…' : '🔄 Sync Network Calendar'}
+                </button>
+                {calendarSyncMsg && (
+                  <p className={`text-sm ${calendarSyncMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>{calendarSyncMsg.text}</p>
+                )}
+              </div>
+            )}
+
             {/* Kiosk link */}
             <div className="bg-surface rounded-xl p-4 border border-border-token flex items-center justify-between">
               <div>
@@ -5414,6 +5445,21 @@ export default function HQPage() {
                 </p>
               </div>
             </div>
+
+            {/* Network Calendar URL — network admins only */}
+            {hqStore.isNetworkAdmin && (
+              <div className="bg-surface rounded-xl p-5 border border-yellow-500/30">
+                <h3 className="font-semibold text-primary mb-1">🌐 Network Calendar URL</h3>
+                <p className="text-xs text-secondary mb-3">Secret iCal URL for the company-wide calendar (card shows, circuit championships, regional events). Visible at all stores.</p>
+                <input
+                  type="url"
+                  className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary focus:outline-none focus:ring-1 focus:ring-accent"
+                  placeholder="https://calendar.google.com/calendar/ical/…"
+                  value={storeConfig.network_calendar_url || ''}
+                  onChange={e => setStoreConfig(c => ({ ...c, network_calendar_url: e.target.value }))}
+                />
+              </div>
+            )}
 
             <div className="flex justify-end">
               <button

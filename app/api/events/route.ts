@@ -46,7 +46,8 @@ export async function GET(request: Request) {
         youtube_url,
         attendance_xp,
         win_xp,
-        prizing
+        prizing,
+        store_id
       `)
       .order('scheduled_at', { ascending: true })
       .limit(limit);
@@ -60,10 +61,10 @@ export async function GET(request: Request) {
     }
     // 'all' returns everything
 
-    // Optional store filter — pass ?store_id=<uuid> to scope to one store
+    // Optional store filter — store events for that store + network events (store_id IS NULL) always included
     const storeId = searchParams.get('store_id');
     if (storeId) {
-      query = query.eq('store_id', storeId);
+      query = query.or(`store_id.eq.${storeId},store_id.is.null`);
     }
 
     const { data: events, error } = await query;
@@ -242,6 +243,7 @@ export async function GET(request: Request) {
         isStartingSoon: hoursUntil > 0 && hoursUntil <= 2,
         isLive: event.status === 'active',
         prizing: event.prizing || null,
+        isNetworkEvent: event.store_id === null,
       };
     });
 

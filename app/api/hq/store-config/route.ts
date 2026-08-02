@@ -22,7 +22,7 @@ export async function GET() {
 
     const { data, error } = await supabaseAdmin
       .from('store_config')
-      .select('id, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, updated_at')
+      .select('id, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, network_calendar_url, updated_at')
       .eq('id', 1)
       .maybeSingle();
 
@@ -44,7 +44,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code } = body;
+    const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, network_calendar_url } = body;
 
     const sanitizedPrefix = player_id_prefix
       ? String(player_id_prefix).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5) || 'HYP'
@@ -59,6 +59,7 @@ export async function PUT(request: Request) {
       shop_categories,
       ...(sanitizedPrefix ? { player_id_prefix: sanitizedPrefix } : {}),
       ...(staff_invite_code !== undefined ? { staff_invite_code } : {}),
+      ...(network_calendar_url !== undefined ? { network_calendar_url: network_calendar_url || null } : {}),
       updated_at: new Date().toISOString(),
     };
 
@@ -66,7 +67,7 @@ export async function PUT(request: Request) {
       .from('store_config')
       .update(updates)
       .eq('id', 1)
-      .select('id, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, updated_at')
+      .select('id, currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, network_calendar_url, updated_at')
       .maybeSingle();
 
     if (error) throw error;
