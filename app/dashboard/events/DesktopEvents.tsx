@@ -600,28 +600,14 @@ function EventsPageContent() {
   const handleSync = async () => {
     setSyncing(true);
     setSyncMessage(null);
-    
     try {
-      const storeIdForSync = localStorage.getItem('ggc_selected_store_id') || '';
-      const res = await fetch('/api/events/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storeId: storeIdForSync }),
-      });
-      const data = await res.json();
-      
-      if (res.ok) {
-        setSyncMessage(`✅ ${data.message}`);
-        await loadEvents();
-      } else {
-        setSyncMessage(`❌ ${data.error || 'Sync failed'}`);
-      }
+      await loadEvents();
+      setSyncMessage('✅ Events refreshed');
     } catch (err) {
-      setSyncMessage('❌ Sync failed - check console');
-      console.error('Sync error:', err);
+      setSyncMessage('❌ Refresh failed');
     } finally {
       setSyncing(false);
-      setTimeout(() => setSyncMessage(null), 5000);
+      setTimeout(() => setSyncMessage(null), 3000);
     }
   };
 
@@ -1182,14 +1168,14 @@ function EventsPageContent() {
             <div className="text-4xl mb-4">📭</div>
             <div className="text-primary font-bold">No upcoming events</div>
             <div className="text-secondary text-sm mt-2">
-              Tap Sync to pull from Google Calendar
+              Tap Refresh to reload events
             </div>
             <button
               onClick={handleSync}
               disabled={syncing}
               className="mt-4 px-4 py-2 bg-accent text-primary rounded-lg disabled:opacity-50"
             >
-              {syncing ? 'Syncing...' : '🔄 Sync from Calendar'}
+              {syncing ? 'Syncing...' : '🔄 Refresh'}
             </button>
           </div>
         ) : (
