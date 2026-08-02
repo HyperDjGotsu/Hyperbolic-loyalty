@@ -149,6 +149,11 @@ export default function PrizeWallPage() {
         onClaimTrial={loadPassStatus}
       />
 
+      <div className="flex items-start gap-3 px-4 py-3 bg-elevated rounded-xl border border-border-token text-sm text-secondary">
+        <span className="text-base leading-none mt-0.5">🏪</span>
+        <p>All prizes are redeemed in person at the store. Show your claim code to a staff member to collect your item.</p>
+      </div>
+
       {!loading && selectedStoreId === null ? (
         <div className="text-center text-secondary py-12">
           <p>No store selected. Visit a store to access the Prize Wall.</p>
@@ -480,6 +485,7 @@ function ConfirmationModal({
         <p className="text-sm text-secondary mt-3">
           You&apos;ll have {(balance - item.xp_cost).toLocaleString()} pts left
         </p>
+        <p className="text-xs text-tertiary mt-2">🏪 Collect in person — show your claim code to staff at the store.</p>
         {error && <p className="text-sm text-danger mt-3" role="alert">{error}</p>}
         <div className="flex gap-3 mt-6">
           <button
