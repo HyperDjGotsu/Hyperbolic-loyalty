@@ -24,6 +24,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
+    // Get live point balance from ledger (network-wide)
+    const { data: balanceData } = await supabaseAdmin
+      .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null } as any);
+    const liveBalance = typeof balanceData === 'number' ? balanceData : (player.gems || 0);
+
     // Get player's purchased items
     const { data: inventory, error: inventoryError } = await supabaseAdmin
       .from('player_inventory')
@@ -110,7 +115,7 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      gems: player.gems || 0,
+      gems: liveBalance,
       passInfo: {
         tier: (player as any).pass_tier || 'none',
         status: (player as any).pass_status || 'none',
