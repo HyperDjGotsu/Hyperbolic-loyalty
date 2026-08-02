@@ -693,10 +693,7 @@ export async function POST(request: Request) {
       }
     }
     
-    // Delete cancelled events after upsert so STATUS:CANCELLED always wins
-    // even if EXDATE parsing failed to exclude a date from the RRULE expansion.
-    // uid_date entries (single occurrence): exact match only.
-    // Bare UIDs (whole series): exact + prefix match to catch all expanded instances.
+    // Delete cancelled events (STATUS:CANCELLED in iCal feed).
     const cancelledUids: string[] = (parsedEvents as any)._cancelledUids || [];
     for (const cancelUid of cancelledUids) {
       const isSpecificOccurrence = /^.+_\d{4}-\d{2}-\d{2}$/.test(cancelUid);
@@ -712,6 +709,33 @@ export async function POST(request: Request) {
           .delete()
           .or(`gcal_uid.eq.${cancelUid},gcal_uid.like.${cancelUid}_%`)
           .in('status', ['scheduled']);
+      }
+    }
+
+    // Stale-event cleanup: remove scheduled future events that were in the DB
+    // but no longer appear in the iCal feed (e.g. Google used EXDATE without
+    // STATUS:CANCELLED, or the event was simply removed from the calendar).
+    // Only touches gcal_uid-sourced events for this store within the sync window.
+    const syncedUids = new Set(futureEvents.map(e => e.gcal_uid));
+    if (syncedUids.size > 0) {
+      // Fetch all upcoming gcal-sourced scheduled events for this store
+      const { data: existingRows } = await supabaseAdmin
+        .from('events')
+        .select('id, gcal_uid')
+        .eq('store_id', storeId)
+        .eq('status', 'scheduled')
+        .not('gcal_uid', 'is', null)
+        .gte('scheduled_at', cutoff.toISOString());
+
+      const staleIds = (existingRows || [])
+        .filter(row => row.gcal_uid && !syncedUids.has(row.gcal_uid))
+        .map(row => row.id);
+
+      if (staleIds.length > 0) {
+        await supabaseAdmin
+          .from('events')
+          .delete()
+          .in('id', staleIds);
       }
     }
 
