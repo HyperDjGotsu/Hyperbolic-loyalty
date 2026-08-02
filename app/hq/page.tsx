@@ -1785,7 +1785,7 @@ export default function HQPage() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setPrizeItems(prev => prev.map(i => i.id === item.id ? data.item : i));
+      setPrizeItems(prev => prev.map(i => i.id === item.id ? data : i));
       showToast(`Item ${!item.is_active ? 'activated' : 'deactivated'}`, 'success');
     } catch {
       showToast('Failed to update item', 'error');
