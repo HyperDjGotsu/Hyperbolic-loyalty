@@ -61,10 +61,12 @@ export async function GET(request: Request) {
     }
     // 'all' returns everything
 
-    // Optional store filter — store events for that store + network events (store_id IS NULL) always included
     const storeId = searchParams.get('store_id');
-    if (storeId) {
-      query = query.or(`store_id.eq.${storeId},store_id.is.null`);
+    const networkOnly = searchParams.get('network') === 'true';
+    if (networkOnly) {
+      query = query.is('store_id', null);
+    } else if (storeId) {
+      query = query.eq('store_id', storeId);
     }
 
     const { data: events, error } = await query;

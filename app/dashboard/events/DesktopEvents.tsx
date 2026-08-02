@@ -573,9 +573,10 @@ function EventsPageContent() {
     setError(null);
     
     try {
+      const networkParam = calendarScope === 'network' ? '&network=true' : '';
       const storeId = calendarScope === 'store' ? localStorage.getItem('ggc_selected_store_id') : null;
       const storeParam = storeId ? `&store_id=${storeId}` : '';
-      const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}`);
+      const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}${networkParam}`);
       const data = await res.json();
       
       if (res.ok) {
@@ -1061,7 +1062,7 @@ function EventsPageContent() {
                   calendarScope === 'network' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
                 }`}
               >
-                All Stores
+                Network
               </button>
             </div>
             <button

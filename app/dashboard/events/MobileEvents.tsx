@@ -367,9 +367,10 @@ function EventsPageContent() {
     setError(null);
     
     try {
+      const networkParam = calendarScope === 'network' ? '&network=true' : '';
       const storeId = calendarScope === 'store' ? localStorage.getItem('ggc_selected_store_id') : null;
       const storeParam = storeId ? `&store_id=${storeId}` : '';
-      const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}`);
+      const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}${networkParam}`);
       const data = await res.json();
       
       if (res.ok) {
@@ -830,7 +831,7 @@ function EventsPageContent() {
                 calendarScope === 'network' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
               }`}
             >
-              All Stores
+              Network
             </button>
           </div>
         </div>
@@ -875,7 +876,7 @@ function EventsPageContent() {
             <div className="text-4xl mb-4">📭</div>
             <div className="text-primary font-bold">No upcoming events</div>
             <div className="text-secondary text-sm mt-2">
-              {selectedGame !== 'all' ? 'Try selecting "All Games" to see more events' : 'Tap Sync to pull from Google Calendar'}
+              {selectedGame !== 'all' ? 'Try selecting "All Games" to see more events' : calendarScope === 'network' ? 'No company events scheduled yet' : 'Tap Sync to pull from Google Calendar'}
             </div>
             <button
               onClick={handleSync}
