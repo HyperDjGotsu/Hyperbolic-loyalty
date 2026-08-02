@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   void request; // touch request to ensure dynamic rendering
   try {
     const { data, error } = await supabaseAdmin
-      .from('store_config' as any)
+      .from('store_config')
       .select('currency_name, currency_icon, store_name, shop_title, shop_description, player_id_prefix, shop_categories')
       .eq('id', 1)
       .maybeSingle();
@@ -38,15 +38,14 @@ export async function GET(request: Request) {
       return NextResponse.json(DEFAULTS, { headers: NO_CACHE });
     }
 
-    const row = data as Record<string, any>;
     const result = {
-      currency_name:    row.currency_name    ?? DEFAULTS.currency_name,
-      currency_icon:    row.currency_icon    ?? DEFAULTS.currency_icon,
-      store_name:       row.store_name       ?? DEFAULTS.store_name,
-      shop_title:       row.shop_title       ?? DEFAULTS.shop_title,
-      shop_description: row.shop_description ?? DEFAULTS.shop_description,
-      player_id_prefix: row.player_id_prefix ?? DEFAULTS.player_id_prefix,
-      shop_categories:  row.shop_categories  ?? DEFAULTS.shop_categories,
+      currency_name:    data.currency_name    ?? DEFAULTS.currency_name,
+      currency_icon:    data.currency_icon    ?? DEFAULTS.currency_icon,
+      store_name:       data.store_name       ?? DEFAULTS.store_name,
+      shop_title:       data.shop_title       ?? DEFAULTS.shop_title,
+      shop_description: data.shop_description ?? DEFAULTS.shop_description,
+      player_id_prefix: data.player_id_prefix ?? DEFAULTS.player_id_prefix,
+      shop_categories:  data.shop_categories  ?? DEFAULTS.shop_categories,
     };
 
     return NextResponse.json(result, { headers: NO_CACHE });

@@ -287,7 +287,7 @@ export async function GET() {
 
     // Get live point balance from ledger (network-wide, source of truth)
     const { data: balanceData } = await supabaseAdmin
-      .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null } as any);
+      .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null as unknown as string });
     const liveGems = typeof balanceData === 'number' ? balanceData : (player.gems || 0);
 
     // Parse avatar

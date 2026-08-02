@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
 
     const { data: invitation, error: insertErr } = await supabaseAdmin
-      .from('staff_invitations' as any)
+      .from('staff_invitations')
       .insert({
         email: normalizedEmail,
         store_id,
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hyperbolic-loyalty.vercel.app';
     const acceptUrl = `${appUrl}/staff/accept-invite?token=${rawToken}`;
     const roleLabel = role === 'store_manager' ? 'Store Manager' : 'Store Staff';
-    const storeName = (store as any).name as string;
+    const storeName = store.name;
 
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
@@ -164,7 +164,7 @@ export async function DELETE(request: Request) {
     }
 
     const { data: existing, error: fetchErr } = await supabaseAdmin
-      .from('staff_invitations' as any)
+      .from('staff_invitations')
       .select('id, store_id, role, accepted_at, revoked_at')
       .eq('id', id)
       .single();
@@ -173,32 +173,30 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
 
-    const inv = existing as any;
-
-    if (inv.accepted_at) {
+    if (existing.accepted_at) {
       return NextResponse.json({ error: 'Cannot revoke an already accepted invitation' }, { status: 409 });
     }
-    if (inv.revoked_at) {
+    if (existing.revoked_at) {
       return NextResponse.json({ error: 'Invitation already revoked' }, { status: 409 });
     }
 
     // Authorization: same rules as creation
     let staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
-      if (inv.role === 'store_manager') {
+      if (existing.role === 'store_manager') {
         return NextResponse.json(
           { error: 'Only network admins can revoke store manager invitations' },
           { status: 403 }
         );
       }
-      staffCtx = await requireStoreManager(inv.store_id);
+      staffCtx = await requireStoreManager(existing.store_id);
       if (!staffCtx) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
     }
 
     const { error: updateErr } = await supabaseAdmin
-      .from('staff_invitations' as any)
+      .from('staff_invitations')
       .update({ revoked_at: new Date().toISOString() })
       .eq('id', id);
 
@@ -219,7 +217,7 @@ export async function GET() {
     if (staffCtx) {
       // Network admin sees all
       const { data, error } = await supabaseAdmin
-        .from('staff_invitations' as any)
+        .from('staff_invitations')
         .select('id, email, store_id, role, invited_by, expires_at, accepted_at, revoked_at, created_at')
         .order('created_at', { ascending: false });
 
@@ -235,7 +233,7 @@ export async function GET() {
     }
 
     const { data, error } = await supabaseAdmin
-      .from('staff_invitations' as any)
+      .from('staff_invitations')
       .select('id, email, store_id, role, invited_by, expires_at, accepted_at, revoked_at, created_at')
       .in('store_id', ctx.managedStoreIds)
       .order('created_at', { ascending: false });

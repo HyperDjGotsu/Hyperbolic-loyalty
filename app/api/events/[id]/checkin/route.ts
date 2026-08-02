@@ -55,7 +55,7 @@ async function awardReferralBonus(
       source: 'referral',
       awarded_by: staffId,
       store_id: storeId,
-    } as any);
+    });
 
     // Prize Points for referrer (flat, no multiplier per spec)
     await logPointTransaction({
@@ -135,8 +135,8 @@ export async function POST(
       }
       playerId = player.id;
       playerName = player.display_name || body.hyp_id;
-      playerTier = (player as any).pass_tier || 'free';
-      playerHomeStoreId = (player as any).home_store_id;
+      playerTier = player.pass_tier || 'free';
+      playerHomeStoreId = player.home_store_id;
     } else {
       const { userId } = await auth();
       if (!userId) {
@@ -154,16 +154,16 @@ export async function POST(
       }
       playerId = player.id;
       playerName = player.display_name || 'Player';
-      playerTier = (player as any).pass_tier || 'free';
-      playerHomeStoreId = (player as any).home_store_id;
-      if ((player as any).is_staff) staffId = player.id;
+      playerTier = player.pass_tier || 'free';
+      playerHomeStoreId = player.home_store_id;
+      if (player.is_staff) staffId = player.id;
     }
 
     // Resolve store_id: body override > event store > player home store
-    const storeId: string = body.store_id || (event as any).store_id || playerHomeStoreId || '';
+    const storeId: string = body.store_id || event.store_id || playerHomeStoreId || '';
 
     // Deduplicate
-    const { data: existing } = await (supabaseAdmin as any)
+    const { data: existing } = await supabaseAdmin
       .from('event_attendances')
       .select('id')
       .eq('event_id', eventId)
@@ -185,7 +185,7 @@ export async function POST(
     );
 
     // Record attendance
-    const { error: attendanceError } = await (supabaseAdmin as any)
+    const { error: attendanceError } = await supabaseAdmin
       .from('event_attendances')
       .insert({
         event_id: eventId,
@@ -212,10 +212,10 @@ export async function POST(
       final_xp: lifetimeXp,
       multiplier: 1,
       description: xpDescription,
-      source: 'event_attendance' as any,
-      awarded_by: staffId as any,
+      source: 'event_attendance',
+      awarded_by: staffId,
       store_id: storeId || null,
-    } as any);
+    });
 
     // Award Prize Points (multiplier applies to event actions)
     if (storeId) {

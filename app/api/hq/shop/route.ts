@@ -100,7 +100,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Shop item not found' }, { status: 404 });
     }
 
-    const itemStoreId = (existing as any).store_id as string | null;
+    const itemStoreId = (existing as unknown as { store_id: string | null }).store_id;
     const staffCtx = itemStoreId
       ? await requireStoreManager(itemStoreId)
       : await requireNetworkAdmin();
@@ -145,7 +145,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Shop item not found' }, { status: 404 });
     }
 
-    const itemStoreId = (existing as any).store_id as string | null;
+    const itemStoreId = (existing as unknown as { store_id: string | null }).store_id;
     const staffCtx = itemStoreId
       ? await requireStoreManager(itemStoreId)
       : await requireNetworkAdmin();

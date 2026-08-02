@@ -618,12 +618,11 @@ export async function POST(request: Request) {
     for (const event of futureEvents) {
       try {
         // Check if event exists by gcal_uid
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: existing } = await (supabaseAdmin
+        const { data: existing } = await supabaseAdmin
           .from('events')
           .select('id')
           .eq('gcal_uid', event.gcal_uid)
-          .single() as any);
+          .maybeSingle();
         
         if (existing) {
           // Update existing event - calendar is source of truth
@@ -813,14 +812,12 @@ export async function GET(request: Request) {
     const futureEvents = parsedEvents.filter(e => new Date(e.scheduled_at) >= cutoff);
     
     // Get existing gcal_uids from database
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existingEvents } = await (supabaseAdmin
+    const { data: existingEvents } = await supabaseAdmin
       .from('events')
       .select('gcal_uid')
-      .not('gcal_uid', 'is', null) as any);
-    
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingUids = new Set(existingEvents?.map((e: any) => e.gcal_uid) || []);
+      .not('gcal_uid', 'is', null);
+
+    const existingUids = new Set(existingEvents?.map((e) => e.gcal_uid) || []);
     
     // Categorize events
     const newEvents = futureEvents.filter(e => !existingUids.has(e.gcal_uid));

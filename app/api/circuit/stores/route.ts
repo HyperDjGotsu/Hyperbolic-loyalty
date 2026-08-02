@@ -8,9 +8,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const orgSlug = searchParams.get('org') || 'ggc';
 
-  const db = supabaseAdmin as any;
-
-  const { data: org } = await db
+  const { data: org } = await supabaseAdmin
     .from('organizations')
     .select('id, name, slug')
     .eq('slug', orgSlug)
@@ -18,7 +16,7 @@ export async function GET(request: Request) {
 
   if (!org) return NextResponse.json({ stores: [], org: null });
 
-  const { data: stores, error } = await db
+  const { data: stores, error } = await supabaseAdmin
     .from('stores')
     .select('id, name, city, state, player_id_prefix, color, is_active')
     .eq('org_id', org.id)

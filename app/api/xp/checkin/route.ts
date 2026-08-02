@@ -31,7 +31,8 @@ export async function GET() {
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
-      .eq('source', 'check_in' as any)
+      // 'check_in' is a legacy source string not in the current xp_source enum
+      .eq('source', 'check_in' as unknown as 'event_attendance')
       .gte('created_at', today.toISOString())
       .limit(1);
 
@@ -72,7 +73,8 @@ export async function POST() {
       .from('xp_ledger')
       .select('id')
       .eq('player_id', player.id)
-      .eq('source', 'check_in' as any)
+      // 'check_in' is a legacy source string not in the current xp_source enum
+      .eq('source', 'check_in' as unknown as 'event_attendance')
       .gte('created_at', today.toISOString())
       .limit(1);
 
@@ -92,7 +94,8 @@ export async function POST() {
         base_xp: CHECK_IN_XP,
         multiplier: 1,
         final_xp: CHECK_IN_XP,
-        source: 'check_in' as any,
+        // 'check_in' is a legacy source string not in the current xp_source enum
+        source: 'check_in' as unknown as 'event_attendance',
         description: 'Daily check-in',
       });
 

@@ -55,9 +55,9 @@ export async function POST(request: Request) {
 
     // Atomic adjustment: advisory lock + balance check + insert in one SQL function.
     // Prevents concurrent adjustments from both passing the negative-balance guard.
-    const { data: result, error: rpcErr } = await (supabaseAdmin as any).rpc('adjust_prize_points', {
+    const { data: result, error: rpcErr } = await supabaseAdmin.rpc('adjust_prize_points', {
       p_player_id: playerId,
-      p_store_id:  storeId,
+      p_store_id:  storeId as string,
       p_amount:    amount,
       p_reason:    reason.trim(),
     });
@@ -67,11 +67,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
 
-    if (result?.error) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+    const resultJson = result as { error?: string; new_balance?: number };
+
+    if (resultJson?.error) {
+      return NextResponse.json({ error: resultJson.error }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, newBalance: result.new_balance });
+    return NextResponse.json({ success: true, newBalance: resultJson.new_balance });
   } catch (err) {
     console.error('prize-points POST error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

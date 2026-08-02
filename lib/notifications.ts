@@ -19,12 +19,13 @@ const DEFAULT_PREFS: NotificationPrefs = {
 };
 
 async function getPrefs(playerId: string): Promise<NotificationPrefs> {
-  const { data } = await (supabaseAdmin as any)
+  const { data } = await supabaseAdmin
     .from('players')
     .select('notification_preferences')
     .eq('id', playerId)
     .single();
-  return { ...DEFAULT_PREFS, ...(data?.notification_preferences ?? {}) };
+  const prefs = (data?.notification_preferences ?? {}) as Partial<NotificationPrefs>;
+  return { ...DEFAULT_PREFS, ...prefs };
 }
 
 export async function createNotification(
@@ -45,7 +46,7 @@ export async function createNotification(
       type,
       title,
       message,
-      data: data as any,
+      data,
       is_read: false,
       store_id: storeId ?? null,
     });
@@ -65,18 +66,17 @@ export async function notifyStorePlayers(
   category: NotificationCategory
 ): Promise<number> {
   try {
-    const { data: players } = await (supabaseAdmin as any)
+    const { data: players } = await supabaseAdmin
       .from('players')
       .select('id, notification_preferences')
       .eq('home_store_id', storeId);
 
     if (!players?.length) return 0;
 
-    const eligible = (players as { id: string; notification_preferences: Partial<NotificationPrefs> | null }[])
-      .filter((p) => {
-        const prefs = { ...DEFAULT_PREFS, ...(p.notification_preferences ?? {}) };
-        return prefs[category];
-      });
+    const eligible = players.filter((p) => {
+      const prefs = { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Partial<NotificationPrefs>) };
+      return prefs[category];
+    });
 
     if (!eligible.length) return 0;
 
@@ -86,12 +86,12 @@ export async function notifyStorePlayers(
       type,
       title,
       message,
-      data: data as any,
+      data,
       is_read: false,
     }));
 
     for (let i = 0; i < rows.length; i += 100) {
-      await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100) as any);
+      await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100));
     }
 
     return eligible.length;
@@ -111,17 +111,16 @@ export async function notifyAllPlayers(
   category: NotificationCategory
 ): Promise<number> {
   try {
-    const { data: players } = await (supabaseAdmin as any)
+    const { data: players } = await supabaseAdmin
       .from('players')
       .select('id, notification_preferences');
 
     if (!players?.length) return 0;
 
-    const eligible = (players as { id: string; notification_preferences: Partial<NotificationPrefs> | null }[])
-      .filter((p) => {
-        const prefs = { ...DEFAULT_PREFS, ...(p.notification_preferences ?? {}) };
-        return prefs[category];
-      });
+    const eligible = players.filter((p) => {
+      const prefs = { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Partial<NotificationPrefs>) };
+      return prefs[category];
+    });
 
     if (!eligible.length) return 0;
 
@@ -131,12 +130,12 @@ export async function notifyAllPlayers(
       type,
       title,
       message,
-      data: data as any,
+      data,
       is_read: false,
     }));
 
     for (let i = 0; i < rows.length; i += 100) {
-      await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100) as any);
+      await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100));
     }
 
     return eligible.length;

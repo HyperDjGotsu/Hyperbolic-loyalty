@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       }
 
       // Network admin unfiltered list
-      const { data, error } = await (supabaseAdmin as any)
+      const { data, error } = await supabaseAdmin
         .from('prize_wall_redemptions')
         .select(`
           id, claim_code, status, item_name, item_retail_value,
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabaseAdmin
       .from('prize_wall_redemptions')
       .select(`
         id, claim_code, status, item_name, item_retail_value,

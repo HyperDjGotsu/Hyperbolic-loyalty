@@ -26,7 +26,7 @@ export async function GET() {
 
     // Get live point balance from ledger (network-wide)
     const { data: balanceData } = await supabaseAdmin
-      .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null } as any);
+      .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null as unknown as string });
     const liveBalance = typeof balanceData === 'number' ? balanceData : (player.gems || 0);
 
     // Get player's purchased items
@@ -117,9 +117,9 @@ export async function GET() {
     return NextResponse.json({
       gems: liveBalance,
       passInfo: {
-        tier: (player as any).pass_tier || 'none',
-        status: (player as any).pass_status || 'none',
-        isActive: (player as any).pass_tier === 'player' && (player as any).pass_status === 'active',
+        tier: player.pass_tier || 'none',
+        status: player.pass_status || 'none',
+        isActive: player.pass_tier === 'player' && player.pass_status === 'active',
       },
       avatarConfig: player.avatar_config || {
         base: '😎',

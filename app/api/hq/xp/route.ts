@@ -255,7 +255,7 @@ export async function POST(request: Request) {
           .eq('id', playerId)
           .single();
 
-        const tier = (playerRow as any)?.pass_tier || 'free';
+        const tier = playerRow?.pass_tier || 'free';
         const multiplier = TIER_MULTIPLIERS[tier] ?? 1.0;
         prizePointsAwarded = Math.round(basePP * multiplier);
 

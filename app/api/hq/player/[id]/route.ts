@@ -78,12 +78,12 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     ] as const;
 
     for (const table of tables) {
-      const { error } = await supabaseAdmin.from(table as any).delete().eq('player_id', pid);
+      const { error } = await supabaseAdmin.from(table).delete().eq('player_id', pid);
       if (error) console.warn(`Could not delete from ${table}:`, error.message);
     }
 
     // emperors references player_id but preserving history — null it out instead of deleting
-    await supabaseAdmin.from('emperors' as any).update({ player_id: null } as any).eq('player_id', pid);
+    await supabaseAdmin.from('emperors').update({ player_id: null as unknown as string }).eq('player_id', pid);
 
     const { error } = await supabaseAdmin.from('players').delete().eq('id', pid);
     if (error) throw error;

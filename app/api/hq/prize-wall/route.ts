@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       }
       // Network admin unfiltered list
       const { data, error } = await supabaseAdmin
-        .from('prize_wall_items' as any)
+        .from('prize_wall_items')
         .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     }
 
     // Return network-wide items + items belonging to this store
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabaseAdmin
       .from('prize_wall_items')
       .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
       .or(`store_id.is.null,store_id.eq.${storeId}`)
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     }
 
     const { data, error } = await supabaseAdmin
-      .from('prize_wall_items' as any)
+      .from('prize_wall_items')
       .insert({
         name,
         xp_cost,
@@ -98,7 +98,7 @@ export async function PUT(request: Request) {
 
     // Load the item to get its actual store_id
     const { data: existing, error: fetchError } = await supabaseAdmin
-      .from('prize_wall_items' as any)
+      .from('prize_wall_items')
       .select('id, store_id')
       .eq('id', id)
       .single();
@@ -107,7 +107,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Prize wall item not found' }, { status: 404 });
     }
 
-    const itemStoreId = (existing as any).store_id as string | null;
+    const itemStoreId = existing.store_id;
     const staffCtx = itemStoreId
       ? await requireStoreManager(itemStoreId)
       : await requireNetworkAdmin();
@@ -123,7 +123,7 @@ export async function PUT(request: Request) {
     }
 
     const { data, error } = await supabaseAdmin
-      .from('prize_wall_items' as any)
+      .from('prize_wall_items')
       .update(updates)
       .eq('id', id)
       .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, created_at')
@@ -148,7 +148,7 @@ export async function DELETE(request: Request) {
 
     // Load the item to get its actual store_id
     const { data: existing, error: fetchError } = await supabaseAdmin
-      .from('prize_wall_items' as any)
+      .from('prize_wall_items')
       .select('id, store_id')
       .eq('id', id)
       .single();
@@ -157,7 +157,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Prize wall item not found' }, { status: 404 });
     }
 
-    const itemStoreId = (existing as any).store_id as string | null;
+    const itemStoreId = existing.store_id;
     const staffCtx = itemStoreId
       ? await requireStoreManager(itemStoreId)
       : await requireNetworkAdmin();
@@ -167,7 +167,7 @@ export async function DELETE(request: Request) {
     }
 
     const { count, error: checkError } = await supabaseAdmin
-      .from('prize_wall_redemptions' as any)
+      .from('prize_wall_redemptions')
       .select('id', { count: 'exact', head: true })
       .eq('item_id', id)
       .eq('status', 'pending');
@@ -182,7 +182,7 @@ export async function DELETE(request: Request) {
     }
 
     const { error } = await supabaseAdmin
-      .from('prize_wall_items' as any)
+      .from('prize_wall_items')
       .delete()
       .eq('id', id);
 

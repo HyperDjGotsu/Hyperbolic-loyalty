@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get matches for event
-    const { data: matches, error } = await (supabaseAdmin as any)
+    const { data: matches, error } = await supabaseAdmin
       .from('bounty_hunter_matches')
       .select('*')
       .eq('event_id', eventId)
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Get player names for display
     const playerIds = new Set<string>();
-    matches?.forEach((m: any) => {
+    matches?.forEach((m) => {
       if (m.winner_id) playerIds.add(m.winner_id);
       if (m.loser_id) playerIds.add(m.loser_id);
     });
@@ -59,10 +59,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Enrich matches with player names
-    const enrichedMatches = matches?.map((m: any) => ({
+    const enrichedMatches = matches?.map((m) => ({
       ...m,
-      winner_name: playerMap[m.winner_id] || 'Unknown',
-      loser_name: playerMap[m.loser_id] || 'Unknown',
+      winner_name: (m.winner_id && playerMap[m.winner_id]) || 'Unknown',
+      loser_name: (m.loser_id && playerMap[m.loser_id]) || 'Unknown',
     }));
 
     return NextResponse.json({ matches: enrichedMatches || [] });
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     const points = MATCH_POINTS[match_type as MatchType];
 
     // Record the match
-    const { data: match, error: matchError } = await (supabaseAdmin as any)
+    const { data: match, error: matchError } = await supabaseAdmin
       .from('bounty_hunter_matches')
       .insert({
         event_id,
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         final_xp: points.winner,
         source: 'manual_adjustment',
         description: `Bounty Hunter Night: ${match_type.replace(/_/g, ' ')} (Win)`,
-      } as any);
+      });
 
     if (winnerXpError) {
       console.error('Error awarding winner XP:', winnerXpError);
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
           final_xp: actualDeduction,
           source: 'manual_adjustment',
           description: `Bounty Hunter Night: ${match_type.replace(/_/g, ' ')} (Loss)`,
-        } as any);
+        });
 
       if (loserXpError) {
         console.error('Error deducting loser XP:', loserXpError);
@@ -211,7 +211,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get match details first to reverse XP
-    const { data: match } = await (supabaseAdmin as any)
+    const { data: match } = await supabaseAdmin
       .from('bounty_hunter_matches')
       .select('*')
       .eq('id', matchId)
@@ -222,19 +222,21 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Reverse winner XP
-    await supabaseAdmin
-      .from('xp_ledger')
-      .insert({
-        player_id: match.winner_id,
-        game_id: 'one_piece',
-        base_xp: -match.winner_points,
-        final_xp: -match.winner_points,
-        source: 'manual_adjustment',
-        description: 'Bounty Hunter Night: Match reversed',
-      } as any);
+    if (match.winner_id) {
+      await supabaseAdmin
+        .from('xp_ledger')
+        .insert({
+          player_id: match.winner_id,
+          game_id: 'one_piece',
+          base_xp: -match.winner_points,
+          final_xp: -match.winner_points,
+          source: 'manual_adjustment',
+          description: 'Bounty Hunter Night: Match reversed',
+        });
+    }
 
     // Reverse loser XP (add back what was deducted)
-    if (match.loser_points < 0) {
+    if (match.loser_points < 0 && match.loser_id) {
       await supabaseAdmin
         .from('xp_ledger')
         .insert({
@@ -244,11 +246,11 @@ export async function DELETE(request: NextRequest) {
           final_xp: -match.loser_points,
           source: 'manual_adjustment',
           description: 'Bounty Hunter Night: Match reversed',
-        } as any);
+        });
     }
 
     // Delete the match
-    const { error: deleteError } = await (supabaseAdmin as any)
+    const { error: deleteError } = await supabaseAdmin
       .from('bounty_hunter_matches')
       .delete()
       .eq('id', matchId);

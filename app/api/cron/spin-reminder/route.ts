@@ -25,16 +25,16 @@ export async function GET(request: Request) {
 
     const spunIds = new Set((spunToday ?? []).map((r: { player_id: string }) => r.player_id));
 
-    const { data: allPlayers } = await (supabaseAdmin as any)
+    const { data: allPlayers } = await supabaseAdmin
       .from('players')
       .select('id, notification_preferences');
 
     if (!allPlayers?.length) return NextResponse.json({ sent: 0 });
 
     const DEFAULT_PREFS = { daily_rewards: true, events: true, leaderboard: true, social: true, store: true };
-    const eligible = (allPlayers as { id: string; notification_preferences: Record<string, boolean> | null }[]).filter((p) => {
+    const eligible = allPlayers.filter((p) => {
       if (spunIds.has(p.id)) return false;
-      const prefs = { ...DEFAULT_PREFS, ...(p.notification_preferences ?? {}) };
+      const prefs = { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Record<string, boolean>) };
       return prefs.daily_rewards;
     });
 

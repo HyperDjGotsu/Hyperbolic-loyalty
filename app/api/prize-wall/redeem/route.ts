@@ -27,25 +27,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const resolvedStoreId: string | null = storeId || (player as any).home_store_id || null;
+    const resolvedStoreId: string | null = storeId || player.home_store_id || null;
 
     if (!resolvedStoreId) {
       return NextResponse.json({ error: 'No store selected — visit a store first' }, { status: 400 });
     }
 
     // Check free tier gate server-side
-    if ((player as any).pass_tier === 'free' || (player as any).pass_tier === 'none') {
-      const { data: config } = await (supabaseAdmin as any)
+    if (player.pass_tier === 'none' || player.pass_tier === null) {
+      const { data: config } = await supabaseAdmin
         .from('economy_config')
         .select('config')
         .order('version', { ascending: false })
         .limit(1)
         .single();
 
-      const gate = config?.config?.free_tier_gate_pts ?? 720;
+      const configJson = (config?.config ?? {}) as { free_tier_gate_pts?: number };
+      const gate = configJson.free_tier_gate_pts ?? 720;
 
-      const { data: balance } = await (supabaseAdmin as any)
-        .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null });
+      const { data: balance } = await supabaseAdmin
+        .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null as unknown as string });
 
       if ((balance ?? 0) < gate) {
         return NextResponse.json({
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     // Atomic deduct + create redemption
-    const { data: result, error } = await (supabaseAdmin as any)
+    const { data: result, error } = await supabaseAdmin
       .rpc('create_prize_redemption', {
         p_player_id: player.id,
         p_item_id: itemId,
@@ -69,16 +70,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Redemption failed' }, { status: 500 });
     }
 
-    if (result.error) {
-      return NextResponse.json({ error: result.error, balance: result.balance, required: result.required }, { status: 400 });
+    const resultJson = result as {
+      error?: string;
+      balance?: number;
+      required?: number;
+      claim_code?: string;
+      item_name?: string;
+      points_deducted?: number;
+      redemption_id?: string;
+    };
+
+    if (resultJson.error) {
+      return NextResponse.json({ error: resultJson.error, balance: resultJson.balance, required: resultJson.required }, { status: 400 });
     }
 
     return NextResponse.json({
       success: true,
-      claimCode: result.claim_code,
-      itemName: result.item_name,
-      pointsDeducted: result.points_deducted,
-      redemptionId: result.redemption_id,
+      claimCode: resultJson.claim_code,
+      itemName: resultJson.item_name,
+      pointsDeducted: resultJson.points_deducted,
+      redemptionId: resultJson.redemption_id,
     });
   } catch (error) {
     console.error('Redeem error:', error);

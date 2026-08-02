@@ -24,7 +24,7 @@ export async function GET() {
     const monthKey = getCurrentMonthKey();
 
     // Get current event
-    const { data: event } = await (supabaseAdmin as any)
+    const { data: event } = await supabaseAdmin
       .from('bounty_hunter_events')
       .select('*')
       .eq('month_key', monthKey)
@@ -72,15 +72,15 @@ export async function GET() {
     }));
 
     // Get registered hunters
-    const { data: participants } = await (supabaseAdmin as any)
+    const { data: participants } = await supabaseAdmin
       .from('bounty_hunter_participants')
       .select('player_id, role')
       .eq('event_id', event.id)
       .eq('role', 'hunter');
 
-    const hunterIds = participants?.map((p: any) => p.player_id) || [];
-    
-    let hunters: any[] = [];
+    const hunterIds = participants?.map((p) => p.player_id).filter((id): id is string => !!id) || [];
+
+    let hunters: Array<{ player_id: string; display_name: string; role: 'hunter'; xp: number }> = [];
     if (hunterIds.length > 0) {
       const { data: hunterPlayers } = await supabaseAdmin
         .from('players')
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     const monthKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
 
     // Check for existing event this month
-    const { data: existing } = await (supabaseAdmin as any)
+    const { data: existing } = await supabaseAdmin
       .from('bounty_hunter_events')
       .select('id')
       .eq('month_key', monthKey)
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create event
-    const { data: newEvent, error: insertError } = await (supabaseAdmin as any)
+    const { data: newEvent, error: insertError } = await supabaseAdmin
       .from('bounty_hunter_events')
       .insert({
         event_date,
@@ -179,7 +179,14 @@ export async function PUT(request: NextRequest) {
     }
 
     // Build update object
-    const updates: any = { updated_at: new Date().toISOString() };
+    const updates: {
+      updated_at: string;
+      status?: string;
+      event_date?: string;
+      month_key?: string;
+      opt_in_opens_at?: string;
+      opt_in_closes_at?: string;
+    } = { updated_at: new Date().toISOString() };
     
     // Update status if provided
     if (status) {
@@ -206,7 +213,7 @@ export async function PUT(request: NextRequest) {
       updates.opt_in_closes_at = opt_in_closes_at;
     }
 
-    const { error: updateError } = await (supabaseAdmin as any)
+    const { error: updateError } = await supabaseAdmin
       .from('bounty_hunter_events')
       .update(updates)
       .eq('id', event_id);
@@ -240,13 +247,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete participants first (cascade should handle this, but being safe)
-    await (supabaseAdmin as any)
+    await supabaseAdmin
       .from('bounty_hunter_participants')
       .delete()
       .eq('event_id', eventId);
 
     // Delete event
-    const { error: deleteError } = await (supabaseAdmin as any)
+    const { error: deleteError } = await supabaseAdmin
       .from('bounty_hunter_events')
       .delete()
       .eq('id', eventId);

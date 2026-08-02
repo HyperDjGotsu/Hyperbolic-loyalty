@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     }
 
     const [itemsResult, subscriberResult] = await Promise.all([
-      (supabaseAdmin as any)
+      supabaseAdmin
         .from('prize_wall_items')
         .select('id, name, description, image_url, xp_cost, retail_value, quantity, store_id, unlock_threshold, is_active, is_network_prize, created_at')
         .eq('is_active', true)
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
     const subscriber_count = 30; // TEMP: visual/redemption test — revert after
 
-    const items = (itemsResult.data ?? []).map((item: any) => ({
+    const items = (itemsResult.data ?? []).map((item) => ({
       ...item,
       is_unlocked: item.unlock_threshold === null || subscriber_count >= item.unlock_threshold,
     }));

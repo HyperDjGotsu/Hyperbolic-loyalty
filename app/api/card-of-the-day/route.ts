@@ -228,7 +228,14 @@ export async function GET() {
     if (dbCard && !dbError) {
       console.log('[Card of the Day] Found staff pick in database');
       
-      const cardData = dbCard.card_data as any;
+      const cardData = dbCard.card_data as {
+        set?: string;
+        rarity?: string;
+        price?: number | null;
+        priceChange7d?: number | null;
+        priceChange30d?: number | null;
+        tcgplayerId?: string;
+      };
       const tcgplayerUrl = cardData.tcgplayerId 
         ? `https://www.tcgplayer.com/product/${cardData.tcgplayerId}`
         : '';

@@ -21,7 +21,7 @@ export async function logPointTransaction({
   referenceId,
   note,
 }: LogPointTransactionParams): Promise<void> {
-  const { error } = await (supabaseAdmin as any).from('prize_point_transactions').insert({
+  const { error } = await supabaseAdmin.from('prize_point_transactions').insert({
     player_id: playerId,
     store_id: storeId,
     amount,
@@ -37,14 +37,14 @@ export async function logPointTransaction({
 }
 
 export async function getPlayerBalance(playerId: string, storeId?: string): Promise<number> {
-  const { data, error } = await (supabaseAdmin as any)
-    .rpc('get_user_point_balance', { p_player_id: playerId, p_store_id: storeId ?? null });
+  const { data, error } = await supabaseAdmin
+    .rpc('get_user_point_balance', { p_player_id: playerId, p_store_id: storeId ?? (null as unknown as string) });
 
   if (error) {
     throw new Error(`Failed to get player point balance: ${error.message}`);
   }
 
-  return (data as number) ?? 0;
+  return data ?? 0;
 }
 
 export const TIER_MULTIPLIERS: Record<string, number> = {

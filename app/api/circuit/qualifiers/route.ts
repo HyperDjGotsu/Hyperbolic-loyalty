@@ -16,9 +16,7 @@ export async function GET(request: Request) {
   const championshipEventId = searchParams.get('championship_event_id');
   const orgSlug = searchParams.get('org') || 'ggc';
 
-  const db = supabaseAdmin as any;
-
-  let query = db
+  let query = supabaseAdmin
     .from('circuit_qualifiers')
     .select(`
       id,
@@ -89,8 +87,7 @@ export async function POST(request: Request) {
         championship_event_id: championship_event_id || null,
       }));
 
-    const db = supabaseAdmin as any;
-    const { data, error } = await db
+    const { data, error } = await supabaseAdmin
       .from('circuit_qualifiers')
       .upsert(qualifiers, { onConflict: 'qualifier_event_id,player_id' })
       .select('id, player_id, placement, has_bye');

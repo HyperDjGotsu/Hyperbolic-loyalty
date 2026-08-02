@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     if (storeId) {
       // Network-wide banners + banners for this specific store
-      query = (query as any).or(`store_id.is.null,store_id.eq.${storeId}`);
+      query = query.or(`store_id.is.null,store_id.eq.${storeId}`);
     } else {
       // No store context: network-wide only
       query = query.is('store_id', null);
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     }
 
     // Transform to frontend format
-    const transformedBanners = (banners || []).map((b: any) => ({
+    const transformedBanners = (banners || []).map((b) => ({
       id: b.id,
       title: b.title,
       subtitle: b.subtitle || '',

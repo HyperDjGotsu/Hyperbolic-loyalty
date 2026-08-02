@@ -17,14 +17,14 @@ export async function GET() {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { data } = await (supabaseAdmin as any)
+    const { data } = await supabaseAdmin
       .from('players')
       .select('notification_preferences')
       .eq('clerk_user_id', userId)
       .single();
 
     return NextResponse.json({
-      prefs: { ...DEFAULT_PREFS, ...(data?.notification_preferences ?? {}) },
+      prefs: { ...DEFAULT_PREFS, ...((data?.notification_preferences ?? {}) as Record<string, boolean>) },
     });
   } catch (err) {
     console.error('notification-preferences GET error:', err);
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       store: store ?? true,
     };
 
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await supabaseAdmin
       .from('players')
       .update({ notification_preferences: prefs })
       .eq('clerk_user_id', userId);

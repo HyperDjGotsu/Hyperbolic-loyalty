@@ -14,7 +14,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: player, error: fetchError } = await (supabaseAdmin as any)
+    const { data: player, error: fetchError } = await supabaseAdmin
       .from('players')
       .select('id, pass_tier, pass_expires_at')
       .eq('clerk_user_id', userId)
@@ -24,11 +24,10 @@ export async function POST() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const currentTier = (player as { id: string; pass_tier: string | null; pass_expires_at: string | null }).pass_tier;
-    if (currentTier && currentTier !== 'none') {
+    if (player.pass_tier && player.pass_tier !== 'none') {
       return NextResponse.json({ error: 'Already on a pass tier' }, { status: 409 });
     }
-    const playerId = (player as { id: string }).id;
+    const playerId = player.id;
 
     // Check lifetime XP gate
     const { data: ledger, error: ledgerError } = await supabaseAdmin
@@ -50,7 +49,7 @@ export async function POST() {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
 
-    const { error: updateError } = await (supabaseAdmin as any)
+    const { error: updateError } = await supabaseAdmin
       .from('players')
       .update({
         pass_tier: 'access',

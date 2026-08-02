@@ -34,16 +34,14 @@ export async function GET() {
   const recentCheckIns: Array<{ playerName: string; hypId: string; xpAwarded: number; checkedInAt: string }> = [];
 
   try {
-    const db = supabaseAdmin as any;
-
-    const { count } = await db
+    const { count } = await supabaseAdmin
       .from('event_attendances')
       .select('id', { count: 'exact', head: true })
       .eq('event_id', event.id);
 
     attendanceCount = count || 0;
 
-    const { data: recentRaw } = await db
+    const { data: recentRaw } = await supabaseAdmin
       .from('event_attendances')
       .select('player_id, checked_in_at, xp_awarded')
       .eq('event_id', event.id)
@@ -51,7 +49,7 @@ export async function GET() {
       .limit(5);
 
     if (recentRaw && recentRaw.length > 0) {
-      const playerIds = (recentRaw as any[]).map((r: any) => r.player_id);
+      const playerIds = recentRaw.map((r) => r.player_id);
       const { data: players } = await supabaseAdmin
         .from('players')
         .select('id, display_name, player_id')
@@ -59,13 +57,13 @@ export async function GET() {
 
       const playerMap = new Map(players?.map(p => [p.id, p]) || []);
 
-      for (const r of recentRaw as any[]) {
+      for (const r of recentRaw) {
         const player = playerMap.get(r.player_id);
         recentCheckIns.push({
           playerName: player?.display_name || 'Player',
           hypId: player?.player_id || '',
-          xpAwarded: r.xp_awarded,
-          checkedInAt: r.checked_in_at,
+          xpAwarded: r.xp_awarded ?? 0,
+          checkedInAt: r.checked_in_at ?? '',
         });
       }
     }

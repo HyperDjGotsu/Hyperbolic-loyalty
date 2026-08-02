@@ -37,12 +37,12 @@ export async function POST(
       // End any currently active event first
       await supabaseAdmin
         .from('events')
-        .update({ status: 'completed' } as any)
+        .update({ status: 'completed' })
         .eq('status', 'active');
 
       const { error } = await supabaseAdmin
         .from('events')
-        .update({ status: 'active' } as any)
+        .update({ status: 'active' })
         .eq('id', eventId);
 
       if (error) {
@@ -55,7 +55,7 @@ export async function POST(
     if (action === 'end') {
       const { error } = await supabaseAdmin
         .from('events')
-        .update({ status: 'completed' } as any)
+        .update({ status: 'completed' })
         .eq('id', eventId);
 
       if (error) {

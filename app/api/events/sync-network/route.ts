@@ -131,7 +131,7 @@ export async function POST(request: Request) {
       .eq('id', 1)
       .single();
 
-    const icalUrl = (config as any)?.network_calendar_url || '';
+    const icalUrl = config?.network_calendar_url || '';
     if (!icalUrl) {
       return NextResponse.json({ error: 'No network calendar URL configured. Set it in HQ → Settings → Network Calendar.' }, { status: 400 });
     }
@@ -148,20 +148,22 @@ export async function POST(request: Request) {
 
     let synced = 0;
     for (const event of parsedEvents) {
-      const { data: existing } = await (supabaseAdmin as any)
+      const { data: existing } = await supabaseAdmin
         .from('events').select('id').eq('gcal_uid', event.gcal_uid).single();
 
+      // Network events use store_id=null (types say string, DB allows null)
       if (existing) {
-        await (supabaseAdmin as any).from('events').update({
+        await supabaseAdmin.from('events').update({
           name: event.name, game_id: event.game_id, description: event.description,
-          scheduled_at: event.scheduled_at, ends_at: event.ends_at, store_id: null,
+          scheduled_at: event.scheduled_at, ends_at: event.ends_at,
+          store_id: null as unknown as string,
         }).eq('id', existing.id);
       } else {
-        await (supabaseAdmin as any).from('events').insert({
+        await supabaseAdmin.from('events').insert({
           gcal_uid: event.gcal_uid, name: event.name, game_id: event.game_id,
           description: event.description, scheduled_at: event.scheduled_at,
-          ends_at: event.ends_at, status: event.status,
-          store_id: null, entry_fee: null, max_players: null,
+          ends_at: event.ends_at, status: 'scheduled',
+          store_id: null as unknown as string, entry_fee: null, max_players: null,
           has_stream: false, attendance_xp: 50, win_xp: 15,
           current_players: 0, prizing: null,
         });

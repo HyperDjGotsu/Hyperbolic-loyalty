@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // All supported games
 const ALL_GAMES = [
@@ -29,7 +24,7 @@ export async function GET() {
       .from('players')
       .select('favorite_games')
       .eq('clerk_user_id', userId)
-      .single() as { data: any; error: any };
+      .single();
 
     if (error) {
       console.error('Error fetching favorites:', error);
@@ -75,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabaseAdmin
       .from('players')
-      .update({ favorite_games: limitedFavorites } as any)
+      .update({ favorite_games: limitedFavorites })
       .eq('clerk_user_id', userId);
 
     if (error) {

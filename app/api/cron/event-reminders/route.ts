@@ -25,15 +25,15 @@ export async function GET(request: Request) {
     if (!events?.length) return NextResponse.json({ sent: 0 });
 
     // Get all players for mass notification
-    const { data: players } = await (supabaseAdmin as any)
+    const { data: players } = await supabaseAdmin
       .from('players')
       .select('id, notification_preferences');
 
     if (!players?.length) return NextResponse.json({ sent: 0 });
 
     const DEFAULT_PREFS = { daily_rewards: true, events: true, leaderboard: true, social: true, store: true };
-    const eligible = (players as { id: string; notification_preferences: Record<string, boolean> | null }[]).filter((p) => {
-      const prefs = { ...DEFAULT_PREFS, ...(p.notification_preferences ?? {}) };
+    const eligible = players.filter((p) => {
+      const prefs = { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Record<string, boolean>) };
       return prefs.events;
     });
 
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       const mins = minutesUntil % 60;
       const timeLabel = hours > 0 ? `${hours}h${mins > 0 ? ` ${mins}m` : ''}` : `${mins}m`;
 
-      const rows: Record<string, unknown>[] = eligible.map((p) => ({
+      const rows = eligible.map((p) => ({
         player_id: p.id,
         type: 'event_reminder',
         title: `⏰ ${event.name} starts in ${timeLabel}`,
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
       }));
 
       for (let i = 0; i < rows.length; i += 100) {
-        await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100) as any);
+        await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100));
       }
       sent += rows.length;
     }

@@ -51,11 +51,11 @@ async function getLifetimeXp(playerId: string): Promise<number> {
 }
 
 async function getPrizePoints(playerId: string): Promise<number> {
-  const { data, error } = await (supabaseAdmin as any)
-    .rpc('get_user_point_balance', { p_player_id: playerId, p_store_id: null });
+  const { data, error } = await supabaseAdmin
+    .rpc('get_user_point_balance', { p_player_id: playerId, p_store_id: null as unknown as string });
 
   if (error) throw new Error(`Prize Points lookup failed: ${error.message}`);
-  return (data as number) ?? 0;
+  return data ?? 0;
 }
 
 export async function GET() {
@@ -81,7 +81,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const player = playerResult.data as unknown as PlayerRecord;
+    const player = playerResult.data;
     const [lifetimeXp, prizePoints] = await Promise.all([
       getLifetimeXp(player.id),
       getPrizePoints(player.id),

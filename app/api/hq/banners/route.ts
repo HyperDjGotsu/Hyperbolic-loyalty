@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         bg_position: bg_position || 'center',
         text_color: text_color || '#ffffff',
         store_id: store_id ?? null,
-      } as any)
+      })
       .select()
       .single();
 
@@ -134,7 +134,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Banner not found' }, { status: 404 });
     }
 
-    const bannerStoreId = (existing as any).store_id as string | null;
+    const bannerStoreId = existing.store_id;
     const staffCtx = bannerStoreId
       ? await requireStoreManager(bannerStoreId)
       : await requireNetworkAdmin();
@@ -162,7 +162,7 @@ export async function PUT(request: Request) {
         bg_size: bg_size || 'cover',
         bg_position: bg_position || 'center',
         text_color: text_color || '#ffffff',
-      } as any)
+      })
       .eq('id', id)
       .select()
       .single();
@@ -200,7 +200,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Banner not found' }, { status: 404 });
     }
 
-    const bannerStoreId = (existing as any).store_id as string | null;
+    const bannerStoreId = existing.store_id;
     const staffCtx = bannerStoreId
       ? await requireStoreManager(bannerStoreId)
       : await requireNetworkAdmin();
