@@ -456,10 +456,13 @@ function parseICal(icalData: string): ParsedEvent[] {
 
 export async function POST(request: Request) {
   try {
-    // Require network admin to run the sync
-    const staffCtx = await requireNetworkAdmin();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Allow cron jobs (CRON_SECRET) or network admins to sync
+    const isCron = request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
+    if (!isCron) {
+      const staffCtx = await requireNetworkAdmin();
+      if (!staffCtx) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Require a storeId so events are always scoped to a store
