@@ -381,17 +381,20 @@ function ItemCard({
   selectedStoreId: string | null | undefined;
 }) {
   const isGrailViewedElsewhere = item.is_network_prize && selectedStoreId !== TRADE_EMPORIUM_ID;
+  const outOfStock = item.quantity != null && item.quantity <= 0;
   const gateLocked = passStatus?.tier === 'free' && (passStatus.lifetimeXp ?? 0) < FREE_TIER_GATE;
   const insufficientPoints = passStatus !== null && passStatus.prizePoints < item.xp_cost;
   const disabledReason = !passStatus
     ? 'Loading player balance'
-    : !item.is_unlocked
-      ? 'This prize is still locked'
-      : gateLocked
-        ? `Reach ${FREE_TIER_GATE} lifetime points to redeem your 1-month Bronze trial`
-        : insufficientPoints
-          ? `You need ${item.xp_cost.toLocaleString()} Prize Points`
-          : null;
+    : outOfStock
+      ? 'Out of stock'
+      : !item.is_unlocked
+        ? 'This prize is still locked'
+        : gateLocked
+          ? `Reach ${FREE_TIER_GATE} lifetime points to redeem your 1-month Bronze trial`
+          : insufficientPoints
+            ? `You need ${item.xp_cost.toLocaleString()} Prize Points`
+            : null;
   const disabled = disabledReason !== null || redeeming;
 
   return (
@@ -425,11 +428,17 @@ function ItemCard({
           )}
         </div>
         {item.quantity != null && (
-          <div className="text-xs text-tertiary mt-1">{item.quantity} remaining</div>
+          <div className="text-xs text-tertiary mt-1">
+            {outOfStock ? 'Out of stock' : `${item.quantity} remaining`}
+          </div>
         )}
         {isGrailViewedElsewhere ? (
           <div className="mt-3 text-center py-2 px-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
             <p className="text-xs text-yellow-400 font-medium">Only redeemable at Trade Emporium</p>
+          </div>
+        ) : outOfStock ? (
+          <div className="mt-3 text-center py-2 px-3 bg-elevated rounded-lg">
+            <p className="text-xs text-tertiary font-medium">Out of Stock</p>
           </div>
         ) : (
           <span className="block mt-3" title={disabledReason ?? undefined}>
