@@ -2613,7 +2613,7 @@ export default function HQPage() {
             </select>
           </div>
           {/* Desktop: tab buttons */}
-          <div className="hidden sm:flex gap-2 py-2">
+          <div className="hidden sm:flex flex-wrap gap-2 py-2">
             {[
               { id: 'players', label: '👤 Players' },
               { id: 'emperor', label: '👑 Emperor' },
