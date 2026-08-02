@@ -1759,8 +1759,8 @@ export default function HQPage() {
           quantity: prizeForm.quantity ? Number(prizeForm.quantity) : null,
           unlock_threshold: prizeForm.unlock_threshold ? Number(prizeForm.unlock_threshold) : null,
           is_active: prizeForm.is_active,
-          // Store managers create store-scoped items; network admins create network-wide items
-          store_id: staffContext?.isNetworkAdmin ? null : (hqStore.activeStoreId ?? null),
+          // Store managers scope to their store; network admins scope to Trade Emporium (company wall)
+          store_id: hqStore.activeStoreId ?? null,
         }),
       });
       const data = await res.json();
