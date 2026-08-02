@@ -319,182 +319,48 @@ function expandRecurringEvent(
   return events;
 }
 
-// Parse iCal format
+// Parse iCal format — two-pass:
+// Pass 1: collect all raw VEVENTs.
+// Pass 2: expand RRULE events, excluding dates already covered by detached instances
+//         (RECURRENCE-ID) or EXDATE, so RRULE never overwrites a detached edit.
 function parseICal(icalData: string): ParsedEvent[] {
-  const events: ParsedEvent[] = [];
+  const result: ParsedEvent[] = [];
+  const cancelledUids: string[] = [];
+
+  // Raw VEVENT data collected in pass 1
+  const rawEvents: Record<string, string>[] = [];
+
   const lines = icalData.split(/\r?\n/);
-  
   let inEvent = false;
   let currentEvent: Record<string, string> = {};
   let currentKey = '';
-  
+
+  // ── Pass 1: collect raw VEVENT records ─────────────────────────────────────
   for (const line of lines) {
-    // Handle folded lines (continuation lines start with space or tab)
     if (line.startsWith(' ') || line.startsWith('\t')) {
-      if (currentKey && currentEvent[currentKey]) {
+      if (currentKey && currentEvent[currentKey] !== undefined) {
         currentEvent[currentKey] += line.slice(1);
       }
       continue;
     }
-    
     if (line === 'BEGIN:VEVENT') {
       inEvent = true;
       currentEvent = {};
       currentKey = '';
       continue;
     }
-    
     if (line === 'END:VEVENT') {
       inEvent = false;
-
-      // Process the event
-      const summary = currentEvent['SUMMARY'] || '';
-      const description = currentEvent['DESCRIPTION'] || '';
-      const uid = currentEvent['UID'] || `unknown_${Date.now()}`;
-      const dtstart = currentEvent['DTSTART'];
-      const dtend = currentEvent['DTEND'];
-      const rrule = currentEvent['RRULE'];
-      const recurrenceId = currentEvent['RECURRENCE-ID'];
-
-      // Mark cancelled events — handled by caller.
-      // With RECURRENCE-ID: single occurrence → delete only that uid_date.
-      // Without RECURRENCE-ID: entire event → delete all instances via prefix.
-      if (currentEvent['STATUS'] === 'CANCELLED') {
-        if (uid && !uid.startsWith('unknown_')) {
-          (events as any)._cancelledUids = (events as any)._cancelledUids || [];
-          if (recurrenceId) {
-            // Single occurrence cancelled — compute exact uid_date
-            const recDate = parseICalDate(recurrenceId.replace(/^.*:/, ''));
-            const recDateKey = recDate.toISOString().slice(0, 10);
-            (events as any)._cancelledUids.push(`${uid}_${recDateKey}`);
-          } else {
-            // Whole event cancelled — bare UID; deletion prefix-matches all instances
-            (events as any)._cancelledUids.push(uid);
-          }
-        }
-        continue;
-      }
-
-      // Skip events matching skip patterns
-      const shouldSkip = SKIP_PATTERNS.some(pattern => pattern.test(summary));
-      if (shouldSkip || !dtstart) {
-        continue;
-      }
-      
-      // Get timezone from DTSTART
-      const dtstartRaw = currentEvent['DTSTART_RAW'] || '';
-      const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
-      const tzid = tzidMatch ? tzidMatch[1] : undefined;
-
-      // Parse dates
-      const startDate = parseICalDate(dtstart, tzid);
-      const endDate = dtend ? parseICalDate(dtend, tzid) : null;
-
-      // Parse EXDATE list — may be comma-separated and/or multi-line (accumulated with comma join)
-      const exdates = new Set<string>();
-      const exdateRaw = currentEvent['EXDATE'] || '';
-      if (exdateRaw) {
-        for (const part of exdateRaw.split(',')) {
-          const cleaned = part.trim().replace(/^[^:]*:/, ''); // strip TZID= prefix if present
-          if (cleaned) {
-            try {
-              const d = parseICalDate(cleaned, tzid);
-              exdates.add(d.toISOString().slice(0, 10));
-            } catch { /* ignore unparseable EXDATE entries */ }
-          }
-        }
-      }
-
-      // Detect game
-      const gameId = detectGameId(summary);
-
-      // Parse price and players from description (or title)
-      const combinedText = `${summary}\n${description}`;
-      let entryFee = parseExplicitPrice(combinedText);
-      let maxPlayers = parseMaxPlayers(combinedText);
-      let attendanceXp = 30;
-      let winXp = 10;
-      let hasStream = false;
-
-      // Parse prizing from description
-      const prizing = parsePrizing(combinedText);
-
-      // Apply overrides based on event title
-      for (const override of EVENT_OVERRIDES) {
-        if (override.pattern.test(summary)) {
-          if (entryFee === null && override.entryFee !== undefined) entryFee = override.entryFee;
-          if (maxPlayers === null && override.maxPlayers !== undefined) maxPlayers = override.maxPlayers;
-          if (override.attendanceXp !== undefined) attendanceXp = override.attendanceXp;
-          if (override.winXp !== undefined) winXp = override.winXp;
-          if (override.hasStream !== undefined) hasStream = override.hasStream;
-          break; // Use first matching override
-        }
-      }
-
-      // Clean up description (remove parsed fields for display)
-      let cleanDescription = description
-        .replace(/\\n/g, '\n')
-        .replace(/\\,/g, ',')
-        .replace(/\\;/g, ';')
-        .replace(/price\s*(?:is|:|-)\s*\$\d+(?:\.\d{2})?/gi, '')
-        .replace(/players?\s*(?::|is)?\s*\d+/gi, '')
-        .replace(/prizing\s*(?::|is|-)\s*.+?(?:\n|$)/gi, '')
-        .trim();
-
-      // For detached instances (RECURRENCE-ID present, no RRULE), use uid_originalDate
-      // so it matches the existing expanded row in the DB.
-      let effectiveUid = uid;
-      if (recurrenceId && !rrule) {
-        const recDate = parseICalDate(recurrenceId.replace(/^[^:]*:/, ''), tzid);
-        effectiveUid = `${uid}_${recDate.toISOString().slice(0, 10)}`;
-      }
-
-      // Create base event
-      const baseEvent: ParsedEvent = {
-        gcal_uid: effectiveUid,
-        name: summary,
-        game_id: gameId,
-        description: cleanDescription || null,
-        scheduled_at: startDate.toISOString(),
-        ends_at: endDate?.toISOString() || null,
-        entry_fee: entryFee,
-        max_players: maxPlayers,
-        has_stream: hasStream,
-        attendance_xp: attendanceXp,
-        win_xp: winXp,
-        status: 'scheduled',
-        prizing: prizing,
-      };
-
-      // Handle recurring events
-      if (rrule) {
-        const expandedEvents = expandRecurringEvent(baseEvent, rrule, startDate, endDate, exdates);
-        events.push(...expandedEvents);
-      } else {
-        // Non-recurring or detached instance — check if it's in the future
-        const cutoff = new Date();
-        cutoff.setHours(cutoff.getHours() - 2);
-
-        if (startDate >= cutoff) {
-          events.push(baseEvent);
-        }
-      }
-      
+      rawEvents.push(currentEvent);
       continue;
     }
-    
     if (inEvent) {
-      // Parse key:value or key;params:value
       const colonIndex = line.indexOf(':');
       if (colonIndex === -1) continue;
-      
       const fullKey = line.slice(0, colonIndex);
       const value = line.slice(colonIndex + 1);
-      
-      // Extract base key (remove parameters like TZID)
       const key = fullKey.split(';')[0];
-      
-      // EXDATE can appear multiple times — accumulate with comma separator
+      // EXDATE may appear multiple times — accumulate
       if (key === 'EXDATE') {
         const prev = currentEvent['EXDATE'];
         currentEvent['EXDATE'] = prev ? `${prev},${value}` : value;
@@ -502,15 +368,171 @@ function parseICal(icalData: string): ParsedEvent[] {
         currentEvent[key] = value;
       }
       currentKey = key;
-
-      // Store raw line for DTSTART/DTEND to extract timezone later
       if (key === 'DTSTART' || key === 'DTEND') {
         currentEvent[`${key}_RAW`] = fullKey;
       }
     }
   }
-  
-  return events;
+
+  // ── Pass 2: build events ────────────────────────────────────────────────────
+
+  // First, collect all RECURRENCE-ID overrides: uid → set of date strings (UTC YYYY-MM-DD)
+  // These dates must be excluded from RRULE expansion so detached instances always win.
+  const recurrenceDates = new Map<string, Set<string>>();
+  for (const ev of rawEvents) {
+    const uid = ev['UID'];
+    const recurrenceId = ev['RECURRENCE-ID'];
+    if (!uid || !recurrenceId || ev['RRULE']) continue; // only detached (non-RRULE) instances
+    const dtstartRaw = ev['DTSTART_RAW'] || '';
+    const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
+    const tzid = tzidMatch ? tzidMatch[1] : undefined;
+    try {
+      const recDate = parseICalDate(recurrenceId.replace(/^[^:]*:/, ''), tzid);
+      if (!recurrenceDates.has(uid)) recurrenceDates.set(uid, new Set());
+      recurrenceDates.get(uid)!.add(recDate.toISOString().slice(0, 10));
+    } catch { /* skip unparseable RECURRENCE-IDs */ }
+  }
+
+  // Separate RRULE master events from non-RRULE (one-offs and detached instances)
+  const rruleMasters: Record<string, string>[] = [];
+  const nonRruleEvents: Record<string, string>[] = [];
+  for (const ev of rawEvents) {
+    if (ev['STATUS'] === 'CANCELLED') {
+      // Collect cancellations
+      const uid = ev['UID'];
+      if (uid && !uid.startsWith('unknown_')) {
+        const recurrenceId = ev['RECURRENCE-ID'];
+        if (recurrenceId) {
+          const dtstartRaw = ev['DTSTART_RAW'] || '';
+          const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
+          const tzid = tzidMatch ? tzidMatch[1] : undefined;
+          try {
+            const recDate = parseICalDate(recurrenceId.replace(/^[^:]*:/, ''), tzid);
+            cancelledUids.push(`${uid}_${recDate.toISOString().slice(0, 10)}`);
+          } catch { cancelledUids.push(uid); }
+        } else {
+          cancelledUids.push(uid);
+        }
+      }
+      continue;
+    }
+    if (ev['RRULE']) {
+      rruleMasters.push(ev);
+    } else {
+      nonRruleEvents.push(ev);
+    }
+  }
+
+  function buildBaseEvent(ev: Record<string, string>, effectiveUid: string): ParsedEvent | null {
+    const summary = ev['SUMMARY'] || '';
+    const description = ev['DESCRIPTION'] || '';
+    const dtstart = ev['DTSTART'];
+    const dtend = ev['DTEND'];
+    if (!dtstart) return null;
+    const shouldSkip = SKIP_PATTERNS.some(p => p.test(summary));
+    if (shouldSkip) return null;
+
+    const dtstartRaw = ev['DTSTART_RAW'] || '';
+    const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
+    const tzid = tzidMatch ? tzidMatch[1] : undefined;
+    const startDate = parseICalDate(dtstart, tzid);
+    const endDate = dtend ? parseICalDate(dtend, tzid) : null;
+    const gameId = detectGameId(summary);
+    const combinedText = `${summary}\n${description}`;
+    let entryFee = parseExplicitPrice(combinedText);
+    let maxPlayers = parseMaxPlayers(combinedText);
+    let attendanceXp = 30;
+    let winXp = 10;
+    let hasStream = false;
+    const prizing = parsePrizing(combinedText);
+    for (const override of EVENT_OVERRIDES) {
+      if (override.pattern.test(summary)) {
+        if (entryFee === null && override.entryFee !== undefined) entryFee = override.entryFee;
+        if (maxPlayers === null && override.maxPlayers !== undefined) maxPlayers = override.maxPlayers;
+        if (override.attendanceXp !== undefined) attendanceXp = override.attendanceXp;
+        if (override.winXp !== undefined) winXp = override.winXp;
+        if (override.hasStream !== undefined) hasStream = override.hasStream;
+        break;
+      }
+    }
+    const cleanDescription = description
+      .replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';')
+      .replace(/price\s*(?:is|:|-)\s*\$\d+(?:\.\d{2})?/gi, '')
+      .replace(/players?\s*(?::|is)?\s*\d+/gi, '')
+      .replace(/prizing\s*(?::|is|-)\s*.+?(?:\n|$)/gi, '')
+      .trim();
+    return {
+      gcal_uid: effectiveUid,
+      name: summary,
+      game_id: gameId,
+      description: cleanDescription || null,
+      scheduled_at: startDate.toISOString(),
+      ends_at: endDate?.toISOString() || null,
+      entry_fee: entryFee,
+      max_players: maxPlayers,
+      has_stream: hasStream,
+      attendance_xp: attendanceXp,
+      win_xp: winXp,
+      status: 'scheduled',
+      prizing,
+    };
+  }
+
+  // Expand RRULE masters, skipping dates covered by RECURRENCE-ID overrides or EXDATE
+  for (const ev of rruleMasters) {
+    const uid = ev['UID'] || `unknown_${Date.now()}`;
+    const rrule = ev['RRULE']!;
+    const dtstartRaw = ev['DTSTART_RAW'] || '';
+    const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
+    const tzid = tzidMatch ? tzidMatch[1] : undefined;
+    if (!ev['DTSTART']) continue;
+    const startDate = parseICalDate(ev['DTSTART'], tzid);
+    const endDate = ev['DTEND'] ? parseICalDate(ev['DTEND'], tzid) : null;
+
+    // Merge EXDATE + RECURRENCE-ID dates → all dates to exclude from expansion
+    const excludeDates = new Set<string>(recurrenceDates.get(uid) || []);
+    const exdateRaw = ev['EXDATE'] || '';
+    if (exdateRaw) {
+      for (const part of exdateRaw.split(',')) {
+        const cleaned = part.trim().replace(/^[^:]*:/, '');
+        if (cleaned) {
+          try { excludeDates.add(parseICalDate(cleaned, tzid).toISOString().slice(0, 10)); } catch { /* skip */ }
+        }
+      }
+    }
+
+    const base = buildBaseEvent(ev, uid);
+    if (!base) continue;
+    const expanded = expandRecurringEvent(base, rrule, startDate, endDate, excludeDates);
+    result.push(...expanded);
+  }
+
+  // Add one-off and detached instances (RECURRENCE-ID → uid_date key, wins over RRULE expansion)
+  const cutoff = new Date();
+  cutoff.setHours(cutoff.getHours() - 2);
+  for (const ev of nonRruleEvents) {
+    const uid = ev['UID'] || `unknown_${Date.now()}`;
+    const recurrenceId = ev['RECURRENCE-ID'];
+    let effectiveUid = uid;
+    if (recurrenceId) {
+      const dtstartRaw = ev['DTSTART_RAW'] || '';
+      const tzidMatch = dtstartRaw.match(/TZID=([^:;]+)/);
+      const tzid = tzidMatch ? tzidMatch[1] : undefined;
+      try {
+        const recDate = parseICalDate(recurrenceId.replace(/^[^:]*:/, ''), tzid);
+        effectiveUid = `${uid}_${recDate.toISOString().slice(0, 10)}`;
+      } catch { /* fall back to bare uid */ }
+    }
+    const base = buildBaseEvent(ev, effectiveUid);
+    if (!base) continue;
+    if (new Date(base.scheduled_at) >= cutoff) {
+      result.push(base);
+    }
+  }
+
+  // Attach cancellation list for caller
+  (result as any)._cancelledUids = cancelledUids;
+  return result;
 }
 
 export async function POST(request: Request) {
