@@ -36,7 +36,7 @@ const navItems = [
   },
   {
     href: '/dashboard/shop',
-    label: 'Shop',
+    label: 'Prize Wall',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
@@ -117,6 +117,7 @@ function MobileNavItem({
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isStaff, setIsStaff] = useState(false);
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -133,6 +134,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchUnread();
     const interval = setInterval(fetchUnread, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/player/by-clerk')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.isStaff) setIsStaff(true); })
+      .catch(() => {});
   }, []);
 
   // Clear badge when visiting notifications page
@@ -153,14 +161,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem key={item.href} item={item} pathname={pathname} />
           ))}
         </nav>
-        <div className="p-4 border-t border-border-token">
-          <Link
-            href="/hq"
-            className="text-xs text-tertiary hover:text-secondary transition-colors"
-          >
-            Staff HQ →
-          </Link>
-        </div>
+        {isStaff && (
+          <div className="p-4 border-t border-border-token">
+            <Link
+              href="/hq"
+              className="text-xs text-tertiary hover:text-secondary transition-colors"
+            >
+              Staff HQ →
+            </Link>
+          </div>
+        )}
       </aside>
 
       {/* Main content */}

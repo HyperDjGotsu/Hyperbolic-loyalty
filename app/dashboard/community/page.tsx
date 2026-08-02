@@ -330,15 +330,38 @@ export default function CommunityPage() {
     }
   }, [isLoaded, user]);
 
-  // Read selected store from localStorage (set by MobileDashboard store switcher)
+  // Read selected store from localStorage; fall back to home store from API for new users
   useEffect(() => {
     const storeId = localStorage.getItem('ggc_selected_store_id');
     const storeName = localStorage.getItem('ggc_selected_store_name');
-    setSelectedStoreId(storeId);
-    setSelectedStoreName(storeName);
-    // Default to store scope if they have a store, network if not
-    setLeaderboardScope(storeId ? 'store' : 'network');
-    loadLeaderboard('overall', storeId || null);
+    if (storeId && storeName) {
+      setSelectedStoreId(storeId);
+      setSelectedStoreName(storeName);
+      setLeaderboardScope('store');
+      loadLeaderboard('overall', storeId);
+    } else {
+      // localStorage not yet seeded (e.g. new user coming straight from onboarding)
+      fetch('/api/player/by-clerk')
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          const homeStore = d?.homeStore ?? null;
+          if (homeStore) {
+            localStorage.setItem('ggc_selected_store_id', homeStore.id);
+            localStorage.setItem('ggc_selected_store_name', homeStore.name);
+            setSelectedStoreId(homeStore.id);
+            setSelectedStoreName(homeStore.name);
+            setLeaderboardScope('store');
+            loadLeaderboard('overall', homeStore.id);
+          } else {
+            setLeaderboardScope('network');
+            loadLeaderboard('overall', null);
+          }
+        })
+        .catch(() => {
+          setLeaderboardScope('network');
+          loadLeaderboard('overall', null);
+        });
+    }
   }, [loadLeaderboard]);
 
   useEffect(() => {

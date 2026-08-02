@@ -365,7 +365,9 @@ function EventsPageContent() {
     setError(null);
     
     try {
-      const res = await fetch('/api/events?status=upcoming&limit=50');
+      const storeId = localStorage.getItem('ggc_selected_store_id');
+      const storeParam = storeId ? `&store_id=${storeId}` : '';
+      const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}`);
       const data = await res.json();
       
       if (res.ok) {
