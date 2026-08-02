@@ -1646,6 +1646,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_network_prize: boolean
           name: string
           quantity: number | null
           retail_value: number | null
@@ -1660,6 +1661,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_network_prize?: boolean
           name: string
           quantity?: number | null
           retail_value?: number | null
@@ -1674,6 +1676,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_network_prize?: boolean
           name?: string
           quantity?: number | null
           retail_value?: number | null
@@ -1785,6 +1788,41 @@ export type Database = {
           {
             foreignKeyName: "prize_wall_redemptions_voided_by_fkey"
             columns: ["voided_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          player_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          player_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_player_id_fkey"
+            columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
@@ -2015,6 +2053,7 @@ export type Database = {
           currency_icon: string
           currency_name: string
           id: number
+          network_calendar_url: string | null
           player_id_prefix: string
           shop_categories: Json
           shop_description: string
@@ -2028,6 +2067,7 @@ export type Database = {
           currency_icon?: string
           currency_name?: string
           id?: number
+          network_calendar_url?: string | null
           player_id_prefix?: string
           shop_categories?: Json
           shop_description?: string
@@ -2041,6 +2081,7 @@ export type Database = {
           currency_icon?: string
           currency_name?: string
           id?: number
+          network_calendar_url?: string | null
           player_id_prefix?: string
           shop_categories?: Json
           shop_description?: string

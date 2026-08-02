@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/ui';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
+import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 
 const navItems = [
   {
@@ -235,6 +236,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </nav>
 
+      <PushNotificationPrompt />
       {showStoreSwitcher && (
         <StoreSwitcherModal
           currentStoreId={selectedStoreId}
