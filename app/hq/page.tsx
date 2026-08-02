@@ -799,6 +799,12 @@ export default function HQPage() {
   const [prizeImageUploading, setPrizeImageUploading] = useState(false);
   const [bannerImageUploading, setBannerImageUploading] = useState(false);
 
+  // Calendar sync state
+  const [calendarUrl, setCalendarUrl] = useState('');
+  const [calendarUrlSaving, setCalendarUrlSaving] = useState(false);
+  const [calendarSyncing, setCalendarSyncing] = useState(false);
+  const [calendarSyncMsg, setCalendarSyncMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
   // Store settings state
   const [storeConfig, setStoreConfig] = useState({
     currency_name: 'Points',
@@ -1540,7 +1546,7 @@ export default function HQPage() {
   // COTD, circuit, emperor, and bounty are network-wide — excluded intentionally
   useEffect(() => {
     if (!hqStore.isInitialized || !hqStore.activeStoreId) return;
-    if (activeTab === 'events') loadHQEvents();
+    if (activeTab === 'events') { loadHQEvents(); loadCalendarUrl(); }
     else if (activeTab === 'banners') loadBanners();
     else if (activeTab === 'prize-wall') loadPrizeItems();
     else if (activeTab === 'settings') { loadStoreConfig(); loadInvitations(); loadAllStores(); }
@@ -1552,6 +1558,57 @@ export default function HQPage() {
       loadEmperorRankings(selectedMonth);
     }
   }, [selectedMonth]);
+
+  // Calendar URL functions
+  const loadCalendarUrl = async () => {
+    if (!activeStoreId) return;
+    try {
+      const res = await fetch(`/api/hq/store-calendar?storeId=${encodeURIComponent(activeStoreId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCalendarUrl(data.ical_url || '');
+      }
+    } catch { /* ignore */ }
+  };
+
+  const saveCalendarUrl = async () => {
+    if (!activeStoreId) return;
+    setCalendarUrlSaving(true);
+    try {
+      const res = await fetch(`/api/hq/store-calendar?storeId=${encodeURIComponent(activeStoreId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ical_url: calendarUrl }),
+      });
+      if (res.ok) showToast('Calendar URL saved', 'success');
+      else showToast('Failed to save URL', 'error');
+    } catch { showToast('Failed to save URL', 'error'); }
+    finally { setCalendarUrlSaving(false); }
+  };
+
+  const syncCalendar = async () => {
+    if (!activeStoreId) return;
+    setCalendarSyncing(true);
+    setCalendarSyncMsg(null);
+    try {
+      const res = await fetch('/api/events/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storeId: activeStoreId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCalendarSyncMsg({ text: `✅ ${data.message}`, ok: true });
+        loadHQEvents();
+      } else {
+        setCalendarSyncMsg({ text: `❌ ${data.error || 'Sync failed'}`, ok: false });
+      }
+    } catch {
+      setCalendarSyncMsg({ text: '❌ Network error', ok: false });
+    } finally {
+      setCalendarSyncing(false);
+    }
+  };
 
   // Store settings functions
   const loadStoreConfig = async () => {
@@ -4388,6 +4445,42 @@ export default function HQPage() {
         {/* Events Tab */}
         {activeTab === 'events' && (
           <div className="space-y-4">
+            {/* Google Calendar Sync */}
+            <div className="bg-surface rounded-xl p-4 border border-border-token space-y-3">
+              <div>
+                <div className="font-semibold text-primary">Google Calendar Sync</div>
+                <div className="text-secondary text-sm mt-0.5">Paste your store's secret iCal URL from Google Calendar settings.</div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  className="flex-1 bg-elevated border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary focus:outline-none focus:ring-1 focus:ring-accent"
+                  placeholder="https://calendar.google.com/calendar/ical/…"
+                  value={calendarUrl}
+                  onChange={e => setCalendarUrl(e.target.value)}
+                />
+                <button
+                  onClick={saveCalendarUrl}
+                  disabled={calendarUrlSaving}
+                  className="px-3 py-2 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated disabled:opacity-50 border border-border-token whitespace-nowrap"
+                >
+                  {calendarUrlSaving ? 'Saving…' : 'Save URL'}
+                </button>
+              </div>
+              <button
+                onClick={syncCalendar}
+                disabled={calendarSyncing || !calendarUrl}
+                className="w-full py-2 bg-accent/10 text-accent rounded-lg text-sm font-medium hover:bg-accent/20 disabled:opacity-40"
+              >
+                {calendarSyncing ? '🔄 Syncing…' : '🔄 Sync Events from Google Calendar'}
+              </button>
+              {calendarSyncMsg && (
+                <p className={`text-sm ${calendarSyncMsg.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {calendarSyncMsg.text}
+                </p>
+              )}
+            </div>
+
             {/* Kiosk link */}
             <div className="bg-surface rounded-xl p-4 border border-border-token flex items-center justify-between">
               <div>

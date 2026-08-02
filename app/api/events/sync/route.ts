@@ -6,8 +6,6 @@ import { notifyAllPlayers } from '@/lib/notifications';
 
 
 export const dynamic = 'force-dynamic';
-// Google Calendar iCal URL (use secret address from env)
-const ICAL_URL = process.env.GOOGLE_CALENDAR_ICAL_URL || '';
 
 // Game detection from event titles
 const GAME_PATTERNS: { pattern: RegExp; id: string }[] = [
@@ -474,14 +472,23 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Starting calendar sync...');
-    
+    // Look up this store's iCal URL from the DB
+    const { data: storeData } = await supabaseAdmin
+      .from('stores')
+      .select('ical_url, name')
+      .eq('id', storeId)
+      .single();
+
+    const ICAL_URL = storeData?.ical_url || '';
+
+    console.log(`Starting calendar sync for ${storeData?.name}...`);
+
     if (!ICAL_URL) {
-      return NextResponse.json({ 
-        error: 'Calendar URL not configured. Set GOOGLE_CALENDAR_ICAL_URL in environment variables.',
-      }, { status: 500 });
+      return NextResponse.json({
+        error: 'No Google Calendar URL set for this store. Paste the secret iCal URL in HQ → Events → Calendar Sync.',
+      }, { status: 400 });
     }
-    
+
     console.log('Fetching calendar...');
     
     // Fetch the iCal feed
@@ -638,12 +645,19 @@ export async function POST(request: Request) {
 // GET - Check sync status / preview what would sync
 export async function GET(request: Request) {
   try {
-    if (!ICAL_URL) {
-      return NextResponse.json({ 
-        error: 'Calendar URL not configured' 
-      }, { status: 500 });
+    const { searchParams } = new URL(request.url);
+    const storeId = searchParams.get('storeId');
+
+    let ICAL_URL = '';
+    if (storeId) {
+      const { data } = await supabaseAdmin.from('stores').select('ical_url').eq('id', storeId).single();
+      ICAL_URL = data?.ical_url || '';
     }
-    
+
+    if (!ICAL_URL) {
+      return NextResponse.json({ error: 'Calendar URL not configured for this store' }, { status: 400 });
+    }
+
     // Fetch the iCal feed
     const response = await fetch(ICAL_URL, {
       cache: 'no-store',
