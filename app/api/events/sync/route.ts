@@ -13,21 +13,26 @@ const GAME_PATTERNS: { pattern: RegExp; id: string }[] = [
   { pattern: /gundam/i, id: 'gundam' },
   { pattern: /pokemon|pokémon/i, id: 'pokemon' },
   { pattern: /magic|mtg|friday\s*night\s*magic|fnm/i, id: 'mtg' },
-  { pattern: /star\s*wars\s*unlimited|swu/i, id: 'star_wars_unlimited' },  // More specific - must have "unlimited"
+  { pattern: /star\s*wars\s*unlimited|swu/i, id: 'sw_unlimited' },
   { pattern: /vanguard|cfv/i, id: 'vanguard' },
-  { pattern: /dragon\s*ball|dbz|dbs|dbscg/i, id: 'dragonball' },
+  { pattern: /dragon\s*ball|dbz|dbs|dbscg/i, id: 'dbs' },
   { pattern: /lorcana/i, id: 'lorcana' },
   { pattern: /yu-?gi-?oh|yugioh/i, id: 'yugioh' },
   { pattern: /digimon/i, id: 'digimon' },
-  { pattern: /weiss|schwarz/i, id: 'weiss_schwarz' },
+  { pattern: /weiss|schwarz/i, id: 'weiss' },
   { pattern: /union\s*arena/i, id: 'union_arena' },
-  { pattern: /warhammer|40k|kill\s*team/i, id: 'warhammer' },
+  { pattern: /warhammer|40k|kill\s*team|blood\s*bowl/i, id: 'warhammer' },
   { pattern: /star\s*wars\s*legion|sw\s*legion|legion/i, id: 'sw_legion' },
   { pattern: /flesh.*blood|fab/i, id: 'fab' },
   { pattern: /hololive/i, id: 'hololive' },
   { pattern: /riftbound/i, id: 'riftbound' },
   { pattern: /uvs|universus/i, id: 'uvs' },
-  { pattern: /elite\s*spark/i, id: 'elite_spark' },  // If this is a game you run
+  { pattern: /final\s*fantasy|fftcg/i, id: 'fftcg' },
+  { pattern: /battletech/i, id: 'battletech' },
+  { pattern: /azuki/i, id: 'azuki' },
+  { pattern: /dice\s*throne/i, id: 'dice_throne' },
+  { pattern: /dungeons|d&d|adventurers?\s*league/i, id: 'dnd' },
+  { pattern: /board\s*game|hobby\s*night/i, id: 'board_games' },
 ];
 
 // Event titles to skip (not game events)
