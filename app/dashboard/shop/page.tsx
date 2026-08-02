@@ -247,8 +247,8 @@ function BalanceBar({
     return <div className="h-24 bg-surface rounded-xl animate-pulse" aria-label="Loading balance" />;
   }
 
-  const gateLocked = passStatus.tier === 'free' && passStatus.prizePoints < FREE_TIER_GATE;
-  const gateProgress = Math.min(100, (passStatus.prizePoints / FREE_TIER_GATE) * 100);
+  const gateLocked = passStatus.tier === 'free' && passStatus.lifetimeXp < FREE_TIER_GATE;
+  const gateProgress = Math.min(100, (passStatus.lifetimeXp / FREE_TIER_GATE) * 100);
 
   return (
     <div className="bg-surface rounded-xl p-4">
@@ -272,7 +272,7 @@ function BalanceBar({
           <div className="flex items-center justify-between text-xs text-secondary mb-1.5">
             <span>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} lifetime points</span>
             <span>
-              {passStatus.prizePoints.toLocaleString()} / {FREE_TIER_GATE} pts
+              {passStatus.lifetimeXp.toLocaleString()} / {FREE_TIER_GATE} lifetime XP
             </span>
           </div>
           <div className="h-2 bg-elevated rounded-full overflow-hidden">
@@ -324,7 +324,7 @@ function ItemCard({
   redeeming: boolean;
   onRedeem: (item: PrizeWallItem) => void;
 }) {
-  const gateLocked = passStatus?.tier === 'free' && passStatus.prizePoints < FREE_TIER_GATE;
+  const gateLocked = passStatus?.tier === 'free' && (passStatus.lifetimeXp ?? 0) < FREE_TIER_GATE;
   const insufficientPoints = passStatus !== null && passStatus.prizePoints < item.xp_cost;
   const disabledReason = !passStatus
     ? 'Loading player balance'
