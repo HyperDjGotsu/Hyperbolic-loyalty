@@ -356,18 +356,20 @@ function parseICal(icalData: string): ParsedEvent[] {
       const rrule = currentEvent['RRULE'];
       const recurrenceId = currentEvent['RECURRENCE-ID'];
 
-      // Mark cancelled events — handled by caller
+      // Mark cancelled events — handled by caller.
+      // With RECURRENCE-ID: single occurrence → delete only that uid_date.
+      // Without RECURRENCE-ID: entire event → delete all instances via prefix.
       if (currentEvent['STATUS'] === 'CANCELLED') {
         if (uid && !uid.startsWith('unknown_')) {
           (events as any)._cancelledUids = (events as any)._cancelledUids || [];
-          // If RECURRENCE-ID present, cancelled uid is uid_date so prefix match works;
-          // always store the base UID — deletion uses prefix matching.
-          (events as any)._cancelledUids.push(uid);
-          // Also push the uid_date variant if recurrence-id is known
           if (recurrenceId) {
+            // Single occurrence cancelled — compute exact uid_date
             const recDate = parseICalDate(recurrenceId.replace(/^.*:/, ''));
             const recDateKey = recDate.toISOString().slice(0, 10);
             (events as any)._cancelledUids.push(`${uid}_${recDateKey}`);
+          } else {
+            // Whole event cancelled — bare UID; deletion prefix-matches all instances
+            (events as any)._cancelledUids.push(uid);
           }
         }
         continue;
@@ -581,15 +583,25 @@ export async function POST(request: Request) {
     }
     
     // Delete cancelled events (STATUS:CANCELLED in iCal feed).
-    // Match both exact UID and uid_date variants (from recurring expansion).
+    // uid_date entries (single occurrence): exact match only.
+    // Bare UIDs (whole event): exact + prefix match to catch all expanded instances.
     const cancelledUids: string[] = (parsedEvents as any)._cancelledUids || [];
     for (const cancelUid of cancelledUids) {
-      // Exact match covers one-off cancellations; prefix match covers expanded recurring instances.
-      await supabaseAdmin
-        .from('events')
-        .delete()
-        .or(`gcal_uid.eq.${cancelUid},gcal_uid.like.${cancelUid}_%`)
-        .in('status', ['scheduled']); // never delete active/completed events
+      const isSpecificOccurrence = /^.+_\d{4}-\d{2}-\d{2}$/.test(cancelUid);
+      if (isSpecificOccurrence) {
+        await supabaseAdmin
+          .from('events')
+          .delete()
+          .eq('gcal_uid', cancelUid)
+          .in('status', ['scheduled']);
+      } else {
+        // Whole series cancelled — exact match + prefix match for expanded instances
+        await supabaseAdmin
+          .from('events')
+          .delete()
+          .or(`gcal_uid.eq.${cancelUid},gcal_uid.like.${cancelUid}_%`)
+          .in('status', ['scheduled']);
+      }
     }
 
     // Upsert events to Supabase
