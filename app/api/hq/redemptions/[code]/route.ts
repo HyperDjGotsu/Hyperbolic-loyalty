@@ -13,7 +13,7 @@ export async function GET(
     const staffCtx = await requireAnyStaff();
     if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { data: redemption, error } = await (supabaseAdmin as any)
+    const { data: redemption, error } = await supabaseAdmin
       .from('prize_wall_redemptions')
       .select(`
         id, claim_code, status, item_name, item_retail_value,
@@ -29,7 +29,8 @@ export async function GET(
     }
 
     // Store staff can only see codes belonging to a store they have access to
-    if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(redemption.store?.id)) {
+    const storeIdForCode = (redemption.store as { id?: string } | null)?.id ?? '';
+    if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(storeIdForCode)) {
       return NextResponse.json({ error: 'Code not found' }, { status: 404 });
     }
 
@@ -56,7 +57,7 @@ export async function PATCH(
     const staffCtx = await requireStoreAccess(requestedStoreId);
     if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const { data: redemption, error: fetchError } = await (supabaseAdmin as any)
+    const { data: redemption, error: fetchError } = await supabaseAdmin
       .from('prize_wall_redemptions')
       .select('id, status, player_id, store_id, points_deducted, item_name, expires_at')
       .eq('claim_code', params.code.toUpperCase())
@@ -98,14 +99,14 @@ export async function PATCH(
 
     if (action === 'claim') {
       if (new Date(redemption.expires_at) < new Date()) {
-        await (supabaseAdmin as any)
+        await supabaseAdmin
           .from('prize_wall_redemptions')
           .update({ status: 'expired' })
           .eq('id', redemption.id);
         return NextResponse.json({ error: 'Redemption code has expired' }, { status: 410 });
       }
 
-      const { error: updateError } = await (supabaseAdmin as any)
+      const { error: updateError } = await supabaseAdmin
         .from('prize_wall_redemptions')
         .update({ status: 'claimed', claimed_at: new Date().toISOString(), claimed_by: staff.id })
         .eq('id', redemption.id)
@@ -119,7 +120,7 @@ export async function PATCH(
     }
 
     // void — refund points
-    const { error: voidError } = await (supabaseAdmin as any)
+    const { error: voidError } = await supabaseAdmin
       .from('prize_wall_redemptions')
       .update({
         status: 'voided',

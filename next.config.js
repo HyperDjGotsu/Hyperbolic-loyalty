@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['web-push'],
   images: {
     domains: ['img.clerk.com', 'images.clerk.dev', 'en.onepiece-cardgame.com'],
   },
