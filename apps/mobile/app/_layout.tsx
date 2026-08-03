@@ -1,56 +1,75 @@
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { Slot, useRouter, useSegments } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { useEffect, useRef } from 'react';
+import { tokenCache } from '@/lib/auth';
+import { registerForPushNotifications } from '@/lib/push';
 
-import { useColorScheme } from '@/components/useColorScheme';
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+const PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+function AuthGuard() {
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+  const notifListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (!isLoaded) return;
+    SplashScreen.hideAsync();
+
+    const inAuthGroup = segments[0] === '(auth)';
+    if (!isSignedIn && !inAuthGroup) {
+      router.replace('/(auth)/sign-in');
+    } else if (isSignedIn && inAuthGroup) {
+      router.replace('/(tabs)');
     }
-  }, [loaded]);
+  }, [isLoaded, isSignedIn, segments]);
 
-  if (!loaded) {
-    return null;
-  }
+  // Register push token after sign-in
+  useEffect(() => {
+    if (!isSignedIn) return;
 
-  return <RootLayoutNav />;
+    registerForPushNotifications().then(async token => {
+      if (!token) return;
+      try {
+        const jwt = await getToken();
+        await fetch(`${API_BASE}/api/player/push-subscription`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+          },
+          body: JSON.stringify({ expo_push_token: token }),
+        });
+      } catch { /* non-critical */ }
+    });
+
+    // Deep link: tap notification → navigate to event
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data as Record<string, string>;
+      if (data?.event_id) {
+        router.push(`/event/${data.event_id}`);
+      }
+    });
+
+    return () => {
+      responseListener.current?.remove();
+      notifListener.current?.remove();
+    };
+  }, [isSignedIn]);
+
+  return <Slot />;
 }
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <AuthGuard />
+    </ClerkProvider>
   );
 }
