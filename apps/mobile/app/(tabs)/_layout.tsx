@@ -9,8 +9,8 @@ const TAB_BAR_STYLE = {
   height: Platform.OS === 'ios' ? 84 : 60,
 };
 
-function TabIcon({ icon, color }: { icon: string; color: string }) {
-  return <Text style={{ fontSize: 20, opacity: color === '#a78bfa' ? 1 : 0.5 }}>{icon}</Text>;
+function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
+  return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>{icon}</Text>;
 }
 
 export default function TabsLayout() {
@@ -31,28 +31,28 @@ export default function TabsLayout() {
         options={{
           title: 'Dashboard',
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => <TabIcon icon="⚡" color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="⚡" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
           title: 'Events',
-          tabBarIcon: ({ color }) => <TabIcon icon="📅" color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="📅" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
           title: 'Inbox',
-          tabBarIcon: ({ color }) => <TabIcon icon="🔔" color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="🔔" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <TabIcon icon="👤" color={color} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
         }}
       />
     </Tabs>

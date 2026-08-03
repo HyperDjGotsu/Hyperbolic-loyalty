@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Hyperbolic XP",
-    "slug": "hyperbolic-xp",
+    "name": "Player Pass",
+    "slug": "player-pass",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "hyperbolicxp",
+    "scheme": "playerpass",
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.hyperbolic.xp"
+      "bundleIdentifier": "PLACEHOLDER_BUNDLE_ID"
     },
     "android": {
-      "package": "com.hyperbolic.xp",
+      "package": "PLACEHOLDER_ANDROID_PACKAGE",
       "adaptiveIcon": {
         "backgroundColor": "#0a0a0f",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -41,7 +41,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Hyperbolic XP to access your camera for QR check-in",
+          "cameraPermission": "Allow Player Pass to access your camera to scan QR codes at events.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -51,12 +51,18 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#7c3aed",
-          "defaultChannel": "default"
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": false
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "PLACEHOLDER_EAS_PROJECT_ID"
+      }
     }
   }
 }

@@ -97,7 +97,7 @@ export default function QRCheckinScreen() {
   return (
     <View style={styles.container}>
       <CameraView
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
         onBarcodeScanned={scanned ? undefined : handleBarcode}
       />
