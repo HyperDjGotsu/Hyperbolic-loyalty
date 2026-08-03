@@ -9,20 +9,14 @@
       "ios": {
         "simulator": false
       },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://hyperbolic-loyalty.vercel.app"
-      }
+      "environment": "development"
     },
     "preview": {
       "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://hyperbolic-loyalty.vercel.app"
-      }
+      "environment": "preview"
     },
     "production": {
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://hyperbolic-loyalty.vercel.app"
-      }
+      "environment": "production"
     }
   },
   "submit": {
