@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.31",
+    "@expo/vector-icons": "^15.0.2",
     "expo": "~57.0.9",
     "expo-auth-session": "~57.0.5",
     "expo-camera": "~57.0.3",

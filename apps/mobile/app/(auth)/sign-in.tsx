@@ -44,13 +44,13 @@ export default function SignInScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
-        <Text style={styles.logo}>⚡ Hyperbolic XP</Text>
-        <Text style={styles.subtitle}>Player Pass</Text>
+        <Text style={styles.logo}>GSHC</Text>
+        <Text style={styles.logoSub}>— PLAYER PASS —</Text>
 
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#666"
+          placeholderTextColor="#7a7060"
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
@@ -59,7 +59,7 @@ export default function SignInScreen() {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#666"
+          placeholderTextColor="#7a7060"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -73,7 +73,7 @@ export default function SignInScreen() {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#111009" />
           ) : (
             <Text style={styles.buttonText}>Sign In</Text>
           )}
@@ -88,30 +88,67 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
-  logo: { fontSize: 32, fontWeight: '800', color: '#a78bfa', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 16, color: '#6b7280', textAlign: 'center', marginBottom: 48 },
+  container: {
+    flex: 1,
+    backgroundColor: '#111009',
+  },
+  inner: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  logo: {
+    fontFamily: 'Georgia',
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#f2efe8',
+    textAlign: 'center',
+  },
+  logoSub: {
+    fontSize: 11,
+    letterSpacing: 4,
+    color: '#f97316',
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 40,
+    marginTop: 6,
+  },
   input: {
-    backgroundColor: '#16161f',
+    backgroundColor: '#1e1c14',
     borderWidth: 1,
-    borderColor: '#2d2d3d',
-    borderRadius: 12,
-    color: '#fff',
+    borderColor: 'rgba(242,239,232,0.08)',
+    borderRadius: 10,
+    color: '#f2efe8',
     fontSize: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 12,
   },
-  error: { color: '#f87171', fontSize: 14, marginBottom: 12, textAlign: 'center' },
+  error: {
+    color: '#ef4444',
+    fontSize: 14,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
   button: {
-    backgroundColor: '#7c3aed',
-    borderRadius: 12,
+    backgroundColor: '#c4b5fd',
+    borderRadius: 10,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
   },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  link: { color: '#a78bfa', textAlign: 'center', marginTop: 24, fontSize: 14 },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#111009',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  link: {
+    color: '#c4b5fd',
+    textAlign: 'center',
+    marginTop: 24,
+    fontSize: 14,
+  },
 });
