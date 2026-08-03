@@ -19,7 +19,10 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -60,9 +63,11 @@
       "typedRoutes": true
     },
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "PLACEHOLDER_EAS_PROJECT_ID"
+        "projectId": "653d26a7-01ba-4269-8023-020ebe03c4a9"
       }
-    }
+    },
+    "owner": "djgotsu"
   }
 }
