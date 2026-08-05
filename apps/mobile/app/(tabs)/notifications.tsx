@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 
 type Notification = {
@@ -18,7 +19,26 @@ type Notification = {
   type: string;
 };
 
-export default function NotificationsScreen() {
+type FeatherIconName = 'calendar' | 'zap' | 'radio' | 'award' | 'bell';
+
+function typeIcon(type: string): FeatherIconName {
+  if (type === 'event') return 'calendar';
+  if (type === 'xp') return 'zap';
+  if (type === 'broadcast') return 'radio';
+  if (type === 'reward') return 'award';
+  return 'bell';
+}
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+export default function AlertsScreen() {
   const api = useApi();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,27 +58,10 @@ export default function NotificationsScreen() {
 
   useEffect(() => { load(); }, []);
 
-  function timeAgo(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
-  }
-
-  function typeIcon(type: string) {
-    if (type === 'event') return '📅';
-    if (type === 'xp') return '⚡';
-    if (type === 'broadcast') return '📢';
-    if (type === 'reward') return '🏆';
-    return '🔔';
-  }
-
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#a78bfa" size="large" />
+        <ActivityIndicator color="#c4b5fd" size="large" />
       </View>
     );
   }
@@ -66,16 +69,25 @@ export default function NotificationsScreen() {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#a78bfa" />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => { setRefreshing(true); load(); }}
+          tintColor="#c4b5fd"
+        />
+      }
     >
+      <Text style={styles.heading}>Alerts</Text>
       {items.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🔔</Text>
-          <Text style={styles.emptyText}>No notifications yet</Text>
+          <Feather name="bell" size={48} color="#7a7060" />
+          <Text style={styles.emptyText}>No alerts yet</Text>
         </View>
       ) : items.map(item => (
         <View key={item.id} style={[styles.row, !item.read && styles.rowUnread]}>
-          <Text style={styles.icon}>{typeIcon(item.type)}</Text>
+          <View style={styles.iconWrap}>
+            <Feather name={typeIcon(item.type)} size={18} color={item.read ? '#7a7060' : '#c4b5fd'} />
+          </View>
           <View style={styles.content}>
             <View style={styles.rowHeader}>
               <Text style={styles.title}>{item.title}</Text>
@@ -91,27 +103,42 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0a0a0f' },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80, gap: 12 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { color: '#4b5563', fontSize: 15 },
+  container: { flex: 1, backgroundColor: '#111009' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111009' },
+  heading: {
+    color: '#f2efe8',
+    fontSize: 24,
+    fontWeight: '800',
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  empty: { alignItems: 'center', paddingTop: 80, gap: 12 },
+  emptyText: { color: '#7a7060', fontSize: 15 },
   row: {
     flexDirection: 'row',
     padding: 16,
     marginHorizontal: 16,
     marginTop: 10,
-    backgroundColor: '#16161f',
+    backgroundColor: '#1a1810',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#2d2d3d',
+    borderColor: 'rgba(242,239,232,0.08)',
     gap: 12,
   },
-  rowUnread: { borderColor: '#7c3aed' },
-  icon: { fontSize: 24, marginTop: 2 },
+  rowUnread: { borderColor: '#c4b5fd' },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(196,181,253,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
   content: { flex: 1 },
   rowHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  title: { color: '#fff', fontWeight: '700', fontSize: 14, flex: 1, marginRight: 8 },
-  time: { color: '#4b5563', fontSize: 11 },
-  body: { color: '#9ca3af', fontSize: 13, lineHeight: 18 },
+  title: { color: '#f2efe8', fontWeight: '700', fontSize: 14, flex: 1, marginRight: 8 },
+  time: { color: '#7a7060', fontSize: 11 },
+  body: { color: '#a89f90', fontSize: 13, lineHeight: 18 },
 });

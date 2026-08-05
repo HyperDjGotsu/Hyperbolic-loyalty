@@ -42,8 +42,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="notifications"
         options={{
-          title: 'Inbox',
-          tabBarLabel: 'Inbox',
+          title: 'Alerts',
+          tabBarLabel: 'Alerts',
           tabBarIcon: ({ color }) => <Feather name="bell" size={22} color={color} />,
         }}
       />
