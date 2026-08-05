@@ -57,8 +57,8 @@ export default function EventsScreen() {
 
   function statusColor(status: string) {
     if (status === 'active') return '#22c55e';
-    if (status === 'upcoming') return '#a78bfa';
-    return '#6b7280';
+    if (status === 'upcoming') return '#c4b5fd';
+    return '#7a7060';
   }
 
   return (
@@ -79,7 +79,7 @@ export default function EventsScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color="#a78bfa" size="large" />
+          <ActivityIndicator color="#c4b5fd" size="large" />
         </View>
       ) : events.length === 0 ? (
         <View style={styles.center}>
@@ -87,7 +87,7 @@ export default function EventsScreen() {
         </View>
       ) : (
         <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#a78bfa" />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#c4b5fd" />}
         >
           {events.map(event => (
             <Pressable
@@ -116,7 +116,7 @@ export default function EventsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
+  container: { flex: 1, backgroundColor: '#111009' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   tabRow: { flexDirection: 'row', margin: 16, gap: 8 },
   tabBtn: {
@@ -124,35 +124,35 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#16161f',
+    backgroundColor: '#1a1810',
     borderWidth: 1,
-    borderColor: '#2d2d3d',
+    borderColor: 'rgba(242,239,232,0.08)',
   },
-  tabBtnActive: { backgroundColor: '#7c3aed', borderColor: '#7c3aed' },
-  tabBtnText: { color: '#6b7280', fontWeight: '600', fontSize: 14 },
-  tabBtnTextActive: { color: '#fff' },
+  tabBtnActive: { backgroundColor: '#c4b5fd', borderColor: '#c4b5fd' },
+  tabBtnText: { color: '#7a7060', fontWeight: '600', fontSize: 14 },
+  tabBtnTextActive: { color: '#111009' },
   eventCard: {
-    backgroundColor: '#16161f',
+    backgroundColor: '#1a1810',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#2d2d3d',
+    borderColor: 'rgba(242,239,232,0.08)',
   },
   eventHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  eventTitle: { fontSize: 16, fontWeight: '700', color: '#fff', flex: 1, marginRight: 8 },
+  eventTitle: { fontSize: 16, fontWeight: '700', color: '#f2efe8', flex: 1, marginRight: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  eventStore: { color: '#9ca3af', fontSize: 12, marginTop: 4 },
-  eventDate: { color: '#6b7280', fontSize: 12, marginTop: 2 },
+  eventStore: { color: '#a89f90', fontSize: 12, marginTop: 4 },
+  eventDate: { color: '#7a7060', fontSize: 12, marginTop: 2 },
   xpBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#312e81',
+    backgroundColor: 'rgba(196,181,253,0.15)',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
     marginTop: 8,
   },
-  xpBadgeText: { color: '#a78bfa', fontSize: 11, fontWeight: '700' },
-  emptyText: { color: '#4b5563', fontSize: 15 },
+  xpBadgeText: { color: '#c4b5fd', fontSize: 11, fontWeight: '700' },
+  emptyText: { color: '#7a7060', fontSize: 15 },
 });
