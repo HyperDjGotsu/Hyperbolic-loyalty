@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,12 +10,14 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 import { C } from '@/lib/theme';
 
 const FREE_TIER_GATE = 720;
 const TRADE_EMPORIUM_ID = '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d';
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
 
 type PlayerTier = 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
 
@@ -40,9 +43,17 @@ type PrizeItem = {
   store_id: string | null;
 };
 
+type ClaimDetails = {
+  claimCode: string;
+  itemName: string;
+  pointsDeducted: number;
+  redemptionId: string;
+};
+
 export default function PrizeWallScreen() {
   const router = useRouter();
   const api = useApi();
+  const { getToken } = useAuth();
   const apiRef = useRef(api);
   apiRef.current = api;
 
@@ -54,7 +65,12 @@ export default function PrizeWallScreen() {
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(true);
 
-  useEffect(() => {
+  const [selectedItem, setSelectedItem] = useState<PrizeItem | null>(null);
+  const [claimDetails, setClaimDetails] = useState<ClaimDetails | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
+
+  const loadPassStatus = useCallback(() => {
     apiRef.current.get<PassStatus>('/api/player/pass-status')
       .then(data => { setPassStatus(data); setStoreId(data.homeStoreId ?? null); })
       .catch((e: unknown) => {
@@ -63,18 +79,75 @@ export default function PrizeWallScreen() {
       });
   }, []);
 
-  useEffect(() => {
-    if (storeId === undefined) return;
-    if (!storeId) { setCatalogLoading(false); return; }
+  const loadCatalog = useCallback((sid: string) => {
     setCatalogLoading(true);
     apiRef.current
       .get<{ items: PrizeItem[]; subscriber_count: number }>(
-        `/api/prize-wall?storeId=${encodeURIComponent(storeId)}`
+        `/api/prize-wall?storeId=${encodeURIComponent(sid)}`
       )
       .then(data => { setItems(data.items ?? []); setSubscriberCount(data.subscriber_count ?? 0); })
       .catch(() => setItems([]))
       .finally(() => setCatalogLoading(false));
-  }, [storeId]);
+  }, []);
+
+  useEffect(() => {
+    loadPassStatus();
+  }, [loadPassStatus]);
+
+  useEffect(() => {
+    if (storeId === undefined) return;
+    if (!storeId) { setCatalogLoading(false); return; }
+    loadCatalog(storeId);
+  }, [storeId, loadCatalog]);
+
+  async function redeemItem() {
+    if (!selectedItem) return;
+    try {
+      setRedeeming(true);
+      setRedeemError(null);
+      const token = await getToken();
+      const res = await fetch(`${API_BASE}/api/prize-wall/redeem`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ itemId: selectedItem.id }),
+      });
+      const data = await res.json() as
+        | ClaimDetails
+        | { error: string; balance?: number; required?: number; gateRequired?: number; currentBalance?: number };
+
+      if (res.status === 400) {
+        const err = data as { error: string; balance?: number; required?: number };
+        const needed = err.required != null ? ` Need ${err.required.toLocaleString()} pts.` : '';
+        setRedeemError(`Not enough Prize Points.${needed}`);
+        return;
+      }
+      if (res.status === 403) {
+        const err = data as { gateRequired?: number };
+        const gate = err.gateRequired ?? FREE_TIER_GATE;
+        setRedeemError(`Prize Wall locked until ${gate} lifetime XP.`);
+        return;
+      }
+      if (!res.ok || !('claimCode' in data)) {
+        setRedeemError('Redemption failed. Please try again.');
+        return;
+      }
+      setSelectedItem(null);
+      setClaimDetails(data as ClaimDetails);
+    } catch {
+      setRedeemError('Unable to connect. Check your connection and try again.');
+    } finally {
+      setRedeeming(false);
+    }
+  }
+
+  function closeClaim() {
+    setClaimDetails(null);
+    loadPassStatus();
+    if (storeId) loadCatalog(storeId);
+  }
 
   const floor = items.filter(i => i.unlock_threshold === null);
   const unlocked = items.filter(i => i.unlock_threshold !== null && i.is_unlocked);
@@ -117,12 +190,24 @@ export default function PrizeWallScreen() {
         <>
           {floor.length > 0 && (
             <CatalogSection title="ALWAYS AVAILABLE">
-              <ItemGrid items={floor} passStatus={passStatus} storeId={storeId ?? null} />
+              <ItemGrid
+                items={floor}
+                passStatus={passStatus}
+                storeId={storeId ?? null}
+                redeeming={redeeming}
+                onRedeem={item => { setRedeemError(null); setSelectedItem(item); }}
+              />
             </CatalogSection>
           )}
           {unlocked.length > 0 && (
             <CatalogSection title="COMMUNITY UNLOCKED">
-              <ItemGrid items={unlocked} passStatus={passStatus} storeId={storeId ?? null} />
+              <ItemGrid
+                items={unlocked}
+                passStatus={passStatus}
+                storeId={storeId ?? null}
+                redeeming={redeeming}
+                onRedeem={item => { setRedeemError(null); setSelectedItem(item); }}
+              />
             </CatalogSection>
           )}
           {locked.length > 0 && (
@@ -139,6 +224,21 @@ export default function PrizeWallScreen() {
       )}
 
       <View style={{ height: 40 }} />
+
+      {selectedItem && passStatus && (
+        <RedeemModal
+          item={selectedItem}
+          balance={passStatus.prizePoints}
+          redeeming={redeeming}
+          error={redeemError}
+          onCancel={() => { setSelectedItem(null); setRedeemError(null); }}
+          onConfirm={() => void redeemItem()}
+        />
+      )}
+
+      {claimDetails && (
+        <ClaimCodeScreen claim={claimDetails} onDone={closeClaim} />
+      )}
     </ScrollView>
   );
 }
@@ -215,10 +315,14 @@ function ItemGrid({
   items,
   passStatus,
   storeId,
+  redeeming,
+  onRedeem,
 }: {
   items: PrizeItem[];
   passStatus: PassStatus | null;
   storeId: string | null;
+  redeeming: boolean;
+  onRedeem: (item: PrizeItem) => void;
 }) {
   const pairs: PrizeItem[][] = [];
   for (let i = 0; i < items.length; i += 2) {
@@ -229,7 +333,14 @@ function ItemGrid({
       {pairs.map((pair, i) => (
         <View key={i} style={styles.gridRow}>
           {pair.map(item => (
-            <ItemCard key={item.id} item={item} passStatus={passStatus} storeId={storeId} />
+            <ItemCard
+              key={item.id}
+              item={item}
+              passStatus={passStatus}
+              storeId={storeId}
+              redeeming={redeeming}
+              onRedeem={onRedeem}
+            />
           ))}
           {pair.length === 1 && <View style={styles.itemCardSpacer} />}
         </View>
@@ -242,10 +353,14 @@ function ItemCard({
   item,
   passStatus,
   storeId,
+  redeeming,
+  onRedeem,
 }: {
   item: PrizeItem;
   passStatus: PassStatus | null;
   storeId: string | null;
+  redeeming: boolean;
+  onRedeem: (item: PrizeItem) => void;
 }) {
   const isGrailElsewhere = item.is_network_prize && storeId !== TRADE_EMPORIUM_ID;
   const outOfStock = item.quantity != null && item.quantity <= 0;
@@ -265,6 +380,7 @@ function ItemCard({
     : null;
 
   const canRedeem = !outOfStock && !isGrailElsewhere && item.is_unlocked && !gateLocked && !insufficientPoints && !!passStatus;
+  const btnDisabled = !canRedeem || redeeming;
 
   return (
     <View style={styles.itemCard}>
@@ -314,16 +430,89 @@ function ItemCard({
           </View>
         ) : (
           <Pressable
-            style={[styles.redeemBtn, !canRedeem && styles.redeemBtnDisabled]}
-            disabled={true}
+            style={[styles.redeemBtn, btnDisabled && styles.redeemBtnDisabled]}
+            disabled={btnDisabled}
+            onPress={canRedeem && !redeeming ? () => onRedeem(item) : undefined}
           >
-            <Text style={[styles.redeemBtnText, !canRedeem && styles.redeemBtnTextDisabled]}>
+            <Text style={[styles.redeemBtnText, btnDisabled && styles.redeemBtnTextDisabled]}>
               {disabledReason ?? 'Redeem'}
             </Text>
           </Pressable>
         )}
       </View>
     </View>
+  );
+}
+
+function RedeemModal({
+  item,
+  balance,
+  redeeming,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  item: PrizeItem;
+  balance: number;
+  redeeming: boolean;
+  error: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal transparent animationType="fade" visible onRequestClose={onCancel}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalBox}>
+          <Text style={styles.modalTitle}>Redeem {item.name}?</Text>
+          <Text style={styles.modalCost}>{item.xp_cost.toLocaleString()} Prize Points</Text>
+          <Text style={styles.modalBalance}>
+            You&apos;ll have {(balance - item.xp_cost).toLocaleString()} pts remaining
+          </Text>
+          <Text style={styles.modalNotice}>🏪 Collect in person — show your claim code to staff.</Text>
+          {error ? <Text style={styles.modalError}>{error}</Text> : null}
+          <View style={styles.modalButtons}>
+            <Pressable
+              style={[styles.modalBtn, styles.modalBtnCancel]}
+              onPress={onCancel}
+              disabled={redeeming}
+            >
+              <Text style={styles.modalBtnCancelText}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.modalBtn, styles.modalBtnConfirm, redeeming && styles.modalBtnOpacity]}
+              onPress={onConfirm}
+              disabled={redeeming}
+            >
+              <Text style={styles.modalBtnConfirmText}>
+                {redeeming ? 'Redeeming…' : 'Confirm'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function ClaimCodeScreen({ claim, onDone }: { claim: ClaimDetails; onDone: () => void }) {
+  return (
+    <Modal animationType="slide" visible onRequestClose={onDone}>
+      <View style={styles.claimScreen}>
+        <Text style={styles.claimItemName}>{claim.itemName}</Text>
+        <View style={styles.claimCodeBox}>
+          <Text style={styles.claimCode}>{claim.claimCode}</Text>
+        </View>
+        <Text style={styles.claimInstruction}>
+          Show this code to staff at the counter to collect your prize.
+        </Text>
+        <Text style={styles.claimDeducted}>
+          −{claim.pointsDeducted.toLocaleString()} Prize Points
+        </Text>
+        <Pressable style={styles.claimDoneBtn} onPress={onDone}>
+          <Text style={styles.claimDoneBtnText}>Done</Text>
+        </Pressable>
+      </View>
+    </Modal>
   );
 }
 
@@ -548,4 +737,88 @@ const styles = StyleSheet.create({
   lockedProgressLabel: { color: C.textTertiary, fontSize: 10 },
   lockedTrack: { height: 4, backgroundColor: C.bgElevated, borderRadius: 2, overflow: 'hidden' },
   lockedFill: { height: '100%', backgroundColor: C.accent, borderRadius: 2 },
+
+  // Confirmation modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalBox: {
+    width: '100%',
+    backgroundColor: C.bgSurface,
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  modalTitle: { color: C.textPrimary, fontSize: 18, fontWeight: '700', marginBottom: 6 },
+  modalCost: { color: C.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 6 },
+  modalBalance: { color: C.textSecondary, fontSize: 14, marginBottom: 8 },
+  modalNotice: { color: C.textTertiary, fontSize: 12, lineHeight: 18 },
+  modalError: { color: C.danger, fontSize: 13, marginTop: 10 },
+  modalButtons: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  modalBtn: { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: 'center' },
+  modalBtnCancel: { backgroundColor: C.bgElevated },
+  modalBtnCancelText: { color: C.textPrimary, fontSize: 15, fontWeight: '600' },
+  modalBtnConfirm: { backgroundColor: C.success },
+  modalBtnConfirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  modalBtnOpacity: { opacity: 0.5 },
+
+  // Claim code screen
+  claimScreen: {
+    flex: 1,
+    backgroundColor: '#0a0a0a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  claimItemName: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  claimCodeBox: {
+    backgroundColor: '#1c1c1e',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#3a3a3c',
+    paddingHorizontal: 32,
+    paddingVertical: 48,
+    alignItems: 'center',
+    width: '100%',
+  },
+  claimCode: {
+    color: '#fff',
+    fontSize: 44,
+    fontWeight: '800',
+    fontFamily: 'monospace',
+    letterSpacing: 6,
+    textAlign: 'center',
+  },
+  claimInstruction: {
+    color: '#d1d5db',
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 28,
+    lineHeight: 22,
+  },
+  claimDeducted: {
+    color: '#f87171',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 16,
+  },
+  claimDoneBtn: {
+    marginTop: 40,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+  },
+  claimDoneBtnText: { color: '#0a0a0a', fontSize: 16, fontWeight: '700' },
 });
