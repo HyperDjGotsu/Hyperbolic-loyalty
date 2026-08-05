@@ -313,7 +313,7 @@ export default function DashboardScreen() {
 
         {/* Footer */}
         {isPaidTier ? (
-          <Pressable style={styles.prizeWallBtn}>
+          <Pressable style={styles.prizeWallBtn} onPress={() => router.push('/prize-wall' as never)}>
             <Text style={styles.prizeWallBtnText}>Spend at Prize Wall</Text>
           </Pressable>
         ) : (
