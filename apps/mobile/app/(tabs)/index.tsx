@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 import { getLevel, getXpProgress, getXpToNext } from '@/lib/theme';
 
@@ -23,6 +25,14 @@ type PlayerResponse = {
   homeStore?: { id: string; name: string; city: string | null; is_flagship: boolean; color: string | null } | null;
   gameXP?: { game_id: string }[];
   recentActivity?: { id: string }[];
+};
+
+type Store = {
+  id: string;
+  name: string;
+  city: string | null;
+  is_flagship: boolean;
+  color: string | null;
 };
 
 type TierStyle = {
@@ -56,6 +66,9 @@ export default function DashboardScreen() {
   const [hasSpunToday, setHasSpunToday] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinResult, setSpinResult] = useState<string | null>(null);
+  const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
 
   async function loadPlayer() {
     try {
@@ -70,6 +83,11 @@ export default function DashboardScreen() {
       setPlayer(data);
       setHasSpunToday(!spinData.canSpin);
       setError('');
+      // Seed selectedStore from homeStore; load full store list for switcher
+      if (data.homeStore) setSelectedStore(data.homeStore as Store);
+      api.get<{ stores: Store[] }>('/api/stores')
+        .then(s => setStores(s.stores ?? []))
+        .catch(() => {});
     } catch {
       setError('Could not load player. Pull down to retry.');
     } finally {
@@ -212,19 +230,23 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Store row */}
-        {player.homeStore?.name ? (
-          <View style={styles.storeRow}>
-            <View style={[styles.storeDot, { backgroundColor: player.homeStore.color ?? '#22c55e' }]} />
-            <Text style={styles.storeName} numberOfLines={1}>
-              {player.homeStore.name}
-            </Text>
-            {player.homeStore.is_flagship && (
+        {/* Store row — tappable, shows selected store context */}
+        {(selectedStore ?? player.homeStore) ? (
+          <Pressable style={styles.storeRow} onPress={() => setShowStoreSwitcher(true)}>
+            <View style={[styles.storeDot, { backgroundColor: (selectedStore ?? player.homeStore)!.color ?? '#22c55e' }]} />
+            <View style={styles.storeNameCol}>
+              <Text style={styles.storeContext}>Viewing</Text>
+              <Text style={styles.storeName} numberOfLines={1}>
+                {(selectedStore ?? player.homeStore)!.name}
+              </Text>
+            </View>
+            {(selectedStore ?? player.homeStore)!.is_flagship && (
               <View style={styles.flagshipBadge}>
                 <Text style={styles.flagshipBadgeText}>Flagship</Text>
               </View>
             )}
-          </View>
+            <Feather name="chevron-right" size={14} color="#7a7060" />
+          </Pressable>
         ) : null}
       </View>
 
@@ -305,6 +327,48 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.bottomPad} />
+
+      {/* Store Switcher Modal */}
+      <Modal
+        visible={showStoreSwitcher}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowStoreSwitcher(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowStoreSwitcher(false)}>
+          <Pressable style={styles.modalSheet} onPress={() => {}}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Switch Store</Text>
+            <Text style={styles.modalSub}>Choose your browsing context</Text>
+            {stores.map(store => {
+              const isSelected = (selectedStore?.id ?? player?.homeStore?.id) === store.id;
+              return (
+                <Pressable
+                  key={store.id}
+                  style={[styles.storeOption, isSelected && styles.storeOptionSelected]}
+                  onPress={() => {
+                    setSelectedStore(store);
+                    setShowStoreSwitcher(false);
+                  }}
+                >
+                  <View style={[styles.storeOptionDot, { backgroundColor: store.color ?? '#7a7060' }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.storeOptionName}>{store.name}</Text>
+                    {store.city ? <Text style={styles.storeOptionCity}>{store.city}</Text> : null}
+                  </View>
+                  {store.is_flagship && (
+                    <View style={styles.flagshipBadge}>
+                      <Text style={styles.flagshipBadgeText}>Flagship</Text>
+                    </View>
+                  )}
+                  {isSelected && <Feather name="check" size={16} color="#c4b5fd" />}
+                </Pressable>
+              );
+            })}
+            <View style={{ height: 24 }} />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -487,7 +551,7 @@ const styles = StyleSheet.create({
   storeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
@@ -497,13 +561,18 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#22c55e',
+  },
+  storeNameCol: {
+    flex: 1,
+  },
+  storeContext: {
+    fontSize: 10,
+    color: '#7a7060',
   },
   storeName: {
     fontSize: 12,
     color: '#a89f90',
     fontWeight: '500',
-    flex: 1,
   },
   flagshipBadge: {
     borderWidth: 1,
@@ -675,5 +744,70 @@ const styles = StyleSheet.create({
 
   bottomPad: {
     paddingBottom: 24,
+  },
+
+  // Store Switcher Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: '#1a1810',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(242,239,232,0.08)',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(242,239,232,0.2)',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    color: '#f2efe8',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  modalSub: {
+    color: '#7a7060',
+    fontSize: 13,
+    marginBottom: 16,
+  },
+  storeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 6,
+    backgroundColor: 'rgba(242,239,232,0.04)',
+  },
+  storeOptionSelected: {
+    backgroundColor: 'rgba(196,181,253,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(196,181,253,0.3)',
+  },
+  storeOptionDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  storeOptionName: {
+    color: '#f2efe8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  storeOptionCity: {
+    color: '#7a7060',
+    fontSize: 12,
+    marginTop: 1,
   },
 });
