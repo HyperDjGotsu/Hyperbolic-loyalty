@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,17 +9,30 @@ import {
   View,
 } from 'react-native';
 import { useApi } from '@/lib/api';
+import { LoadingView } from '@/components/ui';
 
 type Event = {
   id: string;
-  title: string;
+  name: string;
   game_id: string;
-  starts_at: string;
-  ends_at: string;
+  description: string | null;
+  date: string;
+  time: string;
+  scheduledAt: string;
+  endsAt: string | null;
   status: string;
-  store_name: string;
-  xp_reward: number;
+  attendanceXp: number;
+  winXp: number;
+  isLive: boolean;
+  isNetworkEvent: boolean;
+  game: { id: string; name: string; icon: string; color: string } | null;
 };
+
+function statusColor(status: string) {
+  if (status === 'active') return '#22c55e';
+  if (status === 'scheduled') return '#c4b5fd';
+  return '#7a7060';
+}
 
 export default function EventsScreen() {
   const api = useApi();
@@ -32,7 +44,7 @@ export default function EventsScreen() {
 
   async function loadEvents() {
     try {
-      const path = tab === 'network' ? '/api/events?scope=network' : '/api/events';
+      const path = tab === 'network' ? '/api/events?network=true' : '/api/events';
       const data = await api.get<{ events: Event[] }>(path);
       setEvents(data.events ?? []);
     } catch {
@@ -50,17 +62,6 @@ export default function EventsScreen() {
     loadEvents();
   }
 
-  function formatDate(iso: string) {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  }
-
-  function statusColor(status: string) {
-    if (status === 'active') return '#22c55e';
-    if (status === 'upcoming') return '#c4b5fd';
-    return '#7a7060';
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.tabRow}>
@@ -68,7 +69,7 @@ export default function EventsScreen() {
           <Pressable
             key={t}
             style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
-            onPress={() => setTab(t)}
+            onPress={() => { setLoading(true); setTab(t); }}
           >
             <Text style={[styles.tabBtnText, tab === t && styles.tabBtnTextActive]}>
               {t === 'store' ? 'My Store' : 'Network'}
@@ -78,9 +79,7 @@ export default function EventsScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color="#c4b5fd" size="large" />
-        </View>
+        <LoadingView style={styles.center} />
       ) : events.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emptyText}>No upcoming events</Text>
@@ -93,17 +92,19 @@ export default function EventsScreen() {
             <Pressable
               key={event.id}
               style={styles.eventCard}
-              onPress={() => router.push(`/event/${event.id}`)}
+              onPress={() => router.push(`/event/${event.id}` as never)}
             >
               <View style={styles.eventHeader}>
-                <Text style={styles.eventTitle}>{event.title}</Text>
+                <Text style={styles.eventTitle}>{event.name}</Text>
                 <View style={[styles.statusDot, { backgroundColor: statusColor(event.status) }]} />
               </View>
-              <Text style={styles.eventStore}>{event.store_name}</Text>
-              <Text style={styles.eventDate}>{formatDate(event.starts_at)}</Text>
-              {event.xp_reward ? (
+              {event.game ? (
+                <Text style={styles.eventGame}>{event.game.icon} {event.game.name}</Text>
+              ) : null}
+              <Text style={styles.eventDate}>{event.date} · {event.time}</Text>
+              {event.attendanceXp ? (
                 <View style={styles.xpBadge}>
-                  <Text style={styles.xpBadgeText}>+{event.xp_reward} XP</Text>
+                  <Text style={styles.xpBadgeText}>+{event.attendanceXp} XP</Text>
                 </View>
               ) : null}
             </Pressable>
@@ -117,7 +118,7 @@ export default function EventsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#111009' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111009' },
   tabRow: { flexDirection: 'row', margin: 16, gap: 8 },
   tabBtn: {
     flex: 1,
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
   eventHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   eventTitle: { fontSize: 16, fontWeight: '700', color: '#f2efe8', flex: 1, marginRight: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  eventStore: { color: '#a89f90', fontSize: 12, marginTop: 4 },
+  eventGame: { color: '#a89f90', fontSize: 12, marginTop: 4 },
   eventDate: { color: '#7a7060', fontSize: 12, marginTop: 2 },
   xpBadge: {
     alignSelf: 'flex-start',
