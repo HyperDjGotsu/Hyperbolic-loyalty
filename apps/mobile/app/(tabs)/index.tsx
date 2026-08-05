@@ -20,7 +20,9 @@ type PlayerResponse = {
   xp: number;
   gems: number;
   passTier: string;
-  homeStore?: { name: string } | null;
+  homeStore?: { id: string; name: string; city: string | null; is_flagship: boolean; color: string | null } | null;
+  gameXP?: { game_id: string }[];
+  recentActivity?: { id: string }[];
 };
 
 type TierStyle = {
@@ -51,21 +53,49 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [hasSpunToday, setHasSpunToday] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinResult, setSpinResult] = useState<string | null>(null);
 
   async function loadPlayer() {
     try {
-      const data = await api.get<PlayerResponse>('/api/player/by-clerk');
+      const [data, spinData] = await Promise.all([
+        api.get<PlayerResponse>('/api/player/by-clerk'),
+        api.get<{ canSpin: boolean }>('/api/xp/daily-spin').catch(() => ({ canSpin: true })),
+      ]);
       if (!data.linked) {
         router.replace('/onboarding');
         return;
       }
       setPlayer(data);
+      setHasSpunToday(!spinData.canSpin);
       setError('');
     } catch {
       setError('Could not load player. Pull down to retry.');
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  }
+
+  async function handleSpin() {
+    if (hasSpunToday || isSpinning) return;
+    setIsSpinning(true);
+    try {
+      const data = await api.post<{ success: boolean; prize: { xp: number; label: string } }>(
+        '/api/xp/daily-spin',
+        {}
+      );
+      if (data.success) {
+        setHasSpunToday(true);
+        setSpinResult(`+${data.prize.xp} XP — ${data.prize.label}`);
+        setTimeout(() => setSpinResult(null), 3000);
+      }
+    } catch {
+      // already spun or error — mark as spun to avoid double-tap
+      setHasSpunToday(true);
+    } finally {
+      setIsSpinning(false);
     }
   }
 
@@ -168,11 +198,11 @@ export default function DashboardScreen() {
         <View style={styles.statsGrid}>
           <View style={styles.statCell}>
             <Text style={styles.statCellLabel}>GAMES</Text>
-            <Text style={styles.statCellValue}>—</Text>
+            <Text style={styles.statCellValue}>{player.gameXP?.length ?? 0}</Text>
           </View>
           <View style={[styles.statCell, styles.statCellMiddle]}>
             <Text style={styles.statCellLabel}>ACTIVITY</Text>
-            <Text style={styles.statCellValue}>—</Text>
+            <Text style={styles.statCellValue}>{player.recentActivity?.length ?? 0}</Text>
           </View>
           <View style={styles.statCell}>
             <Text style={styles.statCellLabel}>POINTS</Text>
@@ -185,26 +215,36 @@ export default function DashboardScreen() {
         {/* Store row */}
         {player.homeStore?.name ? (
           <View style={styles.storeRow}>
-            <View style={styles.storeDot} />
+            <View style={[styles.storeDot, { backgroundColor: player.homeStore.color ?? '#22c55e' }]} />
             <Text style={styles.storeName} numberOfLines={1}>
               {player.homeStore.name}
             </Text>
-            <View style={styles.flagshipBadge}>
-              <Text style={styles.flagshipBadgeText}>Flagship</Text>
-            </View>
+            {player.homeStore.is_flagship && (
+              <View style={styles.flagshipBadge}>
+                <Text style={styles.flagshipBadgeText}>Flagship</Text>
+              </View>
+            )}
           </View>
         ) : null}
       </View>
 
       {/* Daily Spin button */}
       <View style={styles.spinWrapper}>
-        <Pressable style={styles.spinBtn}>
+        <Pressable
+          style={[styles.spinBtn, (hasSpunToday || isSpinning) && styles.spinBtnClaimed]}
+          onPress={handleSpin}
+          disabled={hasSpunToday || isSpinning}
+        >
           <View>
-            <Text style={styles.spinBtnText}>Daily Spin</Text>
-            <Text style={styles.spinBtnSub}>Tap to spin</Text>
+            <Text style={[styles.spinBtnText, (hasSpunToday || isSpinning) && styles.spinBtnTextClaimed]}>
+              {isSpinning ? 'Spinning…' : hasSpunToday ? (spinResult ?? 'Claimed Today') : 'Daily Spin'}
+            </Text>
+            <Text style={[styles.spinBtnSub, (hasSpunToday || isSpinning) && styles.spinBtnSubClaimed]}>
+              {hasSpunToday ? 'Come back tomorrow' : 'Tap to spin'}
+            </Text>
           </View>
         </Pressable>
-        <View style={styles.pingDot} />
+        {!hasSpunToday && !isSpinning && <View style={styles.pingDot} />}
       </View>
 
       {/* Player Pass card */}
@@ -493,16 +533,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  spinBtnClaimed: {
+    backgroundColor: '#1a1810',
+    borderWidth: 1,
+    borderColor: 'rgba(242,239,232,0.08)',
+  },
   spinBtnText: {
     fontSize: 15,
     fontWeight: '700',
     color: '#111009',
     textAlign: 'center',
   },
+  spinBtnTextClaimed: {
+    color: '#7a7060',
+  },
   spinBtnSub: {
     fontSize: 11,
     color: 'rgba(17,16,9,0.6)',
     textAlign: 'center',
+  },
+  spinBtnSubClaimed: {
+    color: '#7a7060',
   },
   pingDot: {
     position: 'absolute',
