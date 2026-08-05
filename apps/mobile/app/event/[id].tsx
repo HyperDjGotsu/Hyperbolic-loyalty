@@ -8,24 +8,36 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 
 type EventDetail = {
   id: string;
-  title: string;
-  game_id: string;
-  description: string;
-  starts_at: string;
-  ends_at: string;
-  status: string;
-  store_name: string;
-  store_id: string;
-  xp_reward: number;
-  points_reward: number;
-  max_participants: number | null;
-  checkin_count: number;
-  user_checked_in: boolean;
+  name: string;
+  description: string | null;
+  date: string;
+  time: string;
+  scheduledAt: string;
+  endsAt: string | null;
+  game: { id: string; name: string; icon: string; color: string } | null;
+  entryFee: string;
+  isFree: boolean;
+  maxSpots: number | null;
+  interestedCount: number;
+  attendanceXp: number;
+  winXp: number;
+  location: string;
+  address: string;
 };
+
+function Row({ icon, label }: { icon: string; label: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowIcon}>{icon}</Text>
+      <Text style={styles.rowLabel}>{label}</Text>
+    </View>
+  );
+}
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,18 +49,12 @@ export default function EventDetailScreen() {
   const [checkinError, setCheckinError] = useState('');
   const [checkinSuccess, setCheckinSuccess] = useState(false);
 
-  async function load() {
-    try {
-      const data = await api.get<{ event: EventDetail }>(`/api/events/${id}/public`);
-      setEvent(data.event);
-    } catch {
-      setEvent(null);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    api.get<{ event: EventDetail }>(`/api/events/${id}/public`)
+      .then(data => setEvent(data.event))
+      .catch(() => setEvent(null))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   async function handleCheckin() {
     setCheckinLoading(true);
@@ -56,7 +62,6 @@ export default function EventDetailScreen() {
     try {
       await api.post(`/api/events/${id}/checkin`, {});
       setCheckinSuccess(true);
-      setEvent(prev => prev ? { ...prev, user_checked_in: true, checkin_count: prev.checkin_count + 1 } : prev);
     } catch (e: unknown) {
       setCheckinError(e instanceof Error ? e.message : 'Check-in failed');
     } finally {
@@ -64,17 +69,10 @@ export default function EventDetailScreen() {
     }
   }
 
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-US', {
-      weekday: 'long', month: 'long', day: 'numeric',
-      hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
-    });
-  }
-
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#a78bfa" size="large" />
+        <ActivityIndicator color="#c4b5fd" size="large" />
       </View>
     );
   }
@@ -90,24 +88,28 @@ export default function EventDetailScreen() {
     );
   }
 
-  const isActive = event.status === 'active';
-  const canCheckin = isActive && !event.user_checked_in && !checkinSuccess;
-
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{event.title}</Text>
-        <View style={[styles.statusBadge, isActive ? styles.statusActive : styles.statusUpcoming]}>
-          <Text style={styles.statusText}>{event.status.toUpperCase()}</Text>
-        </View>
+      <Pressable style={styles.backRow} onPress={() => router.back()}>
+        <Feather name="arrow-left" size={18} color="#a89f90" />
+        <Text style={styles.backText}>Events</Text>
+      </Pressable>
+
+      <View style={styles.headerBlock}>
+        <Text style={styles.title}>{event.name}</Text>
+        {event.game && (
+          <Text style={styles.gameLabel}>{event.game.icon} {event.game.name}</Text>
+        )}
       </View>
 
       <View style={styles.card}>
-        <Row icon="📍" label={event.store_name} />
-        <Row icon="🕐" label={formatDate(event.starts_at)} />
-        {event.xp_reward ? <Row icon="⚡" label={`+${event.xp_reward} XP on check-in`} /> : null}
-        {event.points_reward ? <Row icon="💎" label={`+${event.points_reward} Points on check-in`} /> : null}
-        {event.checkin_count > 0 ? <Row icon="👥" label={`${event.checkin_count} checked in`} /> : null}
+        <Row icon="📍" label={event.location} />
+        <Row icon="🕐" label={`${event.date} · ${event.time}`} />
+        {event.attendanceXp ? <Row icon="⚡" label={`+${event.attendanceXp} XP on attendance`} /> : null}
+        {event.winXp ? <Row icon="🏆" label={`+${event.winXp} XP for winning`} /> : null}
+        <Row icon="🎟️" label={event.entryFee} />
+        {event.maxSpots ? <Row icon="👥" label={`${event.maxSpots} spots max`} /> : null}
+        {event.interestedCount > 0 ? <Row icon="👀" label={`${event.interestedCount} interested`} /> : null}
       </View>
 
       {event.description ? (
@@ -116,15 +118,13 @@ export default function EventDetailScreen() {
         </View>
       ) : null}
 
-      {checkinSuccess || event.user_checked_in ? (
+      {checkinSuccess ? (
         <View style={styles.checkinSuccess}>
           <Text style={styles.checkinSuccessIcon}>✅</Text>
           <Text style={styles.checkinSuccessText}>You're checked in!</Text>
-          {event.xp_reward ? (
-            <Text style={styles.checkinReward}>+{event.xp_reward} XP earned</Text>
-          ) : null}
+          <Text style={styles.checkinReward}>+{event.attendanceXp} XP earned</Text>
         </View>
-      ) : canCheckin ? (
+      ) : (
         <View style={styles.checkinSection}>
           {checkinError ? <Text style={styles.checkinError}>{checkinError}</Text> : null}
           <Pressable
@@ -132,101 +132,84 @@ export default function EventDetailScreen() {
             onPress={handleCheckin}
             disabled={checkinLoading}
           >
-            {checkinLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.checkinBtnText}>Check In Now</Text>
-            )}
+            {checkinLoading
+              ? <ActivityIndicator color="#111009" />
+              : <Text style={styles.checkinBtnText}>Check In</Text>
+            }
           </Pressable>
           <Pressable
             style={styles.qrBtn}
-            onPress={() => router.push(`/checkin/${id}`)}
+            onPress={() => router.push(`/checkin/${id}` as never)}
           >
-            <Text style={styles.qrBtnText}>📷  Scan QR Code Instead</Text>
+            <Feather name="camera" size={16} color="#c4b5fd" />
+            <Text style={styles.qrBtnText}>Scan QR Code</Text>
           </Pressable>
         </View>
-      ) : !isActive ? (
-        <View style={styles.notActiveBox}>
-          <Text style={styles.notActiveText}>Check-in opens when the event goes live</Text>
-        </View>
-      ) : null}
+      )}
 
       <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
 
-function Row({ icon, label }: { icon: string; label: string }) {
-  return (
-    <View style={{ flexDirection: 'row', gap: 10, paddingVertical: 6 }}>
-      <Text style={{ fontSize: 16 }}>{icon}</Text>
-      <Text style={{ color: '#d1d5db', fontSize: 14, flex: 1 }}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0a0a0f', gap: 16 },
-  header: { padding: 20, paddingBottom: 0 },
-  title: { fontSize: 24, fontWeight: '800', color: '#fff', marginBottom: 10 },
-  statusBadge: { alignSelf: 'flex-start', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  statusActive: { backgroundColor: '#14532d' },
-  statusUpcoming: { backgroundColor: '#312e81' },
-  statusText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#111009' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111009', gap: 16 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingTop: 56, paddingBottom: 8 },
+  backText: { color: '#a89f90', fontSize: 14 },
+  headerBlock: { paddingHorizontal: 16, paddingBottom: 8 },
+  title: { fontSize: 24, fontWeight: '800', color: '#f2efe8', marginBottom: 4 },
+  gameLabel: { fontSize: 14, color: '#a89f90' },
   card: {
-    backgroundColor: '#16161f',
+    backgroundColor: '#1a1810',
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 16,
-    marginTop: 16,
+    marginTop: 12,
     borderWidth: 1,
-    borderColor: '#2d2d3d',
+    borderColor: 'rgba(242,239,232,0.08)',
   },
-  description: { color: '#9ca3af', fontSize: 14, lineHeight: 22 },
+  row: { flexDirection: 'row', gap: 10, paddingVertical: 5 },
+  rowIcon: { fontSize: 16, width: 22 },
+  rowLabel: { color: '#a89f90', fontSize: 14, flex: 1 },
+  description: { color: '#a89f90', fontSize: 14, lineHeight: 22 },
   checkinSection: { marginHorizontal: 16, marginTop: 24, gap: 10 },
   checkinBtn: {
-    backgroundColor: '#7c3aed',
+    backgroundColor: '#c4b5fd',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
   },
   checkinBtnDisabled: { opacity: 0.6 },
-  checkinBtnText: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  checkinBtnText: { color: '#111009', fontSize: 17, fontWeight: '800' },
   qrBtn: {
-    backgroundColor: '#16161f',
+    backgroundColor: '#1a1810',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
     borderWidth: 1,
-    borderColor: '#2d2d3d',
+    borderColor: 'rgba(242,239,232,0.08)',
   },
-  qrBtnText: { color: '#a78bfa', fontWeight: '600', fontSize: 14 },
-  checkinError: { color: '#f87171', fontSize: 13, textAlign: 'center' },
+  qrBtnText: { color: '#c4b5fd', fontWeight: '600', fontSize: 14 },
+  checkinError: { color: '#ef4444', fontSize: 13, textAlign: 'center' },
   checkinSuccess: {
     marginHorizontal: 16,
     marginTop: 24,
-    backgroundColor: '#14532d',
+    backgroundColor: 'rgba(34,197,94,0.1)',
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.3)',
     padding: 24,
     alignItems: 'center',
     gap: 6,
   },
   checkinSuccessIcon: { fontSize: 40 },
-  checkinSuccessText: { color: '#86efac', fontSize: 18, fontWeight: '700' },
-  checkinReward: { color: '#a78bfa', fontSize: 14, fontWeight: '600' },
-  notActiveBox: {
-    marginHorizontal: 16,
-    marginTop: 24,
-    backgroundColor: '#16161f',
-    borderRadius: 14,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2d2d3d',
-  },
-  notActiveText: { color: '#6b7280', fontSize: 14 },
-  errorText: { color: '#f87171', fontSize: 15 },
-  backBtn: { backgroundColor: '#7c3aed', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 },
-  backBtnText: { color: '#fff', fontWeight: '700' },
+  checkinSuccessText: { color: '#22c55e', fontSize: 18, fontWeight: '700' },
+  checkinReward: { color: '#c4b5fd', fontSize: 14, fontWeight: '600' },
+  backBtn: { backgroundColor: '#c4b5fd', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 },
+  backBtnText: { color: '#111009', fontWeight: '700' },
+  errorText: { color: '#ef4444', fontSize: 15 },
 });
