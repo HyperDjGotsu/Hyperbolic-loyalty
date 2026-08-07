@@ -178,7 +178,9 @@ export default function CommunityScreen() {
           <Text style={styles.emptyBody}>
             {scope === 'store'
               ? 'Earn XP at events to appear on the store board.'
-              : 'No network rankings yet.'}
+              : game === 'overall'
+              ? 'No players ranked yet.'
+              : `No ${GAMES.find(g => g.id === game)?.label ?? 'game'} rankings yet — be the first to compete!`}
           </Text>
         </View>
       ) : (
