@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -43,6 +44,7 @@ export default function AlertsScreen() {
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   async function load() {
     try {
@@ -53,6 +55,19 @@ export default function AlertsScreen() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  }
+
+  async function clearAll() {
+    if (clearing || items.length === 0) return;
+    setClearing(true);
+    try {
+      await api.delete('/api/notifications');
+      setItems([]);
+    } catch {
+      // silently fail — list stays as-is
+    } finally {
+      setClearing(false);
     }
   }
 
@@ -77,7 +92,18 @@ export default function AlertsScreen() {
         />
       }
     >
-      <Text style={styles.heading}>Alerts</Text>
+      <View style={styles.headingRow}>
+        <Text style={styles.heading}>Alerts</Text>
+        {items.length > 0 && (
+          <Pressable
+            style={[styles.clearBtn, clearing && styles.clearBtnDisabled]}
+            onPress={clearAll}
+            disabled={clearing}
+          >
+            <Text style={styles.clearBtnText}>{clearing ? 'Clearing…' : 'Clear All'}</Text>
+          </Pressable>
+        )}
+      </View>
       {items.length === 0 ? (
         <View style={styles.empty}>
           <Feather name="bell" size={48} color="#7a7060" />
@@ -105,14 +131,29 @@ export default function AlertsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#111009' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111009' },
-  heading: {
-    color: '#f2efe8',
-    fontSize: 24,
-    fontWeight: '800',
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginHorizontal: 16,
     marginTop: 20,
     marginBottom: 8,
   },
+  heading: {
+    color: '#f2efe8',
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  clearBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(239,68,68,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.25)',
+  },
+  clearBtnDisabled: { opacity: 0.5 },
+  clearBtnText: { color: '#ef4444', fontSize: 12, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 80, gap: 12 },
   emptyText: { color: '#7a7060', fontSize: 15 },
   row: {

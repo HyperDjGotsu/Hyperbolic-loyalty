@@ -65,6 +65,33 @@ export async function GET(request: Request) {
   }
 }
 
+// DELETE - Clear all notifications for the player
+export async function DELETE() {
+  try {
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { data: player } = await supabaseAdmin
+      .from('players')
+      .select('id')
+      .eq('clerk_user_id', userId)
+      .single();
+
+    if (!player) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+
+    const { error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('player_id', player.id);
+
+    if (error) return NextResponse.json({ error: 'Failed to clear notifications' }, { status: 500 });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 // POST - Mark notifications as read
 export async function POST(request: Request) {
   try {
