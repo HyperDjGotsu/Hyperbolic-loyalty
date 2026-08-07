@@ -14,6 +14,51 @@ import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 import { getLevel, getXpProgress, getXpToNext } from '@/lib/theme';
 
+type GameXP = {
+  game_id: string;
+  game_xp: number;
+  game_wins: number;
+  game_events: number;
+  rank: string;
+  xpName: string;
+  monthlyAttendance: number;
+  monthlyThreshold: number;
+  earnedMonthlyBonus: boolean;
+  achievementName: string;
+};
+
+type ActivityEntry = {
+  id: string;
+  source: string;
+  description: string;
+  final_xp: number;
+  base_xp: number;
+  created_at: string;
+  game_id: string | null;
+};
+
+type Banner = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  colorFrom: string;
+  colorTo: string;
+  badge: string;
+  linkUrl: string | null;
+  eventId: string | null;
+};
+
+type CardOfDay = {
+  name: string;
+  game: string;
+  gameDisplay: string;
+  set: string;
+  rarity: string;
+  price: number | null;
+  priceChange7d: number | null;
+};
+
 type PlayerResponse = {
   linked: boolean;
   id: string;
@@ -23,8 +68,15 @@ type PlayerResponse = {
   gems: number;
   passTier: string;
   homeStore?: { id: string; name: string; city: string | null; is_flagship: boolean; color: string | null } | null;
-  gameXP?: { game_id: string }[];
-  recentActivity?: { id: string }[];
+  gameXP?: GameXP[];
+  recentActivity?: ActivityEntry[];
+};
+
+const GAME_ICONS: Record<string, string> = {
+  one_piece: '🏴‍☠️', pokemon: '⚡', mtg: '✨', gundam: '🤖',
+  lorcana: '🪄', star_wars: '🌟', star_wars_unlimited: '🌟',
+  vanguard: '⚔️', yugioh: '⭐', digimon: '🦖', uvs: '👊',
+  hololive: '🎤', weiss: '🎴', riftbound: '🌀', general: '🎮',
 };
 
 type Store = {
@@ -69,6 +121,8 @@ export default function DashboardScreen() {
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [card, setCard] = useState<CardOfDay | null>(null);
 
   async function loadPlayer() {
     try {
@@ -85,8 +139,15 @@ export default function DashboardScreen() {
       setError('');
       // Seed selectedStore from homeStore; load full store list for switcher
       if (data.homeStore) setSelectedStore(data.homeStore as Store);
+      const storeId = data.homeStore?.id ?? null;
       api.get<{ stores: Store[] }>('/api/stores')
         .then(s => setStores(s.stores ?? []))
+        .catch(() => {});
+      api.get<{ banners: Banner[] }>(`/api/banners${storeId ? `?store_id=${storeId}` : ''}`)
+        .then(b => setBanners(b.banners ?? []))
+        .catch(() => {});
+      api.get<CardOfDay>('/api/card-of-the-day')
+        .then(c => setCard(c.name ? c : null))
         .catch(() => {});
     } catch {
       setError('Could not load player. Pull down to retry.');
@@ -325,6 +386,125 @@ export default function DashboardScreen() {
           </View>
         )}
       </View>
+
+      {/* ── Banner Carousel ─────────────────────────────────────────────── */}
+      {banners.length > 0 && (
+        <View style={styles.sectionWrap}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.bannerScroll}
+          >
+            {banners.map(b => (
+              <View
+                key={b.id}
+                style={[styles.bannerCard, { backgroundColor: b.colorFrom || '#1a1810' }]}
+              >
+                {!!b.badge && (
+                  <View style={styles.bannerBadge}>
+                    <Text style={styles.bannerBadgeText}>{b.badge}</Text>
+                  </View>
+                )}
+                <Text style={styles.bannerIcon}>{b.icon}</Text>
+                <Text style={styles.bannerTitle} numberOfLines={2}>{b.title}</Text>
+                {!!b.subtitle && (
+                  <Text style={styles.bannerSubtitle} numberOfLines={2}>{b.subtitle}</Text>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* ── My Games ────────────────────────────────────────────────────── */}
+      {(player.gameXP ?? []).length > 0 && (
+        <View style={styles.sectionWrap}>
+          <Text style={styles.sectionLabel}>MY GAMES</Text>
+          {[...(player.gameXP ?? [])]
+            .sort((a, b) => b.game_xp - a.game_xp)
+            .map(g => (
+              <View key={g.game_id} style={styles.gameRow}>
+                <Text style={styles.gameRowIcon}>
+                  {GAME_ICONS[g.game_id] ?? '🎮'}
+                </Text>
+                <View style={styles.gameRowInfo}>
+                  <Text style={styles.gameRowName}>
+                    {g.game_id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </Text>
+                  <Text style={styles.gameRowRank}>{g.rank}</Text>
+                </View>
+                <View style={styles.gameRowRight}>
+                  <Text style={styles.gameRowXp}>{g.game_xp.toLocaleString()}</Text>
+                  <Text style={styles.gameRowXpName}>{g.xpName}</Text>
+                </View>
+                {g.earnedMonthlyBonus && (
+                  <Text style={styles.gameRowBonus}>🏆</Text>
+                )}
+              </View>
+            ))}
+        </View>
+      )}
+
+      {/* ── Recent Activity ──────────────────────────────────────────────── */}
+      {(player.recentActivity ?? []).length > 0 && (
+        <View style={styles.sectionWrap}>
+          <Text style={styles.sectionLabel}>RECENT ACTIVITY</Text>
+          {(player.recentActivity ?? []).slice(0, 5).map(a => {
+            const xp = a.final_xp || a.base_xp || 0;
+            const date = new Date(a.created_at).toLocaleDateString('en-US', {
+              month: 'short', day: 'numeric',
+            });
+            return (
+              <View key={a.id} style={styles.activityRow}>
+                <Text style={styles.activityIcon}>
+                  {GAME_ICONS[a.game_id ?? ''] ?? '🎮'}
+                </Text>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityDesc} numberOfLines={1}>
+                    {a.description || a.source}
+                  </Text>
+                  <Text style={styles.activityDate}>{date}</Text>
+                </View>
+                {xp > 0 && (
+                  <Text style={styles.activityXp}>+{xp}</Text>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {/* ── Card of the Day ─────────────────────────────────────────────── */}
+      {card && (
+        <View style={styles.sectionWrap}>
+          <Text style={styles.sectionLabel}>CARD OF THE DAY</Text>
+          <View style={styles.cotdCard}>
+            <View style={styles.cotdHeader}>
+              <Text style={styles.cotdGame}>{card.gameDisplay}</Text>
+              {!!card.rarity && (
+                <View style={styles.cotdRarityBadge}>
+                  <Text style={styles.cotdRarityText}>{card.rarity}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.cotdName}>{card.name}</Text>
+            {!!card.set && <Text style={styles.cotdSet}>{card.set}</Text>}
+            {card.price != null && (
+              <View style={styles.cotdPriceRow}>
+                <Text style={styles.cotdPrice}>${card.price.toFixed(2)}</Text>
+                {card.priceChange7d != null && (
+                  <Text style={[
+                    styles.cotdChange,
+                    { color: card.priceChange7d >= 0 ? '#22c55e' : '#ef4444' },
+                  ]}>
+                    {card.priceChange7d >= 0 ? '▲' : '▼'} {Math.abs(card.priceChange7d).toFixed(1)}% (7d)
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      )}
 
       <View style={styles.bottomPad} />
 
@@ -745,6 +925,100 @@ const styles = StyleSheet.create({
   bottomPad: {
     paddingBottom: 24,
   },
+
+  // Shared section wrapper
+  sectionWrap: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: '#7a7060',
+    marginBottom: 10,
+  },
+
+  // Banner carousel
+  bannerScroll: { gap: 10, paddingRight: 4 },
+  bannerCard: {
+    width: 240,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(242,239,232,0.08)',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  bannerBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  bannerBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  bannerIcon:     { fontSize: 28, marginBottom: 8 },
+  bannerTitle:    { color: '#fff', fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  bannerSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
+
+  // My Games
+  gameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(242,239,232,0.06)',
+  },
+  gameRowIcon:  { fontSize: 22, width: 28, textAlign: 'center' },
+  gameRowInfo:  { flex: 1 },
+  gameRowName:  { color: '#f2efe8', fontSize: 13, fontWeight: '700' },
+  gameRowRank:  { color: '#a89f90', fontSize: 11, marginTop: 1 },
+  gameRowRight: { alignItems: 'flex-end' },
+  gameRowXp:    { color: '#f4c542', fontSize: 14, fontWeight: '800' },
+  gameRowXpName:{ color: '#7a7060', fontSize: 10 },
+  gameRowBonus: { fontSize: 16, marginLeft: 4 },
+
+  // Recent Activity
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(242,239,232,0.06)',
+  },
+  activityIcon: { fontSize: 18, width: 24, textAlign: 'center' },
+  activityInfo: { flex: 1 },
+  activityDesc: { color: '#f2efe8', fontSize: 13 },
+  activityDate: { color: '#7a7060', fontSize: 11, marginTop: 1 },
+  activityXp:   { color: '#c4b5fd', fontSize: 13, fontWeight: '700' },
+
+  // Card of the Day
+  cotdCard: {
+    backgroundColor: '#1a1810',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(242,239,232,0.08)',
+  },
+  cotdHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  cotdGame:      { color: '#a89f90', fontSize: 12, fontWeight: '600' },
+  cotdRarityBadge: {
+    backgroundColor: 'rgba(196,181,253,0.15)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  cotdRarityText: { color: '#c4b5fd', fontSize: 10, fontWeight: '700' },
+  cotdName:      { color: '#f2efe8', fontSize: 17, fontWeight: '800', marginBottom: 4 },
+  cotdSet:       { color: '#7a7060', fontSize: 12, marginBottom: 10 },
+  cotdPriceRow:  { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+  cotdPrice:     { color: '#f4c542', fontSize: 22, fontWeight: '900' },
+  cotdChange:    { fontSize: 12, fontWeight: '600' },
 
   // Store Switcher Modal
   modalOverlay: {
