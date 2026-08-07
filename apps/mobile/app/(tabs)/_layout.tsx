@@ -48,6 +48,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="prize-wall"
+        options={{
+          title: 'Prizes',
+          tabBarLabel: 'Prizes',
+          tabBarIcon: ({ color }) => <Feather name="gift" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="notifications"
         options={{
           title: 'Alerts',

@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  ImageBackground,
   Modal,
   Pressable,
   RefreshControl,
@@ -47,6 +48,10 @@ type Banner = {
   badge: string;
   linkUrl: string | null;
   eventId: string | null;
+  backgroundImage: string | null;
+  bgSize: string | null;
+  bgPosition: string | null;
+  textColor: string | null;
 };
 
 type CardOfDay = {
@@ -373,11 +378,12 @@ export default function DashboardScreen() {
         </View>
 
         {/* Footer */}
-        {isPaidTier ? (
-          <Pressable style={styles.prizeWallBtn} onPress={() => router.push('/prize-wall' as never)}>
-            <Text style={styles.prizeWallBtnText}>Spend at Prize Wall</Text>
-          </Pressable>
-        ) : (
+        <Pressable style={styles.prizeWallBtn} onPress={() => router.push('/prize-wall' as never)}>
+          <Text style={styles.prizeWallBtnText}>
+            {isPaidTier ? 'Spend at Prize Wall' : 'View Prize Wall'}
+          </Text>
+        </Pressable>
+        {!isPaidTier && (
           <View style={styles.passFooterFree}>
             <View style={styles.freeProgressTrack}>
               <View style={styles.freeProgressFill} />
@@ -395,23 +401,40 @@ export default function DashboardScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.bannerScroll}
           >
-            {banners.map(b => (
-              <View
-                key={b.id}
-                style={[styles.bannerCard, { backgroundColor: b.colorFrom || '#1a1810' }]}
-              >
-                {!!b.badge && (
-                  <View style={styles.bannerBadge}>
-                    <Text style={styles.bannerBadgeText}>{b.badge}</Text>
-                  </View>
-                )}
-                <Text style={styles.bannerIcon}>{b.icon}</Text>
-                <Text style={styles.bannerTitle} numberOfLines={2}>{b.title}</Text>
-                {!!b.subtitle && (
-                  <Text style={styles.bannerSubtitle} numberOfLines={2}>{b.subtitle}</Text>
-                )}
-              </View>
-            ))}
+            {banners.map(b => {
+              const textColor = b.textColor || '#ffffff';
+              const inner = (
+                <>
+                  {!!b.badge && (
+                    <View style={styles.bannerBadge}>
+                      <Text style={styles.bannerBadgeText}>{b.badge}</Text>
+                    </View>
+                  )}
+                  <Text style={styles.bannerIcon}>{b.icon}</Text>
+                  <Text style={[styles.bannerTitle, { color: textColor }]} numberOfLines={2}>{b.title}</Text>
+                  {!!b.subtitle && (
+                    <Text style={[styles.bannerSubtitle, { color: textColor === '#ffffff' ? 'rgba(255,255,255,0.7)' : textColor }]} numberOfLines={2}>{b.subtitle}</Text>
+                  )}
+                </>
+              );
+              if (b.backgroundImage) {
+                return (
+                  <ImageBackground
+                    key={b.id}
+                    source={{ uri: b.backgroundImage }}
+                    style={[styles.bannerCard, { backgroundColor: b.colorFrom || '#1a1810' }]}
+                    imageStyle={{ resizeMode: b.bgSize === 'contain' ? 'contain' : 'cover', opacity: 0.75 }}
+                  >
+                    {inner}
+                  </ImageBackground>
+                );
+              }
+              return (
+                <View key={b.id} style={[styles.bannerCard, { backgroundColor: b.colorFrom || '#1a1810' }]}>
+                  {inner}
+                </View>
+              );
+            })}
           </ScrollView>
         </View>
       )}
