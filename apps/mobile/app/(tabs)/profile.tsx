@@ -173,7 +173,9 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
-            <Text style={styles.statVal}>{(player.passTier ?? 'FREE').toUpperCase()}</Text>
+            <Text style={styles.statVal}>
+              {(player.passTier === 'none' || !player.passTier ? 'FREE' : player.passTier).toUpperCase()}
+            </Text>
             <Text style={styles.statLabel}>Pass</Text>
           </View>
         </View>
