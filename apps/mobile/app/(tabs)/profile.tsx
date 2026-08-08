@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Switch,
   Text,
@@ -30,6 +31,16 @@ type NotifPrefs = {
   store: boolean;
 };
 
+type ReferralStats = {
+  referralCode: string;
+  shareUrl: string;
+  stats: {
+    totalReferred: number;
+    attendedFirstEvent: number;
+    totalXpEarned: number;
+  };
+};
+
 const DEFAULT_PREFS: NotifPrefs = {
   daily_rewards: true,
   events: true,
@@ -51,6 +62,7 @@ export default function ProfileScreen() {
   const api = useApi();
   const [player, setPlayer] = useState<Player | null>(null);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
+  const [referral, setReferral] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
@@ -63,6 +75,10 @@ export default function ProfileScreen() {
       ]);
       setPlayer(playerData);
       setPrefs({ ...DEFAULT_PREFS, ...prefData.prefs });
+      // Referral stats — non-critical, load separately
+      api.get<ReferralStats>('/api/referral/stats')
+        .then(data => setReferral(data))
+        .catch(() => {});
     } catch {
       setError(true);
     } finally {
@@ -85,6 +101,14 @@ export default function ProfileScreen() {
     }
   }
 
+  async function shareReferral() {
+    if (!referral) return;
+    await Share.share({
+      message: `Join Player Pass with my referral link and earn bonus XP! ${referral.shareUrl}`,
+      url: referral.shareUrl,
+    });
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -103,6 +127,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Player card */}
       <View style={styles.card}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{player.displayName[0]?.toUpperCase()}</Text>
@@ -130,8 +155,44 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Referral */}
+      {referral && (
+        <>
+          <Text style={styles.sectionTitle}>Refer a Friend</Text>
+          <View style={[styles.card, styles.cardLeft]}>
+            <View style={styles.referralRow}>
+              <View style={styles.referralCode}>
+                <Text style={styles.referralCodeLabel}>Your Code</Text>
+                <Text style={styles.referralCodeText}>{referral.referralCode}</Text>
+              </View>
+              <Pressable style={styles.shareBtn} onPress={shareReferral}>
+                <Text style={styles.shareBtnText}>Share</Text>
+              </Pressable>
+            </View>
+            <View style={styles.referralStats}>
+              <View style={styles.refStat}>
+                <Text style={styles.refStatVal}>{referral.stats.totalReferred}</Text>
+                <Text style={styles.refStatLabel}>Referred</Text>
+              </View>
+              <View style={styles.refStat}>
+                <Text style={styles.refStatVal}>{referral.stats.attendedFirstEvent}</Text>
+                <Text style={styles.refStatLabel}>Attended</Text>
+              </View>
+              <View style={styles.refStat}>
+                <Text style={[styles.refStatVal, styles.xpColor]}>{referral.stats.totalXpEarned}</Text>
+                <Text style={styles.refStatLabel}>XP Earned</Text>
+              </View>
+            </View>
+            <Text style={styles.referralHint}>
+              You earn +50 XP when a referral attends their first event
+            </Text>
+          </View>
+        </>
+      )}
+
+      {/* Notification preferences */}
       <Text style={styles.sectionTitle}>Notifications {saving ? '(saving…)' : ''}</Text>
-      <View style={styles.card}>
+      <View style={[styles.card, styles.cardLeft]}>
         {PREF_LABELS.map(({ key, label, icon }) => (
           <View key={key} style={styles.prefRow}>
             <Text style={styles.prefIcon}>{icon}</Text>
@@ -167,6 +228,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(242,239,232,0.08)',
     alignItems: 'center',
   },
+  cardLeft: { alignItems: 'flex-start' },
   avatar: {
     width: 72,
     height: 72,
@@ -182,14 +244,50 @@ const styles = StyleSheet.create({
   name: { fontSize: 22, fontWeight: '800', color: '#f2efe8' },
   hypId: { color: '#7a7060', fontSize: 12, marginTop: 2 },
   store: { color: '#a89f90', fontSize: 13, marginTop: 6 },
-  statsRow: { flexDirection: 'row', marginTop: 20, gap: 0 },
+  statsRow: { flexDirection: 'row', marginTop: 20, gap: 0, alignSelf: 'stretch' },
   stat: { flex: 1, alignItems: 'center' },
   statDivider: { width: 1, backgroundColor: 'rgba(242,239,232,0.08)' },
   statVal: { fontSize: 18, fontWeight: '800', color: '#f2efe8' },
   xpVal: { color: '#f4c542' },
   pointsVal: { color: '#c4b5fd' },
   statLabel: { color: '#7a7060', fontSize: 12, marginTop: 2 },
-  sectionTitle: { color: '#f2efe8', fontSize: 16, fontWeight: '700', marginHorizontal: 16, marginTop: 24, marginBottom: 4 },
+  sectionTitle: {
+    color: '#f2efe8',
+    fontSize: 16,
+    fontWeight: '700',
+    marginHorizontal: 16,
+    marginTop: 24,
+    marginBottom: 4,
+  },
+  referralRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 16,
+  },
+  referralCode: {},
+  referralCodeLabel: { color: '#7a7060', fontSize: 11, marginBottom: 2 },
+  referralCodeText: { color: '#f4c542', fontSize: 18, fontWeight: '800', letterSpacing: 1 },
+  shareBtn: {
+    backgroundColor: 'rgba(196,181,253,0.12)',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(196,181,253,0.25)',
+  },
+  shareBtnText: { color: '#c4b5fd', fontWeight: '700', fontSize: 13 },
+  referralStats: {
+    flexDirection: 'row',
+    gap: 24,
+    marginBottom: 12,
+  },
+  refStat: { alignItems: 'center' },
+  refStatVal: { fontSize: 20, fontWeight: '800', color: '#f2efe8' },
+  xpColor: { color: '#f4c542' },
+  refStatLabel: { color: '#7a7060', fontSize: 11, marginTop: 2 },
+  referralHint: { color: '#7a7060', fontSize: 12, fontStyle: 'italic' },
   prefRow: { flexDirection: 'row', alignItems: 'center', width: '100%', paddingVertical: 10 },
   prefIcon: { fontSize: 18, marginRight: 10 },
   prefLabel: { flex: 1, color: '#a89f90', fontSize: 15 },

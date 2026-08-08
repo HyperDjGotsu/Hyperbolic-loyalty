@@ -14,29 +14,55 @@ import { useApi } from '@/lib/api';
 type Notification = {
   id: string;
   title: string;
-  body: string;
+  message: string;
   created_at: string;
-  read: boolean;
+  is_read: boolean;
   type: string;
 };
 
-type FeatherIconName = 'calendar' | 'zap' | 'radio' | 'award' | 'bell';
+type FeatherIconName = 'calendar' | 'zap' | 'radio' | 'award' | 'bell' | 'star' | 'gift' | 'trending-up' | 'clock' | 'check-circle';
 
 function typeIcon(type: string): FeatherIconName {
-  if (type === 'event') return 'calendar';
-  if (type === 'xp') return 'zap';
-  if (type === 'broadcast') return 'radio';
-  if (type === 'reward') return 'award';
-  return 'bell';
+  switch (type) {
+    case 'event':
+    case 'event_share':
+    case 'event_announced':
+    case 'event_reminder':
+    case 'event_recap':
+      return 'calendar';
+    case 'xp':
+    case 'xp_earned':
+      return 'zap';
+    case 'broadcast':
+    case 'store':
+      return 'radio';
+    case 'reward':
+    case 'achievement':
+      return 'award';
+    case 'referral':
+      return 'gift';
+    case 'leaderboard':
+    case 'weekly_summary':
+      return 'trending-up';
+    case 'spin_ready':
+      return 'star';
+    case 'pass_expiring':
+      return 'clock';
+    default:
+      return 'bell';
+  }
 }
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default function AlertsScreen() {
@@ -49,7 +75,12 @@ export default function AlertsScreen() {
   async function load() {
     try {
       const data = await api.get<{ notifications: Notification[] }>('/api/notifications');
-      setItems(data.notifications ?? []);
+      const notifications = data.notifications ?? [];
+      setItems(notifications);
+      // Mark all as read after fetching (fire-and-forget)
+      if (notifications.some(n => !n.is_read)) {
+        api.post('/api/notifications', { markAll: true }).catch(() => {});
+      }
     } catch {
       setItems([]);
     } finally {
@@ -110,16 +141,16 @@ export default function AlertsScreen() {
           <Text style={styles.emptyText}>No alerts yet</Text>
         </View>
       ) : items.map(item => (
-        <View key={item.id} style={[styles.row, !item.read && styles.rowUnread]}>
+        <View key={item.id} style={[styles.row, !item.is_read && styles.rowUnread]}>
           <View style={styles.iconWrap}>
-            <Feather name={typeIcon(item.type)} size={18} color={item.read ? '#7a7060' : '#c4b5fd'} />
+            <Feather name={typeIcon(item.type)} size={18} color={item.is_read ? '#7a7060' : '#c4b5fd'} />
           </View>
           <View style={styles.content}>
             <View style={styles.rowHeader}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.time}>{timeAgo(item.created_at)}</Text>
             </View>
-            <Text style={styles.body}>{item.body}</Text>
+            <Text style={styles.body}>{item.message}</Text>
           </View>
         </View>
       ))}
