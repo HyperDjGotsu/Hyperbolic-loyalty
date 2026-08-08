@@ -326,6 +326,8 @@ export default function DashboardScreen() {
           style={[styles.spinBtn, (hasSpunToday || isSpinning) && styles.spinBtnClaimed]}
           onPress={handleSpin}
           disabled={hasSpunToday || isSpinning}
+          accessibilityLabel={hasSpunToday ? 'Daily spin already claimed' : 'Daily spin — tap to earn XP'}
+          accessibilityRole="button"
         >
           <View>
             <Text style={[styles.spinBtnText, (hasSpunToday || isSpinning) && styles.spinBtnTextClaimed]}>
