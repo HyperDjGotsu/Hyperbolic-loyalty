@@ -78,6 +78,8 @@ type PlayerResponse = {
   recentActivity?: ActivityEntry[];
 };
 
+const FREE_TIER_GATE = 720; // XP required to unlock prize wall trial
+
 const GAME_ICONS: Record<string, string> = {
   one_piece: '🏴‍☠️', pokemon: '⚡', mtg: '✨', gundam: '🤖',
   lorcana: '🪄', star_wars: '🌟', star_wars_unlimited: '🌟',
@@ -385,14 +387,24 @@ export default function DashboardScreen() {
             {isPaidTier ? 'Spend at Prize Wall' : 'View Prize Wall'}
           </Text>
         </Pressable>
-        {!isPaidTier && (
-          <View style={styles.passFooterFree}>
-            <View style={styles.freeProgressTrack}>
-              <View style={styles.freeProgressFill} />
+        {!isPaidTier && (() => {
+          const gateProgress = Math.min(1, player.xp / FREE_TIER_GATE);
+          const gateReached = player.xp >= FREE_TIER_GATE;
+          return (
+            <View style={styles.passFooterFree}>
+              <View style={styles.freeProgressTrack}>
+                <View
+                  style={[styles.freeProgressFill, { width: `${Math.round(gateProgress * 100)}%` as `${number}%` }]}
+                />
+              </View>
+              <Text style={styles.freeProgressLabel}>
+                {gateReached
+                  ? '🎉 Bronze trial unlocked — claim on web'
+                  : `${player.xp} / ${FREE_TIER_GATE} XP — unlock Prize Wall trial`}
+              </Text>
             </View>
-            <Text style={styles.freeProgressLabel}>Upgrade to unlock more rewards</Text>
-          </View>
-        )}
+          );
+        })()}
       </View>
 
       {/* ── Banner Carousel ─────────────────────────────────────────────── */}
