@@ -1,5 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { useEffect, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import {
   ActivityIndicator,
   Pressable,
@@ -58,8 +59,9 @@ const PREF_LABELS: { key: keyof NotifPrefs; label: string; icon: string }[] = [
 ];
 
 export default function ProfileScreen() {
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const api = useApi();
+  const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
   const [player, setPlayer] = useState<Player | null>(null);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [referral, setReferral] = useState<ReferralStats | null>(null);
@@ -99,6 +101,26 @@ export default function ProfileScreen() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSignOut() {
+    // Deregister push token before Clerk clears the session (JWT still valid here)
+    try {
+      const [jwt, storedToken] = await Promise.all([
+        getToken(),
+        SecureStore.getItemAsync('expo_push_token'),
+      ]);
+      if (jwt) {
+        const body = storedToken ? JSON.stringify({ expo_push_token: storedToken }) : JSON.stringify({});
+        await fetch(`${API_BASE}/api/player/expo-push-token`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+          body,
+        });
+        if (storedToken) await SecureStore.deleteItemAsync('expo_push_token');
+      }
+    } catch { /* non-critical */ }
+    signOut();
   }
 
   async function shareReferral() {
@@ -207,7 +229,7 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      <Pressable style={styles.signOutBtn} onPress={() => signOut()}>
+      <Pressable style={styles.signOutBtn} onPress={() => void handleSignOut()}>
         <Text style={styles.signOutText}>Sign Out</Text>
       </Pressable>
       <View style={{ height: 40 }} />
