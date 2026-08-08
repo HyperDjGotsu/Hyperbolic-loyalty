@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Pressable,
   RefreshControl,
@@ -37,6 +38,7 @@ function statusColor(status: string) {
 export default function EventsScreen() {
   const api = useApi();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,7 +66,7 @@ export default function EventsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabRow}>
+      <View style={[styles.tabRow, { marginTop: insets.top + 8 }]}>
         {(['store', 'network'] as const).map(t => (
           <Pressable
             key={t}

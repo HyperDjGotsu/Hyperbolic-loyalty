@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Pressable,
@@ -61,6 +62,7 @@ const PREF_LABELS: { key: keyof NotifPrefs; label: string; icon: string }[] = [
 export default function ProfileScreen() {
   const { signOut, getToken } = useAuth();
   const api = useApi();
+  const insets = useSafeAreaInsets();
   const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
   const [player, setPlayer] = useState<Player | null>(null);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
@@ -148,7 +150,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top }}>
       {/* Player card */}
       <View style={styles.card}>
         <View style={styles.avatar}>

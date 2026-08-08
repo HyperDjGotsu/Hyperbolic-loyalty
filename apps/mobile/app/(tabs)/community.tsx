@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Image,
   Pressable,
@@ -68,6 +69,7 @@ function AvatarBubble({ avatar }: { avatar: Avatar }) {
 
 export default function CommunityScreen() {
   const api = useApi();
+  const insets = useSafeAreaInsets();
   const [scope, setScope] = useState<'store' | 'network'>('store');
   const [game, setGame] = useState('overall');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -131,7 +133,7 @@ export default function CommunityScreen() {
   return (
     <View style={styles.container}>
       {/* Scope toggle */}
-      <View style={styles.scopeRow}>
+      <View style={[styles.scopeRow, { marginTop: insets.top + 8 }]}>
         {(['store', 'network'] as const).map(s => (
           <Pressable
             key={s}

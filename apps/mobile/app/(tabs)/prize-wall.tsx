@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Image,
@@ -52,6 +53,7 @@ type ClaimDetails = {
 export default function PrizeWallScreen() {
   const api = useApi();
   const { getToken } = useAuth();
+  const insets = useSafeAreaInsets();
   const apiRef = useRef(api);
   apiRef.current = api;
 
@@ -153,7 +155,7 @@ export default function PrizeWallScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Prize Wall</Text>
+      <Text style={[styles.title, { marginTop: insets.top + 16 }]}>Prize Wall</Text>
       <Text style={styles.subtitle}>Spend your Points on real prizes. Points never expire.</Text>
 
       <BalanceBar passStatus={passStatus} error={passError} />
@@ -552,7 +554,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bgBase },
   content: { paddingBottom: 24 },
 
-  title: { fontSize: 24, fontWeight: '800', color: C.textPrimary, paddingHorizontal: 16, marginTop: 56 },
+  title: { fontSize: 24, fontWeight: '800', color: C.textPrimary, paddingHorizontal: 16, marginTop: 16 },
   subtitle: { fontSize: 13, color: C.textSecondary, paddingHorizontal: 16, marginTop: 4, marginBottom: 16 },
 
   // Balance card

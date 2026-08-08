@@ -1,5 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   ImageBackground,
@@ -116,6 +117,7 @@ function getTierStyle(tier: string): TierStyle {
 export default function DashboardScreen() {
   const api = useApi();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [player, setPlayer] = useState<PlayerResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -236,7 +238,7 @@ export default function DashboardScreen() {
       }
     >
       {/* Header block */}
-      <View style={styles.headerBlock}>
+      <View style={[styles.headerBlock, { paddingTop: insets.top + 16 }]}>
         <Text style={styles.logoText}>GSHC</Text>
         <Text style={styles.logoSub}>— PLAYER PASS —</Text>
       </View>
@@ -610,7 +612,7 @@ const styles = StyleSheet.create({
 
   // Header block
   headerBlock: {
-    paddingTop: 52,
+    paddingTop: 16, // overridden by inline style with safe area inset
     paddingBottom: 24,
     paddingHorizontal: 16,
     alignItems: 'center',

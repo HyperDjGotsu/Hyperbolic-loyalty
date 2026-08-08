@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Pressable,
@@ -67,6 +68,7 @@ function timeAgo(iso: string) {
 
 export default function AlertsScreen() {
   const api = useApi();
+  const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -123,7 +125,7 @@ export default function AlertsScreen() {
         />
       }
     >
-      <View style={styles.headingRow}>
+      <View style={[styles.headingRow, { marginTop: insets.top + 8 }]}>
         <Text style={styles.heading}>Alerts</Text>
         {items.length > 0 && (
           <Pressable
