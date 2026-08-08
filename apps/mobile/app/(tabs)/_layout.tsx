@@ -1,68 +1,74 @@
-import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+const TAB_BAR_STYLE = {
+  backgroundColor: '#111009',
+  borderTopColor: 'rgba(242,239,232,0.08)',
+  borderTopWidth: 1,
+  paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+  height: Platform.OS === 'ios' ? 84 : 60,
+};
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+        headerShown: false,
+        headerStyle: { backgroundColor: '#111009' },
+        headerTintColor: '#f2efe8',
+        tabBarStyle: TAB_BAR_STYLE,
+        tabBarActiveTintColor: '#c4b5fd',
+        tabBarInactiveTintColor: '#7a7060',
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: 'Home',
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color }) => <Feather name="home" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="events"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
+          title: 'Events',
+          tabBarLabel: 'Events',
+          tabBarIcon: ({ color }) => <Feather name="calendar" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Community',
+          tabBarLabel: 'Community',
+          tabBarIcon: ({ color }) => <Feather name="users" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="prize-wall"
+        options={{
+          title: 'Prizes',
+          tabBarLabel: 'Prizes',
+          tabBarIcon: ({ color }) => <Feather name="gift" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Alerts',
+          tabBarLabel: 'Alerts',
+          tabBarIcon: ({ color }) => <Feather name="bell" size={22} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarLabel: 'Profile',
+          tabBarIcon: ({ color }) => <Feather name="user" size={22} color={color} />,
         }}
       />
     </Tabs>

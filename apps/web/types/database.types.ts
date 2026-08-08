@@ -879,6 +879,41 @@ export type Database = {
           },
         ]
       }
+      expo_push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string | null
+          player_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform?: string | null
+          player_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string | null
+          player_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expo_push_tokens_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -2585,3 +2620,4 @@ export const Constants = {
     },
   },
 } as const
+

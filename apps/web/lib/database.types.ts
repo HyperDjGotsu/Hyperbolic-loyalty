@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_users: {
+        Row: {
+          clerk_user_id: string
+          created_at: string
+          email: string | null
+          id: string
+          real_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          clerk_user_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          real_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clerk_user_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          real_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           background_image: string | null
@@ -31,6 +58,7 @@ export type Database = {
           link_url: string | null
           sort_order: number | null
           starts_at: string | null
+          store_id: string | null
           subtitle: string | null
           text_color: string | null
           title: string
@@ -53,6 +81,7 @@ export type Database = {
           link_url?: string | null
           sort_order?: number | null
           starts_at?: string | null
+          store_id?: string | null
           subtitle?: string | null
           text_color?: string | null
           title: string
@@ -75,6 +104,7 @@ export type Database = {
           link_url?: string | null
           sort_order?: number | null
           starts_at?: string | null
+          store_id?: string | null
           subtitle?: string | null
           text_color?: string | null
           title?: string
@@ -87,6 +117,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banners_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -227,6 +264,50 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcasts: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          notification_type: string
+          player_count: number
+          scope: string
+          sent_by_clerk_id: string
+          store_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          notification_type?: string
+          player_count?: number
+          scope: string
+          sent_by_clerk_id: string
+          store_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          notification_type?: string
+          player_count?: number
+          scope?: string
+          sent_by_clerk_id?: string
+          store_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcasts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -727,7 +808,7 @@ export type Database = {
           prizing: string[] | null
           scheduled_at: string
           status: Database["public"]["Enums"]["event_status"] | null
-          store_id: string | null
+          store_id: string
           twitch_url: string | null
           updated_at: string | null
           win_xp: number | null
@@ -751,7 +832,7 @@ export type Database = {
           prizing?: string[] | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["event_status"] | null
-          store_id?: string | null
+          store_id: string
           twitch_url?: string | null
           updated_at?: string | null
           win_xp?: number | null
@@ -775,7 +856,7 @@ export type Database = {
           prizing?: string[] | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["event_status"] | null
-          store_id?: string | null
+          store_id?: string
           twitch_url?: string | null
           updated_at?: string | null
           win_xp?: number | null
@@ -794,6 +875,41 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expo_push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string | null
+          player_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform?: string | null
+          player_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string | null
+          player_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expo_push_tokens_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
             referencedColumns: ["id"]
           },
         ]
@@ -876,6 +992,66 @@ export type Database = {
         }
         Relationships: []
       }
+      network_settings: {
+        Row: {
+          id: number
+          network_name: string
+          player_id_prefix: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          network_name?: string
+          player_id_prefix?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          network_name?: string
+          player_id_prefix?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      network_staff_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_staff_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_staff_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -884,6 +1060,7 @@ export type Database = {
           is_read: boolean | null
           message: string
           player_id: string
+          store_id: string | null
           title: string
           type: string
         }
@@ -894,6 +1071,7 @@ export type Database = {
           is_read?: boolean | null
           message: string
           player_id: string
+          store_id?: string | null
           title: string
           type: string
         }
@@ -904,6 +1082,7 @@ export type Database = {
           is_read?: boolean | null
           message?: string
           player_id?: string
+          store_id?: string | null
           title?: string
           type?: string
         }
@@ -913,6 +1092,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -1121,6 +1307,7 @@ export type Database = {
           is_staff: boolean | null
           last_check_in_at: string | null
           last_seen_at: string | null
+          managed_store_id: string | null
           notification_preferences: Json
           pass_billing_anchor: number | null
           pass_expires_at: string | null
@@ -1186,6 +1373,7 @@ export type Database = {
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
+          managed_store_id?: string | null
           notification_preferences?: Json
           pass_billing_anchor?: number | null
           pass_expires_at?: string | null
@@ -1251,6 +1439,7 @@ export type Database = {
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
+          managed_store_id?: string | null
           notification_preferences?: Json
           pass_billing_anchor?: number | null
           pass_expires_at?: string | null
@@ -1293,6 +1482,13 @@ export type Database = {
           {
             foreignKeyName: "players_home_store_id_fkey"
             columns: ["home_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_managed_store_id_fkey"
+            columns: ["managed_store_id"]
             isOneToOne: false
             referencedRelation: "stores"
             referencedColumns: ["id"]
@@ -1435,7 +1631,7 @@ export type Database = {
           player_id: string
           reference_id: string | null
           source: string
-          store_id: string
+          store_id: string | null
           type: string
         }
         Insert: {
@@ -1446,7 +1642,7 @@ export type Database = {
           player_id: string
           reference_id?: string | null
           source: string
-          store_id: string
+          store_id?: string | null
           type: string
         }
         Update: {
@@ -1457,7 +1653,7 @@ export type Database = {
           player_id?: string
           reference_id?: string | null
           source?: string
-          store_id?: string
+          store_id?: string | null
           type?: string
         }
         Relationships: [
@@ -1481,9 +1677,11 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          fulfillment_store_id: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_network_prize: boolean
           name: string
           quantity: number | null
           retail_value: number | null
@@ -1494,9 +1692,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description?: string | null
+          fulfillment_store_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_network_prize?: boolean
           name: string
           quantity?: number | null
           retail_value?: number | null
@@ -1507,9 +1707,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string | null
+          fulfillment_store_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_network_prize?: boolean
           name?: string
           quantity?: number | null
           retail_value?: number | null
@@ -1518,6 +1720,13 @@ export type Database = {
           xp_cost?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "prize_wall_items_fulfillment_store_id_fkey"
+            columns: ["fulfillment_store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "prize_wall_items_store_id_fkey"
             columns: ["store_id"]
@@ -1620,6 +1829,41 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          player_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          player_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rank_thresholds: {
         Row: {
           game_id: string | null
@@ -1648,6 +1892,50 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seasons: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          name: string
+          starts_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          name?: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasons_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
             referencedColumns: ["id"]
           },
         ]
@@ -1691,12 +1979,116 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          revoked_at: string | null
+          role: string
+          store_id: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          revoked_at?: string | null
+          role: string
+          store_id: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          revoked_at?: string | null
+          role?: string
+          store_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_invitations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_store_roles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_store_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_store_roles_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_store_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_config: {
         Row: {
           created_at: string | null
           currency_icon: string
           currency_name: string
           id: number
+          network_calendar_url: string | null
           player_id_prefix: string
           shop_categories: Json
           shop_description: string
@@ -1710,6 +2102,7 @@ export type Database = {
           currency_icon?: string
           currency_name?: string
           id?: number
+          network_calendar_url?: string | null
           player_id_prefix?: string
           shop_categories?: Json
           shop_description?: string
@@ -1723,6 +2116,7 @@ export type Database = {
           currency_icon?: string
           currency_name?: string
           id?: number
+          network_calendar_url?: string | null
           player_id_prefix?: string
           shop_categories?: Json
           shop_description?: string
@@ -1735,36 +2129,57 @@ export type Database = {
       }
       stores: {
         Row: {
+          address: string | null
           city: string | null
           color: string | null
           created_at: string | null
+          currency_icon: string
+          currency_name: string
+          ical_url: string | null
           id: string
           is_active: boolean | null
+          is_flagship: boolean
           name: string
           org_id: string | null
+          phone: string | null
           player_id_prefix: string
+          slug: string | null
           state: string | null
         }
         Insert: {
+          address?: string | null
           city?: string | null
           color?: string | null
           created_at?: string | null
+          currency_icon?: string
+          currency_name?: string
+          ical_url?: string | null
           id?: string
           is_active?: boolean | null
+          is_flagship?: boolean
           name: string
           org_id?: string | null
+          phone?: string | null
           player_id_prefix?: string
+          slug?: string | null
           state?: string | null
         }
         Update: {
+          address?: string | null
           city?: string | null
           color?: string | null
           created_at?: string | null
+          currency_icon?: string
+          currency_name?: string
+          ical_url?: string | null
           id?: string
           is_active?: boolean | null
+          is_flagship?: boolean
           name?: string
           org_id?: string | null
+          phone?: string | null
           player_id_prefix?: string
+          slug?: string | null
           state?: string | null
         }
         Relationships: [
@@ -1849,6 +2264,7 @@ export type Database = {
           id: string
           multiplier: number | null
           player_id: string
+          season_id: string | null
           source: Database["public"]["Enums"]["xp_source"]
           store_id: string | null
           transaction_id: string | null
@@ -1864,6 +2280,7 @@ export type Database = {
           id?: string
           multiplier?: number | null
           player_id: string
+          season_id?: string | null
           source: Database["public"]["Enums"]["xp_source"]
           store_id?: string | null
           transaction_id?: string | null
@@ -1879,6 +2296,7 @@ export type Database = {
           id?: string
           multiplier?: number | null
           player_id?: string
+          season_id?: string | null
           source?: Database["public"]["Enums"]["xp_source"]
           store_id?: string | null
           transaction_id?: string | null
@@ -1903,6 +2321,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xp_ledger_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
             referencedColumns: ["id"]
           },
           {
@@ -1984,6 +2409,23 @@ export type Database = {
       }
     }
     Functions: {
+      accept_staff_invitation: {
+        Args: {
+          p_clerk_user_id: string
+          p_token_hash: string
+          p_verified_emails: string[]
+        }
+        Returns: Json
+      }
+      adjust_prize_points: {
+        Args: {
+          p_amount: number
+          p_player_id: string
+          p_reason: string
+          p_store_id: string
+        }
+        Returns: Json
+      }
       award_xp: {
         Args: {
           p_awarded_by?: string
@@ -2178,3 +2620,4 @@ export const Constants = {
     },
   },
 } as const
+
