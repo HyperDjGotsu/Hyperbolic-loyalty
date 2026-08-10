@@ -475,7 +475,7 @@ export type Database = {
           has_bye: boolean | null
           id: string
           placement: number
-          player_id: string
+          player_id: string | null
           qualified_at: string | null
           qualifier_event_id: string
           store_id: string | null
@@ -485,7 +485,7 @@ export type Database = {
           has_bye?: boolean | null
           id?: string
           placement: number
-          player_id: string
+          player_id?: string | null
           qualified_at?: string | null
           qualifier_event_id: string
           store_id?: string | null
@@ -495,7 +495,7 @@ export type Database = {
           has_bye?: boolean | null
           id?: string
           placement?: number
-          player_id?: string
+          player_id?: string | null
           qualified_at?: string | null
           qualifier_event_id?: string
           store_id?: string | null
@@ -535,7 +535,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
-          player_id: string
+          player_id: string | null
           result_description: string | null
           result_rarity: string | null
           result_xp: number
@@ -544,7 +544,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
-          player_id: string
+          player_id?: string | null
           result_description?: string | null
           result_rarity?: string | null
           result_xp: number
@@ -553,7 +553,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
-          player_id?: string
+          player_id?: string | null
           result_description?: string | null
           result_rarity?: string | null
           result_xp?: number
@@ -607,7 +607,7 @@ export type Database = {
           month: string
           month_label: string
           monthly_xp: number
-          player_id: string
+          player_id: string | null
           player_name: string
         }
         Insert: {
@@ -620,7 +620,7 @@ export type Database = {
           month: string
           month_label: string
           monthly_xp: number
-          player_id: string
+          player_id?: string | null
           player_name: string
         }
         Update: {
@@ -633,7 +633,7 @@ export type Database = {
           month?: string
           month_label?: string
           monthly_xp?: number
-          player_id?: string
+          player_id?: string | null
           player_name?: string
         }
         Relationships: [
@@ -717,7 +717,7 @@ export type Database = {
           event_id: string
           game_id: string | null
           id: string
-          player_id: string
+          player_id: string | null
           xp_awarded: number
         }
         Insert: {
@@ -725,7 +725,7 @@ export type Database = {
           event_id: string
           game_id?: string | null
           id?: string
-          player_id: string
+          player_id?: string | null
           xp_awarded?: number
         }
         Update: {
@@ -733,7 +733,7 @@ export type Database = {
           event_id?: string
           game_id?: string | null
           id?: string
-          player_id?: string
+          player_id?: string | null
           xp_awarded?: number
         }
         Relationships: [
@@ -1137,7 +1137,7 @@ export type Database = {
           id: string
           period_end: string
           period_start: string
-          player_id: string
+          player_id: string | null
           status: Database["public"]["Enums"]["pass_status"]
           stripe_invoice_id: string | null
           tier: Database["public"]["Enums"]["pass_tier"]
@@ -1151,7 +1151,7 @@ export type Database = {
           id?: string
           period_end: string
           period_start: string
-          player_id: string
+          player_id?: string | null
           status: Database["public"]["Enums"]["pass_status"]
           stripe_invoice_id?: string | null
           tier: Database["public"]["Enums"]["pass_tier"]
@@ -1165,7 +1165,7 @@ export type Database = {
           id?: string
           period_end?: string
           period_start?: string
-          player_id?: string
+          player_id?: string | null
           status?: Database["public"]["Enums"]["pass_status"]
           stripe_invoice_id?: string | null
           tier?: Database["public"]["Enums"]["pass_tier"]
@@ -1179,6 +1179,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      player_deletions: {
+        Row: {
+          clerk_user_id: string | null
+          completed_at: string | null
+          created_at: string
+          current_step: string | null
+          error_message: string | null
+          external_systems_notified: string[]
+          id: string
+          initiated_at: string
+          last_retry_at: string | null
+          player_id: string
+          retry_count: number
+          status: string
+        }
+        Insert: {
+          clerk_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          current_step?: string | null
+          error_message?: string | null
+          external_systems_notified?: string[]
+          id?: string
+          initiated_at?: string
+          last_retry_at?: string | null
+          player_id: string
+          retry_count?: number
+          status?: string
+        }
+        Update: {
+          clerk_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          current_step?: string | null
+          error_message?: string | null
+          external_systems_notified?: string[]
+          id?: string
+          initiated_at?: string
+          last_retry_at?: string | null
+          player_id?: string
+          retry_count?: number
+          status?: string
+        }
+        Relationships: []
       }
       player_inventory: {
         Row: {
@@ -1226,7 +1271,7 @@ export type Database = {
           home_store_id: string | null
           id: string
           next_renewal_at: string | null
-          player_id: string
+          player_id: string | null
           recurring_amount: number
           started_at: string
           status: string
@@ -1241,7 +1286,7 @@ export type Database = {
           home_store_id?: string | null
           id?: string
           next_renewal_at?: string | null
-          player_id: string
+          player_id?: string | null
           recurring_amount?: number
           started_at?: string
           status?: string
@@ -1256,7 +1301,7 @@ export type Database = {
           home_store_id?: string | null
           id?: string
           next_renewal_at?: string | null
-          player_id?: string
+          player_id?: string | null
           recurring_amount?: number
           started_at?: string
           status?: string
@@ -1514,7 +1559,7 @@ export type Database = {
           claimed_at: string | null
           id: string
           pass_tier_at_claim: Database["public"]["Enums"]["pass_tier"]
-          player_id: string
+          player_id: string | null
           price_per_unit: number
           product_id: string
           quantity: number
@@ -1523,7 +1568,7 @@ export type Database = {
           claimed_at?: string | null
           id?: string
           pass_tier_at_claim: Database["public"]["Enums"]["pass_tier"]
-          player_id: string
+          player_id?: string | null
           price_per_unit: number
           product_id: string
           quantity: number
@@ -1532,7 +1577,7 @@ export type Database = {
           claimed_at?: string | null
           id?: string
           pass_tier_at_claim?: Database["public"]["Enums"]["pass_tier"]
-          player_id?: string
+          player_id?: string | null
           price_per_unit?: number
           product_id?: string
           quantity?: number
@@ -1628,7 +1673,7 @@ export type Database = {
           created_at: string
           id: string
           note: string | null
-          player_id: string
+          player_id: string | null
           reference_id: string | null
           source: string
           store_id: string | null
@@ -1639,7 +1684,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
-          player_id: string
+          player_id?: string | null
           reference_id?: string | null
           source: string
           store_id?: string | null
@@ -1650,7 +1695,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
-          player_id?: string
+          player_id?: string | null
           reference_id?: string | null
           source?: string
           store_id?: string | null
@@ -1747,7 +1792,7 @@ export type Database = {
           item_id: string
           item_name: string
           item_retail_value: number | null
-          player_id: string
+          player_id: string | null
           points_deducted: number
           status: string
           store_id: string | null
@@ -1765,7 +1810,7 @@ export type Database = {
           item_id: string
           item_name: string
           item_retail_value?: number | null
-          player_id: string
+          player_id?: string | null
           points_deducted: number
           status?: string
           store_id?: string | null
@@ -1783,7 +1828,7 @@ export type Database = {
           item_id?: string
           item_name?: string
           item_retail_value?: number | null
-          player_id?: string
+          player_id?: string | null
           points_deducted?: number
           status?: string
           store_id?: string | null
@@ -2263,7 +2308,7 @@ export type Database = {
           game_id: string | null
           id: string
           multiplier: number | null
-          player_id: string
+          player_id: string | null
           season_id: string | null
           source: Database["public"]["Enums"]["xp_source"]
           store_id: string | null
@@ -2279,7 +2324,7 @@ export type Database = {
           game_id?: string | null
           id?: string
           multiplier?: number | null
-          player_id: string
+          player_id?: string | null
           season_id?: string | null
           source: Database["public"]["Enums"]["xp_source"]
           store_id?: string | null
@@ -2295,7 +2340,7 @@ export type Database = {
           game_id?: string | null
           id?: string
           multiplier?: number | null
-          player_id?: string
+          player_id?: string | null
           season_id?: string | null
           source?: Database["public"]["Enums"]["xp_source"]
           store_id?: string | null
@@ -2438,6 +2483,7 @@ export type Database = {
         }
         Returns: string
       }
+      cleanup_player_data: { Args: { p_player_id: string }; Returns: undefined }
       create_prize_redemption: {
         Args: { p_item_id: string; p_player_id: string; p_store_id: string }
         Returns: Json
@@ -2620,4 +2666,3 @@ export const Constants = {
     },
   },
 } as const
-

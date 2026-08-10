@@ -5,19 +5,8 @@ import type { Database } from '@/types/database.types';
 
 export const dynamic = 'force-dynamic';
 
-function getTypedAdminClient(): SupabaseClient<Database> {
+function getAdminClient(): SupabaseClient<Database> {
   return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
-}
-
-// Untyped client for player_deletions — not in generated types until migration runs
-// and types are regenerated.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getUntypedAdminClient(): SupabaseClient<any> {
-  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
@@ -31,8 +20,7 @@ export async function DELETE() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const db = getTypedAdminClient();
-  const dbRaw = getUntypedAdminClient();
+  const db = getAdminClient();
 
   // ── Look up player by clerk_user_id ──────────────────────────────────────
   const { data: player, error: playerError } = await db
@@ -84,7 +72,7 @@ export async function DELETE() {
   }
 
   // ── Pre-flight: idempotency ──────────────────────────────────────────────
-  const { data: existingDeletion } = await dbRaw
+  const { data: existingDeletion } = await db
     .from('player_deletions')
     .select('id, status')
     .eq('player_id', playerId)
@@ -103,7 +91,7 @@ export async function DELETE() {
 
   // ── Create audit record (committed before the transactional cleanup) ─────
   // This record persists even if the RPC rolls back, so we always have a log.
-  const { data: auditRow, error: auditInsertError } = await dbRaw
+  const { data: auditRow, error: auditInsertError } = await db
     .from('player_deletions')
     .insert({
       player_id: playerId,
@@ -127,11 +115,11 @@ export async function DELETE() {
   // ── Transactional Supabase cleanup via SECURITY DEFINER RPC ─────────────
   // All anonymize/delete steps run inside one Postgres transaction.
   // If any step fails the entire transaction rolls back — no partial state.
-  const { error: rpcError } = await dbRaw.rpc('cleanup_player_data', { p_player_id: playerId });
+  const { error: rpcError } = await db.rpc('cleanup_player_data', { p_player_id: playerId });
 
   if (rpcError) {
     console.error('[delete] cleanup_player_data RPC failed:', rpcError.message);
-    await dbRaw
+    await db
       .from('player_deletions')
       .update({
         status: 'manual_review_required',
@@ -156,7 +144,7 @@ export async function DELETE() {
     if (errObj?.status !== 404) {
       // Log for manual cleanup — clerk_user_id retained in audit row for recovery
       console.error('[delete] Clerk deletion failed — requires manual cleanup. See player_deletions audit table.');
-      await dbRaw
+      await db
         .from('player_deletions')
         .update({
           status: 'failed_at_clerk',
@@ -171,13 +159,13 @@ export async function DELETE() {
   }
 
   // ── Mark complete; clear clerk_user_id (it is no longer needed) ──────────
-  await dbRaw
+  await db
     .from('player_deletions')
     .update({
       status: 'completed',
       current_step: 'complete',
       completed_at: new Date().toISOString(),
-      clerk_user_id: null,  // don't retain a deleted person's Clerk ID permanently
+      clerk_user_id: null,
     })
     .eq('id', auditId);
 

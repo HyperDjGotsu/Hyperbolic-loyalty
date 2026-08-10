@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     // Aggregate XP per player
     const xpMap: Record<string, number> = {};
     for (const row of ledgerRows) {
+      if (!row.player_id) continue;
       xpMap[row.player_id] = (xpMap[row.player_id] ?? 0) + (row.final_xp ?? 0);
     }
 
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
 
     const totalMap: Record<string, number> = {};
     for (const row of allXp ?? []) {
+      if (!row.player_id) continue;
       totalMap[row.player_id] = (totalMap[row.player_id] ?? 0) + (row.final_xp ?? 0);
     }
 

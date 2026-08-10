@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       .select('player_id')
       .eq('spin_date', todayPacific);
 
-    const spunIds = new Set((spunToday ?? []).map((r: { player_id: string }) => r.player_id));
+    const spunIds = new Set((spunToday ?? []).filter(r => r.player_id !== null).map(r => r.player_id!));
 
     const { data: allPlayers } = await supabaseAdmin
       .from('players')

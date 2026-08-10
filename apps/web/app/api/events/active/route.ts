@@ -49,7 +49,7 @@ export async function GET() {
       .limit(5);
 
     if (recentRaw && recentRaw.length > 0) {
-      const playerIds = recentRaw.map((r) => r.player_id);
+      const playerIds = recentRaw.map((r) => r.player_id).filter((id): id is string => id !== null);
       const { data: players } = await supabaseAdmin
         .from('players')
         .select('id, display_name, player_id')
@@ -58,7 +58,7 @@ export async function GET() {
       const playerMap = new Map(players?.map(p => [p.id, p]) || []);
 
       for (const r of recentRaw) {
-        const player = playerMap.get(r.player_id);
+        const player = r.player_id ? playerMap.get(r.player_id) : undefined;
         recentCheckIns.push({
           playerName: player?.display_name || 'Player',
           hypId: player?.player_id || '',

@@ -136,7 +136,7 @@ export async function PATCH(
     }
 
     // Refund points
-    if (redemption.store_id) {
+    if (redemption.store_id && redemption.player_id) {
       await logPointTransaction({
         playerId: redemption.player_id,
         storeId: redemption.store_id,
