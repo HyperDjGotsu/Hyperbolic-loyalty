@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
+import { sendExpoPushToAllPlayers } from '@/lib/expo-push';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +59,14 @@ export async function GET(request: Request) {
         await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100));
       }
       sent += rows.length;
+
+      // Fire Expo push (non-blocking — failures don't fail the cron)
+      sendExpoPushToAllPlayers({
+        title: `⏰ ${event.name} starts in ${timeLabel}`,
+        body: 'Head to the store — doors open soon!',
+        data: { event_id: event.id, event_name: event.name, scheduled_at: event.scheduled_at },
+        category: 'events',
+      }).catch((err) => console.error('[expo-push] event-reminder dispatch error:', err));
     }
 
     return NextResponse.json({ sent });

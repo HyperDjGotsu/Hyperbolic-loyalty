@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
 import { notifyStorePlayers, notifyAllPlayers } from '@/lib/notifications';
+import { sendExpoPushToStorePlayers, sendExpoPushToAllPlayers } from '@/lib/expo-push';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -42,31 +43,23 @@ export async function POST(request: Request) {
       if (!ctx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const trimmedTitle = title.trim();
+    const trimmedMessage = message.trim();
+
     let playerCount = 0;
     if (scope === 'network') {
-      playerCount = await notifyAllPlayers(
-        'store_announcement',
-        title.trim(),
-        message.trim(),
-        null,
-        'store'
-      );
+      playerCount = await notifyAllPlayers('store_announcement', trimmedTitle, trimmedMessage, null, 'store');
+      sendExpoPushToAllPlayers({ title: trimmedTitle, body: trimmedMessage, category: 'store' }).catch(() => {});
     } else {
-      playerCount = await notifyStorePlayers(
-        storeId!,
-        'store_announcement',
-        title.trim(),
-        message.trim(),
-        null,
-        'store'
-      );
+      playerCount = await notifyStorePlayers(storeId!, 'store_announcement', trimmedTitle, trimmedMessage, null, 'store');
+      sendExpoPushToStorePlayers(storeId!, { title: trimmedTitle, body: trimmedMessage, category: 'store' }).catch(() => {});
     }
 
     await supabaseAdmin.from('broadcasts').insert({
       store_id: scope === 'store' ? storeId : null,
       scope,
-      title: title.trim(),
-      message: message.trim(),
+      title: trimmedTitle,
+      message: trimmedMessage,
       notification_type: 'store_announcement',
       sent_by_clerk_id: userId,
       player_count: playerCount,

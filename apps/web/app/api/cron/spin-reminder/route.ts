@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
+import { sendExpoPushToPlayer } from '@/lib/expo-push';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,11 @@ export async function GET(request: Request) {
         null,
         'daily_rewards'
       );
+      sendExpoPushToPlayer(player.id, {
+        title: '🎰 Daily spin is waiting!',
+        body: "Don't miss your free spin today — prizes reset at midnight.",
+        category: 'daily_rewards',
+      }).catch(() => {});
       sent++;
     }
 
