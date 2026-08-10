@@ -100,6 +100,30 @@ export async function sendExpoPushToPlayer(playerId: string, opts: ExpoPushOptio
   await sendToTokens(tokens as TokenRow[], opts);
 }
 
+// Send Expo push to a specific pre-filtered list of player IDs.
+// Preference checking is the CALLER's responsibility — no re-query here.
+// Use this when the caller already has the eligible subset (avoids 2N queries).
+export async function sendExpoPushToPlayers(playerIds: string[], opts: ExpoPushOptions): Promise<number> {
+  if (!playerIds.length) return 0;
+  const uniqueIds = Array.from(new Set(playerIds));
+
+  const { data: tokens } = await supabaseAdmin
+    .from('expo_push_tokens')
+    .select('id, token, player_id')
+    .in('player_id', uniqueIds);
+
+  if (!tokens?.length) return 0;
+  // Deduplicate tokens — same physical device could be registered twice
+  const seen = new Set<string>();
+  const unique = (tokens as TokenRow[]).filter((t) => {
+    if (seen.has(t.token)) return false;
+    seen.add(t.token);
+    return true;
+  });
+  await sendToTokens(unique, opts);
+  return unique.length;
+}
+
 // Send Expo push to all players at a store, respecting preferences.
 // Returns the token count dispatched.
 export async function sendExpoPushToStorePlayers(storeId: string, opts: ExpoPushOptions): Promise<number> {
