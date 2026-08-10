@@ -5,7 +5,6 @@ import type { Database } from '@/types/database.types';
 
 export const dynamic = 'force-dynamic';
 
-// Typed client for tables that exist in the generated schema
 function getTypedAdminClient(): SupabaseClient<Database> {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +13,8 @@ function getTypedAdminClient(): SupabaseClient<Database> {
   );
 }
 
-// Untyped client for player_deletions (not in generated types yet — added by migration)
+// Untyped client for player_deletions — not in generated types until migration runs
+// and types are regenerated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getUntypedAdminClient(): SupabaseClient<any> {
   return createClient(
@@ -34,9 +34,7 @@ export async function DELETE() {
   const db = getTypedAdminClient();
   const dbRaw = getUntypedAdminClient();
 
-  // --------------------------------------------------------
-  // Look up player record by clerk_user_id
-  // --------------------------------------------------------
+  // ── Look up player by clerk_user_id ──────────────────────────────────────
   const { data: player, error: playerError } = await db
     .from('players')
     .select('id, is_staff')
@@ -49,9 +47,7 @@ export async function DELETE() {
 
   const playerId: string = player.id;
 
-  // --------------------------------------------------------
-  // Pre-flight: staff check via players.is_staff
-  // --------------------------------------------------------
+  // ── Pre-flight: staff check via denormalized flag ────────────────────────
   if (player.is_staff) {
     return NextResponse.json(
       {
@@ -63,7 +59,7 @@ export async function DELETE() {
     );
   }
 
-  // Also check app_users / role tables
+  // Belt-and-suspenders: also check role tables in case is_staff is stale
   const { data: appUser } = await db
     .from('app_users')
     .select(
@@ -73,11 +69,9 @@ export async function DELETE() {
     .single();
 
   if (appUser) {
-    const networkRoles = (appUser.network_staff_roles ?? []) as { role: string }[];
-    const storeRoles = (appUser.staff_store_roles ?? []) as { store_id: string }[];
-    const hasStaffRole = networkRoles.length > 0 || storeRoles.length > 0;
-
-    if (hasStaffRole) {
+    const hasNetworkRole = ((appUser.network_staff_roles ?? []) as { role: string }[]).length > 0;
+    const hasStoreRole = ((appUser.staff_store_roles ?? []) as { store_id: string }[]).length > 0;
+    if (hasNetworkRole || hasStoreRole) {
       return NextResponse.json(
         {
           error: 'staff_active',
@@ -89,9 +83,7 @@ export async function DELETE() {
     }
   }
 
-  // --------------------------------------------------------
-  // Pre-flight: idempotency / in-progress check
-  // --------------------------------------------------------
+  // ── Pre-flight: idempotency ──────────────────────────────────────────────
   const { data: existingDeletion } = await dbRaw
     .from('player_deletions')
     .select('id, status')
@@ -109,147 +101,61 @@ export async function DELETE() {
     }
   }
 
-  // --------------------------------------------------------
-  // SAGA — start audit record
-  // --------------------------------------------------------
-  let step = 'audit_init';
-  let auditId: string | null = null;
+  // ── Create audit record (committed before the transactional cleanup) ─────
+  // This record persists even if the RPC rolls back, so we always have a log.
+  const { data: auditRow, error: auditInsertError } = await dbRaw
+    .from('player_deletions')
+    .insert({
+      player_id: playerId,
+      clerk_user_id: clerkUserId,
+      status: 'in_progress',
+      current_step: 'cleanup_rpc',
+    })
+    .select('id')
+    .single();
 
-  async function updateStep(s: string) {
-    step = s;
-    if (auditId) {
-      await dbRaw
-        .from('player_deletions')
-        .update({ current_step: s })
-        .eq('id', auditId);
-    }
+  if (auditInsertError || !auditRow) {
+    console.error('[delete] audit insert failed:', auditInsertError?.message);
+    return NextResponse.json(
+      { error: 'deletion_failed', message: 'Account deletion could not be completed. Please contact support.' },
+      { status: 500 }
+    );
   }
 
-  try {
-    // step: audit_init
-    const { data: auditRow, error: auditInsertError } = await dbRaw
-      .from('player_deletions')
-      .insert({
-        player_id: playerId,
-        clerk_user_id: clerkUserId,
-        status: 'in_progress',
-        current_step: 'audit_init',
-      })
-      .select('id')
-      .single();
+  const auditId: string = auditRow.id;
 
-    if (auditInsertError || !auditRow) {
-      console.error('[delete] failed to insert audit row:', auditInsertError?.message);
-      return NextResponse.json(
-        {
-          error: 'deletion_failed',
-          message: 'Account deletion could not be completed. Please contact support.',
-        },
-        { status: 500 }
-      );
-    }
+  // ── Transactional Supabase cleanup via SECURITY DEFINER RPC ─────────────
+  // All anonymize/delete steps run inside one Postgres transaction.
+  // If any step fails the entire transaction rolls back — no partial state.
+  const { error: rpcError } = await dbRaw.rpc('cleanup_player_data', { p_player_id: playerId });
 
-    auditId = auditRow.id as string;
-
-    // --------------------------------------------------------
-    // step: cancel_redemptions
-    // --------------------------------------------------------
-    await updateStep('cancel_redemptions');
-
-    await db
-      .from('prize_wall_redemptions')
-      .update({
-        status: 'cancelled',
-        void_reason: 'account_deleted',
-        voided_at: new Date().toISOString(),
-      })
-      .eq('player_id', playerId)
-      .in('status', ['pending', 'approved']);
-
-    // --------------------------------------------------------
-    // step: delete_personal
-    // --------------------------------------------------------
-    await updateStep('delete_personal');
-
-    await db.from('friendships').delete().or(`requester_id.eq.${playerId},addressee_id.eq.${playerId}`);
-    await db.from('event_interest').delete().eq('player_id', playerId);
-    await db.from('notifications').delete().eq('player_id', playerId);
-    await db.from('expo_push_tokens').delete().eq('player_id', playerId);
-    await db.from('push_subscriptions').delete().eq('player_id', playerId);
-    await db.from('bounty_hunter_participants').delete().eq('player_id', playerId);
-    await db.from('player_inventory').delete().eq('player_id', playerId);
-
-    // --------------------------------------------------------
-    // step: anonymize_history
-    // Use dbRaw here because the migration makes these columns nullable,
-    // but the generated types haven't been regenerated yet.
-    // --------------------------------------------------------
-    await updateStep('anonymize_history');
-
-    await dbRaw.from('xp_ledger').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('prize_point_transactions').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('prize_wall_redemptions').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('daily_spins').update({ player_id: null }).eq('player_id', playerId);
-    // emperors: anonymize AND snapshot display_name in one update
+  if (rpcError) {
+    console.error('[delete] cleanup_player_data RPC failed:', rpcError.message);
     await dbRaw
-      .from('emperors')
-      .update({ player_id: null, display_name_snapshot: 'Deleted Player' })
-      .eq('player_id', playerId);
-    await dbRaw.from('event_attendance').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('event_attendances').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('pass_history').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('player_pass_subscriptions').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('circuit_qualifiers').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('preorder_claims').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('transactions').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('card_of_the_day_votes').update({ player_id: null }).eq('player_id', playerId);
-    await dbRaw.from('bounty_hunter_matches').update({ winner_id: null }).eq('winner_id', playerId);
-    await dbRaw.from('bounty_hunter_matches').update({ loser_id: null }).eq('loser_id', playerId);
+      .from('player_deletions')
+      .update({
+        status: 'manual_review_required',
+        current_step: 'cleanup_rpc',
+        error_message: 'RPC failed — player data unchanged. Contact support.',
+      })
+      .eq('id', auditId);
+    return NextResponse.json(
+      { error: 'deletion_failed', message: 'Account deletion could not be completed. Please contact support.' },
+      { status: 500 }
+    );
+  }
 
-    // --------------------------------------------------------
-    // step: anonymize_references
-    // --------------------------------------------------------
-    await updateStep('anonymize_references');
-
-    await dbRaw.from('xp_ledger').update({ awarded_by: null }).eq('awarded_by', playerId);
-    await dbRaw.from('players').update({ referred_by: null }).eq('referred_by', playerId);
-
-    // --------------------------------------------------------
-    // step: delete_player
-    // --------------------------------------------------------
-    await updateStep('delete_player');
-
-    const { error: deletePlayerError } = await db.from('players').delete().eq('id', playerId);
-
-    if (deletePlayerError) {
-      throw new Error(`delete_player: ${deletePlayerError.message}`);
-    }
-
-    // --------------------------------------------------------
-    // step: delete_clerk
-    // All Supabase data is gone at this point. Even if Clerk fails,
-    // the player cannot sign in (no players row). Return 200.
-    // --------------------------------------------------------
-    await updateStep('delete_clerk');
-
-    let clerkFailed = false;
-    try {
-      const client = await clerkClient();
-      await client.users.deleteUser(clerkUserId);
-    } catch (clerkErr: unknown) {
-      const errObj = clerkErr as { status?: number };
-      // 404 = already deleted, treat as success
-      if (errObj?.status !== 404) {
-        clerkFailed = true;
-        // Log for manual cleanup — do not expose clerkUserId in response
-        console.error('[delete] Clerk deletion requires manual cleanup. Check player_deletions audit table.');
-      }
-    }
-
-    // --------------------------------------------------------
-    // step: complete
-    // --------------------------------------------------------
-    if (clerkFailed) {
+  // ── Delete Clerk identity (last — Supabase data is fully gone) ───────────
+  // Even if this fails the player row is deleted, so sign-in would 404
+  // on every subsequent data request. The audit record tracks the state.
+  try {
+    const clerk = await clerkClient();
+    await clerk.users.deleteUser(clerkUserId);
+  } catch (clerkErr: unknown) {
+    const errObj = clerkErr as { status?: number };
+    if (errObj?.status !== 404) {
+      // Log for manual cleanup — clerk_user_id retained in audit row for recovery
+      console.error('[delete] Clerk deletion failed — requires manual cleanup. See player_deletions audit table.');
       await dbRaw
         .from('player_deletions')
         .update({
@@ -258,40 +164,22 @@ export async function DELETE() {
           completed_at: new Date().toISOString(),
         })
         .eq('id', auditId);
-    } else {
-      await dbRaw
-        .from('player_deletions')
-        .update({
-          status: 'completed',
-          current_step: 'complete',
-          completed_at: new Date().toISOString(),
-        })
-        .eq('id', auditId);
+      // Return success to the client — their data is gone; Clerk cleanup is an admin task
+      return NextResponse.json({ success: true });
     }
-
-    return NextResponse.json({ success: true });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`[delete] saga failed at step="${step}":`, message);
-
-    // Update audit row for manual review
-    if (auditId) {
-      await dbRaw
-        .from('player_deletions')
-        .update({
-          status: 'manual_review_required',
-          current_step: step,
-          error_message: `Failed at step: ${step}`,
-        })
-        .eq('id', auditId);
-    }
-
-    return NextResponse.json(
-      {
-        error: 'deletion_failed',
-        message: 'Account deletion could not be completed. Please contact support.',
-      },
-      { status: 500 }
-    );
+    // 404 = already deleted; treat as success (idempotent)
   }
+
+  // ── Mark complete; clear clerk_user_id (it is no longer needed) ──────────
+  await dbRaw
+    .from('player_deletions')
+    .update({
+      status: 'completed',
+      current_step: 'complete',
+      completed_at: new Date().toISOString(),
+      clerk_user_id: null,  // don't retain a deleted person's Clerk ID permanently
+    })
+    .eq('id', auditId);
+
+  return NextResponse.json({ success: true });
 }

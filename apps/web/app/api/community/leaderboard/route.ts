@@ -74,10 +74,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch XP data' }, { status: 500 });
     }
 
-    // Aggregate per player
+    // Aggregate per player — skip anonymized rows (player_id = null) so
+    // deleted players don't form a phantom "null" group in the results.
     const xpByPlayer: Record<string, number> = {};
-    for (const entry of xpData ?? []) {
-      xpByPlayer[entry.player_id] = (xpByPlayer[entry.player_id] || 0) + (entry.final_xp || 0);
+    for (const entry of (xpData ?? []).filter(e => e.player_id !== null)) {
+      xpByPlayer[entry.player_id!] = (xpByPlayer[entry.player_id!] || 0) + (entry.final_xp || 0);
     }
 
     const rankedPlayerIds = Object.entries(xpByPlayer)
