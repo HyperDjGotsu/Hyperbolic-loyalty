@@ -69,13 +69,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- ── Cancel pending/approved prize redemptions ───────────────────────────
+  -- ── Void pending prize redemptions ──────────────────────────────────────
   UPDATE prize_wall_redemptions
-  SET    status     = 'cancelled',
+  SET    status      = 'voided',
          void_reason = 'account_deleted',
-         voided_at  = now()
+         voided_at   = now()
   WHERE  player_id = p_player_id
-    AND  status IN ('pending', 'approved');
+    AND  status = 'pending';
 
   -- ── Hard delete: personal / device records ──────────────────────────────
   DELETE FROM friendships
