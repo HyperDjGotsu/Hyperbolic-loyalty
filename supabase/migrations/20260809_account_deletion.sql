@@ -108,10 +108,10 @@ BEGIN
   UPDATE transactions              SET player_id = NULL WHERE player_id = p_player_id;
   UPDATE event_attendances         SET player_id = NULL WHERE player_id = p_player_id;
 
-  -- Emperor: anonymize identity AND snapshot display name in one statement
+  -- Emperor: anonymize identity AND overwrite display name in one statement
   UPDATE emperors
-  SET    player_id            = NULL,
-         display_name_snapshot = 'Deleted Player'
+  SET    player_id  = NULL,
+         player_name = 'Deleted Player'
   WHERE  player_id = p_player_id;
 
   -- Bounty Hunter matches reference player by winner_id / loser_id (already nullable)
