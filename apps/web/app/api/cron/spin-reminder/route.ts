@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
-import { sendExpoPushToPlayer } from '@/lib/expo-push';
+import { sendExpoPushToPlayers } from '@/lib/expo-push';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,13 +12,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Get today's date in Pacific time (UTC-7 / UTC-8)
     const pacificOffset = -7; // PDT; adjust to -8 for PST if needed
     const now = new Date();
     const pacificNow = new Date(now.getTime() + pacificOffset * 60 * 60 * 1000);
     const todayPacific = pacificNow.toISOString().split('T')[0];
 
-    // Find all players who have NOT spun today
     const { data: spunToday } = await supabaseAdmin
       .from('daily_spins')
       .select('player_id')
@@ -39,6 +37,7 @@ export async function GET(request: Request) {
       return prefs.daily_rewards;
     });
 
+    // Create in-app notifications for each eligible player
     let sent = 0;
     for (const player of eligible) {
       await createNotification(
@@ -49,12 +48,26 @@ export async function GET(request: Request) {
         null,
         'daily_rewards'
       );
-      sendExpoPushToPlayer(player.id, {
-        title: '🎰 Daily spin is waiting!',
-        body: "Don't miss your free spin today — prizes reset at midnight.",
-        category: 'daily_rewards',
-      }).catch(() => {});
       sent++;
+    }
+
+    // Dispatch Expo push once for the full eligible set — no per-player preference
+    // re-query because eligibility was already determined above.
+    if (eligible.length > 0) {
+      try {
+        const tokenCount = await sendExpoPushToPlayers(
+          eligible.map((p) => p.id),
+          {
+            title: '🎰 Daily spin is waiting!',
+            body: "Don't miss your free spin today — prizes reset at midnight.",
+            category: 'daily_rewards',
+          }
+        );
+        console.log(`[expo-push] spin-reminder: ${tokenCount} tokens dispatched`);
+      } catch (err) {
+        // Push failure must not affect notification-row creation count
+        console.error('[expo-push] spin-reminder dispatch error:', err);
+      }
     }
 
     return NextResponse.json({ sent });

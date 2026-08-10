@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { createNotification } from '@/lib/notifications';
-import { sendExpoPushToAllPlayers } from '@/lib/expo-push';
+import { sendExpoPushToPlayers } from '@/lib/expo-push';
 
 export const dynamic = 'force-dynamic';
 
-// Runs every hour — notifies players of events starting in the next 2 hours
+// Runs every hour — notifies players of events starting in the next 1-13h window
 export async function GET(request: Request) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -13,10 +12,9 @@ export async function GET(request: Request) {
 
   try {
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 60 * 60 * 1000);   // 1h from now
+    const windowStart = new Date(now.getTime() + 60 * 60 * 1000);    // 1h from now
     const windowEnd = new Date(now.getTime() + 13 * 60 * 60 * 1000); // 13h from now
 
-    // Find events starting in the 2h window
     const { data: events } = await supabaseAdmin
       .from('events')
       .select('id, name, scheduled_at, game_id')
@@ -25,7 +23,6 @@ export async function GET(request: Request) {
 
     if (!events?.length) return NextResponse.json({ sent: 0 });
 
-    // Get all players for mass notification
     const { data: players } = await supabaseAdmin
       .from('players')
       .select('id, notification_preferences');
@@ -37,6 +34,9 @@ export async function GET(request: Request) {
       const prefs = { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Record<string, boolean>) };
       return prefs.events;
     });
+
+    const eligibleIds = eligible.map((p) => p.id);
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
 
     let sent = 0;
     for (const event of events) {
@@ -60,13 +60,35 @@ export async function GET(request: Request) {
       }
       sent += rows.length;
 
-      // Fire Expo push (non-blocking — failures don't fail the cron)
-      sendExpoPushToAllPlayers({
-        title: `⏰ ${event.name} starts in ${timeLabel}`,
-        body: 'Head to the store — doors open soon!',
-        data: { event_id: event.id, event_name: event.name, scheduled_at: event.scheduled_at },
-        category: 'events',
-      }).catch((err) => console.error('[expo-push] event-reminder dispatch error:', err));
+      // Push idempotency: check if a reminder was already pushed for this event
+      // in the past hour (guards against cron retry/duplicate execution).
+      // Uses existing notification rows as proxy — no schema change required.
+      const { count: alreadyPushed } = await supabaseAdmin
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('type', 'event_reminder')
+        .contains('data', { event_id: event.id })
+        .gte('created_at', oneHourAgo);
+
+      // alreadyPushed counts rows we just inserted + any from a prior run.
+      // If prior run inserted rows (count > rows.length), skip push.
+      if ((alreadyPushed ?? 0) > rows.length) {
+        console.log(`[expo-push] skipping duplicate push for event ${event.id}`);
+        continue;
+      }
+
+      try {
+        const tokenCount = await sendExpoPushToPlayers(eligibleIds, {
+          title: `⏰ ${event.name} starts in ${timeLabel}`,
+          body: 'Head to the store — doors open soon!',
+          data: { event_id: event.id, event_name: event.name, scheduled_at: event.scheduled_at },
+          category: 'events',
+        });
+        console.log(`[expo-push] event-reminder: ${tokenCount} tokens for event ${event.id}`);
+      } catch (err) {
+        // Push failure must not affect the in-app notification count
+        console.error('[expo-push] event-reminder dispatch error:', err);
+      }
     }
 
     return NextResponse.json({ sent });

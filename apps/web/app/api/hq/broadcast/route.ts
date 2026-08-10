@@ -49,10 +49,18 @@ export async function POST(request: Request) {
     let playerCount = 0;
     if (scope === 'network') {
       playerCount = await notifyAllPlayers('store_announcement', trimmedTitle, trimmedMessage, null, 'store');
-      sendExpoPushToAllPlayers({ title: trimmedTitle, body: trimmedMessage, category: 'store' }).catch(() => {});
+      try {
+        await sendExpoPushToAllPlayers({ title: trimmedTitle, body: trimmedMessage, category: 'store' });
+      } catch (err) {
+        console.error('[expo-push] broadcast network dispatch error:', err);
+      }
     } else {
       playerCount = await notifyStorePlayers(storeId!, 'store_announcement', trimmedTitle, trimmedMessage, null, 'store');
-      sendExpoPushToStorePlayers(storeId!, { title: trimmedTitle, body: trimmedMessage, category: 'store' }).catch(() => {});
+      try {
+        await sendExpoPushToStorePlayers(storeId!, { title: trimmedTitle, body: trimmedMessage, category: 'store' });
+      } catch (err) {
+        console.error('[expo-push] broadcast store dispatch error:', err);
+      }
     }
 
     await supabaseAdmin.from('broadcasts').insert({
