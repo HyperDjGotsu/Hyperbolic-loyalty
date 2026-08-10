@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
-import type { Database } from '@/lib/database.types';
+import type { Database } from '@/types/database.types';
 import { createNotification } from '@/lib/notifications';
 import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
 
