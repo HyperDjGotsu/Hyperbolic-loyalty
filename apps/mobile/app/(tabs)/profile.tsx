@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   Share,
@@ -61,6 +62,7 @@ const PREF_LABELS: { key: keyof NotifPrefs; label: string; icon: string }[] = [
 
 export default function ProfileScreen() {
   const { signOut, getToken } = useAuth();
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const api = useApi();
   const insets = useSafeAreaInsets();
   const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
@@ -123,6 +125,73 @@ export default function ProfileScreen() {
       }
     } catch { /* non-critical */ }
     signOut();
+  }
+
+  async function handleDeleteAccount() {
+    Alert.alert(
+      'Delete your account?',
+      'This will permanently delete your Player Pass account, XP history, and all associated data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes, Delete Account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Are you absolutely sure?',
+              'Your account will be permanently deleted immediately. There is no recovery or grace period.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete permanently',
+                  style: 'destructive',
+                  onPress: () => void performDeletion(),
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  }
+
+  async function performDeletion() {
+    setDeletingAccount(true);
+    try {
+      const jwt = await getToken();
+      if (!jwt) throw new Error('No auth token');
+
+      const res = await fetch(`${API_BASE}/api/player/delete`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+
+      const data = await res.json().catch(() => ({})) as Record<string, string>;
+
+      if (res.ok && data.success) {
+        await signOut();
+        return;
+      }
+
+      if (data.error === 'staff_active') {
+        Alert.alert(
+          'Cannot Delete Account',
+          data.message || 'Your account has active staff permissions. Ask your network administrator to remove your staff role before deleting your account.'
+        );
+        return;
+      }
+
+      if (data.error === 'deletion_in_progress') {
+        Alert.alert('Deletion In Progress', 'Account deletion is already in progress. Please try again later.');
+        return;
+      }
+
+      Alert.alert('Deletion Failed', 'Account deletion failed. Please contact support.');
+    } catch {
+      Alert.alert('Deletion Failed', 'Account deletion failed. Please contact support.');
+    } finally {
+      setDeletingAccount(false);
+    }
   }
 
   async function shareReferral() {
@@ -236,6 +305,26 @@ export default function ProfileScreen() {
       <Pressable style={styles.signOutBtn} onPress={() => void handleSignOut()}>
         <Text style={styles.signOutText}>Sign Out</Text>
       </Pressable>
+
+      {/* Danger Zone */}
+      <View style={styles.dangerZone}>
+        <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+        <Pressable
+          style={[styles.deleteBtn, deletingAccount && styles.deleteBtnDisabled]}
+          onPress={() => void handleDeleteAccount()}
+          disabled={deletingAccount}
+        >
+          {deletingAccount ? (
+            <ActivityIndicator color="#ef4444" size="small" />
+          ) : (
+            <Text style={styles.deleteText}>Delete Account</Text>
+          )}
+        </Pressable>
+        <Text style={styles.dangerZoneHint}>
+          Permanently deletes your account and all data. This cannot be undone.
+        </Text>
+      </View>
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -329,4 +418,39 @@ const styles = StyleSheet.create({
   },
   signOutText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
   errorText: { color: '#ef4444', fontSize: 15 },
+  dangerZone: {
+    marginHorizontal: 16,
+    marginTop: 32,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(239,68,68,0.2)',
+  },
+  dangerZoneTitle: {
+    color: '#7a7060',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  deleteBtn: {
+    backgroundColor: 'rgba(239,68,68,0.08)',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.25)',
+    minHeight: 50,
+    justifyContent: 'center',
+  },
+  deleteBtnDisabled: {
+    opacity: 0.5,
+  },
+  deleteText: { color: '#ef4444', fontWeight: '600', fontSize: 14 },
+  dangerZoneHint: {
+    color: '#7a7060',
+    fontSize: 11,
+    marginTop: 8,
+    textAlign: 'center',
+  },
 });

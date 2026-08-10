@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useUser, useClerk } from '@clerk/nextjs';
 import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
 
 interface ShopItem {
@@ -132,6 +132,7 @@ const defaultAvatarConfig: AvatarConfig = {
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [ownedItems, setOwnedItems] = useState<Record<string, ShopItem[]>>({});
   const [loading, setLoading] = useState(true);
@@ -176,6 +177,12 @@ export default function ProfilePage() {
     store: true,
   });
   const [savingNotif, setSavingNotif] = useState(false);
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<'confirm1' | 'confirm2'>('confirm1');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadPlayerData = useCallback(async () => {
     setLoading(true);
@@ -330,6 +337,46 @@ export default function ProfilePage() {
       console.error('Error saving privacy settings:', error);
     } finally {
       setSavingPrivacy(false);
+    }
+  };
+
+  const openDeleteModal = () => {
+    setDeleteStep('confirm1');
+    setDeleteError(null);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch('/api/player/delete', { method: 'DELETE' });
+      const data = await res.json().catch(() => ({})) as Record<string, string>;
+
+      if (res.ok && data.success) {
+        setShowDeleteModal(false);
+        await signOut({ redirectUrl: '/' });
+        return;
+      }
+
+      if (data.error === 'staff_active') {
+        setDeleteError(
+          data.message ||
+          'Your account has active staff permissions. Ask your network administrator to remove your staff role before deleting your account.'
+        );
+        return;
+      }
+
+      if (data.error === 'deletion_in_progress') {
+        setDeleteError('Account deletion is already in progress. Please try again later.');
+        return;
+      }
+
+      setDeleteError('Account deletion failed. Please contact support.');
+    } catch {
+      setDeleteError('Account deletion failed. Please contact support.');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -1189,6 +1236,32 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Danger Zone */}
+      <div className="px-4 mt-8 mb-6">
+        <div className="border-t border-red-500/20 pt-6">
+          <h2 className="text-xs font-bold text-secondary/60 uppercase tracking-widest mb-3">
+            Danger Zone
+          </h2>
+          <div className="bg-red-500/5 rounded-xl p-4 border border-red-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-primary text-sm font-medium">Delete Account</div>
+                <div className="text-secondary text-xs mt-0.5">
+                  Permanently delete your account and all data
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={openDeleteModal}
+                className="px-4 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-400 font-semibold text-sm hover:bg-red-500/25 transition-colors flex-shrink-0 ml-4"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Settings */}
       <div className="px-4 mt-6 mb-6">
         <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
@@ -1278,6 +1351,70 @@ export default function ProfilePage() {
 
       {/* Privacy Settings Modal */}
       {showPrivacyModal && <PrivacySettingsModal />}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl w-full max-w-sm border border-border-token overflow-hidden">
+            <div className="p-5 border-b border-border-token">
+              <h2 className="text-primary font-bold text-lg">
+                {deleteStep === 'confirm1' ? 'Delete your account?' : 'Are you absolutely sure?'}
+              </h2>
+            </div>
+            <div className="p-5">
+              {deleteStep === 'confirm1' ? (
+                <p className="text-secondary text-sm">
+                  This will permanently delete your Player Pass account, XP history, and all associated data.
+                  This cannot be undone.
+                </p>
+              ) : (
+                <p className="text-secondary text-sm">
+                  Your account will be permanently deleted immediately. There is no recovery or grace period.
+                </p>
+              )}
+
+              {deleteError && (
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+                  <p className="text-red-400 text-sm">{deleteError}</p>
+                </div>
+              )}
+
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteError(null);
+                  }}
+                  disabled={deletingAccount}
+                  className="flex-1 py-3 rounded-xl bg-elevated border border-border-token text-secondary font-medium text-sm hover:text-primary transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                {deleteStep === 'confirm1' ? (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteStep('confirm2')}
+                    className="flex-1 py-3 rounded-xl bg-red-500/15 border border-red-500/40 text-red-400 font-semibold text-sm hover:bg-red-500/25 transition-colors"
+                  >
+                    Yes, Delete Account
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteAccount()}
+                    disabled={deletingAccount}
+                    className="flex-1 py-3 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+                  >
+                    {deletingAccount ? 'Deleting...' : 'Delete permanently'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Avatar Editor Modal */}
       {editingAvatar && <AvatarEditorModal />}
