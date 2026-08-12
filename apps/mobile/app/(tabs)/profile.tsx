@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
+import { API_BASE } from '@/lib/config';
 import { useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -65,7 +66,6 @@ export default function ProfileScreen() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const api = useApi();
   const insets = useSafeAreaInsets();
-  const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
   const [player, setPlayer] = useState<Player | null>(null);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [referral, setReferral] = useState<ReferralStats | null>(null);

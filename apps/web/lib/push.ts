@@ -5,7 +5,7 @@ function initVapid() {
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
   if (!pub || !priv) return false;
-  webpush.setVapidDetails('mailto:admin@hyperbolic-loyalty.vercel.app', pub, priv);
+  webpush.setVapidDetails(process.env.VAPID_CONTACT ?? 'mailto:admin@playerpass.gg', pub, priv);
   return true;
 }
 

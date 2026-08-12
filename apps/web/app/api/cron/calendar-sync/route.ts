@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: 'No stores with calendar URLs configured', synced: 0 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hyperbolic-loyalty.vercel.app';
+  const baseUrl = getAppUrl();
   const results: { store: string; synced?: number; error?: string }[] = [];
 
   for (const store of stores) {

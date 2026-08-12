@@ -29,7 +29,7 @@ export default function KioskPage() {
   const [activeEvent, setActiveEvent] = useState<ActiveEvent | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [nfcEnabled, setNfcEnabled] = useState(false);
-  const [origin, setOrigin] = useState('https://hyperbolic-loyalty.vercel.app');
+  const [origin, setOrigin] = useState('');
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const processingRef = useRef(false);
 

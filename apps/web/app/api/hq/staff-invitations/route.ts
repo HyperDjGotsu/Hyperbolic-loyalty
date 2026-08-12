@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
+import { getAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -113,8 +114,7 @@ export async function POST(request: Request) {
       throw insertErr;
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hyperbolic-loyalty.vercel.app';
-    const acceptUrl = `${appUrl}/staff/accept-invite?token=${rawToken}`;
+    const acceptUrl = `${getAppUrl()}/staff/accept-invite?token=${rawToken}`;
     const roleLabel = role === 'store_manager' ? 'Store Manager' : 'Store Staff';
     const storeName = store.name;
 

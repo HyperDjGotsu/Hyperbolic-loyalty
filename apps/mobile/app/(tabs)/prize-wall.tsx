@@ -14,10 +14,10 @@ import { useAuth } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 import { C } from '@/lib/theme';
+import { API_BASE } from '@/lib/config';
 
 const FREE_TIER_GATE = 720;
 const TRADE_EMPORIUM_ID = '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d';
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
 
 type PlayerTier = 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
 

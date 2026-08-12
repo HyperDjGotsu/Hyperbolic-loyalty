@@ -7,11 +7,11 @@ import { Platform } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { tokenCache } from '@/lib/auth';
 import { registerForPushNotifications } from '@/lib/push';
+import { API_BASE } from '@/lib/config';
 
 SplashScreen.preventAutoHideAsync();
 
 const PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
 
 const PUSH_TOKEN_KEY = 'expo_push_token';
 

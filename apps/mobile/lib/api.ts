@@ -1,6 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'https://hyperbolic-loyalty.vercel.app';
+import { API_BASE } from '@/lib/config';
 
 export function useApi() {
   const { getToken } = useAuth();

@@ -18,8 +18,17 @@ const isPublicRoute = createRouteMatcher([
   '/api/events/(.*)/checkin(.*)',
 ]);
 
+// authorizedParties is intentionally omitted.
+//
+// Clerk's `authorizedParties` checks the `azp` JWT claim, which is set to
+// Clerk's own frontend API URL — not the app's domain. In @clerk/clerk-expo
+// (mobile), `azp` is the Clerk FAPI URL (e.g. clerk.accounts.dev), which
+// differs from the web origin. Adding authorizedParties here would require
+// whitelisting that internal URL, is brittle across environments, and adds
+// no real security since JWT signatures already cryptographically prevent
+// cross-instance token reuse. Single-tenant, single-Clerk-instance apps do
+// not benefit from this setting.
 export default clerkMiddleware(async (auth, req) => {
-  // If it's a protected route and user isn't signed in, redirect to sign-in
   if (isProtectedRoute(req)) {
     await auth.protect();
   }

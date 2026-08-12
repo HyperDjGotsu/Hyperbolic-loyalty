@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +60,7 @@ export async function GET() {
 
     return NextResponse.json({
       referralCode,
-      shareUrl: `https://hyperbolic-loyalty.vercel.app/onboarding?ref=${referralCode}`,
+      shareUrl: `${getAppUrl()}/onboarding?ref=${referralCode}`,
       stats: {
         totalReferred: referralCount || 0,
         attendedFirstEvent: attendedCount || 0,
