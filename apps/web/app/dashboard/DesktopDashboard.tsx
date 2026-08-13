@@ -576,6 +576,7 @@ export default function DesktopDashboard() {
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
   const [friendActivity, setFriendActivity] = useState<any[]>([]);
+  const [shopHighlights, setShopHighlights] = useState<any[]>([]);
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -787,6 +788,13 @@ export default function DesktopDashboard() {
     fetch('/api/friends-activity')
       .then(r => r.ok ? r.json() : { activity: [] })
       .then(d => setFriendActivity(d.activity || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/shop')
+      .then(r => r.ok ? r.json() : { items: [] })
+      .then(d => setShopHighlights((d.items || []).filter((i: any) => !i.isDefault).slice(0, 4)))
       .catch(() => {});
   }, []);
 
@@ -1319,19 +1327,31 @@ export default function DesktopDashboard() {
               </div>
 
               {/* Friends Activity */}
-              {friendActivity.length > 0 && (
-                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
-                  <div className="flex justify-between items-center mb-5">
-                    <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                      👥 Friends Activity
-                    </h3>
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                    👥 Friends Activity
+                  </h3>
+                  <button
+                    onClick={() => router.push('/dashboard/community')}
+                    className="text-accent text-sm hover:underline"
+                  >
+                    Community →
+                  </button>
+                </div>
+                {friendActivity.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
+                    <div className="text-3xl">👥</div>
+                    <div className="text-sm font-medium text-secondary">No friend activity yet</div>
+                    <div className="text-xs text-tertiary">Add friends to see what they&apos;re up to</div>
                     <button
                       onClick={() => router.push('/dashboard/community')}
-                      className="text-accent text-sm hover:underline"
+                      className="mt-2 text-xs text-accent border border-accent/30 px-3 py-1.5 rounded-lg hover:bg-accent/10 transition-colors"
                     >
-                      Community →
+                      Find players →
                     </button>
                   </div>
+                ) : (
                   <div className="space-y-3">
                     {friendActivity.map((item: any, i: number) => (
                       <div key={i} className="flex items-start gap-3 p-3 bg-elevated border border-border-token rounded-xl">
@@ -1345,9 +1365,39 @@ export default function DesktopDashboard() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+
+            {/* Prize Wall Footer */}
+            {shopHighlights.length > 0 && (
+              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 mt-6 transition-all hover:border-border-strong">
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                    🛍️ Prize Wall
+                  </h3>
+                  <button
+                    onClick={() => router.push('/dashboard/shop')}
+                    className="text-accent text-sm hover:underline"
+                  >
+                    Visit Prize Wall →
+                  </button>
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {shopHighlights.map((item: any) => (
+                    <button
+                      key={item.id}
+                      onClick={() => router.push('/dashboard/shop')}
+                      className="bg-elevated border border-border-token rounded-xl p-3 text-center hover:border-accent/40 transition-colors"
+                    >
+                      <div className="text-3xl mb-2">{item.assetData?.emoji || '🎁'}</div>
+                      <div className="text-xs font-medium truncate">{item.name}</div>
+                      <div className="text-[10px] text-accent mt-1">{item.price.toLocaleString()} {storeConfig.currency_name}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         </main>
       </div>
