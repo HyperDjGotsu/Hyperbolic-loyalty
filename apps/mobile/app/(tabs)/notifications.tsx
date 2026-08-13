@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Alert,
@@ -78,11 +78,17 @@ export default function AlertsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [error, setError] = useState(false);
+  const storeIdRef = useRef<string | null>(null);
 
   async function load() {
     setError(false);
     try {
-      const data = await api.get<{ notifications: Notification[] }>('/api/notifications');
+      if (!storeIdRef.current) {
+        const player = await api.get<{ homeStore?: { id: string } | null }>('/api/player/by-clerk');
+        storeIdRef.current = player.homeStore?.id ?? null;
+      }
+      const storeParam = storeIdRef.current ? `?store_id=${storeIdRef.current}` : '';
+      const data = await api.get<{ notifications: Notification[] }>(`/api/notifications${storeParam}`);
       const notifications = data.notifications ?? [];
       // Optimistically mark all read in local state before the API call resolves
       if (notifications.some(n => !n.is_read)) {

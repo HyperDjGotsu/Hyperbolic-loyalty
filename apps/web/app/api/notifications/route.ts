@@ -27,14 +27,20 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unread') === 'true';
     const limit = parseInt(searchParams.get('limit') || '20');
+    const storeId = searchParams.get('store_id');
 
-    // Build query
+    // Build query — include store-scoped notifications for the player's store
+    // plus network-wide notifications (store_id IS NULL)
     let query = supabaseAdmin
       .from('notifications')
-      .select('*')
+      .select('id, title, message, created_at, is_read, type, store_id')
       .eq('player_id', player.id)
       .order('created_at', { ascending: false })
       .limit(limit);
+
+    if (storeId) {
+      query = query.or(`store_id.eq.${storeId},store_id.is.null`);
+    }
 
     if (unreadOnly) {
       query = query.eq('is_read', false);
