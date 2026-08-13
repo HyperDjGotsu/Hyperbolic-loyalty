@@ -101,7 +101,7 @@ export default function OnboardingScreen() {
         action: 'link_existing',
         hypId: hypId.trim().toUpperCase(),
       });
-      router.replace('/(tabs)/index' as never);
+      router.replace('/(tabs)' as never);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to link card');
     } finally {
@@ -128,7 +128,7 @@ export default function OnboardingScreen() {
         referralCode: referralCode.trim().toUpperCase() || null,
         homeStoreId,
       });
-      router.replace('/(tabs)/index' as never);
+      router.replace('/(tabs)' as never);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to create profile');
     } finally {
