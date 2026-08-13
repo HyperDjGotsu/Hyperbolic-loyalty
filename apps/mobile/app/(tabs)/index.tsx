@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
@@ -130,6 +130,7 @@ export default function DashboardScreen() {
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const manualStoreRef = useRef<Store | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [card, setCard] = useState<CardOfDay | null>(null);
 
@@ -146,9 +147,9 @@ export default function DashboardScreen() {
       setPlayer(data);
       setHasSpunToday(!spinData.canSpin);
       setError('');
-      // Seed selectedStore only on first load — preserve user's switcher choice on refresh
-      if (data.homeStore && !selectedStore) setSelectedStore(data.homeStore as Store);
-      const storeId = (selectedStore ?? data.homeStore)?.id ?? null;
+      // Seed selectedStore only if user hasn't manually chosen a store (ref survives stale closures)
+      if (data.homeStore && !manualStoreRef.current) setSelectedStore(data.homeStore as Store);
+      const storeId = (manualStoreRef.current ?? data.homeStore)?.id ?? null;
       api.get<{ stores: Store[] }>('/api/stores')
         .then(s => setStores(s.stores ?? []))
         .catch(() => {});
@@ -572,6 +573,7 @@ export default function DashboardScreen() {
                   key={store.id}
                   style={[styles.storeOption, isSelected && styles.storeOptionSelected]}
                   onPress={() => {
+                    manualStoreRef.current = store;
                     setSelectedStore(store);
                     setShowStoreSwitcher(false);
                   }}
