@@ -9,15 +9,27 @@
       "ios": {
         "simulator": false
       },
-      "environment": "development"
+      "environment": "development",
+      "cache": {
+        "key": "dev-v1",
+        "paths": ["~/.gradle/caches", "~/.npm"]
+      }
     },
     "preview": {
       "distribution": "internal",
-      "environment": "preview"
+      "environment": "preview",
+      "cache": {
+        "key": "preview-v1",
+        "paths": ["~/.gradle/caches", "~/.npm"]
+      }
     },
     "production": {
       "autoIncrement": true,
-      "environment": "production"
+      "environment": "production",
+      "cache": {
+        "key": "prod-v1",
+        "paths": ["~/.gradle/caches", "~/.npm"]
+      }
     }
   },
   "submit": {
