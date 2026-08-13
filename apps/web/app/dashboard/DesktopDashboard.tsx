@@ -763,7 +763,11 @@ export default function DesktopDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/events?status=upcoming&limit=3')
+    const storeId = localStorage.getItem('ggc_selected_store_id');
+    const url = storeId
+      ? `/api/events?status=upcoming&limit=3&store_id=${storeId}`
+      : '/api/events?status=upcoming&limit=3';
+    fetch(url)
       .then(r => r.ok ? r.json() : { events: [] })
       .then(d => setUpcomingEvents(d.events || []))
       .catch(() => {});
