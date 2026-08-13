@@ -43,10 +43,25 @@ export default function EventsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<'store' | 'network'>('store');
+  const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
 
-  async function loadEvents() {
+  async function loadHomeStore() {
     try {
-      const path = tab === 'network' ? '/api/events?network=true' : '/api/events';
+      const data = await api.get<{ homeStore?: { id: string } | null }>('/api/player/by-clerk');
+      setHomeStoreId(data.homeStore?.id ?? null);
+    } catch { /* non-critical */ }
+  }
+
+  async function loadEvents(storeId: string | null = homeStoreId) {
+    try {
+      let path: string;
+      if (tab === 'network') {
+        path = '/api/events?network=true';
+      } else if (storeId) {
+        path = `/api/events?store_id=${storeId}`;
+      } else {
+        path = '/api/events';
+      }
       const data = await api.get<{ events: Event[] }>(path);
       setEvents(data.events ?? []);
     } catch {
@@ -57,11 +72,15 @@ export default function EventsScreen() {
     }
   }
 
-  useEffect(() => { loadEvents(); }, [tab]);
+  useEffect(() => {
+    loadHomeStore().then(() => loadEvents());
+  }, []);
+
+  useEffect(() => { loadEvents(); }, [tab, homeStoreId]);
 
   function onRefresh() {
     setRefreshing(true);
-    loadEvents();
+    void loadEvents();
   }
 
   return (

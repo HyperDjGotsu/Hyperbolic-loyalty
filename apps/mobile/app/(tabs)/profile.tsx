@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE } from '@/lib/config';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -92,7 +93,7 @@ export default function ProfileScreen() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useFocusEffect(useCallback(() => { void load(); }, []));
 
   async function togglePref(key: keyof NotifPrefs, value: boolean) {
     const updated = { ...prefs, [key]: value };

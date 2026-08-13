@@ -241,8 +241,8 @@ export default function DashboardScreen() {
     >
       {/* Header block */}
       <View style={[styles.headerBlock, { paddingTop: insets.top + 16 }]}>
-        <Text style={styles.logoText}>GSHC</Text>
-        <Text style={styles.logoSub}>— PLAYER PASS —</Text>
+        <Text style={styles.logoText}>PLAYER PASS</Text>
+        <Text style={styles.logoSub}>— LEVEL UP YOUR COMMUNITY —</Text>
       </View>
 
       {/* Player card */}
@@ -364,7 +364,7 @@ export default function DashboardScreen() {
         {/* Two-column stats */}
         <View style={styles.passStatsRow}>
           <View style={styles.passStatCol}>
-            <Text style={styles.passStatLabel}>LIFETIME XP</Text>
+            <Text style={styles.passStatLabel}>GUILD POINTS</Text>
             <Text style={styles.passXpValue}>{player.xp.toLocaleString()}</Text>
             <Text style={styles.passStatNote}>total earned</Text>
           </View>

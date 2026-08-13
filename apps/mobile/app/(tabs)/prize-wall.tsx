@@ -127,7 +127,7 @@ export default function PrizeWallScreen() {
       if (res.status === 403) {
         const err = data as { gateRequired?: number };
         const gate = err.gateRequired ?? FREE_TIER_GATE;
-        setRedeemError(`Prize Wall locked until ${gate} lifetime XP.`);
+        setRedeemError(`Prize Wall locked until ${gate} Guild Points.`);
         return;
       }
       if (!res.ok || !('claimCode' in data)) {
@@ -264,12 +264,12 @@ function BalanceBar({ passStatus, error }: { passStatus: PassStatus | null; erro
           {passStatus.prizePoints.toLocaleString()} Prize Points
         </Text>
       </View>
-      <Text style={styles.lifetimeXpText}>Lifetime XP: {passStatus.lifetimeXp.toLocaleString()}</Text>
+      <Text style={styles.lifetimeXpText}>Guild Points: {passStatus.lifetimeXp.toLocaleString()}</Text>
 
       {gateLocked && (
         <View style={styles.gateSection}>
           <View style={styles.gateLabelRow}>
-            <Text style={styles.gateLabel}>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} lifetime XP</Text>
+            <Text style={styles.gateLabel}>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} Guild Points</Text>
             <Text style={styles.gateCount}>{passStatus.lifetimeXp} / {FREE_TIER_GATE}</Text>
           </View>
           <View style={styles.gateTrack}>
