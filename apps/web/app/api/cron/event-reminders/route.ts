@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
     const { data: events } = await supabaseAdmin
       .from('events')
-      .select('id, name, scheduled_at, game_id')
+      .select('id, name, scheduled_at, game_id, store_id')
       .gte('scheduled_at', windowStart.toISOString())
       .lte('scheduled_at', windowEnd.toISOString());
 
@@ -25,17 +25,12 @@ export async function GET(request: Request) {
 
     const { data: players } = await supabaseAdmin
       .from('players')
-      .select('id, notification_preferences');
+      .select('id, notification_preferences, home_store_id');
 
     if (!players?.length) return NextResponse.json({ sent: 0 });
 
     const DEFAULT_PREFS = { daily_rewards: true, events: true, leaderboard: true, social: true, store: true };
-    const eligible = players.filter((p) => {
-      const prefs = { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Record<string, boolean>) };
-      return prefs.events;
-    });
 
-    const eligibleIds = eligible.map((p) => p.id);
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
 
     let sent = 0;
@@ -46,8 +41,18 @@ export async function GET(request: Request) {
       const mins = minutesUntil % 60;
       const timeLabel = hours > 0 ? `${hours}h${mins > 0 ? ` ${mins}m` : ''}` : `${mins}m`;
 
+      // Only notify players whose home store matches this event's store
+      const eligible = players.filter((p) => {
+        if (event.store_id && p.home_store_id !== event.store_id) return false;
+        const prefs = { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Record<string, boolean>) };
+        return prefs.events;
+      });
+
+      const eligibleIds = eligible.map((p) => p.id);
+
       const rows = eligible.map((p) => ({
         player_id: p.id,
+        store_id: event.store_id ?? null,
         type: 'event_reminder',
         title: `⏰ ${event.name} starts in ${timeLabel}`,
         message: `Head to the store — doors open soon!`,
