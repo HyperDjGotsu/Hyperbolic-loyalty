@@ -121,7 +121,7 @@ function CheckInContent() {
       <div className="card-elevated rounded-2xl px-10 py-6 flex flex-col items-center gap-2">
         <div>
           <span className="xp-number text-5xl">+{xpAwarded}</span>
-          <span className="text-secondary text-2xl ml-2">Lifetime XP</span>
+          <span className="text-secondary text-2xl ml-2">Guild Points</span>
         </div>
         {prizePointsAwarded > 0 && (
           <div>

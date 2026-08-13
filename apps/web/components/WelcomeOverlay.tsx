@@ -13,10 +13,10 @@ interface StoreConfig {
 }
 
 const DEFAULT_CONFIG: StoreConfig = {
-  store_name: 'GSHC Player Pass',
+  store_name: 'Player Pass',
   shop_title: 'Prize Wall',
   shop_description: 'avatar cosmetics — backgrounds, frames, badges, and more',
-  player_id_prefix: 'HYP',
+  player_id_prefix: '',
   currency_name: 'Points',
 };
 
@@ -44,8 +44,8 @@ function buildSlides(cfg: StoreConfig) {
     },
     {
       emoji: '🪪',
-      title: 'Your Player ID',
-      body: `Your ${cfg.player_id_prefix}-ID is your identity at the store. Staff use it to check you in, award XP, and look you up. Find it any time on your Profile.`,
+      title: 'Your Player Profile',
+      body: 'Your Player Pass profile travels with you across the network. Your progress, Guild Points, and rewards are always there. Staff and check-in kiosks can identify you through your profile QR — no code to remember.',
       cta: "Let's go",
     },
   ] as Array<{ emoji: string; title: string; body: string; cta?: string }>;

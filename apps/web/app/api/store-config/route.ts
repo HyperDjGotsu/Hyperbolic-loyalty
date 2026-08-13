@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 const DEFAULTS = {
   currency_name: 'Points',
   currency_icon: '⭐',
-  store_name: 'GSHC Player Pass',
+  store_name: 'Player Pass',
   shop_title: 'Prize Wall',
   shop_description: 'avatar cosmetics',
   player_id_prefix: 'HYP',

@@ -331,7 +331,7 @@ export default function MobileDashboard() {
       const xpValue = gxp.game_xp || gxp.total_xp || gxp.xp || 0;
       return {
         id: slug,
-        name: slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        name: slug === 'general' ? 'Guild Points' : slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
         xpName: gxp.xpName || (slug === 'one_piece' ? 'Berries' : 'XP'),
         icon: config.icon,
         xp: xpValue,
@@ -415,9 +415,8 @@ export default function MobileDashboard() {
         {/* Logo */}
         <div className="text-center mb-4">
           <div className="text-2xl font-black text-secondary font-display">
-            GSHC
+            Player Pass
           </div>
-          <div className="text-orange-400 text-xs font-bold tracking-widest">— PLAYER PASS —</div>
         </div>
 
         {/* Player Card */}
@@ -433,7 +432,6 @@ export default function MobileDashboard() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h1 className="text-primary text-lg font-bold">{playerData?.displayName || 'Player'}</h1>
-                  <span className="text-secondary text-xs font-mono">{playerData?.hyp_id}</span>
                 </div>
                 <div className="text-secondary text-sm">Level {level} Player</div>
                 <div className="mt-2">

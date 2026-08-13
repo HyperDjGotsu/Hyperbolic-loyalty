@@ -5,7 +5,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-base text-primary flex flex-col">
       {/* Nav */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-border-token">
-        <span className="font-display text-xl font-bold tracking-tight">GSHC Player Pass</span>
+        <span className="font-display text-xl font-bold tracking-tight">Player Pass</span>
         <div className="flex items-center gap-3">
           <Link
             href="/sign-in"
@@ -24,19 +24,13 @@ export default function LandingPage() {
 
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 max-w-2xl mx-auto w-full">
-        <div className="inline-flex items-center gap-2 bg-accent/10 text-accent text-xs font-medium px-3 py-1 rounded-full mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-          Now live at Games of Martinez
-        </div>
-
         <h1 className="font-display text-5xl font-black leading-tight mb-6">
-          Earn XP.<br />
-          Climb the ranks.<br />
-          Own your game.
+          Level up your<br />
+          community.
         </h1>
 
         <p className="text-lg text-secondary max-w-md mb-10">
-          GSHC Player Pass rewards you for every event, match, and purchase. Track your progress, compete on the leaderboard, and unlock rewards.
+          Player Pass rewards players for every event, match, and purchase. Track progress, compete on the leaderboard, and unlock rewards.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs mx-auto">

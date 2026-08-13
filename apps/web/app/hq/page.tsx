@@ -1421,7 +1421,7 @@ export default function HQPage() {
     const emperor = monthlyRankings[0];
     const monthLabel = getMonthOptions().find(m => m.value === selectedMonth)?.label || selectedMonth;
     
-    if (!confirm(`Crown ${emperor.display_name} as the ${monthLabel} Emperor?\n\nMonthly XP Earned: ${emperor.berries.toLocaleString()} Berries\n\n(Total bounty will be calculated from their lifetime XP)`)) {
+    if (!confirm(`Crown ${emperor.display_name} as the ${monthLabel} Emperor?\n\nMonthly XP Earned: ${emperor.berries.toLocaleString()} Berries\n\n(Total bounty will be calculated from their Guild Points)`)) {
       return;
     }
     

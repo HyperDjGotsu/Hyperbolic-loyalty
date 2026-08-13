@@ -572,7 +572,7 @@ export default function DesktopDashboard() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
-  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'GSHC Player Pass' });
+  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Player Pass' });
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -776,8 +776,8 @@ export default function DesktopDashboard() {
       const stats = gameStats[slug]; // Get stats for this game
       return {
         id: slug,
-        name: slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        xpName: gxp.xpName || (slug === 'one_piece' ? 'Berries' : 'XP'),
+        name: slug === 'general' ? 'Guild Points' : slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        xpName: gxp.xpName || (slug === 'one_piece' ? 'Berries' : slug === 'general' ? 'Guild Points' : 'XP'),
         icon: config.icon,
         xp: xpValue,
         level: Math.floor(xpValue / 50) + 1,
@@ -947,9 +947,6 @@ export default function DesktopDashboard() {
                 <h2 className="text-[32px] font-extrabold mb-0.5">
                   {playerData?.displayName || 'Player'}
                 </h2>
-                <div className="text-accent text-sm font-medium mb-4 tracking-wide">
-                  {playerData?.hyp_id}
-                </div>
 
                 {/* XP Bar */}
                 <div className="max-w-[380px]">

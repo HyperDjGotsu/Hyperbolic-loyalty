@@ -50,7 +50,7 @@ export function PlayerPassCard({
 
       <div className="grid grid-cols-2 divide-x divide-white/10">
         <div className="px-5 py-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Lifetime XP</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Guild Points</p>
           <p className="mt-1 text-2xl font-bold tabular-nums text-white">{formatValue(lifetimeXp)}</p>
           <p className="mt-1 text-xs text-zinc-500">Never decreases · Rank currency</p>
         </div>
