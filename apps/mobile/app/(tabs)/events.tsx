@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Pressable,
@@ -44,32 +44,47 @@ export default function EventsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<'store' | 'network'>('store');
   const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
+  const [storeError, setStoreError] = useState(false);
+  const requestSeq = useRef(0);
 
   async function loadAll(currentTab: 'store' | 'network', cachedStoreId: string | null) {
+    const seq = ++requestSeq.current;
+
     let storeId = cachedStoreId;
-    if (!storeId) {
+    if (!storeId && currentTab === 'store') {
       try {
         const data = await api.get<{ homeStore?: { id: string } | null }>('/api/player/by-clerk');
         storeId = data.homeStore?.id ?? null;
         if (storeId) setHomeStoreId(storeId);
       } catch { /* non-critical */ }
     }
-    try {
-      let path: string;
-      if (currentTab === 'network') {
-        path = '/api/events?network=true';
-      } else if (storeId) {
-        path = `/api/events?store_id=${storeId}`;
-      } else {
-        path = '/api/events';
-      }
-      const data = await api.get<{ events: Event[] }>(path);
-      setEvents(data.events ?? []);
-    } catch {
+
+    // If store tab but no store resolved, show error instead of all-stores fallback
+    if (currentTab === 'store' && !storeId) {
+      if (seq !== requestSeq.current) return;
+      setStoreError(true);
       setEvents([]);
-    } finally {
       setLoading(false);
       setRefreshing(false);
+      return;
+    }
+    setStoreError(false);
+
+    try {
+      const path = currentTab === 'network'
+        ? '/api/events?network=true'
+        : `/api/events?store_id=${storeId}`;
+      const data = await api.get<{ events: Event[] }>(path);
+      if (seq !== requestSeq.current) return; // stale response — discard
+      setEvents(data.events ?? []);
+    } catch {
+      if (seq !== requestSeq.current) return;
+      setEvents([]);
+    } finally {
+      if (seq === requestSeq.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }
 
@@ -90,7 +105,7 @@ export default function EventsScreen() {
           <Pressable
             key={t}
             style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
-            onPress={() => { setLoading(true); setTab(t); }}
+            onPress={() => { if (t !== tab) { setLoading(true); setTab(t); } }}
           >
             <Text style={[styles.tabBtnText, tab === t && styles.tabBtnTextActive]}>
               {t === 'store' ? 'My Store' : 'Network'}
@@ -101,6 +116,10 @@ export default function EventsScreen() {
 
       {loading ? (
         <LoadingView style={styles.center} />
+      ) : storeError ? (
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>Could not load store events</Text>
+        </View>
       ) : events.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emptyText}>No upcoming events</Text>
