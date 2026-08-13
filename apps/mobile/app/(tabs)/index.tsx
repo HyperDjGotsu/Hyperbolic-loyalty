@@ -146,9 +146,9 @@ export default function DashboardScreen() {
       setPlayer(data);
       setHasSpunToday(!spinData.canSpin);
       setError('');
-      // Seed selectedStore from homeStore; load full store list for switcher
-      if (data.homeStore) setSelectedStore(data.homeStore as Store);
-      const storeId = data.homeStore?.id ?? null;
+      // Seed selectedStore only on first load — preserve user's switcher choice on refresh
+      if (data.homeStore && !selectedStore) setSelectedStore(data.homeStore as Store);
+      const storeId = (selectedStore ?? data.homeStore)?.id ?? null;
       api.get<{ stores: Store[] }>('/api/stores')
         .then(s => setStores(s.stores ?? []))
         .catch(() => {});
