@@ -910,7 +910,7 @@ export default function DesktopDashboard() {
             {[
               { icon: '🏠', path: '/dashboard-desktop', active: true },
               { icon: '📅', path: '/dashboard/events' },
-              { icon: '🛒', path: '/dashboard/shop' },
+              { icon: '🛒', path: '/dashboard/prize-wall' },
               { icon: '👥', path: '/dashboard/community' },
               { icon: '👤', path: '/dashboard/profile' },
             ].map((item, i) => (
@@ -1329,7 +1329,7 @@ export default function DesktopDashboard() {
                     🛒 Store Highlights
                   </h3>
                   <button 
-                    onClick={() => router.push('/dashboard/shop')}
+                    onClick={() => router.push('/dashboard/prize-wall')}
                     className="text-cyan-400 text-sm hover:underline"
                   >
                     Visit Shop →

@@ -97,7 +97,7 @@ export default function NotificationsPage() {
     } else if (notif.type === 'friend_request') {
       router.push('/dashboard/community');
     } else if (notif.type === 'store') {
-      router.push('/dashboard/shop');
+      router.push('/dashboard/prize-wall');
     } else if (notif.type === 'leaderboard') {
       router.push('/dashboard/community');
     } else {
