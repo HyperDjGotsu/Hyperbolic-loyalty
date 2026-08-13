@@ -85,6 +85,7 @@ export default function MobileDashboard() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
+  const [shopHighlights, setShopHighlights] = useState<any[]>([]);
   const [passStatus, setPassStatus] = useState<{
     tier: 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
     lifetimeXp: number;
@@ -279,6 +280,13 @@ export default function MobileDashboard() {
       }
     }
     loadStoreConfig();
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/shop')
+      .then(r => r.ok ? r.json() : { items: [] })
+      .then(d => setShopHighlights((d.items || []).filter((i: any) => !i.isDefault).slice(0, 4)))
+      .catch(() => {});
   }, []);
 
   // Load banners — re-runs when selected store changes so carousel reflects current context:
@@ -649,6 +657,35 @@ export default function MobileDashboard() {
           </div>
         )}
       </div>
+
+      {/* Prize Wall Footer */}
+      {shopHighlights.length > 0 && (
+        <div className="mx-4 mt-6 mb-6">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-bold text-primary flex items-center gap-2">
+              <span className="text-xl">🛍️</span> Prize Wall
+            </h2>
+            <a href="/dashboard/shop" className="text-accent text-sm">
+              Visit →
+            </a>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {shopHighlights.map((item: any) => (
+              <a
+                key={item.id}
+                href="/dashboard/shop"
+                className="bg-elevated border border-border-token rounded-xl p-3 text-center hover:border-accent/40 transition-colors block"
+              >
+                <div className="text-3xl mb-2">{item.assetData?.emoji || '🎁'}</div>
+                <div className="text-xs font-medium truncate">{item.name}</div>
+                <div className="text-[10px] text-accent mt-1">
+                  {item.price.toLocaleString()} {storeConfig.currency_name}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );
