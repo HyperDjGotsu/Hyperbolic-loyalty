@@ -574,7 +574,7 @@ export default function DesktopDashboard() {
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Player Pass' });
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-  const [shopHighlights, setShopHighlights] = useState<any[]>([]);
+  const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -774,12 +774,11 @@ export default function DesktopDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/shop')
-      .then(r => r.ok ? r.json() : { items: [] })
-      .then(d => {
-        const nonDefault = (d.items || []).filter((i: any) => !i.isDefault);
-        setShopHighlights(nonDefault.slice(0, 3));
-      })
+    const storeId = localStorage.getItem('ggc_selected_store_id');
+    const url = storeId ? `/api/store-updates?store_id=${storeId}` : '/api/store-updates';
+    fetch(url)
+      .then(r => r.ok ? r.json() : { updates: [] })
+      .then(d => setStoreUpdates(d.updates || []))
       .catch(() => {});
   }, []);
 
@@ -1284,33 +1283,28 @@ export default function DesktopDashboard() {
 
             {/* Second Row */}
             <div className="mt-6">
-              {/* Prize Wall Highlights */}
+              {/* Store Updates */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    🛍️ Prize Wall
-                  </h3>
-                  <button
-                    onClick={() => router.push('/dashboard/shop')}
-                    className="text-accent text-sm hover:underline"
-                  >
-                    Visit Prize Wall →
-                  </button>
-                </div>
-                {shopHighlights.length === 0 ? (
-                  <div className="text-sm text-secondary text-center py-4">No items available right now.</div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    {shopHighlights.map((item: any) => (
-                      <button
-                        key={item.id}
-                        onClick={() => router.push('/dashboard/shop')}
-                        className="bg-elevated border border-border-token rounded-xl p-3 text-center hover:border-accent/40 transition-colors"
+                <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
+                  📡 Store Updates
+                </h3>
+                {storeUpdates.length === 0 ? null : (
+                  <div className="space-y-3">
+                    {storeUpdates.map((update: any, i: number) => (
+                      <div
+                        key={i}
+                        className={`flex items-start gap-3 p-3 bg-elevated border border-border-token rounded-xl ${update.link ? 'cursor-pointer hover:border-accent/40 transition-colors' : ''}`}
+                        onClick={() => update.link && router.push(update.link)}
                       >
-                        <div className="text-3xl mb-2">{item.assetData?.emoji || '🎁'}</div>
-                        <div className="text-xs font-medium truncate">{item.name}</div>
-                        <div className="text-[10px] text-accent mt-1">{item.price.toLocaleString()} {storeConfig.currency_name}</div>
-                      </button>
+                        <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                          {update.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] text-accent uppercase tracking-wide font-medium mb-0.5">{update.label}</div>
+                          <div className="text-sm font-medium leading-snug">{update.headline}</div>
+                          {update.subtext && <div className="text-xs text-secondary mt-0.5">{update.subtext}</div>}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
