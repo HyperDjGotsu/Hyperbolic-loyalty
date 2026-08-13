@@ -45,17 +45,18 @@ export default function EventsScreen() {
   const [tab, setTab] = useState<'store' | 'network'>('store');
   const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
 
-  async function loadHomeStore() {
-    try {
-      const data = await api.get<{ homeStore?: { id: string } | null }>('/api/player/by-clerk');
-      setHomeStoreId(data.homeStore?.id ?? null);
-    } catch { /* non-critical */ }
-  }
-
-  async function loadEvents(storeId: string | null = homeStoreId) {
+  async function loadAll(currentTab: 'store' | 'network', cachedStoreId: string | null) {
+    let storeId = cachedStoreId;
+    if (!storeId) {
+      try {
+        const data = await api.get<{ homeStore?: { id: string } | null }>('/api/player/by-clerk');
+        storeId = data.homeStore?.id ?? null;
+        if (storeId) setHomeStoreId(storeId);
+      } catch { /* non-critical */ }
+    }
     try {
       let path: string;
-      if (tab === 'network') {
+      if (currentTab === 'network') {
         path = '/api/events?network=true';
       } else if (storeId) {
         path = `/api/events?store_id=${storeId}`;
@@ -73,14 +74,13 @@ export default function EventsScreen() {
   }
 
   useEffect(() => {
-    loadHomeStore().then(() => loadEvents());
-  }, []);
-
-  useEffect(() => { loadEvents(); }, [tab, homeStoreId]);
+    setLoading(true);
+    void loadAll(tab, homeStoreId);
+  }, [tab]);
 
   function onRefresh() {
     setRefreshing(true);
-    void loadEvents();
+    void loadAll(tab, homeStoreId);
   }
 
   return (
