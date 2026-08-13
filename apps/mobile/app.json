@@ -98,6 +98,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-updates",
       [
         "expo-splash-screen",
         {
@@ -126,6 +127,15 @@
         }
       ]
     ],
+    "updates": {
+      "url": "https://u.expo.dev/653d26a7-01ba-4269-8023-020ebe03c4a9",
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "experiments": {
       "typedRoutes": true
     },
