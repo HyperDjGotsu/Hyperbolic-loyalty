@@ -573,6 +573,8 @@ export default function DesktopDashboard() {
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Player Pass' });
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [shopHighlights, setShopHighlights] = useState<any[]>([]);
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -758,6 +760,23 @@ export default function DesktopDashboard() {
       }
     }
     loadBanners();
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/events?status=upcoming&limit=3')
+      .then(r => r.ok ? r.json() : { events: [] })
+      .then(d => setUpcomingEvents(d.events || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/shop')
+      .then(r => r.ok ? r.json() : { items: [] })
+      .then(d => {
+        const nonDefault = (d.items || []).filter((i: any) => !i.isDefault);
+        setShopHighlights(nonDefault.slice(0, 3));
+      })
+      .catch(() => {});
   }, []);
 
   // Derive display values
@@ -1218,13 +1237,13 @@ export default function DesktopDashboard() {
                 </div>
               </div>
 
-              {/* Upcoming Events You're Interested In */}
+              {/* Upcoming Events */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    📅 Your Upcoming Events
+                    📅 Upcoming Events
                   </h3>
-                  <button 
+                  <button
                     onClick={() => router.push('/dashboard/events')}
                     className="text-accent text-sm hover:underline"
                   >
@@ -1232,106 +1251,65 @@ export default function DesktopDashboard() {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {/* Placeholder events - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-                    <div className="w-10 h-10 bg-[#E63946]/20 rounded-lg flex items-center justify-center text-lg">🏴‍☠️</div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">One Piece Local</div>
-                      <div className="text-xs text-secondary">Saturday, 1:00 PM</div>
+                  {upcomingEvents.length === 0 ? (
+                    <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl opacity-60">
+                      <div className="w-10 h-10 bg-elevated/50 rounded-lg flex items-center justify-center text-lg">📅</div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-secondary">No upcoming events</div>
+                        <div className="text-xs text-tertiary">Check back soon</div>
+                      </div>
                     </div>
-                    <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">Registered</div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-                    <div className="w-10 h-10 bg-[#8B5CF6]/20 rounded-lg flex items-center justify-center text-lg">✨</div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">MTG Commander Night</div>
-                      <div className="text-xs text-secondary">Friday, 6:00 PM</div>
+                  ) : upcomingEvents.map((event: any) => (
+                    <div key={event.id} className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                        style={{ backgroundColor: `${event.game?.color || '#3b82f6'}20` }}
+                      >
+                        {event.game?.icon || '🎮'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{event.name}</div>
+                        <div className="text-xs text-secondary">{event.date}, {event.time}</div>
+                      </div>
+                      {event.isFree && <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded flex-shrink-0">Free</div>}
                     </div>
-                    <div className="text-xs text-accent bg-accent/10 px-2 py-1 rounded">Interested</div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-surface rounded-xl opacity-60">
-                    <div className="w-10 h-10 bg-elevated/50 rounded-lg flex items-center justify-center text-lg">📅</div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-secondary">No more events this week</div>
-                      <div className="text-xs text-tertiary">Check the calendar for more</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
 
             {/* Second Row */}
-            <div className="grid grid-cols-2 gap-6 mt-6">
-              {/* Store Highlights */}
+            <div className="mt-6">
+              {/* Prize Wall Highlights */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    🛒 Store Highlights
+                    🛍️ Prize Wall
                   </h3>
-                  <button 
+                  <button
                     onClick={() => router.push('/dashboard/shop')}
                     className="text-accent text-sm hover:underline"
                   >
-                    Visit Shop →
+                    Visit Prize Wall →
                   </button>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {/* Placeholder items - will be replaced with real data */}
-                  <div className="bg-elevated border border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
-                    <div className="text-3xl mb-2">🎨</div>
-                    <div className="text-xs font-medium">Custom Avatar Frame</div>
-                    <div className="text-[10px] text-accent mt-1">500 XP</div>
+                {shopHighlights.length === 0 ? (
+                  <div className="text-sm text-secondary text-center py-4">No items available right now.</div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3">
+                    {shopHighlights.map((item: any) => (
+                      <button
+                        key={item.id}
+                        onClick={() => router.push('/dashboard/shop')}
+                        className="bg-elevated border border-border-token rounded-xl p-3 text-center hover:border-accent/40 transition-colors"
+                      >
+                        <div className="text-3xl mb-2">{item.assetData?.emoji || '🎁'}</div>
+                        <div className="text-xs font-medium truncate">{item.name}</div>
+                        <div className="text-[10px] text-accent mt-1">{item.price.toLocaleString()} {storeConfig.currency_name}</div>
+                      </button>
+                    ))}
                   </div>
-                  <div className="bg-elevated border border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
-                    <div className="text-3xl mb-2">✨</div>
-                    <div className="text-xs font-medium">Name Glow Effect</div>
-                    <div className="text-[10px] text-accent mt-1">750 XP</div>
-                  </div>
-                  <div className="bg-elevated border border-border-token rounded-xl p-3 text-center cursor-pointer hover:bg-elevated transition-colors">
-                    <div className="text-3xl mb-2">🏆</div>
-                    <div className="text-xs font-medium">Trophy Badge</div>
-                    <div className="text-[10px] text-accent mt-1">1,000 XP</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Friends Activity */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    👥 Friends Activity
-                  </h3>
-                  <button 
-                    onClick={() => router.push('/dashboard/community')}
-                    className="text-accent text-sm hover:underline"
-                  >
-                    View All →
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {/* Placeholder friends - will be replaced with real data */}
-                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-                    <div className="w-8 h-8 bg-accent/20 border border-accent/30 rounded-full flex items-center justify-center text-xs font-bold text-accent">JM</div>
-                    <div className="flex-1">
-                      <div className="text-sm"><span className="font-medium">JMoney</span> <span className="text-secondary">ranked up to</span> <span className="text-yellow-400">Warlord</span></div>
-                      <div className="text-[10px] text-secondary">2 hours ago</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-xs font-bold">SK</div>
-                    <div className="flex-1">
-                      <div className="text-sm"><span className="font-medium">SailorKing</span> <span className="text-secondary">won</span> <span className="text-green-400">3 matches</span> <span className="text-secondary">in One Piece</span></div>
-                      <div className="text-[10px] text-secondary">5 hours ago</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-xs font-bold">TC</div>
-                    <div className="flex-1">
-                      <div className="text-sm"><span className="font-medium">TCGMaster</span> <span className="text-secondary">earned</span> <span className="text-accent">+150 XP</span></div>
-                      <div className="text-[10px] text-secondary">Yesterday</div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </section>
