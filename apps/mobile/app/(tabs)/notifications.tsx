@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  Alert,
   ActivityIndicator,
   Pressable,
   RefreshControl,
@@ -55,7 +56,10 @@ function typeIcon(type: string): FeatherIconName {
 }
 
 function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return '';
+  const diff = Date.now() - date.getTime();
+  if (diff < 0) return 'just now';
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;
@@ -63,7 +67,7 @@ function timeAgo(iso: string) {
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default function AlertsScreen() {
@@ -73,18 +77,22 @@ export default function AlertsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [error, setError] = useState(false);
 
   async function load() {
+    setError(false);
     try {
       const data = await api.get<{ notifications: Notification[] }>('/api/notifications');
       const notifications = data.notifications ?? [];
-      setItems(notifications);
-      // Mark all as read after fetching (fire-and-forget)
+      // Optimistically mark all read in local state before the API call resolves
       if (notifications.some(n => !n.is_read)) {
+        setItems(notifications.map(n => ({ ...n, is_read: true })));
         api.post('/api/notifications', { markAll: true }).catch(() => {});
+      } else {
+        setItems(notifications);
       }
     } catch {
-      setItems([]);
+      setError(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -93,15 +101,28 @@ export default function AlertsScreen() {
 
   async function clearAll() {
     if (clearing || items.length === 0) return;
-    setClearing(true);
-    try {
-      await api.delete('/api/notifications');
-      setItems([]);
-    } catch {
-      // silently fail — list stays as-is
-    } finally {
-      setClearing(false);
-    }
+    Alert.alert(
+      'Clear All Alerts',
+      'This will permanently delete all your alerts.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            setClearing(true);
+            try {
+              await api.delete('/api/notifications');
+              setItems([]);
+            } catch {
+              Alert.alert('Error', 'Could not clear alerts. Try again.');
+            } finally {
+              setClearing(false);
+            }
+          },
+        },
+      ]
+    );
   }
 
   useEffect(() => { load(); }, []);
@@ -137,7 +158,18 @@ export default function AlertsScreen() {
           </Pressable>
         )}
       </View>
-      {items.length === 0 ? (
+      {error ? (
+        <View style={styles.empty}>
+          <Feather name="bell" size={48} color="#7a7060" />
+          <Text style={styles.emptyText}>Could not load alerts</Text>
+          <Pressable
+            style={styles.retryBtn}
+            onPress={() => { setLoading(true); void load(); }}
+          >
+            <Text style={styles.retryText}>Retry</Text>
+          </Pressable>
+        </View>
+      ) : items.length === 0 ? (
         <View style={styles.empty}>
           <Feather name="bell" size={48} color="#7a7060" />
           <Text style={styles.emptyText}>No alerts yet</Text>
@@ -189,6 +221,15 @@ const styles = StyleSheet.create({
   clearBtnText: { color: '#ef4444', fontSize: 12, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 80, gap: 12 },
   emptyText: { color: '#7a7060', fontSize: 15 },
+  retryBtn: {
+    backgroundColor: 'rgba(196,181,253,0.12)',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(196,181,253,0.25)',
+  },
+  retryText: { color: '#c4b5fd', fontWeight: '700', fontSize: 13 },
   row: {
     flexDirection: 'row',
     padding: 16,
