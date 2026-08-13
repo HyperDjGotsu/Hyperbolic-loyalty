@@ -234,12 +234,12 @@ export default function ProfileScreen() {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Text style={[styles.statVal, styles.xpVal]}>{player.xp.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>XP</Text>
+            <Text style={styles.statLabel}>Guild Points</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
             <Text style={[styles.statVal, styles.pointsVal]}>{player.gems}</Text>
-            <Text style={styles.statLabel}>Points</Text>
+            <Text style={styles.statLabel}>Prize Points</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>

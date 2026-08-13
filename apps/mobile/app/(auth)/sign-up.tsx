@@ -60,7 +60,7 @@ export default function SignUpScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
-        <Text style={styles.logo}>GSHC Player Pass</Text>
+        <Text style={styles.logo}>PLAYER PASS</Text>
         <Text style={styles.subtitle}>
           {pendingVerification ? 'Check your email' : 'Create Account'}
         </Text>

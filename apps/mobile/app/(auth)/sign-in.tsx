@@ -44,8 +44,8 @@ export default function SignInScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.inner}>
-        <Text style={styles.logo}>GSHC</Text>
-        <Text style={styles.logoSub}>— PLAYER PASS —</Text>
+        <Text style={styles.logo}>PLAYER PASS</Text>
+        <Text style={styles.logoSub}>— LEVEL UP YOUR COMMUNITY —</Text>
 
         <TextInput
           style={styles.input}

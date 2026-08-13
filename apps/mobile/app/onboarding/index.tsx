@@ -150,7 +150,7 @@ export default function OnboardingScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.brand}>PLAYER PASS</Text>
-          <Text style={styles.brandSub}>— GSHC NETWORK —</Text>
+          <Text style={styles.brandSub}>— LEVEL UP YOUR COMMUNITY —</Text>
         </View>
 
         {/* Error banner */}
