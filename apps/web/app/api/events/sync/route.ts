@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireNetworkAdmin } from '@/lib/auth-helpers';
 import { fetchICalSafe } from '@/lib/ical-fetch';
-import { notifyAllPlayers } from '@/lib/notifications';
+import { notifyStorePlayers } from '@/lib/notifications';
 
 
 export const dynamic = 'force-dynamic';
@@ -682,7 +682,8 @@ export async function POST(request: Request) {
             // Announce new event to all members (non-blocking)
             const eventDate = new Date(event.scheduled_at);
             const dateLabel = eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' });
-            notifyAllPlayers(
+            notifyStorePlayers(
+              storeId,
               'event_announced',
               `📣 New event: ${event.name}`,
               `${dateLabel} — check Events for details and mark yourself as interested.`,
