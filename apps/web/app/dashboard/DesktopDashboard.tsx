@@ -575,6 +575,7 @@ export default function DesktopDashboard() {
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Player Pass' });
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
+  const [friendActivity, setFriendActivity] = useState<any[]>([]);
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -779,6 +780,13 @@ export default function DesktopDashboard() {
     fetch(url)
       .then(r => r.ok ? r.json() : { updates: [] })
       .then(d => setStoreUpdates(d.updates || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/friends-activity')
+      .then(r => r.ok ? r.json() : { activity: [] })
+      .then(d => setFriendActivity(d.activity || []))
       .catch(() => {});
   }, []);
 
@@ -1282,7 +1290,7 @@ export default function DesktopDashboard() {
             </div>
 
             {/* Second Row */}
-            <div className="mt-6">
+            <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Updates */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
@@ -1309,6 +1317,36 @@ export default function DesktopDashboard() {
                   </div>
                 )}
               </div>
+
+              {/* Friends Activity */}
+              {friendActivity.length > 0 && (
+                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                  <div className="flex justify-between items-center mb-5">
+                    <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                      👥 Friends Activity
+                    </h3>
+                    <button
+                      onClick={() => router.push('/dashboard/community')}
+                      className="text-accent text-sm hover:underline"
+                    >
+                      Community →
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {friendActivity.map((item: any, i: number) => (
+                      <div key={i} className="flex items-start gap-3 p-3 bg-elevated border border-border-token rounded-xl">
+                        <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center text-base flex-shrink-0">
+                          {item.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm leading-snug">{item.headline}</div>
+                          {item.subtext && <div className="text-xs text-secondary mt-0.5">{item.subtext}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         </main>
