@@ -75,6 +75,7 @@ export default function ProfileScreen() {
   const [error, setError] = useState(false);
 
   async function load() {
+    setError(false);
     try {
       const [playerData, prefData] = await Promise.all([
         api.get<Player>('/api/player/by-clerk'),
@@ -82,7 +83,6 @@ export default function ProfileScreen() {
       ]);
       setPlayer(playerData);
       setPrefs({ ...DEFAULT_PREFS, ...prefData.prefs });
-      // Referral stats — non-critical, load separately
       api.get<ReferralStats>('/api/referral/stats')
         .then(data => setReferral(data))
         .catch(() => {});
@@ -295,9 +295,10 @@ export default function ProfileScreen() {
             <Text style={styles.prefLabel}>{label}</Text>
             <Switch
               value={!!prefs[key]}
-              onValueChange={v => togglePref(key, v)}
+              onValueChange={v => { if (!saving) void togglePref(key, v); }}
               trackColor={{ false: 'rgba(242,239,232,0.08)', true: '#c4b5fd' }}
               thumbColor="#fff"
+              disabled={saving}
             />
           </View>
         ))}

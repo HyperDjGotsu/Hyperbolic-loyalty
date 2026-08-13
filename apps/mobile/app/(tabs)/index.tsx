@@ -179,9 +179,15 @@ export default function DashboardScreen() {
         setSpinResult(`+${data.prize.xp} XP — ${data.prize.label}`);
         setTimeout(() => setSpinResult(null), 3000);
       }
-    } catch {
-      // already spun or error — mark as spun to avoid double-tap
-      setHasSpunToday(true);
+    } catch (err: unknown) {
+      // Lock button only on confirmed 409 (already spun); leave retryable for network errors
+      const isAlreadySpun = err instanceof Error && err.message.includes('→ 409');
+      if (isAlreadySpun) {
+        setHasSpunToday(true);
+      } else {
+        setSpinResult('Try again');
+        setTimeout(() => setSpinResult(null), 2000);
+      }
     } finally {
       setIsSpinning(false);
     }

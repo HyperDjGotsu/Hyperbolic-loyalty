@@ -119,6 +119,12 @@ export default function EventsScreen() {
       ) : storeError ? (
         <View style={styles.center}>
           <Text style={styles.emptyText}>Could not load store events</Text>
+          <Pressable
+            style={styles.retryBtn}
+            onPress={() => { setLoading(true); setStoreError(false); void loadAll(tab, null); }}
+          >
+            <Text style={styles.retryText}>Retry</Text>
+          </Pressable>
         </View>
       ) : events.length === 0 ? (
         <View style={styles.center}>
@@ -195,5 +201,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   xpBadgeText: { color: '#c4b5fd', fontSize: 11, fontWeight: '700' },
-  emptyText: { color: '#7a7060', fontSize: 15 },
+  emptyText: { color: '#7a7060', fontSize: 15, marginBottom: 16 },
+  retryBtn: {
+    backgroundColor: 'rgba(196,181,253,0.12)',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(196,181,253,0.25)',
+  },
+  retryText: { color: '#c4b5fd', fontWeight: '700', fontSize: 13 },
 });
