@@ -1,8 +1,9 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
+  Image,
   ImageBackground,
   Modal,
   Pressable,
@@ -63,6 +64,13 @@ type CardOfDay = {
   rarity: string;
   price: number | null;
   priceChange7d: number | null;
+};
+
+type PrizePreviewItem = {
+  id: string;
+  name: string;
+  image_url: string | null;
+  xp_cost: number;
 };
 
 type StoreUpdate = {
@@ -562,6 +570,11 @@ export default function DashboardScreen() {
         </View>
       )}
 
+      {/* ── Prize Wall Preview ──────────────────────────────────────────── */}
+      {(selectedStore ?? player.homeStore) && (
+        <PrizeWallPreview storeId={(selectedStore ?? player.homeStore)!.id} onPress={() => router.push('/prize-wall' as never)} />
+      )}
+
       {/* ── Upcoming Events ─────────────────────────────────────────────── */}
       <View style={styles.sectionWrap}>
         <Text style={styles.sectionLabel}>UPCOMING EVENTS</Text>
@@ -706,6 +719,85 @@ export default function DashboardScreen() {
     </ScrollView>
   );
 }
+
+function PrizeWallPreview({ storeId, onPress }: { storeId: string; onPress: () => void }) {
+  const api = useApi();
+  const [items, setItems] = useState<PrizePreviewItem[]>([]);
+
+  useEffect(() => {
+    api.get<{ items: PrizePreviewItem[] }>(`/api/prize-wall?storeId=${encodeURIComponent(storeId)}`)
+      .then(d => setItems((d.items ?? []).slice(0, 4)))
+      .catch(() => {});
+  }, [storeId]);
+
+  if (items.length === 0) return null;
+
+  return (
+    <View style={styles.sectionWrap}>
+      <View style={prizeStyles.header}>
+        <Text style={styles.sectionLabel}>PRIZE WALL</Text>
+        <Pressable onPress={onPress}>
+          <Text style={prizeStyles.link}>View all →</Text>
+        </Pressable>
+      </View>
+      <View style={prizeStyles.grid}>
+        {items.map(item => (
+          <Pressable key={item.id} style={prizeStyles.card} onPress={onPress}>
+            <View style={prizeStyles.imageBox}>
+              {item.image_url ? (
+                <PrizeImage uri={item.image_url} />
+              ) : (
+                <View style={prizeStyles.imagePlaceholder}>
+                  <Feather name="gift" size={22} color="#7a7060" />
+                </View>
+              )}
+            </View>
+            <Text style={prizeStyles.name} numberOfLines={2}>{item.name}</Text>
+            <Text style={prizeStyles.cost}>{item.xp_cost.toLocaleString()} pts</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function PrizeImage({ uri }: { uri: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <View style={prizeStyles.imagePlaceholder}>
+        <Feather name="gift" size={22} color="#7a7060" />
+      </View>
+    );
+  }
+  return (
+    <Image
+      source={{ uri }}
+      style={prizeStyles.image}
+      resizeMode="cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+const prizeStyles = StyleSheet.create({
+  header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  link:             { fontSize: 12, color: '#c4b5fd' },
+  grid:             { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  card: {
+    width: '47%',
+    backgroundColor: '#1a1810',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(242,239,232,0.08)',
+    overflow: 'hidden',
+  },
+  imageBox:         { aspectRatio: 1, backgroundColor: '#242018' },
+  image:            { width: '100%', height: '100%' },
+  imagePlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  name:             { fontSize: 11, fontWeight: '600', color: '#f2efe8', padding: 8, paddingBottom: 2 },
+  cost:             { fontSize: 10, color: '#c4b5fd', paddingHorizontal: 8, paddingBottom: 8 },
+});
 
 const styles = StyleSheet.create({
   container: {
