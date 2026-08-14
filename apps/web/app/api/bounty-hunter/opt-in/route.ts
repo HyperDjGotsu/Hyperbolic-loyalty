@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { enforceRateLimitPermissive } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,10 +18,14 @@ function getCurrentMonthKey(): string {
 export async function POST() {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    // 5 opt-in toggles per hour — DB enforces one active opt-in per month
+    const rl = await enforceRateLimitPermissive(`bh-optin:${userId}`, 3600, 5);
+    if (rl) return rl;
 
     // Get current player
     const { data: player } = await supabaseAdmin

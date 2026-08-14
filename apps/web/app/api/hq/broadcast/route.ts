@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { enforceRateLimitPermissive } from '@/lib/rate-limit';
 import { notifyStorePlayers, notifyAllPlayers } from '@/lib/notifications';
 import { sendExpoPushToStorePlayers, sendExpoPushToAllPlayers } from '@/lib/expo-push';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -13,6 +14,10 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // 10 broadcast messages per 5 minutes per staff user — push notification spam protection
+    const rl = await enforceRateLimitPermissive(`hq-broadcast:${userId}`, 300, 10);
+    if (rl) return rl;
 
     const body = await request.json() as {
       title: string;

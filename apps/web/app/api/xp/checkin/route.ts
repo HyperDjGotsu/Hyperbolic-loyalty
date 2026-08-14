@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 
 export const dynamic = 'force-dynamic';
@@ -49,10 +50,14 @@ export async function GET() {
 export async function POST() {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    // 15 attempts per 5 minutes — accounts for NFC retries; DB enforces 1 check-in/day
+    const rl = await enforceRateLimitStrict(`checkin:${userId}`, 300, 15);
+    if (rl) return rl;
 
     // Get player by clerk_user_id
     const { data: player, error: playerError } = await supabaseAdmin

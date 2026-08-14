@@ -1941,6 +1941,24 @@ export type Database = {
           },
         ]
       }
+      rate_limit_buckets: {
+        Row: {
+          bucket_key: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          bucket_key: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          bucket_key?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       seasons: {
         Row: {
           created_at: string
@@ -2483,6 +2501,18 @@ export type Database = {
         }
         Returns: string
       }
+      check_rate_limit: {
+        Args: {
+          p_key: string
+          p_max_requests: number
+          p_window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          reset_at: string
+        }[]
+      }
       cleanup_player_data: { Args: { p_player_id: string }; Returns: undefined }
       create_prize_redemption: {
         Args: { p_item_id: string; p_player_id: string; p_store_id: string }
@@ -2666,3 +2696,4 @@ export const Constants = {
     },
   },
 } as const
+

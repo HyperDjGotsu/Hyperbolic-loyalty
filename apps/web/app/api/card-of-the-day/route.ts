@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import https from 'https';
 import dns from 'dns';
 import { lookup } from 'dns/promises';
+import { enforceRateLimitPermissive, getClientIp } from '@/lib/rate-limit';
 
 // Force dynamic rendering (not static)
 export const dynamic = 'force-dynamic';
@@ -198,11 +199,15 @@ async function httpsGet(url: string, apiKey: string): Promise<{ status: number; 
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // 20 requests per hour per IP — JustTCG quota is 1,000/month; cache handles normal load
+    const rl = await enforceRateLimitPermissive(`cotd:${getClientIp(request)}`, 3600, 20);
+    if (rl) return rl;
+
     // Get today's date in Pacific timezone
-    const today = new Date().toLocaleDateString('en-CA', { 
-      timeZone: 'America/Los_Angeles' 
+    const today = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'America/Los_Angeles',
     });
 
     // Check cache first

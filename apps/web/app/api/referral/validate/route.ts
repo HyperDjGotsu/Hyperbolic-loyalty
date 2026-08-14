@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { enforceRateLimitPermissive, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 // GET - Validate a referral code
 export async function GET(request: Request) {
   try {
+    // 20 validations per hour per IP — pre-auth endpoint, protect referral enumeration
+    const rl = await enforceRateLimitPermissive(`referral-v:${getClientIp(request)}`, 3600, 20);
+    if (rl) return rl;
+
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
 

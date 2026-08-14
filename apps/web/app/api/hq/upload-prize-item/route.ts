@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireNetworkAdmin, requireStoreManager } from '@/lib/auth-helpers';
+import { enforceRateLimitPermissive } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,10 @@ export async function POST(request: Request) {
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    // 20 uploads per 5 minutes per staff user
+    const rl = await enforceRateLimitPermissive(`hq-upload:${staffCtx.clerkUserId}`, 300, 20);
+    if (rl) return rl;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });

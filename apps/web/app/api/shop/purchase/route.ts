@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 
 export const dynamic = 'force-dynamic';
@@ -8,10 +9,14 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    // 5 attempts per minute — optimistic lock in DB is the authoritative guard
+    const rl = await enforceRateLimitStrict(`purchase:${userId}`, 60, 5);
+    if (rl) return rl;
 
     const body = await request.json();
     const { itemId } = body;

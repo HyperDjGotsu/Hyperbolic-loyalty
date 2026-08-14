@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { enforceRateLimitPermissive } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -115,11 +116,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Must be logged in to vote' }, { status: 401 });
     }
-    
+
+    // 5 votes per minute; DB unique constraint enforces 1 actual vote/day
+    const rl = await enforceRateLimitPermissive(`cotd-vote:${userId}`, 60, 5);
+    if (rl) return rl;
+
     const body = await request.json();
     const { poolCardId } = body;
     

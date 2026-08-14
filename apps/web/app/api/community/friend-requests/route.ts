@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
+import { enforceRateLimitPermissive } from '@/lib/rate-limit';
 
 
 export const dynamic = 'force-dynamic';
@@ -102,10 +103,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    // 10 friend requests per hour — prevents notification spam
+    const rl = await enforceRateLimitPermissive(`friend-req:${userId}`, 3600, 10);
+    if (rl) return rl;
 
     const body = await request.json();
     const { targetPlayerId } = body; // This is the player_id or internal UUID

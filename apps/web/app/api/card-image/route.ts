@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { enforceRateLimitPermissive, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,10 @@ const ONE_PIECE_FORMATS = (cardNumber: string) => [
 ];
 
 export async function GET(request: Request) {
+  // 30 proxied image requests per minute per IP
+  const rl = await enforceRateLimitPermissive(`card-img:${getClientIp(request)}`, 60, 30);
+  if (rl) return rl;
+
   const { searchParams } = new URL(request.url);
   const game = searchParams.get('game');
   const cardNumber = searchParams.get('cardNumber');

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { enforceRateLimitPermissive, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,10 @@ function generateReferralCode(playerId: string): string {
 
 export async function POST(request: Request) {
   try {
+    // Rate limit by IP before auth — protects account creation from spam/enumeration
+    const rl = await enforceRateLimitPermissive(`player-link:${getClientIp(request)}`, 3600, 10);
+    if (rl) return rl;
+
     const { userId } = await auth();
 
     if (!userId) {

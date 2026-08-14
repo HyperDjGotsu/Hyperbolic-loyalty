@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
+import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +87,10 @@ export async function POST(_request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+    // 10 attempts per 5 minutes — DB unique constraint enforces 1 actual spin/day
+    const rl = await enforceRateLimitStrict(`spin:${userId}`, 300, 10);
+    if (rl) return rl;
 
     const playerId = await getPlayerId(userId);
     if (!playerId) return NextResponse.json({ error: 'Player not found' }, { status: 404 });

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 import type { Database } from '@/types/database.types';
 import { createNotification } from '@/lib/notifications';
+import { enforceRateLimitStrict } from '@/lib/rate-limit';
 import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
@@ -175,6 +176,11 @@ export async function POST(request: Request) {
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    // 60 XP awards per 5 minutes per staff user — allows rapid event check-ins
+    // while limiting a compromised account's XP farming throughput
+    const rl = await enforceRateLimitStrict(`hq-xp:${staffCtx.clerkUserId}`, 300, 60);
+    if (rl) return rl;
 
     // Get the staff member's players record for awarded_by
     const { data: staffCheck } = await supabaseAdmin

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,10 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    // 5 attempts per minute — atomic RPC is the authoritative deduction guard
+    const rl = await enforceRateLimitStrict(`redeem:${userId}`, 60, 5);
+    if (rl) return rl;
 
     const { itemId, storeId } = await request.json() as { itemId: string; storeId?: string };
 
