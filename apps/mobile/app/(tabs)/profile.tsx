@@ -337,7 +337,9 @@ export default function ProfileScreen() {
       const asset = result.assets[0];
       const jwt = await getToken();
       const fileRes = await fetch(asset.uri);
-      const blob = await fileRes.blob();
+      const rawBlob = await fileRes.blob();
+      const mimeType = asset.mimeType ?? 'image/jpeg';
+      const blob = new Blob([rawBlob], { type: mimeType });
       const formData = new FormData();
       formData.append('file', blob, 'avatar.jpg');
 
