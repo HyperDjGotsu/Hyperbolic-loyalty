@@ -115,6 +115,7 @@ type PlayerResponse = {
   homeStore?: { id: string; name: string; city: string | null; is_flagship: boolean; color: string | null } | null;
   gameXP?: GameXP[];
   recentActivity?: ActivityEntry[];
+  avatarConfig?: { base?: string; background?: string; frame?: string; photo_url?: string | null } | null;
 };
 
 const FREE_TIER_GATE = 720; // XP required to unlock prize wall trial
@@ -326,7 +327,11 @@ export default function DashboardScreen() {
         <View style={styles.playerTopRow}>
           {/* Avatar */}
           <View style={styles.avatarOuter}>
-            <Text style={styles.avatarInitial}>{initial}</Text>
+            {player.avatarConfig?.photo_url
+              ? <Image source={{ uri: player.avatarConfig.photo_url }} style={styles.avatarPhoto} />
+              : player.avatarConfig?.base
+                ? <Text style={styles.avatarEmoji}>{player.avatarConfig.base}</Text>
+                : <Text style={styles.avatarInitial}>{initial}</Text>}
             {/* Level badge */}
             <View style={styles.levelBadge}>
               <Text style={styles.levelBadgeText}>{level}</Text>
@@ -905,6 +910,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#c4b5fd',
   },
+  avatarPhoto: { width: 56, height: 56, borderRadius: 28 },
+  avatarEmoji: { fontSize: 28 },
   levelBadge: {
     position: 'absolute',
     bottom: 0,
