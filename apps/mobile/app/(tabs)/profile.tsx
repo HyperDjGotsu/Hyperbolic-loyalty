@@ -1,5 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE } from '@/lib/config';
+import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -7,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -314,6 +316,70 @@ export default function ProfileScreen() {
     } catch { Alert.alert('Could not save', 'Please try again.'); } finally { setModalSaving(false); }
   }
 
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  async function pickAndUploadPhoto() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Allow access to your photo library to upload an avatar.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    setPhotoUploading(true);
+    try {
+      const asset = result.assets[0];
+      const jwt = await getToken();
+      const formData = new FormData();
+      formData.append('file', {
+        uri: asset.uri,
+        type: asset.mimeType ?? 'image/jpeg',
+        name: 'avatar.jpg',
+      } as unknown as Blob);
+
+      const res = await fetch(`${API_BASE}/api/player/avatar-photo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${jwt}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        Alert.alert('Upload failed', err.error ?? 'Please try again.');
+        return;
+      }
+
+      const { photo_url } = await res.json() as { photo_url: string };
+      setAvatarDraft(d => d ? { ...d, photo_url, base: d.base ?? '😎' } : d);
+    } catch {
+      Alert.alert('Upload failed', 'Could not upload photo. Please try again.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  async function removePhoto() {
+    setPhotoUploading(true);
+    try {
+      const jwt = await getToken();
+      await fetch(`${API_BASE}/api/player/avatar-photo`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      setAvatarDraft(d => d ? { ...d, photo_url: null } : d);
+    } catch {
+      Alert.alert('Error', 'Could not remove photo.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
   function openAvatar() {
     if (!player?.avatarConfig) return;
     setAvatarDraft(player.avatarConfig); setAvatarTab('base'); setAvatarOpen(true);
@@ -377,7 +443,9 @@ export default function ProfileScreen() {
       {/* Player card */}
       <View style={styles.card}>
         <View style={[styles.avatar, { backgroundColor: avatarBg, borderColor: avatarFrameColor }]}>
-          <Text style={styles.avatarText}>{avatarEmoji}</Text>
+          {player.avatarConfig?.photo_url
+            ? <Image source={{ uri: player.avatarConfig.photo_url }} style={styles.avatarPhoto} />
+            : <Text style={styles.avatarText}>{avatarEmoji}</Text>}
         </View>
         <Text style={styles.name}>{player.displayName}</Text>
         <Text style={styles.hypId}>{player.hyp_id}</Text>
@@ -525,12 +593,53 @@ export default function ProfileScreen() {
             <View style={[styles.avatarPreview, {
               backgroundColor: avatarAsset('background', avatarDraft.background)?.color ?? avatarDraft.background ?? '#29241d',
               borderColor: FRAME_COLORS[avatarAsset('frame', avatarDraft.frame)?.style ?? avatarDraft.frame] ?? 'transparent',
-            }]}><Text style={styles.previewEmoji}>{avatarAsset('base', avatarDraft.base)?.emoji ?? avatarDraft.base ?? '🙂'}</Text>{avatarDraft.badge && <Text style={styles.previewBadge}>{avatarAsset('badge', avatarDraft.badge)?.emoji ?? '◆'}</Text>}</View>
+            }]}>
+              {avatarDraft.photo_url
+                ? <Image source={{ uri: avatarDraft.photo_url }} style={styles.previewPhoto} />
+                : <Text style={styles.previewEmoji}>{avatarAsset('base', avatarDraft.base)?.emoji ?? avatarDraft.base ?? '🙂'}</Text>}
+              {avatarDraft.badge && <Text style={styles.previewBadge}>{avatarAsset('badge', avatarDraft.badge)?.emoji ?? '◆'}</Text>}
+            </View>
             <View style={styles.avatarTabs}>{([
               ['photo', '📷 Photo'], ['base', '😊 Base'], ['background', '🎨 BG'], ['frame', '✨ Frame'], ['badge', '🏷️ Badge'],
             ] as const).map(([tab, label]) => <Pressable key={tab} style={[styles.avatarTab, avatarTab === tab && styles.avatarTabActive]} onPress={() => setAvatarTab(tab)}><Text style={[styles.avatarTabText, avatarTab === tab && styles.editLink]}>{label}</Text></Pressable>)}</View>
             <ScrollView contentContainerStyle={styles.avatarEditorContent}>
-              {avatarTab === 'photo' && <View style={styles.emptyAvatarTab}><Text style={styles.emptyAvatarText}>Photo avatars not yet supported on mobile.</Text></View>}
+              {avatarTab === 'photo' && (
+                <View style={styles.photoTab}>
+                  {avatarDraft?.photo_url ? (
+                    <>
+                      <View style={styles.photoPreviewWrap}>
+                        <Image source={{ uri: avatarDraft.photo_url! }} style={styles.photoPreviewCircle} />
+                        <Text style={styles.photoPreviewLabel}>Photo set ✓</Text>
+                      </View>
+                      <Pressable
+                        style={[styles.photoBtn, photoUploading && styles.buttonDisabledOp]}
+                        onPress={() => void pickAndUploadPhoto()}
+                        disabled={photoUploading}
+                      >
+                        <Text style={styles.photoBtnText}>{photoUploading ? 'Uploading…' : '📷 Change Photo'}</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.photoRemoveBtn, photoUploading && styles.buttonDisabledOp]}
+                        onPress={() => void removePhoto()}
+                        disabled={photoUploading}
+                      >
+                        <Text style={styles.photoRemoveText}>Remove Photo</Text>
+                      </Pressable>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.photoHint}>Add a photo to use as your avatar</Text>
+                      <Pressable
+                        style={[styles.photoBtn, photoUploading && styles.buttonDisabledOp]}
+                        onPress={() => void pickAndUploadPhoto()}
+                        disabled={photoUploading}
+                      >
+                        <Text style={styles.photoBtnText}>{photoUploading ? 'Uploading…' : '📷 Choose from Library'}</Text>
+                      </Pressable>
+                    </>
+                  )}
+                </View>
+              )}
 
               {avatarTab === 'base' && <View style={styles.emojiGrid}>
                 {[...EMOJI_OPTIONS.map(emoji => ({ key: `default-${emoji}`, value: emoji, emoji })), ...inventory.base.filter(item => item.assetData.emoji && !EMOJI_OPTIONS.includes(item.assetData.emoji)).map(item => ({ key: item.id, value: item.id, emoji: item.assetData.emoji! }))].map(option => {
@@ -753,4 +862,28 @@ const styles = StyleSheet.create({
   frameOption: { width: '22%', minHeight: 94, borderRadius: 12, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center', padding: 6 },
   frameRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 6, backgroundColor: '#29241d' },
   frameRingEmoji: { fontSize: 24 },
+  avatarPhoto: { width: '100%', height: '100%', borderRadius: 36 },
+  previewPhoto: { width: '100%', height: '100%', borderRadius: 56 },
+  photoTab: { paddingVertical: 24, alignItems: 'center', gap: 16 },
+  photoPreviewWrap: { alignItems: 'center', gap: 10 },
+  photoPreviewCircle: { width: 112, height: 112, borderRadius: 56 },
+  photoPreviewLabel: { color: '#22c55e', fontSize: 13, fontWeight: '700' },
+  photoHint: { color: '#a89f90', fontSize: 14, textAlign: 'center' },
+  photoBtn: {
+    backgroundColor: '#c4b5fd',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+  },
+  photoBtnText: { color: '#111009', fontSize: 15, fontWeight: '700' },
+  photoRemoveBtn: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.4)',
+  },
+  photoRemoveText: { color: '#ef4444', fontSize: 14, fontWeight: '600' },
+  buttonDisabledOp: { opacity: 0.5 },
 });
