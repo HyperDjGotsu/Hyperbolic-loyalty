@@ -40,7 +40,7 @@ export default function OnboardingScreen() {
   const api = useApi();
   const router = useRouter();
 
-  const [mode, setMode] = useState<Mode>('choice');
+  const [mode, setMode] = useState<Mode>('create');
   const [step, setStep] = useState<Step>('profile');
 
   // Link existing
