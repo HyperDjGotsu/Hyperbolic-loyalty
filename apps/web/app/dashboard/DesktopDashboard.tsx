@@ -1390,11 +1390,22 @@ export default function DesktopDashboard() {
                     <button
                       key={item.id}
                       onClick={() => router.push('/dashboard/prize-wall')}
-                      className="bg-elevated border border-border-token rounded-xl p-3 text-center hover:border-accent/40 transition-colors"
+                      className="bg-elevated border border-border-token rounded-xl overflow-hidden text-left hover:border-accent/40 transition-colors"
                     >
-                      <div className="text-3xl mb-2">🎁</div>
-                      <div className="text-xs font-medium truncate">{item.name}</div>
-                      <div className="text-[10px] text-accent mt-1">{item.xp_cost.toLocaleString()} Guild Points</div>
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full aspect-square object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="w-full aspect-square flex items-center justify-center text-3xl bg-surface">🎁</div>
+                      )}
+                      <div className="p-2">
+                        <div className="text-xs font-medium truncate">{item.name}</div>
+                        <div className="text-[10px] text-accent mt-0.5">{item.xp_cost.toLocaleString()} Prize Points</div>
+                      </div>
                     </button>
                   ))}
                 </div>
