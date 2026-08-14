@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin as supabase } from '@/lib/supabase';
 
-// Force dynamic rendering (not static)
 export const dynamic = 'force-dynamic';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +16,7 @@ export async function GET(request: Request) {
     const { data: player, error: playerError } = await supabase
       .from('players')
       .select('id')
-      .eq('clerk_id', userId)
+      .eq('clerk_user_id', userId)
       .single();
 
     if (playerError || !player) {
@@ -32,7 +26,7 @@ export async function GET(request: Request) {
     // Get all games
     const { data: games, error: gamesError } = await supabase
       .from('games')
-      .select('id, name, icon, xp_name')
+      .select('id, name, icon')
       .order('name');
 
     if (gamesError) throw gamesError;
@@ -48,7 +42,8 @@ export async function GET(request: Request) {
     // Aggregate XP by game
     const xpByGame: Record<string, number> = {};
     for (const entry of xpData || []) {
-      xpByGame[entry.game_id] = (xpByGame[entry.game_id] || 0) + entry.final_xp;
+      if (!entry.game_id) continue;
+      xpByGame[entry.game_id] = (xpByGame[entry.game_id] || 0) + (entry.final_xp || 0);
     }
 
     // Build response with game stats
@@ -56,7 +51,6 @@ export async function GET(request: Request) {
       gameId: game.id,
       name: game.name,
       icon: game.icon,
-      xpName: game.xp_name,
       xp: xpByGame[game.id] || 0,
     }));
 

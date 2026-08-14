@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin as supabase } from '@/lib/supabase';
 
-// Force dynamic rendering (not static)
 export const dynamic = 'force-dynamic';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // =============================================================================
 // GET: Get today's voting pool and player's vote status
@@ -60,7 +54,7 @@ export async function GET(request: Request) {
       const { data: player } = await supabase
         .from('players')
         .select('id')
-        .eq('clerk_id', userId)
+        .eq('clerk_user_id', userId)
         .single();
       
       if (player) {
@@ -137,7 +131,7 @@ export async function POST(request: Request) {
     const { data: player, error: playerError } = await supabase
       .from('players')
       .select('id, display_name')
-      .eq('clerk_id', userId)
+      .eq('clerk_user_id', userId)
       .single();
     
     if (playerError || !player) {
@@ -185,11 +179,11 @@ export async function POST(request: Request) {
       // Changing vote - remove old vote count
       await supabase
         .from('card_of_the_day_pool')
-        .update({ votes_count: (await supabase
+        .update({ votes_count: Math.max(0, ((await supabase
           .from('card_of_the_day_pool')
           .select('votes_count')
           .eq('id', existingVote.pool_card_id)
-          .single()).data?.votes_count - 1 || 0
+          .single()).data?.votes_count ?? 1) - 1)
         })
         .eq('id', existingVote.pool_card_id);
       

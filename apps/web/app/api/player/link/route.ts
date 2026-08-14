@@ -217,25 +217,6 @@ export async function POST(request: Request) {
         console.log(`🎁 Referral bonus: +30 XP awarded to ${displayName} (referred by ${referrerName})`);
       }
 
-      if (staffInviteCode) {
-        const { data: configRow } = await supabaseAdmin
-          .from('store_config')
-          .select('staff_invite_code')
-          .eq('id', 1)
-          .maybeSingle();
-
-        if (
-          configRow?.staff_invite_code &&
-          configRow.staff_invite_code.toLowerCase() === staffInviteCode.toLowerCase()
-        ) {
-          await supabaseAdmin
-            .from('players')
-            .update({ is_staff: true })
-            .eq('id', newPlayer.id);
-          console.log(`Staff invite used for player ${displayName}`);
-        }
-      }
-
       return NextResponse.json({
         success: true,
         player_id: newPlayer.player_id,

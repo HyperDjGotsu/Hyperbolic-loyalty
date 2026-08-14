@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +32,15 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (pass_status !== undefined) updates.pass_status = pass_status;
     if (pass_expires_at !== undefined) updates.pass_expires_at = pass_expires_at;
     if (pass_started_at !== undefined) updates.pass_started_at = pass_started_at;
-    if (is_staff !== undefined) updates.is_staff = is_staff;
+
+    // is_staff changes require network admin
+    if (is_staff !== undefined) {
+      const adminCtx = await requireNetworkAdmin();
+      if (!adminCtx) {
+        return NextResponse.json({ error: 'Network admin required to change staff status' }, { status: 403 });
+      }
+      updates.is_staff = is_staff;
+    }
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });

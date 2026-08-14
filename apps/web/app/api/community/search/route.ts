@@ -27,11 +27,14 @@ export async function GET(request: Request) {
       .eq('clerk_user_id', userId)
       .single();
 
+    // Sanitize query before interpolating into PostgREST filter string
+    const safeQuery = query.replace(/[^a-zA-Z0-9 \-_]/g, '');
+
     // Search by display_name or player_id
     const { data: players, error } = await supabaseAdmin
       .from('players')
       .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config, privacy_profile_visibility, privacy_hide_from_search, privacy_allow_friend_requests')
-      .or(`display_name.ilike.%${query}%,player_id.ilike.%${query}%`)
+      .or(`display_name.ilike.%${safeQuery}%,player_id.ilike.%${safeQuery}%`)
       .neq('id', currentPlayer?.id || '')
       .limit(20);
 

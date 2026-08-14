@@ -69,15 +69,21 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Deduct gems
-    const { error: updateError } = await supabaseAdmin
+    // Deduct gems — conditional on gems not having changed since we read them (optimistic lock)
+    const { data: updated, error: updateError } = await supabaseAdmin
       .from('players')
       .update({ gems: playerGems - item.price })
-      .eq('id', player.id);
+      .eq('id', player.id)
+      .eq('gems', playerGems)
+      .select('id');
 
     if (updateError) {
       console.error('Error deducting gems:', updateError);
       return NextResponse.json({ error: 'Failed to process purchase' }, { status: 500 });
+    }
+
+    if (!updated || updated.length === 0) {
+      return NextResponse.json({ error: 'Purchase conflict — please try again' }, { status: 409 });
     }
 
     // Add to inventory

@@ -27,7 +27,11 @@ export async function GET() {
       .maybeSingle();
 
     if (error) throw error;
-    return NextResponse.json(data, {
+
+    // Strip staff_invite_code for non-network-admins
+    const response = staffCtx.isNetworkAdmin ? data : { ...data, staff_invite_code: undefined };
+
+    return NextResponse.json(response, {
       headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
     });
   } catch (err) {
@@ -47,7 +51,7 @@ export async function PUT(request: Request) {
     const { currency_name, currency_icon, store_name, shop_title, shop_description, shop_categories, player_id_prefix, staff_invite_code, network_calendar_url } = body;
 
     const sanitizedPrefix = player_id_prefix
-      ? String(player_id_prefix).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5) || 'HYP'
+      ? String(player_id_prefix).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5) || 'GGC'
       : undefined;
 
     const updates = {

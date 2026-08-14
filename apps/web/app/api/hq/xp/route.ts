@@ -194,6 +194,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Cap single XP award — network admins may exceed cap for corrections
+    const MAX_SINGLE_AWARD = 500;
+    if (!staffCtx.isNetworkAdmin && Math.abs(amount) > MAX_SINGLE_AWARD) {
+      return NextResponse.json({ error: `Single XP award cannot exceed ${MAX_SINGLE_AWARD}` }, { status: 400 });
+    }
+
     // Validate store access.
     // - storeId provided: staff must belong to that store (or be network admin).
     // - storeId absent: only network admins may award XP without a store context
@@ -210,6 +216,18 @@ export async function POST(request: Request) {
           { error: 'storeId is required for store staff' },
           { status: 400 }
         );
+      }
+    }
+
+    // Verify the target player belongs to a store this staff member can access
+    if (!staffCtx.isNetworkAdmin && storeId) {
+      const { data: targetPlayer } = await supabaseAdmin
+        .from('players')
+        .select('home_store_id')
+        .eq('id', playerId)
+        .single();
+      if (targetPlayer && targetPlayer.home_store_id && !staffCtx.allStoreIds.includes(targetPlayer.home_store_id)) {
+        return NextResponse.json({ error: 'Player does not belong to your store' }, { status: 403 });
       }
     }
 

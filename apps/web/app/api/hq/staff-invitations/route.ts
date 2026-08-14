@@ -146,7 +146,7 @@ export async function POST(request: Request) {
       console.log(`[DEV] Staff invitation accept URL for ${normalizedEmail}: ${acceptUrl}`);
     }
 
-    return NextResponse.json({ invitation, acceptUrl }, { status: 201 });
+    return NextResponse.json({ invitation }, { status: 201 });
   } catch (err) {
     console.error('staff-invitations POST error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
