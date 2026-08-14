@@ -918,12 +918,12 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      {/* Tabs - Simplified: Ranks, Friends, One Piece */}
+      {/* Tabs — One Piece tab is preserved in code but hidden until revived */}
       <div className="flex border-b border-border-token">
         {[
           { id: 'leaderboard' as const, label: '🏆 Ranks', icon: '🏆' },
           { id: 'friends' as const, label: '👥 Friends', count: friends.length, requestCount: friendRequests.length },
-          { id: 'one_piece' as const, label: '🏴‍☠️ One Piece', icon: '🏴‍☠️' },
+          // { id: 'one_piece' as const, label: '🏴‍☠️ One Piece', icon: '🏴‍☠️' },
         ].map((tab) => (
           <button
             key={tab.id}
