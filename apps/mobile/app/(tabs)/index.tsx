@@ -65,6 +65,33 @@ type CardOfDay = {
   priceChange7d: number | null;
 };
 
+type StoreUpdate = {
+  type: 'winner' | 'new_event' | 'broadcast';
+  icon: string;
+  label: string;
+  headline: string;
+  subtext?: string;
+  date: string;
+};
+
+type FriendActivity = {
+  type: 'checkin' | 'xp' | 'placement';
+  icon: string;
+  headline: string;
+  subtext?: string;
+  date: string;
+};
+
+type UpcomingEvent = {
+  id: string;
+  name: string;
+  game_id: string | null;
+  scheduled_at: string;
+  entry_fee: number | null;
+  attendance_xp: number | null;
+  status: string;
+};
+
 type PlayerResponse = {
   linked: boolean;
   id: string;
@@ -133,6 +160,9 @@ export default function DashboardScreen() {
   const manualStoreRef = useRef<Store | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [card, setCard] = useState<CardOfDay | null>(null);
+  const [storeUpdates, setStoreUpdates] = useState<StoreUpdate[]>([]);
+  const [friendActivity, setFriendActivity] = useState<FriendActivity[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
 
   async function loadPlayer() {
     try {
@@ -158,6 +188,15 @@ export default function DashboardScreen() {
         .catch(() => {});
       api.get<CardOfDay>('/api/card-of-the-day')
         .then(c => setCard(c.name ? c : null))
+        .catch(() => {});
+      api.get<{ updates: StoreUpdate[] }>(`/api/store-updates${storeId ? `?store_id=${storeId}` : ''}`)
+        .then(d => setStoreUpdates(d.updates ?? []))
+        .catch(() => {});
+      api.get<{ activity: FriendActivity[] }>('/api/friends-activity')
+        .then(d => setFriendActivity(d.activity ?? []))
+        .catch(() => {});
+      api.get<{ events: UpcomingEvent[] }>(`/api/events?status=upcoming&limit=3${storeId ? `&store_id=${storeId}` : ''}`)
+        .then(d => setUpcomingEvents(d.events ?? []))
         .catch(() => {});
     } catch {
       setError('Could not load player. Pull down to retry.');
@@ -519,6 +558,74 @@ export default function DashboardScreen() {
           })}
         </View>
       )}
+
+      {/* ── Upcoming Events ─────────────────────────────────────────────── */}
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionLabel}>UPCOMING EVENTS</Text>
+        {upcomingEvents.length === 0 ? (
+          <Text style={styles.emptyText}>No upcoming events at this store.</Text>
+        ) : (
+          upcomingEvents.map(ev => {
+            const date = new Date(ev.scheduled_at).toLocaleDateString('en-US', {
+              weekday: 'short', month: 'short', day: 'numeric',
+            });
+            const time = new Date(ev.scheduled_at).toLocaleTimeString('en-US', {
+              hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles',
+            });
+            return (
+              <View key={ev.id} style={styles.feedRow}>
+                <Text style={styles.feedIcon}>{GAME_ICONS[ev.game_id ?? ''] ?? '📅'}</Text>
+                <View style={styles.feedInfo}>
+                  <Text style={styles.feedHeadline} numberOfLines={1}>{ev.name}</Text>
+                  <Text style={styles.feedSub}>{date} · {time}</Text>
+                </View>
+                {ev.entry_fee != null && ev.entry_fee > 0 ? (
+                  <Text style={styles.feedMeta}>${ev.entry_fee}</Text>
+                ) : (
+                  <Text style={[styles.feedMeta, { color: '#22c55e' }]}>Free</Text>
+                )}
+              </View>
+            );
+          })
+        )}
+      </View>
+
+      {/* ── Store Updates ────────────────────────────────────────────────── */}
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionLabel}>STORE UPDATES</Text>
+        {storeUpdates.length === 0 ? (
+          <Text style={styles.emptyText}>No recent store activity.</Text>
+        ) : (
+          storeUpdates.map((u, i) => (
+            <View key={i} style={styles.feedRow}>
+              <Text style={styles.feedIcon}>{u.icon}</Text>
+              <View style={styles.feedInfo}>
+                <Text style={styles.feedLabel}>{u.label}</Text>
+                <Text style={styles.feedHeadline} numberOfLines={2}>{u.headline}</Text>
+                {u.subtext ? <Text style={styles.feedSub} numberOfLines={1}>{u.subtext}</Text> : null}
+              </View>
+            </View>
+          ))
+        )}
+      </View>
+
+      {/* ── Friends Activity ─────────────────────────────────────────────── */}
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionLabel}>FRIENDS ACTIVITY</Text>
+        {friendActivity.length === 0 ? (
+          <Text style={styles.emptyText}>No friends activity yet. Add friends to see what they're up to.</Text>
+        ) : (
+          friendActivity.map((a, i) => (
+            <View key={i} style={styles.feedRow}>
+              <Text style={styles.feedIcon}>{a.icon}</Text>
+              <View style={styles.feedInfo}>
+                <Text style={styles.feedHeadline} numberOfLines={2}>{a.headline}</Text>
+                {a.subtext ? <Text style={styles.feedSub} numberOfLines={1}>{a.subtext}</Text> : null}
+              </View>
+            </View>
+          ))
+        )}
+      </View>
 
       {/* ── Card of the Day ─────────────────────────────────────────────── */}
       {card && (
@@ -985,6 +1092,23 @@ const styles = StyleSheet.create({
     color: '#7a7060',
     marginBottom: 10,
   },
+
+  // Empty / feed
+  emptyText: { fontSize: 12, color: '#7a7060', fontStyle: 'italic' },
+  feedRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(242,239,232,0.06)',
+  },
+  feedIcon:     { fontSize: 20, width: 26, textAlign: 'center', paddingTop: 1 },
+  feedInfo:     { flex: 1 },
+  feedLabel:    { fontSize: 9, fontWeight: '700', color: '#7a7060', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 },
+  feedHeadline: { fontSize: 13, color: '#f2efe8', fontWeight: '600', lineHeight: 18 },
+  feedSub:      { fontSize: 11, color: '#a89f90', marginTop: 2 },
+  feedMeta:     { fontSize: 12, fontWeight: '700', color: '#a89f90', paddingTop: 2 },
 
   // Banner carousel
   bannerScroll: { gap: 10, paddingRight: 4 },
