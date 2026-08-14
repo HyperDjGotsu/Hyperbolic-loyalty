@@ -64,6 +64,7 @@ export default function PrizeWallScreen() {
   const [items, setItems] = useState<PrizeItem[]>([]);
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
 
   const [selectedItem, setSelectedItem] = useState<PrizeItem | null>(null);
   const [claimDetails, setClaimDetails] = useState<ClaimDetails | null>(null);
@@ -81,12 +82,13 @@ export default function PrizeWallScreen() {
 
   const loadCatalog = useCallback((sid: string) => {
     setCatalogLoading(true);
+    setCatalogError(false);
     apiRef.current
       .get<{ items: PrizeItem[]; subscriber_count: number }>(
         `/api/prize-wall?storeId=${encodeURIComponent(sid)}`
       )
       .then(data => { setItems(data.items ?? []); setSubscriberCount(data.subscriber_count ?? 0); })
-      .catch(() => setItems([]))
+      .catch(() => setCatalogError(true))
       .finally(() => setCatalogLoading(false));
   }, []);
 
@@ -176,6 +178,14 @@ export default function PrizeWallScreen() {
           <Feather name="map-pin" size={32} color={C.textTertiary} />
           <Text style={styles.emptyText}>No store selected. Visit a store to access the Prize Wall.</Text>
         </View>
+      ) : catalogError ? (
+        <View style={styles.emptyBox}>
+          <Feather name="alert-circle" size={32} color={C.textTertiary} />
+          <Text style={styles.emptyText}>Could not load prizes.</Text>
+          <Pressable style={styles.retryButton} onPress={() => storeId && loadCatalog(storeId)}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </Pressable>
+        </View>
       ) : items.length === 0 && !catalogLoading ? (
         <View style={styles.emptyBox}>
           <Feather name="gift" size={32} color={C.textTertiary} />
@@ -240,6 +250,7 @@ export default function PrizeWallScreen() {
 
 function ImageWithFallback({ uri, style }: { uri: string; style: ComponentProps<typeof Image>['style'] }) {
   const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [uri]);
   if (failed) {
     return (
       <View style={[style, { alignItems: 'center', justifyContent: 'center' }]}>
@@ -628,6 +639,13 @@ const styles = StyleSheet.create({
   loadingBox: { paddingVertical: 48, alignItems: 'center' },
   emptyBox: { paddingVertical: 48, alignItems: 'center', gap: 12, paddingHorizontal: 32 },
   emptyText: { color: C.textTertiary, fontSize: 14, textAlign: 'center', lineHeight: 22 },
+  retryButton: {
+    backgroundColor: C.bgElevated,
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  retryButtonText: { color: C.accent, fontSize: 13, fontWeight: '700' },
 
   // Section
   section: { marginTop: 8, paddingHorizontal: 16 },

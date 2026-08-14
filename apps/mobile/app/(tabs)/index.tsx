@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ImageBackground,
   Modal,
@@ -174,13 +175,44 @@ export default function DashboardScreen() {
   const [storeUpdates, setStoreUpdates] = useState<StoreUpdate[]>([]);
   const [friendActivity, setFriendActivity] = useState<FriendActivity[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [feedErrors, setFeedErrors] = useState<Record<string, boolean>>({});
+  const loadGeneration = useRef(0);
+
+  async function loadFeeds(storeId: string | null, generation: number) {
+    const requests = [
+      ['stores', api.get<{ stores: Store[] }>('/api/stores')],
+      ['banners', api.get<{ banners: Banner[] }>(`/api/banners${storeId ? `?store_id=${storeId}` : ''}`)],
+      ['card', api.get<CardOfDay>('/api/card-of-the-day')],
+      ['storeUpdates', api.get<{ updates: StoreUpdate[] }>(`/api/store-updates${storeId ? `?store_id=${storeId}` : ''}`)],
+      ['friendActivity', api.get<{ activity: FriendActivity[] }>('/api/friends-activity')],
+      ['upcomingEvents', api.get<{ events: UpcomingEvent[] }>(`/api/events?status=upcoming&limit=3${storeId ? `&store_id=${storeId}` : ''}`)],
+    ] as const;
+    const results = await Promise.allSettled(requests.map(([, request]) => request));
+    if (generation !== loadGeneration.current) return;
+
+    const errors: Record<string, boolean> = {};
+    results.forEach((result, index) => {
+      const key = requests[index][0];
+      if (result.status === 'rejected') { errors[key] = true; return; }
+      const value = result.value;
+      if (key === 'stores') setStores((value as { stores: Store[] }).stores ?? []);
+      if (key === 'banners') setBanners((value as { banners: Banner[] }).banners ?? []);
+      if (key === 'card') setCard((value as CardOfDay).name ? value as CardOfDay : null);
+      if (key === 'storeUpdates') setStoreUpdates((value as { updates: StoreUpdate[] }).updates ?? []);
+      if (key === 'friendActivity') setFriendActivity((value as { activity: FriendActivity[] }).activity ?? []);
+      if (key === 'upcomingEvents') setUpcomingEvents((value as { events: UpcomingEvent[] }).events ?? []);
+    });
+    setFeedErrors(errors);
+  }
 
   async function loadPlayer() {
+    const generation = ++loadGeneration.current;
     try {
       const [data, spinData] = await Promise.all([
         api.get<PlayerResponse>('/api/player/by-clerk'),
         api.get<{ canSpin: boolean }>('/api/xp/daily-spin').catch(() => ({ canSpin: true })),
       ]);
+      if (generation !== loadGeneration.current) return;
       if (!data.linked) {
         router.replace('/onboarding');
         return;
@@ -191,29 +223,15 @@ export default function DashboardScreen() {
       // Seed selectedStore only if user hasn't manually chosen a store (ref survives stale closures)
       if (data.homeStore && !manualStoreRef.current) setSelectedStore(data.homeStore as Store);
       const storeId = (manualStoreRef.current ?? data.homeStore)?.id ?? null;
-      api.get<{ stores: Store[] }>('/api/stores')
-        .then(s => setStores(s.stores ?? []))
-        .catch(() => {});
-      api.get<{ banners: Banner[] }>(`/api/banners${storeId ? `?store_id=${storeId}` : ''}`)
-        .then(b => setBanners(b.banners ?? []))
-        .catch(() => {});
-      api.get<CardOfDay>('/api/card-of-the-day')
-        .then(c => setCard(c.name ? c : null))
-        .catch(() => {});
-      api.get<{ updates: StoreUpdate[] }>(`/api/store-updates${storeId ? `?store_id=${storeId}` : ''}`)
-        .then(d => setStoreUpdates(d.updates ?? []))
-        .catch(() => {});
-      api.get<{ activity: FriendActivity[] }>('/api/friends-activity')
-        .then(d => setFriendActivity(d.activity ?? []))
-        .catch(() => {});
-      api.get<{ events: UpcomingEvent[] }>(`/api/events?status=upcoming&limit=3${storeId ? `&store_id=${storeId}` : ''}`)
-        .then(d => setUpcomingEvents(d.events ?? []))
-        .catch(() => {});
+      await loadFeeds(storeId, generation);
     } catch {
+      if (generation !== loadGeneration.current) return;
       setError('Could not load player. Pull down to retry.');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (generation === loadGeneration.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }
 
@@ -232,12 +250,11 @@ export default function DashboardScreen() {
       }
     } catch (err: unknown) {
       // Lock button only on confirmed 409 (already spun); leave retryable for network errors
-      const isAlreadySpun = err instanceof Error && err.message.includes('→ 409');
+      const isAlreadySpun = err instanceof Error && err.message.includes('already_claimed');
       if (isAlreadySpun) {
         setHasSpunToday(true);
       } else {
-        setSpinResult('Try again');
-        setTimeout(() => setSpinResult(null), 2000);
+        Alert.alert('Spin failed', 'Could not complete your daily spin. Please try again.');
       }
     } finally {
       setIsSpinning(false);
@@ -247,7 +264,8 @@ export default function DashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!player) setLoading(true);
-      loadPlayer();
+      void loadPlayer();
+      return () => { loadGeneration.current += 1; };
     }, [])
   );
 
@@ -575,11 +593,20 @@ export default function DashboardScreen() {
         <PrizeWallPreview storeId={(selectedStore ?? player.homeStore)!.id} onPress={() => router.push('/prize-wall' as never)} />
       )}
 
+      {Object.keys(feedErrors).length > 0 && (
+        <View style={styles.sectionWrap}>
+          <Text style={styles.errorText}>Some dashboard content could not be loaded.</Text>
+          <Pressable style={styles.retryBtn} onPress={onRefresh}>
+            <Text style={styles.retryText}>Retry</Text>
+          </Pressable>
+        </View>
+      )}
+
       {/* ── Upcoming Events ─────────────────────────────────────────────── */}
       <View style={styles.sectionWrap}>
         <Text style={styles.sectionLabel}>UPCOMING EVENTS</Text>
         {upcomingEvents.length === 0 ? (
-          <Text style={styles.emptyText}>No upcoming events at this store.</Text>
+          <Text style={styles.emptyText}>{feedErrors.upcomingEvents ? 'Could not load upcoming events. Pull down to retry.' : 'No upcoming events at this store.'}</Text>
         ) : (
           upcomingEvents.map(ev => (
             <View key={ev.id} style={styles.feedRow}>
@@ -600,7 +627,7 @@ export default function DashboardScreen() {
       <View style={styles.sectionWrap}>
         <Text style={styles.sectionLabel}>STORE UPDATES</Text>
         {storeUpdates.length === 0 ? (
-          <Text style={styles.emptyText}>No recent store activity.</Text>
+          <Text style={styles.emptyText}>{feedErrors.storeUpdates ? 'Could not load store updates. Pull down to retry.' : 'No recent store activity.'}</Text>
         ) : (
           storeUpdates.map((u, i) => (
             <View key={i} style={styles.feedRow}>
@@ -619,7 +646,7 @@ export default function DashboardScreen() {
       <View style={styles.sectionWrap}>
         <Text style={styles.sectionLabel}>FRIENDS ACTIVITY</Text>
         {friendActivity.length === 0 ? (
-          <Text style={styles.emptyText}>No friends activity yet. Add friends to see what they're up to.</Text>
+          <Text style={styles.emptyText}>{feedErrors.friendActivity ? 'Could not load friends activity. Pull down to retry.' : "No friends activity yet. Add friends to see what they're up to."}</Text>
         ) : (
           friendActivity.map((a, i) => (
             <View key={i} style={styles.feedRow}>
@@ -688,14 +715,12 @@ export default function DashboardScreen() {
                   onPress={() => {
                     manualStoreRef.current = store;
                     setSelectedStore(store);
+                    setBanners([]);
+                    setStoreUpdates([]);
+                    setUpcomingEvents([]);
                     setShowStoreSwitcher(false);
-                    const sid = store.id;
-                    api.get<{ banners: Banner[] }>(`/api/banners?store_id=${sid}`)
-                      .then(b => setBanners(b.banners ?? [])).catch(() => {});
-                    api.get<{ updates: StoreUpdate[] }>(`/api/store-updates?store_id=${sid}`)
-                      .then(d => setStoreUpdates(d.updates ?? [])).catch(() => {});
-                    api.get<{ events: UpcomingEvent[] }>(`/api/events?status=upcoming&limit=3&store_id=${sid}`)
-                      .then(d => setUpcomingEvents(d.events ?? [])).catch(() => {});
+                    setRefreshing(true);
+                    void loadPlayer();
                   }}
                 >
                   <View style={[styles.storeOptionDot, { backgroundColor: store.color ?? '#7a7060' }]} />

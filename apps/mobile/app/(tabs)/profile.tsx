@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE } from '@/lib/config';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -73,6 +73,10 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
+  const prefsRef = useRef(prefs);
+  const inFlightPrefs = useRef(new Set<keyof NotifPrefs>());
+
+  prefsRef.current = prefs;
 
   async function load() {
     setError(false);
@@ -96,15 +100,18 @@ export default function ProfileScreen() {
   useFocusEffect(useCallback(() => { void load(); }, []));
 
   async function togglePref(key: keyof NotifPrefs, value: boolean) {
-    const updated = { ...prefs, [key]: value };
-    setPrefs(updated);
+    if (inFlightPrefs.current.has(key)) return;
+    inFlightPrefs.current.add(key);
+    const updated = { ...prefsRef.current, [key]: value };
     setSaving(true);
     try {
-      await api.post('/api/player/notification-preferences', updated);
+      const response = await api.post<{ prefs: NotifPrefs }>('/api/player/notification-preferences', updated);
+      setPrefs({ ...DEFAULT_PREFS, ...response.prefs });
     } catch {
-      setPrefs(prefs);
+      // Keep the last server-confirmed preferences.
     } finally {
-      setSaving(false);
+      inFlightPrefs.current.delete(key);
+      setSaving(inFlightPrefs.current.size > 0);
     }
   }
 
