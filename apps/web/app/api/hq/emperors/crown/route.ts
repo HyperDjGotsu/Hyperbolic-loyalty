@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { month, monthSort, playerName, playerId, monthlyXp } = body;
-    // playerId here is HYP-XXXX format, monthlyXp is what they earned this month
+    // playerId here is the player_id (e.g. GGC-XXXX format), monthlyXp is what they earned this month
 
     if (!month || !monthSort || !playerName || !playerId || monthlyXp === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

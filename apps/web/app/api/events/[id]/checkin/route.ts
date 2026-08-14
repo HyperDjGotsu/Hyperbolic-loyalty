@@ -117,7 +117,7 @@ export async function POST(
     }
 
     // Both paths require a Clerk session.
-    // Kiosk/NFC path: staff member's session + hyp_id in body identifies the player.
+    // Kiosk/NFC path: staff member's session + player_id in body identifies the player.
     // Player phone path: session identifies the player directly.
     const { userId } = await auth();
     if (!userId) {

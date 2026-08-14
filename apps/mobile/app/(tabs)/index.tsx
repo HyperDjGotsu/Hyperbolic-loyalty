@@ -341,7 +341,7 @@ export default function DashboardScreen() {
           {/* Info column */}
           <View style={styles.infoCol}>
             <Text style={styles.displayName}>{player.displayName}</Text>
-            <Text style={styles.hypId}>{player.player_id}</Text>
+            <Text style={styles.playerId}>{player.player_id}</Text>
             <Text style={styles.levelLabel}>Level {level} Player</Text>
 
             {/* XP bar */}
@@ -936,7 +936,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#f2efe8',
   },
-  hypId: {
+  playerId: {
     fontSize: 11,
     fontFamily: 'monospace',
     color: '#a89f90',

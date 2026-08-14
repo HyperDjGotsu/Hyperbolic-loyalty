@@ -449,7 +449,7 @@ export default function ProfileScreen() {
             : <Text style={styles.avatarText}>{avatarEmoji}</Text>}
         </View>
         <Text style={styles.name}>{player.displayName}</Text>
-        <Text style={styles.hypId}>{player.player_id}</Text>
+        <Text style={styles.playerId}>{player.player_id}</Text>
         <Pressable style={styles.editAvatarBtn} onPress={openAvatar}><Text style={styles.editLink}>Edit Avatar</Text></Pressable>
         {player.homeStore ? (
           <Text style={styles.store}>📍 {player.homeStore.name}</Text>
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   editAvatarBtn: { marginTop: 7, paddingHorizontal: 10, paddingVertical: 5 },
   editLink: { color: '#c4b5fd', fontSize: 13, fontWeight: '700' },
   name: { fontSize: 22, fontWeight: '800', color: '#f2efe8' },
-  hypId: { color: '#7a7060', fontSize: 12, marginTop: 2 },
+  playerId: { color: '#7a7060', fontSize: 12, marginTop: 2 },
   store: { color: '#a89f90', fontSize: 13, marginTop: 6 },
   statsRow: { flexDirection: 'row', marginTop: 20, gap: 0, alignSelf: 'stretch' },
   stat: { flex: 1, alignItems: 'center' },

@@ -44,7 +44,7 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<Step>('profile');
 
   // Link existing
-  const [hypId, setHypId] = useState('');
+  const [playerId, setPlayerId] = useState('');
 
   // Create new — profile step
   const [displayName, setDisplayName]       = useState('');
@@ -94,12 +94,12 @@ export default function OnboardingScreen() {
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
   async function handleLinkExisting() {
-    if (!hypId.trim()) { setError('Please enter your HYP-ID'); return; }
+    if (!playerId.trim()) { setError('Please enter your Player ID'); return; }
     setLoading(true); setError('');
     try {
       await api.post('/api/player/link', {
         action: 'link_existing',
-        hypId: hypId.trim().toUpperCase(),
+        playerId: playerId.trim().toUpperCase(),
       });
       router.replace('/(tabs)' as never);
     } catch (e: unknown) {
@@ -170,19 +170,19 @@ export default function OnboardingScreen() {
 
             <Text style={styles.sectionTitle}>Link Your Card</Text>
             <Text style={styles.sectionBody}>
-              Enter the HYP-ID from your NFC card or receipt.
+              Enter the Player ID from your NFC card or receipt.
             </Text>
 
-            <Text style={styles.label}>HYP-ID</Text>
+            <Text style={styles.label}>Player ID</Text>
             <TextInput
               style={styles.input}
-              placeholder="HYP-XXXXXX"
+              placeholder="GGC-XXXXXX"
               placeholderTextColor={C.textTertiary}
               autoCapitalize="characters"
               autoCorrect={false}
               maxLength={12}
-              value={hypId}
-              onChangeText={v => setHypId(v.toUpperCase())}
+              value={playerId}
+              onChangeText={v => setPlayerId(v.toUpperCase())}
             />
 
             <Pressable
