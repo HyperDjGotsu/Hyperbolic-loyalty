@@ -1,5 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE } from '@/lib/config';
+import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -318,7 +319,49 @@ export default function ProfileScreen() {
   const [photoUploading, setPhotoUploading] = useState(false);
 
   async function pickAndUploadPhoto() {
-    Alert.alert('App update required', 'Photo upload will be available in the next app update. You can set a photo avatar on the web app in the meantime.');
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Allow access to your photo library to upload an avatar.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    setPhotoUploading(true);
+    try {
+      const asset = result.assets[0];
+      const jwt = await getToken();
+      const formData = new FormData();
+      formData.append('file', {
+        uri: asset.uri,
+        type: asset.mimeType ?? 'image/jpeg',
+        name: 'avatar.jpg',
+      } as unknown as Blob);
+
+      const res = await fetch(`${API_BASE}/api/player/avatar-photo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${jwt}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        Alert.alert('Upload failed', err.error ?? 'Please try again.');
+        return;
+      }
+
+      const { photo_url } = await res.json() as { photo_url: string };
+      setAvatarDraft(d => d ? { ...d, photo_url, base: d.base ?? '😎' } : d);
+    } catch {
+      Alert.alert('Upload failed', 'Could not upload photo. Please try again.');
+    } finally {
+      setPhotoUploading(false);
+    }
   }
 
   async function removePhoto() {
