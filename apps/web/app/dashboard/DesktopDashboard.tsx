@@ -1396,11 +1396,11 @@ export default function DesktopDashboard() {
                         <img
                           src={item.image_url}
                           alt={item.name}
-                          className="w-full aspect-square object-cover"
+                          className="w-full h-24 object-cover"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       ) : (
-                        <div className="w-full aspect-square flex items-center justify-center text-3xl bg-surface">🎁</div>
+                        <div className="w-full h-24 flex items-center justify-center text-3xl bg-surface">🎁</div>
                       )}
                       <div className="p-2">
                         <div className="text-xs font-medium truncate">{item.name}</div>
