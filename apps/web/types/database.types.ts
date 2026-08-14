@@ -2518,7 +2518,6 @@ export type Database = {
         Args: { p_item_id: string; p_player_id: string; p_store_id: string }
         Returns: Json
       }
-      get_card_of_the_day: { Args: { target_date?: string }; Returns: Json }
       get_pass_multiplier: { Args: { p_player_id: string }; Returns: number }
       get_player_multiplier: { Args: { p_player_id: string }; Returns: number }
       get_player_rank: {
