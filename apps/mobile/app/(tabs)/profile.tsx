@@ -48,6 +48,7 @@ type InventoryItem = {
 };
 
 type Inventory = Record<'base' | 'background' | 'frame' | 'badge', InventoryItem[]>;
+type AvatarTab = 'photo' | keyof Inventory;
 type Privacy = {
   profile_visibility: 'public' | 'friends' | 'private';
   show_as_anonymous: boolean;
@@ -98,6 +99,35 @@ const GAMES = [
   ['union_arena', 'Union Arena', '🛡️'], ['warhammer', 'Warhammer', '⚔️'],
 ] as const;
 
+const EMOJI_OPTIONS = [
+  '😎', '😊', '😄', '😍', '🤩', '😏', '😤', '🥳', '🤠', '👻', '🐶', '🐱',
+  '🦊', '🐺', '🦁', '🐸', '🤖', '👾', '🎭', '🧙', '🥷', '🧛', '🐉', '⚡',
+];
+
+const COLOR_OPTIONS = [
+  '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899',
+  '#b91c1c', '#c2410c', '#a16207', '#15803d', '#0f766e', '#1d4ed8', '#6d28d9', '#be185d',
+  '#7f1d1d', '#7c2d12', '#713f12', '#14532d', '#134e4a', '#1e3a8a', '#4c1d95', '#831843',
+  '#fca5a5', '#fdba74', '#fde68a', '#86efac', '#5eead4', '#93c5fd', '#c4b5fd', '#f9a8d4',
+  '#f5f5f5', '#d4d4d4', '#a3a3a3', '#737373', '#525252', '#404040', '#262626', '#171717',
+  '#1a1810', '#1c1917', '#1a1a2e', '#0f172a', '#1e1b4b', '#0c4a6e', '#14532d', '#1f2937',
+];
+
+const FRAME_OPTIONS = [
+  { style: 'none', label: 'None', color: '#555' },
+  { style: 'silver', label: 'Silver', color: '#d4d4d8' },
+  { style: 'gold', label: 'Gold', color: '#eab308' },
+  { style: 'diamond', label: 'Diamond', color: '#22d3ee' },
+  { style: 'fire', label: 'Fire', color: '#f97316' },
+  { style: 'electric', label: 'Electric', color: '#facc15' },
+  { style: 'legendary', label: 'Legendary', color: '#a855f7' },
+  { style: 'pirate', label: 'Pirate', color: '#dc2626' },
+] as const;
+
+const FRAME_COLORS: Record<string, string> = Object.fromEntries(
+  FRAME_OPTIONS.map(option => [option.style, option.style === 'none' ? 'transparent' : option.color]),
+);
+
 const EMPTY_INVENTORY: Inventory = { base: [], background: [], frame: [], badge: [] };
 const DEFAULT_PRIVACY: Privacy = {
   profile_visibility: 'public', show_as_anonymous: false, allow_friend_requests: true, hide_from_search: false,
@@ -120,7 +150,7 @@ export default function ProfileScreen() {
   const [inventory, setInventory] = useState<Inventory>(EMPTY_INVENTORY);
   const [avatarDraft, setAvatarDraft] = useState<AvatarConfig | null>(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [avatarTab, setAvatarTab] = useState<keyof Inventory>('base');
+  const [avatarTab, setAvatarTab] = useState<AvatarTab>('base');
   const [privacy, setPrivacy] = useState<Privacy>(DEFAULT_PRIVACY);
   const [privacyDraft, setPrivacyDraft] = useState<Privacy>(DEFAULT_PRIVACY);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -322,7 +352,9 @@ export default function ProfileScreen() {
   const isGrace = !isFree && player?.passStatus === 'grace_period';
   const isActive = !isFree && player?.passStatus === 'active';
   const avatarEmoji = avatarAsset('base', player?.avatarConfig?.base)?.emoji ?? player?.avatarConfig?.base ?? '🙂';
-  const avatarBg = avatarAsset('background', player?.avatarConfig?.background)?.color ?? '#29241d';
+  const avatarBg = avatarAsset('background', player?.avatarConfig?.background)?.color ?? player?.avatarConfig?.background ?? '#29241d';
+  const avatarFrameStyle = avatarAsset('frame', player?.avatarConfig?.frame)?.style ?? player?.avatarConfig?.frame ?? 'none';
+  const avatarFrameColor = FRAME_COLORS[avatarFrameStyle] ?? 'transparent';
 
   if (loading) {
     return (
@@ -344,7 +376,7 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top }}>
       {/* Player card */}
       <View style={styles.card}>
-        <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
+        <View style={[styles.avatar, { backgroundColor: avatarBg, borderColor: avatarFrameColor }]}>
           <Text style={styles.avatarText}>{avatarEmoji}</Text>
         </View>
         <Text style={styles.name}>{player.displayName}</Text>
@@ -489,7 +521,43 @@ export default function ProfileScreen() {
 
       <Modal visible={avatarOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setAvatarOpen(false)}>
         <View style={[styles.modal, { paddingTop: insets.top }]}><View style={styles.modalHeader}><Pressable onPress={() => setAvatarOpen(false)}><Text style={styles.modalAction}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Edit Avatar</Text><Pressable disabled={modalSaving} onPress={saveAvatar}><Text style={styles.modalAction}>{modalSaving ? 'Saving…' : 'Save'}</Text></Pressable></View>
-          {avatarDraft && <><View style={[styles.avatarPreview, { backgroundColor: avatarAsset('background', avatarDraft.background)?.color ?? '#29241d' }]}><Text style={styles.previewEmoji}>{avatarAsset('base', avatarDraft.base)?.emoji ?? avatarDraft.base ?? '🙂'}</Text>{avatarDraft.badge && <Text style={styles.previewBadge}>{avatarAsset('badge', avatarDraft.badge)?.emoji ?? '◆'}</Text>}</View><View style={styles.avatarTabs}>{(['base','background','frame','badge'] as const).map(tab => <Pressable key={tab} style={[styles.avatarTab, avatarTab === tab && styles.avatarTabActive]} onPress={() => setAvatarTab(tab)}><Text style={[styles.avatarTabText, avatarTab === tab && styles.editLink]}>{tab === 'background' ? 'BG' : tab[0].toUpperCase()+tab.slice(1)}</Text></Pressable>)}</View><ScrollView contentContainerStyle={styles.optionGrid}>{avatarTab === 'badge' && <Pressable style={[styles.avatarOption, avatarDraft.badge === null && styles.optionSelected]} onPress={() => setAvatarDraft(d => d ? { ...d, badge: null } : d)}><Text style={styles.optionEmoji}>∅</Text><Text style={styles.optionName}>None</Text></Pressable>}{inventory[avatarTab].map(item => <Pressable key={item.id} style={[styles.avatarOption, avatarDraft[avatarTab] === item.id && styles.optionSelected]} onPress={() => setAvatarDraft(d => d ? { ...d, [avatarTab]: item.id } : d)}><View style={[styles.assetSwatch, item.assetData.color ? { backgroundColor: item.assetData.color } : null]}><Text style={styles.optionEmoji}>{item.assetData.emoji ?? (avatarTab === 'frame' ? '◯' : '◆')}</Text></View><Text style={styles.optionName} numberOfLines={2}>{item.name}</Text></Pressable>)}</ScrollView></>}
+          {avatarDraft && <>
+            <View style={[styles.avatarPreview, {
+              backgroundColor: avatarAsset('background', avatarDraft.background)?.color ?? avatarDraft.background ?? '#29241d',
+              borderColor: FRAME_COLORS[avatarAsset('frame', avatarDraft.frame)?.style ?? avatarDraft.frame] ?? 'transparent',
+            }]}><Text style={styles.previewEmoji}>{avatarAsset('base', avatarDraft.base)?.emoji ?? avatarDraft.base ?? '🙂'}</Text>{avatarDraft.badge && <Text style={styles.previewBadge}>{avatarAsset('badge', avatarDraft.badge)?.emoji ?? '◆'}</Text>}</View>
+            <View style={styles.avatarTabs}>{([
+              ['photo', '📷 Photo'], ['base', '😊 Base'], ['background', '🎨 BG'], ['frame', '✨ Frame'], ['badge', '🏷️ Badge'],
+            ] as const).map(([tab, label]) => <Pressable key={tab} style={[styles.avatarTab, avatarTab === tab && styles.avatarTabActive]} onPress={() => setAvatarTab(tab)}><Text style={[styles.avatarTabText, avatarTab === tab && styles.editLink]}>{label}</Text></Pressable>)}</View>
+            <ScrollView contentContainerStyle={styles.avatarEditorContent}>
+              {avatarTab === 'photo' && <View style={styles.emptyAvatarTab}><Text style={styles.emptyAvatarText}>Photo avatars not yet supported on mobile.</Text></View>}
+
+              {avatarTab === 'base' && <View style={styles.emojiGrid}>
+                {[...EMOJI_OPTIONS.map(emoji => ({ key: `default-${emoji}`, value: emoji, emoji })), ...inventory.base.filter(item => item.assetData.emoji && !EMOJI_OPTIONS.includes(item.assetData.emoji)).map(item => ({ key: item.id, value: item.id, emoji: item.assetData.emoji! }))].map(option => {
+                  const selected = avatarDraft.base === option.value;
+                  return <Pressable key={option.key} style={[styles.emojiOption, selected && styles.optionSelected]} onPress={() => setAvatarDraft(d => d ? { ...d, base: option.value } : d)}><Text style={styles.emojiOptionText}>{option.emoji}</Text>{selected && <Text style={styles.selectionCheck}>✓</Text>}</Pressable>;
+                })}
+              </View>}
+
+              {avatarTab === 'background' && <>
+                <View style={[styles.colorPreviewStrip, { backgroundColor: avatarAsset('background', avatarDraft.background)?.color ?? avatarDraft.background }]}><Text style={styles.colorPreviewText}>Current background</Text></View>
+                <View style={styles.colorGrid}>{[...COLOR_OPTIONS.map(color => ({ key: `default-${color}`, value: color, color })), ...inventory.background.filter(item => item.assetData.color && !COLOR_OPTIONS.some(color => color.toLowerCase() === item.assetData.color!.toLowerCase())).map(item => ({ key: item.id, value: item.id, color: item.assetData.color! }))].map(option => {
+                  const selected = avatarDraft.background === option.value;
+                  return <Pressable accessibilityLabel={`Background ${option.color}`} key={option.key} style={[styles.colorSwatchRing, selected && styles.colorSwatchSelected]} onPress={() => setAvatarDraft(d => d ? { ...d, background: option.value } : d)}><View style={[styles.colorSwatch, { backgroundColor: option.color }]}>{selected && <Text style={styles.colorCheck}>✓</Text>}</View></Pressable>;
+                })}</View>
+              </>}
+
+              {avatarTab === 'frame' && <View style={styles.frameGrid}>{[...FRAME_OPTIONS.map(option => ({ key: `default-${option.style}`, value: option.style, label: option.label, color: option.color })), ...inventory.frame.filter(item => item.assetData.style && !FRAME_OPTIONS.some(option => option.style === item.assetData.style)).map(item => ({ key: item.id, value: item.id, label: item.name, color: item.assetData.color ?? FRAME_COLORS[item.assetData.style!] ?? '#777' }))].map(option => {
+                const selected = avatarDraft.frame === option.value;
+                return <Pressable key={option.key} style={[styles.frameOption, selected && styles.optionSelected]} onPress={() => setAvatarDraft(d => d ? { ...d, frame: option.value } : d)}><View style={[styles.frameRing, { borderColor: option.color }]}><Text style={styles.frameRingEmoji}>{avatarAsset('base', avatarDraft.base)?.emoji ?? avatarDraft.base ?? '🙂'}</Text></View><Text style={styles.optionName} numberOfLines={1}>{option.label}</Text></Pressable>;
+              })}</View>}
+
+              {avatarTab === 'badge' && (inventory.badge.length ? <View style={styles.optionGrid}>{inventory.badge.map(item => {
+                const selected = avatarDraft.badge === item.id;
+                return <Pressable key={item.id} style={[styles.avatarOption, selected && styles.optionSelected]} onPress={() => setAvatarDraft(d => d ? { ...d, badge: selected ? null : item.id } : d)}><View style={styles.assetSwatch}><Text style={styles.optionEmoji}>{item.assetData.emoji ?? '◆'}</Text></View><Text style={styles.optionName} numberOfLines={2}>{item.name}</Text></Pressable>;
+              })}</View> : <View style={styles.emptyAvatarTab}><Text style={styles.emptyAvatarText}>Earn badges by completing achievements</Text></View>)}
+            </ScrollView>
+          </>}
         </View>
       </Modal>
     </ScrollView>
@@ -667,4 +735,22 @@ const styles = StyleSheet.create({
   avatarTabActive: { borderBottomWidth: 2, borderBottomColor: '#c4b5fd' },
   avatarTabText: { color: '#7a7060', fontSize: 13, fontWeight: '700' },
   assetSwatch: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  avatarEditorContent: { padding: 16, paddingBottom: 40 },
+  emptyAvatarTab: { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  emptyAvatarText: { color: '#a89f90', fontSize: 15, textAlign: 'center' },
+  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
+  emojiOption: { width: '22%', aspectRatio: 1, maxHeight: 72, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#1a1810', alignItems: 'center', justifyContent: 'center' },
+  emojiOptionText: { fontSize: 32 },
+  selectionCheck: { position: 'absolute', top: 3, right: 6, color: '#c4b5fd', fontSize: 15, fontWeight: '900' },
+  colorPreviewStrip: { height: 48, borderRadius: 12, marginBottom: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  colorPreviewText: { color: '#fff', fontSize: 12, fontWeight: '800', textShadowColor: '#000', textShadowRadius: 3 },
+  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  colorSwatchRing: { width: '12.5%', alignItems: 'center', justifyContent: 'center', height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'transparent' },
+  colorSwatchSelected: { borderColor: '#fff' },
+  colorSwatch: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  colorCheck: { color: '#fff', fontSize: 17, fontWeight: '900', textShadowColor: '#000', textShadowRadius: 3 },
+  frameGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  frameOption: { width: '22%', minHeight: 94, borderRadius: 12, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center', padding: 6 },
+  frameRing: { width: 52, height: 52, borderRadius: 26, borderWidth: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 6, backgroundColor: '#29241d' },
+  frameRingEmoji: { fontSize: 24 },
 });
