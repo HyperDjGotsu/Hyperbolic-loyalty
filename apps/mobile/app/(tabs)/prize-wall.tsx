@@ -127,7 +127,7 @@ export default function PrizeWallScreen() {
       if (res.status === 403) {
         const err = data as { gateRequired?: number };
         const gate = err.gateRequired ?? FREE_TIER_GATE;
-        setRedeemError(`Prize Wall locked until ${gate} Guild Points.`);
+        setRedeemError(`Prize Wall requires a paid pass. Earn ${gate} Guild Points for a free trial.`);
         return;
       }
       if (!res.ok || !('claimCode' in data)) {
@@ -238,6 +238,25 @@ export default function PrizeWallScreen() {
   );
 }
 
+function ImageWithFallback({ uri, style }: { uri: string; style: object | object[] }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <View style={[Array.isArray(style) ? style[0] : style, { alignItems: 'center', justifyContent: 'center' }]}>
+        <Feather name="image" size={20} color={C.textTertiary} />
+      </View>
+    );
+  }
+  return (
+    <Image
+      source={{ uri }}
+      style={style as never}
+      resizeMode="cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function BalanceBar({ passStatus, error }: { passStatus: PassStatus | null; error: string }) {
   if (error) {
     return (
@@ -264,12 +283,12 @@ function BalanceBar({ passStatus, error }: { passStatus: PassStatus | null; erro
           {passStatus.prizePoints.toLocaleString()} Prize Points
         </Text>
       </View>
-      <Text style={styles.lifetimeXpText}>Guild Points: {passStatus.lifetimeXp.toLocaleString()}</Text>
+      <Text style={styles.lifetimeXpText}>{passStatus.lifetimeXp.toLocaleString()} Guild Points earned</Text>
 
       {gateLocked && (
         <View style={styles.gateSection}>
           <View style={styles.gateLabelRow}>
-            <Text style={styles.gateLabel}>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} Guild Points</Text>
+            <Text style={styles.gateLabel}>Earn {FREE_TIER_GATE} Guild Points to unlock a 1-month Bronze trial</Text>
             <Text style={styles.gateCount}>{passStatus.lifetimeXp} / {FREE_TIER_GATE}</Text>
           </View>
           <View style={styles.gateTrack}>
@@ -381,11 +400,7 @@ function ItemCard({
     <View style={styles.itemCard}>
       <View style={styles.itemImageBox}>
         {item.image_url ? (
-          <Image
-            source={{ uri: item.image_url }}
-            style={styles.itemImageEl}
-            resizeMode="cover"
-          />
+          <ImageWithFallback uri={item.image_url} style={styles.itemImageEl} />
         ) : (
           <View style={styles.itemImagePlaceholder}>
             <Feather name="image" size={20} color={C.textTertiary} />
@@ -406,7 +421,7 @@ function ItemCard({
 
         <View style={styles.itemPriceRow}>
           <Text style={styles.itemCost}>{item.xp_cost.toLocaleString()}</Text>
-          <Text style={styles.itemCostUnit}> pts</Text>
+          <Text style={styles.itemCostUnit}> Prize Points</Text>
         </View>
         {item.retail_value != null ? (
           <Text style={styles.itemRetail}>${item.retail_value} value</Text>
@@ -519,11 +534,7 @@ function LockedItem({ item, subscriberCount }: { item: PrizeItem; subscriberCoun
     <View style={[styles.lockedItem, { opacity: 0.7 }]}>
       <View style={styles.lockedThumb}>
         {item.image_url ? (
-          <Image
-            source={{ uri: item.image_url }}
-            style={[styles.lockedThumbImg, { opacity: 0.35 }]}
-            resizeMode="cover"
-          />
+          <ImageWithFallback uri={item.image_url} style={[styles.lockedThumbImg, { opacity: 0.35 }]} />
         ) : (
           <View style={styles.lockedThumbPlaceholder} />
         )}
