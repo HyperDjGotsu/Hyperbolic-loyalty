@@ -56,13 +56,21 @@ export async function POST(request: Request) {
       };
     }
 
+    // Validate photo_url — must be null or a Supabase storage URL owned by this app
+    const SUPABASE_STORAGE_PREFIX = `https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '')}/storage/`;
+    const validatedPhotoUrl = photo_url === undefined
+      ? currentConfig.photo_url
+      : (photo_url === null || (typeof photo_url === 'string' && photo_url.startsWith(SUPABASE_STORAGE_PREFIX))
+          ? photo_url
+          : currentConfig.photo_url); // reject arbitrary external URLs silently
+
     // Build new config
     const newConfig: AvatarConfig = {
       base: base !== undefined ? base : currentConfig.base,
       background: background !== undefined ? background : currentConfig.background,
       frame: frame !== undefined ? frame : currentConfig.frame,
       badge: badge !== undefined ? badge : currentConfig.badge,
-      photo_url: photo_url !== undefined ? photo_url : currentConfig.photo_url,
+      photo_url: validatedPhotoUrl,
     };
 
     // Update avatar config - cast to JSON compatible type

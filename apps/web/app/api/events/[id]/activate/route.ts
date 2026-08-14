@@ -34,11 +34,15 @@ export async function POST(
     const { action } = await request.json() as { action: 'start' | 'end' };
 
     if (action === 'start') {
-      // End any currently active event first
-      await supabaseAdmin
+      // End any currently active event for this store only (scoped to prevent cross-store clobber)
+      const endQuery = supabaseAdmin
         .from('events')
         .update({ status: 'completed' })
         .eq('status', 'active');
+
+      await (event.store_id
+        ? endQuery.eq('store_id', event.store_id)
+        : endQuery.is('store_id', null));
 
       const { error } = await supabaseAdmin
         .from('events')

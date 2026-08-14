@@ -10,7 +10,7 @@
     "db:types": "npx supabase gen types typescript --project-id gdyksfarqpzfvymzifxr > types/database.types.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.36.5",
+    "@clerk/nextjs": "^7.7.5",
     "@clerk/themes": "^2.4.46",
     "@supabase/supabase-js": "^2.89.0",
     "clsx": "^2.1.0",

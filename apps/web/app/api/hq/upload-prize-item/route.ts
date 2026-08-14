@@ -28,6 +28,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid file type. Allowed: png, jpg, webp, gif' }, { status: 400 });
     }
 
+    if (file.size > 5_000_000) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 5 MB.' }, { status: 400 });
+    }
+
     const timestamp = Date.now();
     const filename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `prize-items/${timestamp}-${filename}`;

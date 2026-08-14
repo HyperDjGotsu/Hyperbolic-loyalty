@@ -62,10 +62,12 @@ function AuthGuard() {
       } catch { /* non-critical */ }
     });
 
-    // Deep link: tap notification → navigate to event
+    // Deep link: tap notification → navigate to event (validate event_id to prevent path traversal)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as Record<string, string>;
-      if (data?.event_id) router.push(`/event/${data.event_id}`);
+      if (data?.event_id && /^[a-zA-Z0-9-]{1,64}$/.test(data.event_id)) {
+        router.push(`/event/${data.event_id}`);
+      }
     });
 
     return () => { responseListener.current?.remove(); };
