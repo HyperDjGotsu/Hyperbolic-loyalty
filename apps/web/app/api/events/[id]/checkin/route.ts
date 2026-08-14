@@ -116,7 +116,24 @@ export async function POST(
       return NextResponse.json({ error: 'Event is not active' }, { status: 400 });
     }
 
-    // Two auth paths: HYP-ID (kiosk/NFC) or Clerk session (player's phone)
+    // Both paths require a Clerk session.
+    // Kiosk/NFC path: staff member's session + hyp_id in body identifies the player.
+    // Player phone path: session identifies the player directly.
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const { data: authedPlayer } = await supabaseAdmin
+      .from('players')
+      .select('id, display_name, pass_tier, home_store_id, is_staff')
+      .eq('clerk_user_id', userId)
+      .single();
+
+    if (!authedPlayer) {
+      return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
     let playerId: string;
     let playerName: string;
     let playerTier: string = 'free';
@@ -124,6 +141,12 @@ export async function POST(
     let staffId: string | null = null;
 
     if (body.hyp_id) {
+      // Kiosk/NFC path — requires the requester to be a staff member
+      if (!authedPlayer.is_staff) {
+        return NextResponse.json({ error: 'Staff access required for kiosk check-in' }, { status: 403 });
+      }
+      staffId = authedPlayer.id;
+
       const { data: player } = await supabaseAdmin
         .from('players')
         .select('id, display_name, pass_tier, home_store_id')
@@ -138,29 +161,16 @@ export async function POST(
       playerTier = player.pass_tier || 'free';
       playerHomeStoreId = player.home_store_id;
     } else {
-      const { userId } = await auth();
-      if (!userId) {
-        return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-      }
-
-      const { data: player } = await supabaseAdmin
-        .from('players')
-        .select('id, display_name, pass_tier, home_store_id, is_staff')
-        .eq('clerk_user_id', userId)
-        .single();
-
-      if (!player) {
-        return NextResponse.json({ error: 'Player not found' }, { status: 404 });
-      }
-      playerId = player.id;
-      playerName = player.display_name || 'Player';
-      playerTier = player.pass_tier || 'free';
-      playerHomeStoreId = player.home_store_id;
-      if (player.is_staff) staffId = player.id;
+      // Player's own phone path
+      playerId = authedPlayer.id;
+      playerName = authedPlayer.display_name || 'Player';
+      playerTier = authedPlayer.pass_tier || 'free';
+      playerHomeStoreId = authedPlayer.home_store_id;
+      if (authedPlayer.is_staff) staffId = authedPlayer.id;
     }
 
-    // Resolve store_id: body override > event store > player home store
-    const storeId: string = body.store_id || event.store_id || playerHomeStoreId || '';
+    // store_id always comes from the event record, never from the request body
+    const storeId: string = event.store_id || playerHomeStoreId || '';
 
     // Deduplicate
     const { data: existing } = await supabaseAdmin

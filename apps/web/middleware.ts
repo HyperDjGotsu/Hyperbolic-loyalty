@@ -11,11 +11,14 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/api/player/(.*)',
   '/kiosk(.*)',
   '/checkin(.*)',
   '/api/events/active(.*)',
-  '/api/events/(.*)/checkin(.*)',
+  '/api/community/leaderboard(.*)',
+  '/api/banners(.*)',
+  '/api/store-config(.*)',
+  '/api/stores(.*)',
+  '/api/events/(.*)/public(.*)',
 ]);
 
 // authorizedParties is intentionally omitted.

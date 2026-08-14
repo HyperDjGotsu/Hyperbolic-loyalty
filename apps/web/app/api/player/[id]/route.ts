@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-
 export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
   const playerId = params.id?.toUpperCase();
 
   if (!playerId) {
@@ -14,10 +20,9 @@ export async function GET(
   }
 
   try {
-    // Get player by HYP ID
     const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
-      .select('*')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config, pass_tier, created_at')
       .eq('player_id', playerId)
       .single();
 
@@ -25,26 +30,18 @@ export async function GET(
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Get total XP directly from xp_ledger (more reliable than materialized views)
-    console.log('Querying xp_ledger for player.id:', player.id);
-    const { data: xpData, error: xpError } = await supabaseAdmin
+    const { data: xpData } = await supabaseAdmin
       .from('xp_ledger')
       .select('final_xp')
       .eq('player_id', player.id);
-    
-    console.log('xpData result:', xpData);
-    console.log('xpError:', xpError);
-    
-    const totalXP = xpData?.reduce((sum, row) => sum + (row.final_xp || 0), 0) || 0;
-    console.log('totalXP calculated:', totalXP);
 
-    // Get game XP breakdown directly from xp_ledger
+    const totalXP = xpData?.reduce((sum, row) => sum + (row.final_xp || 0), 0) || 0;
+
     const { data: gameXPRaw } = await supabaseAdmin
       .from('xp_ledger')
       .select('game_id, final_xp, source')
       .eq('player_id', player.id);
-    
-    // Aggregate by game
+
     const gameXPMap: Record<string, { game_id: string; game_xp: number; game_wins: number; game_events: number }> = {};
     gameXPRaw?.forEach(row => {
       if (!row.game_id) return;
@@ -57,7 +54,6 @@ export async function GET(
     });
     const gameXP = Object.values(gameXPMap);
 
-    // Get recent activity
     const { data: activity } = await supabaseAdmin
       .from('xp_ledger')
       .select(`
@@ -73,14 +69,16 @@ export async function GET(
       .order('created_at', { ascending: false })
       .limit(5);
 
+    const photoUrl = (player.avatar_config as Record<string, unknown> | null)?.photo_url as string | null ?? null;
+
     return NextResponse.json({
       id: player.id,
       hyp_id: player.player_id,
       displayName: player.display_name,
-      realName: player.real_name,
-      discord: player.discord_username,
       avatar: {
+        type: photoUrl ? 'photo' : 'emoji',
         emoji: player.avatar_base,
+        photoUrl,
         background: player.avatar_background,
         frame: player.avatar_frame,
         badge: player.avatar_badge,
