@@ -357,8 +357,9 @@ export default function ProfileScreen() {
 
       const { photo_url } = await res.json() as { photo_url: string };
       setAvatarDraft(d => d ? { ...d, photo_url, base: d.base ?? '😎' } : d);
-    } catch {
-      Alert.alert('Upload failed', 'Could not upload photo. Please try again.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      Alert.alert('Upload failed', msg);
     } finally {
       setPhotoUploading(false);
     }
