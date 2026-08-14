@@ -1,17 +1,16 @@
 <claude-mem-context>
 # Memory Context
 
-# [hyperbolic-app] recent context, 2026-08-13 8:24pm PDT
+# [hyperbolic-app] recent context, 2026-08-14 10:05am PDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (18,550t read) | 596,991t work | 97% savings
+Stats: 50 obs (18,534t read) | 611,538t work | 97% savings
 
 ### Apr 26, 2026
 110 11:01p 🔵 Existing Daily Spin Route — Architecture and Flaws Discovered
-111 " 🔵 DailyGacha.tsx — Client-Side Prize Selection with Mismatched Odds
 113 11:06p 🔵 Current DailyGacha Client-Side Reward Pool Structure
 114 " 🔵 Players Table Schema Verification for Daily Spin
 115 11:07p 🔵 DailyGacha Integration Points and rarityColors Definition
@@ -74,6 +73,7 @@ S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for 
 ### Aug 13, 2026
 1798 9:49a 🔵 PlayerPass Mobile Alerts Tab — Code Audit Confirms Correct and Complete Implementation
 1799 " 🔵 Web Dashboard Prize Wall Footer — Exists in DesktopDashboard Only, Missing from MobileDashboard
+1819 8:25p 🔵 Mobile Code Review Requested — Home Screen Feeds + Prize Wall
 
-Access 597k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 612k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
