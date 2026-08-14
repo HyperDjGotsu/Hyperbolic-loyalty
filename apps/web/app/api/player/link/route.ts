@@ -108,8 +108,8 @@ export async function POST(request: Request) {
         .filter(Boolean)
         .join(' ') || null;
 
-      // Resolve prefix from the player's home store (falls back to 'HYP' if not found)
-      let idPrefix = 'HYP';
+      // Resolve prefix from the player's home store (falls back to 'GGC' network default)
+      let idPrefix = 'GGC';
       if (homeStoreId) {
         const { data: storeRow } = await supabaseAdmin
           .from('stores')
