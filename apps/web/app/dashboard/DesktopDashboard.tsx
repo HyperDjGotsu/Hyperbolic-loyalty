@@ -1396,7 +1396,7 @@ export default function DesktopDashboard() {
                         <img
                           src={item.image_url}
                           alt={item.name}
-                          className="w-full h-24 object-cover"
+                          className="w-full h-24 object-contain bg-black/20"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       ) : (
