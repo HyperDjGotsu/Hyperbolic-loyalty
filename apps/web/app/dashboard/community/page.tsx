@@ -851,7 +851,7 @@ export default function CommunityPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
-              className="w-full bg-elevated/80 border border-border-token rounded-xl py-3 px-4 pl-10 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
+              className="w-full bg-surface border border-border-strong rounded-xl py-3 px-4 pl-10 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">🔍</span>
             {isSearching && (
@@ -882,7 +882,7 @@ export default function CommunityPage() {
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🔍</div>
             <div className="text-primary font-bold">Find Players</div>
-            <div className="text-secondary text-sm">Search by name or player ID (HYP-XXXXX)</div>
+            <div className="text-secondary text-sm">Search by name or player ID</div>
           </div>
         )}
       </div>
