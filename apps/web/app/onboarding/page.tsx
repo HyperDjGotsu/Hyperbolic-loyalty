@@ -214,6 +214,12 @@ function OnboardingContent() {
       }
 
       localStorage.setItem('hyperbolic_player_id', data.player_id);
+      // Seed store picker to home store so dashboard doesn't show a stale previous selection
+      const homeStore = stores.find((s) => s.id === homeStoreId);
+      if (homeStore) {
+        localStorage.setItem('ggc_selected_store_id', homeStore.id);
+        localStorage.setItem('ggc_selected_store_name', homeStore.name);
+      }
       router.push('/dashboard');
     } catch (err) {
       setError('Connection error. Please try again.');
