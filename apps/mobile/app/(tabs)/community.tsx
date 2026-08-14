@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  ActivityIndicator,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useApi } from '@/lib/api';
@@ -53,6 +56,17 @@ type FriendRequest = {
   name: string;
   avatar: Avatar;
   timestamp: string;
+};
+
+type SearchResult = {
+  id: string;
+  odid: string;
+  name: string;
+  level: number | null;
+  totalXp: number | null;
+  avatar: Avatar;
+  isFriend: boolean;
+  allowFriendRequests: boolean;
 };
 
 const GAMES = [
@@ -102,9 +116,31 @@ export default function CommunityScreen() {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [friendsRefreshing, setFriendsRefreshing] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
+  const [requestsSent, setRequestsSent] = useState<Set<string>>(new Set());
+  const [sendingRequest, setSendingRequest] = useState(false);
   const homeStoreId = useRef<string | null>(null);
   const friendsLoaded = useRef(false);
   const inFlightPrefs = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const query = searchQuery.trim();
+    if (!query) { setSearchResults([]); setSearching(false); return; }
+    setSearching(true);
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      api.get<{ results: SearchResult[] }>(`/api/community/search?q=${encodeURIComponent(query)}`)
+        .then(data => { if (!cancelled) setSearchResults(data.results ?? []); })
+        .catch(() => { if (!cancelled) setSearchResults([]); })
+        .finally(() => { if (!cancelled) setSearching(false); });
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [searchQuery, searchOpen]);
 
   // Load the player's homeStoreId once so we know what to pass to the store leaderboard
   useEffect(() => {
@@ -221,6 +257,26 @@ export default function CommunityScreen() {
     }
   }
 
+  function closeSearch() {
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSelectedResult(null);
+  }
+
+  async function sendFriendRequest(result: SearchResult) {
+    if (sendingRequest || result.isFriend || requestsSent.has(result.odid)) return;
+    setSendingRequest(true);
+    try {
+      await api.post('/api/community/friend-requests', { targetPlayerId: result.odid });
+      setRequestsSent(current => new Set(current).add(result.odid));
+    } catch {
+      // Keep the action available so it can be retried.
+    } finally {
+      setSendingRequest(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View style={[styles.tabRow, { marginTop: insets.top }]}>
@@ -235,6 +291,9 @@ export default function CommunityScreen() {
             {activeTab === tab.id && <View style={styles.tabUnderline} />}
           </Pressable>
         ))}
+        <Pressable accessibilityLabel="Search players" style={styles.searchHeaderButton} onPress={() => setSearchOpen(true)}>
+          <Text style={styles.searchHeaderIcon}>🔍</Text>
+        </Pressable>
       </View>
 
       {activeTab === 'ranks' ? (
@@ -399,6 +458,30 @@ export default function CommunityScreen() {
           )}
         </ScrollView>
       )}
+
+      <Modal visible={searchOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={closeSearch}>
+        <View style={[styles.searchModal, { paddingTop: insets.top }]}>
+          <View style={styles.searchModalHeader}>
+            <TextInput autoFocus value={searchQuery} onChangeText={setSearchQuery} placeholder="Search players" placeholderTextColor={C.textTertiary} style={styles.searchInput} autoCapitalize="none" returnKeyType="search" />
+            <Pressable onPress={closeSearch}><Text style={styles.cancelText}>Cancel</Text></Pressable>
+          </View>
+          {searching ? <ActivityIndicator style={styles.searchLoader} color={C.accent} /> : searchQuery.trim() && searchResults.length === 0 ? (
+            <View style={styles.searchEmpty}><Text style={styles.emptyBody}>No players found</Text></View>
+          ) : (
+            <ScrollView keyboardShouldPersistTaps="handled">{searchResults.map(result => (
+              <Pressable key={result.id} style={styles.searchResultRow} onPress={() => setSelectedResult(result)}>
+                <AvatarBubble avatar={result.avatar} /><View style={styles.info}><Text style={styles.name} numberOfLines={1}>{result.name}</Text><Text style={styles.meta}>Lv.{result.level ?? 1} · {(result.totalXp ?? 0).toLocaleString()} XP</Text></View><Text style={styles.resultChevron}>›</Text>
+              </Pressable>
+            ))}</ScrollView>
+          )}
+          {selectedResult && <View style={styles.profileOverlay}>
+            <Pressable style={styles.profileBackdrop} onPress={() => setSelectedResult(null)} />
+            <View style={[styles.miniProfile, { paddingBottom: Math.max(insets.bottom, 20) }]}><View style={styles.sheetHandle} /><AvatarBubble avatar={selectedResult.avatar} /><Text style={styles.profileName}>{selectedResult.name}</Text><Text style={styles.profileMeta}>Level {selectedResult.level ?? 1} · {(selectedResult.totalXp ?? 0).toLocaleString()} XP</Text>
+              <Pressable disabled={selectedResult.isFriend || requestsSent.has(selectedResult.odid) || !selectedResult.allowFriendRequests || sendingRequest} style={[styles.friendRequestButton, (selectedResult.isFriend || requestsSent.has(selectedResult.odid) || !selectedResult.allowFriendRequests) && styles.friendRequestDisabled]} onPress={() => sendFriendRequest(selectedResult)}><Text style={styles.friendRequestText}>{selectedResult.isFriend ? '✓ Friends' : requestsSent.has(selectedResult.odid) ? '📨 Request Sent' : !selectedResult.allowFriendRequests ? 'Friend Requests Disabled' : sendingRequest ? 'Sending…' : 'Send Friend Request'}</Text></Pressable>
+            </View>
+          </View>}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -408,7 +491,7 @@ const styles = StyleSheet.create({
   fill:      { flex: 1, backgroundColor: C.bgBase },
 
   // Tabs
-  tabRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: C.border },
+  tabRow: { flexDirection: 'row', paddingRight: 52, borderBottomWidth: 1, borderBottomColor: C.border },
   tab: { flex: 1, alignItems: 'center', paddingTop: 14, paddingBottom: 12 },
   tabText: { color: C.textTertiary, fontSize: 14, fontWeight: '700' },
   tabTextActive: { color: C.accent },
@@ -421,6 +504,8 @@ const styles = StyleSheet.create({
     borderRadius: 1,
     backgroundColor: C.accent,
   },
+  searchHeaderButton: { position: 'absolute', right: 8, top: 5, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  searchHeaderIcon: { fontSize: 19 },
 
   // Scope toggle
   scopeRow: { flexDirection: 'row', margin: 16, gap: 8 },
@@ -531,4 +616,21 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: 16 },
   emptyTitle: { color: C.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 8 },
   emptyBody: { color: C.textTertiary, fontSize: 13, textAlign: 'center' },
+  searchModal: { flex: 1, backgroundColor: C.bgBase },
+  searchModalHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderBottomWidth: 1, borderBottomColor: C.border },
+  searchInput: { flex: 1, height: 44, borderRadius: 12, paddingHorizontal: 14, color: C.textPrimary, backgroundColor: C.bgSurface, borderWidth: 1, borderColor: C.border, fontSize: 15 },
+  cancelText: { color: C.accent, fontWeight: '700', fontSize: 14 },
+  searchLoader: { marginTop: 32 },
+  searchEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  searchResultRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border },
+  resultChevron: { color: C.textTertiary, fontSize: 26 },
+  profileOverlay: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end' },
+  profileBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.65)' },
+  miniProfile: { backgroundColor: C.bgElevated, borderTopLeftRadius: 24, borderTopRightRadius: 24, alignItems: 'center', paddingTop: 12, paddingHorizontal: 24 },
+  sheetHandle: { width: 42, height: 4, borderRadius: 2, backgroundColor: C.border, marginBottom: 20 },
+  profileName: { color: C.textPrimary, fontSize: 20, fontWeight: '800', marginTop: 12 },
+  profileMeta: { color: C.textSecondary, fontSize: 13, marginTop: 4, marginBottom: 20 },
+  friendRequestButton: { width: '100%', minHeight: 48, borderRadius: 12, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
+  friendRequestDisabled: { backgroundColor: C.bgSurface, borderWidth: 1, borderColor: C.border },
+  friendRequestText: { color: C.accentFg, fontSize: 14, fontWeight: '800' },
 });

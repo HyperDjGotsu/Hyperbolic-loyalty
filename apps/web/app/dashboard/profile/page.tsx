@@ -130,6 +130,25 @@ const defaultAvatarConfig: AvatarConfig = {
   photo_url: null,
 };
 
+const DEFAULT_BASE_ITEMS: ShopItem[] = [
+  '😎','😊','😄','😍','🤩','😏','😤','🥳','🤠','👻','🐶','🐱','🦊','🐺','🦁','🐸',
+].map((emoji, i) => ({ id: `d-base-${i}`, name: emoji, description: '', category: 'base', price: 0, rarity: 'common', assetData: { emoji }, isDefault: true }));
+
+const DEFAULT_BG_ITEMS: ShopItem[] = [
+  { color: '#1e1b4b', name: 'Midnight' }, { color: '#0f172a', name: 'Void' },
+  { color: '#1a1a2e', name: 'Deep' }, { color: '#3b0764', name: 'Purple' },
+  { color: '#0c4a6e', name: 'Ocean' }, { color: '#14532d', name: 'Forest' },
+  { color: '#7c2d12', name: 'Ember' }, { color: '#713f12', name: 'Gold' },
+  { color: '#1c1917', name: 'Warm Dark' }, { color: '#18181b', name: 'Zinc' },
+].map((bg, i) => ({ id: `d-bg-${i}`, name: bg.name, description: '', category: 'background', price: 0, rarity: 'common', assetData: { color: bg.color }, isDefault: true }));
+
+const DEFAULT_FRAME_ITEMS: ShopItem[] = [
+  { style: 'none', name: 'None' }, { style: 'silver', name: 'Silver' },
+  { style: 'gold', name: 'Gold' }, { style: 'diamond', name: 'Diamond' },
+  { style: 'fire', name: 'Fire' }, { style: 'electric', name: 'Electric' },
+  { style: 'legendary', name: 'Legendary' },
+].map((f, i) => ({ id: `d-frame-${i}`, name: f.name, description: '', category: 'frame', price: 0, rarity: 'common', assetData: { style: f.style }, isDefault: true }));
+
 export default function ProfilePage() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
@@ -866,31 +885,35 @@ export default function ProfilePage() {
         
         {activeTab === 'base' && (
           <div className="grid grid-cols-4 gap-3">
-            {(ownedItems.base || []).map(item => (
+            {[...DEFAULT_BASE_ITEMS, ...(ownedItems.base || []).filter(i => !DEFAULT_BASE_ITEMS.some(d => d.assetData?.emoji === i.assetData?.emoji))].map(item => (
               <CustomizeItemCard key={item.id} item={item} />
             ))}
           </div>
         )}
-        
+
         {activeTab === 'background' && (
           <div className="grid grid-cols-4 gap-3">
-            {(ownedItems.background || []).map(item => (
+            {[...DEFAULT_BG_ITEMS, ...(ownedItems.background || []).filter(i => !DEFAULT_BG_ITEMS.some(d => d.assetData?.color === i.assetData?.color))].map(item => (
               <CustomizeItemCard key={item.id} item={item} />
             ))}
           </div>
         )}
-        
+
         {activeTab === 'frame' && (
           <div className="grid grid-cols-4 gap-3">
-            {(ownedItems.frame || []).map(item => (
+            {[...DEFAULT_FRAME_ITEMS, ...(ownedItems.frame || []).filter(i => !DEFAULT_FRAME_ITEMS.some(d => d.assetData?.style === i.assetData?.style))].map(item => (
               <CustomizeItemCard key={item.id} item={item} />
             ))}
           </div>
         )}
-        
+
         {activeTab === 'badge' && (
           <div className="grid grid-cols-4 gap-3">
-            {(ownedItems.badge || []).map(item => (
+            {(ownedItems.badge || []).length === 0 ? (
+              <div className="col-span-4 text-center py-8 text-secondary text-sm">
+                Earn badges by participating in events and achievements.
+              </div>
+            ) : (ownedItems.badge || []).map(item => (
               <CustomizeItemCard key={item.id} item={item} />
             ))}
           </div>
@@ -1109,37 +1132,6 @@ export default function ProfilePage() {
             <p className="text-secondary">Unable to load referral info</p>
           </div>
         )}
-      </div>
-
-      {/* Inventory Summary */}
-      <div className="px-4 mt-6">
-        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
-          <span className="text-xl">🎒</span> Inventory
-        </h2>
-        <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
-          <div className="grid grid-cols-4 gap-4 text-center">
-            <div>
-              <div className="text-xl mb-1">😎</div>
-              <div className="text-primary font-bold">{(ownedItems.base || []).length}</div>
-              <div className="text-secondary text-xs">Bases</div>
-            </div>
-            <div>
-              <div className="text-xl mb-1">🎨</div>
-              <div className="text-primary font-bold">{(ownedItems.background || []).length}</div>
-              <div className="text-secondary text-xs">BGs</div>
-            </div>
-            <div>
-              <div className="text-xl mb-1">✨</div>
-              <div className="text-primary font-bold">{(ownedItems.frame || []).length}</div>
-              <div className="text-secondary text-xs">Frames</div>
-            </div>
-            <div>
-              <div className="text-xl mb-1">🏷️</div>
-              <div className="text-primary font-bold">{(ownedItems.badge || []).length}</div>
-              <div className="text-secondary text-xs">Badges</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Favorite Games */}
