@@ -131,22 +131,30 @@ const defaultAvatarConfig: AvatarConfig = {
 };
 
 const DEFAULT_BASE_ITEMS: ShopItem[] = [
-  '😎','😊','😄','😍','🤩','😏','😤','🥳','🤠','👻','🐶','🐱','🦊','🐺','🦁','🐸',
+  '😎','😊','😄','😍','🤩','😏','😤','🥳','🤠','👻','🐶','🐱',
+  '🦊','🐺','🦁','🐸','🤖','👾','🎭','🧙','🥷','🧛','🐉','⚡',
 ].map((emoji, i) => ({ id: `d-base-${i}`, name: emoji, description: '', category: 'base', price: 0, rarity: 'common', assetData: { emoji }, isDefault: true }));
 
 const DEFAULT_BG_ITEMS: ShopItem[] = [
-  { color: '#1e1b4b', name: 'Midnight' }, { color: '#0f172a', name: 'Void' },
-  { color: '#1a1a2e', name: 'Deep' }, { color: '#3b0764', name: 'Purple' },
-  { color: '#0c4a6e', name: 'Ocean' }, { color: '#14532d', name: 'Forest' },
-  { color: '#7c2d12', name: 'Ember' }, { color: '#713f12', name: 'Gold' },
-  { color: '#1c1917', name: 'Warm Dark' }, { color: '#18181b', name: 'Zinc' },
+  { color: '#ef4444', name: 'Red' }, { color: '#f97316', name: 'Orange' }, { color: '#eab308', name: 'Yellow' }, { color: '#22c55e', name: 'Green' },
+  { color: '#14b8a6', name: 'Teal' }, { color: '#3b82f6', name: 'Blue' }, { color: '#8b5cf6', name: 'Violet' }, { color: '#ec4899', name: 'Pink' },
+  { color: '#b91c1c', name: 'Dark Red' }, { color: '#c2410c', name: 'Dark Orange' }, { color: '#a16207', name: 'Dark Yellow' }, { color: '#15803d', name: 'Dark Green' },
+  { color: '#0f766e', name: 'Dark Teal' }, { color: '#1d4ed8', name: 'Dark Blue' }, { color: '#6d28d9', name: 'Dark Violet' }, { color: '#be185d', name: 'Dark Pink' },
+  { color: '#7f1d1d', name: 'Deep Red' }, { color: '#7c2d12', name: 'Ember' }, { color: '#713f12', name: 'Gold' }, { color: '#14532d', name: 'Forest' },
+  { color: '#134e4a', name: 'Deep Teal' }, { color: '#1e3a8a', name: 'Navy' }, { color: '#4c1d95', name: 'Deep Violet' }, { color: '#831843', name: 'Deep Pink' },
+  { color: '#fca5a5', name: 'Light Red' }, { color: '#fdba74', name: 'Light Orange' }, { color: '#fde68a', name: 'Light Yellow' }, { color: '#86efac', name: 'Light Green' },
+  { color: '#5eead4', name: 'Light Teal' }, { color: '#93c5fd', name: 'Light Blue' }, { color: '#c4b5fd', name: 'Light Violet' }, { color: '#f9a8d4', name: 'Light Pink' },
+  { color: '#f5f5f5', name: 'White' }, { color: '#d4d4d4', name: 'Light Gray' }, { color: '#a3a3a3', name: 'Gray' }, { color: '#737373', name: 'Mid Gray' },
+  { color: '#525252', name: 'Dark Gray' }, { color: '#404040', name: 'Darker Gray' }, { color: '#262626', name: 'Near Black' }, { color: '#171717', name: 'Black' },
+  { color: '#1a1810', name: 'Warm Black' }, { color: '#1c1917', name: 'Warm Dark' }, { color: '#1a1a2e', name: 'Deep' }, { color: '#0f172a', name: 'Void' },
+  { color: '#1e1b4b', name: 'Midnight' }, { color: '#0c4a6e', name: 'Ocean' }, { color: '#14532d', name: 'Pine' }, { color: '#1f2937', name: 'Slate' },
 ].map((bg, i) => ({ id: `d-bg-${i}`, name: bg.name, description: '', category: 'background', price: 0, rarity: 'common', assetData: { color: bg.color }, isDefault: true }));
 
 const DEFAULT_FRAME_ITEMS: ShopItem[] = [
   { style: 'none', name: 'None' }, { style: 'silver', name: 'Silver' },
   { style: 'gold', name: 'Gold' }, { style: 'diamond', name: 'Diamond' },
   { style: 'fire', name: 'Fire' }, { style: 'electric', name: 'Electric' },
-  { style: 'legendary', name: 'Legendary' },
+  { style: 'legendary', name: 'Legendary' }, { style: 'pirate', name: 'Pirate' },
 ].map((f, i) => ({ id: `d-frame-${i}`, name: f.name, description: '', category: 'frame', price: 0, rarity: 'common', assetData: { style: f.style }, isDefault: true }));
 
 export default function ProfilePage() {
