@@ -30,7 +30,7 @@ function OnboardingContent() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<'choice' | 'link' | 'create'>('choice');
+  const [mode, setMode] = useState<'choice' | 'link' | 'create'>('create');
   const [step, setStep] = useState<'profile' | 'store'>('profile');
   const [hypId, setHypId] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -239,9 +239,8 @@ function OnboardingContent() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="font-display text-3xl font-black text-accent">
-            HYPERBOLIC
+            PLAYER PASS
           </div>
-          <div className="text-secondary text-sm font-bold tracking-widest mt-1">— GAMES —</div>
         </div>
 
         {/* Welcome */}
@@ -260,41 +259,6 @@ function OnboardingContent() {
           </div>
         )}
 
-        {mode === 'choice' && (
-          <div className="space-y-4">
-            {/* Already have a card */}
-            <button
-              onClick={() => setMode('link')}
-              className="w-full card p-6 text-left hover:border-accent/50 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center text-3xl">
-                  💳
-                </div>
-                <div>
-                  <h3 className="text-primary font-bold text-lg">I have a card</h3>
-                  <p className="text-secondary text-sm">Link your existing HYP-ID to this account</p>
-                </div>
-              </div>
-            </button>
-
-            {/* New player */}
-            <button
-              onClick={() => setMode('create')}
-              className="w-full card p-6 text-left hover:border-accent/50 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center text-3xl">
-                  ✨
-                </div>
-                <div>
-                  <h3 className="text-primary font-bold text-lg">I'm new here</h3>
-                  <p className="text-secondary text-sm">Create a new player profile</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        )}
 
         {mode === 'link' && (
           <div className="card p-6">
