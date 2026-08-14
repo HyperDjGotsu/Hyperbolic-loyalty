@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic';
 
 const ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-function generateHypId(): string {
-  let id = 'HYP-';
+function generatePlayerId(): string {
+  let id = 'GGC-';
   for (let i = 0; i < 6; i++) {
     id += ID_CHARS.charAt(Math.floor(Math.random() * ID_CHARS.length));
   }
@@ -28,18 +28,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Display name required' }, { status: 400 });
     }
 
-    let hypId = generateHypId();
+    let playerId = generatePlayerId();
     let attempts = 0;
 
     while (attempts < 10) {
       const { data: existing } = await supabaseAdmin
         .from('players')
         .select('id')
-        .eq('player_id', hypId)
+        .eq('player_id', playerId)
         .single();
 
       if (!existing) break;
-      hypId = generateHypId();
+      playerId = generatePlayerId();
       attempts++;
     }
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const { data: player, error } = await supabaseAdmin
       .from('players')
       .insert({
-        player_id: hypId,
+        player_id: playerId,
         display_name: displayName.trim(),
         avatar_base: avatar?.base || '😎',
         avatar_background: avatar?.background || '#3b82f6',
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       id: player.id,
-      hyp_id: player.player_id,
+      player_id: player.player_id,
       displayName: player.display_name,
       avatar: {
         emoji: player.avatar_base,

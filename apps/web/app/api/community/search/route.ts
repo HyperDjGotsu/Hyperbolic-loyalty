@@ -81,7 +81,7 @@ export async function GET(request: Request) {
       const isPending = pendingIds.has(player.id);
 
       return {
-        id: player.player_id, // HYP-XXXXX format for display
+        id: player.player_id,
         odid: player.id, // UUID for API calls
         name: player.display_name || 'Unknown',
         title: isPrivate ? '???' : `Level ${level}`,

@@ -314,8 +314,8 @@ export default function CommunityPage() {
         const res = await fetch('/api/player/by-clerk');
         if (res.ok) {
           const data = await res.json();
-          if (data.hyp_id) {
-            setCurrentPlayerId(data.hyp_id);
+          if (data.player_id) {
+            setCurrentPlayerId(data.player_id);
           }
           if (data.id) {
             setCurrentPlayerUuid(data.id);

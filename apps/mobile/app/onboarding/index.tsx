@@ -136,7 +136,7 @@ export default function OnboardingScreen() {
     }
   }
 
-  function reset() { setError(''); setMode('choice'); setStep('profile'); }
+  function reset() { setError(''); setStep('profile'); router.back(); }
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -160,31 +160,6 @@ export default function OnboardingScreen() {
           </View>
         )}
 
-        {/* ── Choice screen ─────────────────────────────────────────────────── */}
-        {mode === 'choice' && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Welcome 👋</Text>
-            <Text style={styles.sectionBody}>
-              Let's get you set up with your player profile.
-            </Text>
-
-            <Pressable style={styles.choiceCard} onPress={() => { setError(''); setMode('link'); }}>
-              <Text style={styles.choiceIcon}>💳</Text>
-              <View style={styles.choiceText}>
-                <Text style={styles.choiceTitle}>I have a card</Text>
-                <Text style={styles.choiceDesc}>Link your existing HYP-ID to this account</Text>
-              </View>
-            </Pressable>
-
-            <Pressable style={styles.choiceCard} onPress={() => { setError(''); setMode('create'); }}>
-              <Text style={styles.choiceIcon}>✨</Text>
-              <View style={styles.choiceText}>
-                <Text style={styles.choiceTitle}>I'm new here</Text>
-                <Text style={styles.choiceDesc}>Create a new player profile</Text>
-              </View>
-            </Pressable>
-          </View>
-        )}
 
         {/* ── Link existing ─────────────────────────────────────────────────── */}
         {mode === 'link' && (
@@ -227,10 +202,6 @@ export default function OnboardingScreen() {
         {/* ── Create — Profile step ─────────────────────────────────────────── */}
         {mode === 'create' && step === 'profile' && (
           <View style={styles.section}>
-            <Pressable onPress={reset} style={styles.back}>
-              <Text style={styles.backText}>← Back</Text>
-            </Pressable>
-
             <Text style={styles.sectionTitle}>Create Profile</Text>
             <Text style={styles.sectionBody}>Set up your player profile to start earning XP.</Text>
 

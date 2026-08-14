@@ -84,11 +84,11 @@ export const GAME_IDS = [
 // PLAYER FUNCTIONS
 // ============================================
 
-export async function getPlayerByHypId(hypId: string): Promise<Player | null> {
+export async function getPlayerByPlayerId(playerId: string): Promise<Player | null> {
   const { data, error } = await supabase
     .from('players')
     .select('*')
-    .eq('player_id', hypId.toUpperCase())
+    .eq('player_id', playerId.toUpperCase())
     .single();
 
   if (error || !data) return null;

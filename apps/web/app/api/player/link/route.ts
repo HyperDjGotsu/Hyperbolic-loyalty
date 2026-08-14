@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, hypId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId, managedStoreId } = body;
+    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId, managedStoreId } = body;
 
     // Check if user already has a linked player
     const { data: existingLink } = await supabaseAdmin
@@ -47,16 +47,16 @@ export async function POST(request: Request) {
     }
 
     if (action === 'link_existing') {
-      // Link to an existing player by HYP-ID
-      if (!hypId) {
-        return NextResponse.json({ error: 'HYP-ID required' }, { status: 400 });
+      // Link to an existing player by player ID
+      if (!playerId) {
+        return NextResponse.json({ error: 'Player ID required' }, { status: 400 });
       }
 
       // Find the player
       const { data: player, error: findError } = await supabaseAdmin
         .from('players')
         .select('*')
-        .eq('player_id', hypId.toUpperCase())
+        .eq('player_id', playerId.toUpperCase())
         .single();
 
       if (findError || !player) {

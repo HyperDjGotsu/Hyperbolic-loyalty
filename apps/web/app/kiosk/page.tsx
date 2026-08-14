@@ -12,7 +12,7 @@ interface ActiveEvent {
   attendanceCount: number;
   recentCheckIns: Array<{
     playerName: string;
-    hypId: string;
+    playerId: string;
     xpAwarded: number;
     checkedInAt: string;
   }>;
@@ -63,7 +63,7 @@ export default function KioskPage() {
     }, 4000);
   };
 
-  const checkInByHypId = useCallback(async (hypId: string) => {
+  const checkInByPlayerId = useCallback(async (playerId: string) => {
     if (!activeEvent || processingRef.current) return;
     processingRef.current = true;
 
@@ -71,7 +71,7 @@ export default function KioskPage() {
       const res = await fetch(`/api/events/${activeEvent.id}/checkin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hyp_id: hypId }),
+        body: JSON.stringify({ player_id: playerId }),
       });
       const data = await res.json();
 
@@ -79,16 +79,17 @@ export default function KioskPage() {
         showFeedback({ type: 'success', playerName: data.playerName, xpAwarded: data.xpAwarded, message: 'Welcome!' });
         fetchActiveEvent();
       } else if (data.alreadyCheckedIn) {
-        showFeedback({ type: 'already', playerName: data.playerName || hypId, message: 'Already checked in!' });
+        showFeedback({ type: 'already', playerName: data.playerName || playerId, message: 'Already checked in!' });
       } else {
-        showFeedback({ type: 'error', playerName: hypId, message: data.error || 'Check-in failed' });
+        showFeedback({ type: 'error', playerName: playerId, message: data.error || 'Check-in failed' });
       }
     } catch {
       showFeedback({ type: 'error', playerName: '', message: 'Network error — try QR code' });
     }
   }, [activeEvent, fetchActiveEvent]);
 
-  // Web NFC — reads HYP-ID from card text record OR extracts hyp_id from URL record
+  // Web NFC — reads Player ID from card text record OR extracts player_id from URL record
+  // Accepts both legacy HYP- prefix cards and new GGC- prefix cards for backward compat
   useEffect(() => {
     if (!('NDEFReader' in window)) return;
 
@@ -101,21 +102,23 @@ export default function KioskPage() {
 
         reader.onreading = (event: any) => {
           for (const record of event.message.records) {
-            let hypId = '';
+            let detectedId = '';
 
             if (record.recordType === 'text') {
               const decoder = new TextDecoder(record.encoding || 'utf-8');
               const text = decoder.decode(record.data).trim();
-              if (text.startsWith('HYP-')) hypId = text;
+              // Accept HYP- (legacy cards) and GGC- (new cards), or any PREFIX-ALPHANUM pattern
+              if (/^[A-Z]+-[A-Z0-9]+$/.test(text)) detectedId = text;
             } else if (record.recordType === 'url') {
               const decoder = new TextDecoder();
               const url = decoder.decode(record.data);
-              const match = url.match(/[?&]hyp_id=(HYP-[A-Z0-9]+)/);
-              if (match) hypId = match[1];
+              // Accept player_id or hyp_id param, any PREFIX-ALPHANUM value
+              const match = url.match(/[?&](?:player_id|hyp_id)=([A-Z]+-[A-Z0-9]+)/);
+              if (match) detectedId = match[1];
             }
 
-            if (hypId) {
-              checkInByHypId(hypId);
+            if (detectedId) {
+              checkInByPlayerId(detectedId);
               break;
             }
           }
@@ -126,7 +129,7 @@ export default function KioskPage() {
     };
 
     startNFC();
-  }, [checkInByHypId]);
+  }, [checkInByPlayerId]);
 
   const gameColor = activeEvent?.game?.color || '#3b82f6';
   const checkinUrl = activeEvent ? `${origin}/checkin?event_id=${activeEvent.id}` : '';
@@ -237,7 +240,7 @@ export default function KioskPage() {
                     <div key={i} className="bg-surface rounded-xl p-4 border border-border flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <div className="font-bold text-primary text-sm truncate">{ci.playerName}</div>
-                        <div className="text-tertiary text-xs">{ci.hypId}</div>
+                        <div className="text-tertiary text-xs">{ci.playerId}</div>
                       </div>
                       <div className="text-accent font-bold text-sm flex-shrink-0">+{ci.xpAwarded}</div>
                     </div>

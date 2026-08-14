@@ -636,7 +636,7 @@ export default function DesktopDashboard() {
           const data = await response.json();
 
           if (data.linked) {
-            localStorage.setItem('hyperbolic_player_id', data.hyp_id);
+            localStorage.setItem('hyperbolic_player_id', data.player_id);
             localStorage.setItem('hyperbolic_player_uuid', data.id);
             setPlayerData(data);
             setLoading(false);
@@ -650,15 +650,15 @@ export default function DesktopDashboard() {
         }
       }
 
-      const hypId = localStorage.getItem('hyperbolic_player_id');
+      const playerId = localStorage.getItem('hyperbolic_player_id');
 
-      if (!hypId) {
+      if (!playerId) {
         router.push(user ? '/onboarding' : '/sign-in');
         return;
       }
 
       try {
-        const response = await fetch(`/api/player/${hypId}`);
+        const response = await fetch(`/api/player/${playerId}`);
         const data = await response.json();
 
         if (response.ok && !data.error) {
@@ -1012,7 +1012,7 @@ export default function DesktopDashboard() {
                   {playerData?.displayName || 'Player'}
                 </h2>
                 <div className="text-cyan-400 text-sm font-medium mb-4 tracking-wide">
-                  {playerData?.hyp_id}
+                  {playerData?.player_id}
                 </div>
 
                 {/* XP Bar */}

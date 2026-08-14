@@ -306,7 +306,7 @@ export async function GET() {
     return NextResponse.json({
       linked: true,
       id: player.id,
-      hyp_id: player.player_id,
+      player_id: player.player_id,
       displayName: player.display_name,
       realName: player.real_name,
       discord: player.discord_username,

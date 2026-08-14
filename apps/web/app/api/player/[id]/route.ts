@@ -73,7 +73,7 @@ export async function GET(
 
     return NextResponse.json({
       id: player.id,
-      hyp_id: player.player_id,
+      player_id: player.player_id,
       displayName: player.display_name,
       avatar: {
         type: photoUrl ? 'photo' : 'emoji',

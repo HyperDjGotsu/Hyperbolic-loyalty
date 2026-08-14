@@ -23,7 +23,7 @@ import { useApi } from '@/lib/api';
 type Player = {
   linked: boolean;
   id: string;
-  hyp_id: string;
+  player_id: string;
   displayName: string;
   xp: number;
   gems: number;
@@ -449,7 +449,7 @@ export default function ProfileScreen() {
             : <Text style={styles.avatarText}>{avatarEmoji}</Text>}
         </View>
         <Text style={styles.name}>{player.displayName}</Text>
-        <Text style={styles.hypId}>{player.hyp_id}</Text>
+        <Text style={styles.hypId}>{player.player_id}</Text>
         <Pressable style={styles.editAvatarBtn} onPress={openAvatar}><Text style={styles.editLink}>Edit Avatar</Text></Pressable>
         {player.homeStore ? (
           <Text style={styles.store}>📍 {player.homeStore.name}</Text>

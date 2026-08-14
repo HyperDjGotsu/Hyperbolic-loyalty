@@ -31,7 +31,7 @@ export async function GET() {
 
   // Attendance data — isolated so a missing table never kills the response
   let attendanceCount = 0;
-  const recentCheckIns: Array<{ playerName: string; hypId: string; xpAwarded: number; checkedInAt: string }> = [];
+  const recentCheckIns: Array<{ playerName: string; playerId: string; xpAwarded: number; checkedInAt: string }> = [];
 
   try {
     const { count } = await supabaseAdmin
@@ -61,7 +61,7 @@ export async function GET() {
         const player = r.player_id ? playerMap.get(r.player_id) : undefined;
         recentCheckIns.push({
           playerName: player?.display_name || 'Player',
-          hypId: player?.player_id || '',
+          playerId: player?.player_id || '',
           xpAwarded: r.xp_awarded ?? 0,
           checkedInAt: r.checked_in_at ?? '',
         });

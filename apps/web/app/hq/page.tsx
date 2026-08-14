@@ -2658,7 +2658,7 @@ export default function HQPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && hqStore.activeStoreId && searchPlayer()}
-                  placeholder="Enter Player ID (HYP-XXXXX) or name..."
+                  placeholder="Enter Player ID or name..."
                   className="flex-1 bg-elevated border border-border-token rounded-lg px-4 py-3 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
                 />
                 <button
@@ -5053,7 +5053,7 @@ export default function HQPage() {
                     type="text"
                     value={standingsSearch}
                     onChange={e => { setStandingsSearch(e.target.value); searchForStandings(e.target.value); }}
-                    placeholder="Search player by name or HYP-ID…"
+                    placeholder="Search player by name or Player ID…"
                     className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
                   />
                   {standingsSearchResults.length > 0 && (

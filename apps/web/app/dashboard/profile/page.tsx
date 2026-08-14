@@ -242,7 +242,7 @@ export default function ProfilePage() {
             }
 
             setPlayerData({
-              id: data.hyp_id,
+              id: data.player_id,
               odid: data.id,
               displayName: data.displayName,
               totalXp: data.xp || 0,

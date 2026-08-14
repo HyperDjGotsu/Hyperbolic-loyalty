@@ -96,7 +96,7 @@ export async function POST(
   try {
     const eventId = params.id;
     const body = await request.json() as {
-      hyp_id?: string;
+      player_id?: string;
       rounds_won?: number;
       store_id?: string;
     };
@@ -140,7 +140,7 @@ export async function POST(
     let playerHomeStoreId: string | null = null;
     let staffId: string | null = null;
 
-    if (body.hyp_id) {
+    if (body.player_id) {
       // Kiosk/NFC path — requires the requester to be a staff member
       if (!authedPlayer.is_staff) {
         return NextResponse.json({ error: 'Staff access required for kiosk check-in' }, { status: 403 });
@@ -150,14 +150,14 @@ export async function POST(
       const { data: player } = await supabaseAdmin
         .from('players')
         .select('id, display_name, pass_tier, home_store_id')
-        .eq('player_id', body.hyp_id.toUpperCase())
+        .eq('player_id', body.player_id.toUpperCase())
         .single();
 
       if (!player) {
         return NextResponse.json({ error: 'Player not found' }, { status: 404 });
       }
       playerId = player.id;
-      playerName = player.display_name || body.hyp_id;
+      playerName = player.display_name || body.player_id;
       playerTier = player.pass_tier || 'free';
       playerHomeStoreId = player.home_store_id;
     } else {

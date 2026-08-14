@@ -32,7 +32,7 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<'choice' | 'link' | 'create'>('create');
   const [step, setStep] = useState<'profile' | 'store'>('profile');
-  const [hypId, setHypId] = useState('');
+  const [playerId, setPlayerId] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [discordUsername, setDiscordUsername] = useState('');
   const [phone, setPhone] = useState('');
@@ -58,7 +58,7 @@ function OnboardingContent() {
 
         if (data.linked) {
           // User already has a linked player, go to dashboard
-          localStorage.setItem('hyperbolic_player_id', data.hyp_id);
+          localStorage.setItem('hyperbolic_player_id', data.player_id);
           localStorage.setItem('hyperbolic_player_uuid', data.id);
           router.push('/dashboard');
           return;
@@ -137,8 +137,8 @@ function OnboardingContent() {
   }, [referralCode]);
 
   const handleLinkExisting = async () => {
-    if (!hypId.trim()) {
-      setError('Please enter your HYP-ID');
+    if (!playerId.trim()) {
+      setError('Please enter your Player ID');
       return;
     }
 
@@ -151,7 +151,7 @@ function OnboardingContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'link_existing',
-          hypId: hypId.trim().toUpperCase()
+          playerId: playerId.trim().toUpperCase()
         }),
       });
 
@@ -277,16 +277,16 @@ function OnboardingContent() {
 
             <h2 className="text-xl font-bold text-primary mb-2">Link Your Card</h2>
             <p className="text-secondary text-sm mb-6">
-              Enter the HYP-ID from your NFC card or receipt.
+              Enter the Player ID from your NFC card or receipt.
             </p>
 
             <div className="mb-6">
-              <label className="block text-secondary text-sm mb-2">HYP-ID</label>
+              <label className="block text-secondary text-sm mb-2">Player ID</label>
               <input
                 type="text"
-                value={hypId}
-                onChange={(e) => setHypId(e.target.value.toUpperCase())}
-                placeholder="HYP-XXXXXX"
+                value={playerId}
+                onChange={(e) => setPlayerId(e.target.value.toUpperCase())}
+                placeholder="GGC-XXXXXX"
                 className="w-full bg-input border border-border-token rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent font-mono text-lg tracking-wider"
                 maxLength={10}
               />

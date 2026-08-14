@@ -140,7 +140,7 @@ export default function MobileDashboard() {
 
           if (data.linked) {
             // Store for future reference
-            localStorage.setItem('hyperbolic_player_id', data.hyp_id);
+            localStorage.setItem('hyperbolic_player_id', data.player_id);
             localStorage.setItem('hyperbolic_player_uuid', data.id);
             setPlayerData(data);
             const homeStoreFromDb = data.homeStore ?? null;
@@ -209,16 +209,16 @@ export default function MobileDashboard() {
       }
 
       // Fallback: try localStorage (for backwards compatibility or non-logged-in access)
-      const hypId = localStorage.getItem('hyperbolic_player_id');
-      
-      if (!hypId) {
+      const playerId = localStorage.getItem('hyperbolic_player_id');
+
+      if (!playerId) {
         // No player found anywhere, redirect to sign-in or onboarding
         router.push(user ? '/onboarding' : '/sign-in');
         return;
       }
 
       try {
-        const response = await fetch(`/api/player/${hypId}`);
+        const response = await fetch(`/api/player/${playerId}`);
         const data = await response.json();
 
         if (response.ok && !data.error) {

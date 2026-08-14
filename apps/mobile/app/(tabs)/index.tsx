@@ -107,7 +107,7 @@ type UpcomingEvent = {
 type PlayerResponse = {
   linked: boolean;
   id: string;
-  hyp_id: string;
+  player_id: string;
   displayName: string;
   xp: number;
   gems: number;
@@ -341,7 +341,7 @@ export default function DashboardScreen() {
           {/* Info column */}
           <View style={styles.infoCol}>
             <Text style={styles.displayName}>{player.displayName}</Text>
-            <Text style={styles.hypId}>{player.hyp_id}</Text>
+            <Text style={styles.hypId}>{player.player_id}</Text>
             <Text style={styles.levelLabel}>Level {level} Player</Text>
 
             {/* XP bar */}

@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { targetPlayerId } = body; // This is the player_id (HYP-XXXXX) or internal UUID
+    const { targetPlayerId } = body; // This is the player_id or internal UUID
 
     if (!targetPlayerId) {
       return NextResponse.json({ error: 'Target player ID required' }, { status: 400 });
