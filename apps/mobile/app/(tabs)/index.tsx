@@ -85,10 +85,13 @@ type FriendActivity = {
 type UpcomingEvent = {
   id: string;
   name: string;
-  game_id: string | null;
-  scheduled_at: string;
-  entry_fee: number | null;
-  attendance_xp: number | null;
+  game: { id: string; name: string; icon: string; color: string } | null;
+  scheduledAt: string;
+  date: string;
+  time: string;
+  entryFee: string;
+  isFree: boolean;
+  attendanceXp: number;
   status: string;
 };
 
@@ -565,28 +568,18 @@ export default function DashboardScreen() {
         {upcomingEvents.length === 0 ? (
           <Text style={styles.emptyText}>No upcoming events at this store.</Text>
         ) : (
-          upcomingEvents.map(ev => {
-            const date = new Date(ev.scheduled_at).toLocaleDateString('en-US', {
-              weekday: 'short', month: 'short', day: 'numeric',
-            });
-            const time = new Date(ev.scheduled_at).toLocaleTimeString('en-US', {
-              hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles',
-            });
-            return (
-              <View key={ev.id} style={styles.feedRow}>
-                <Text style={styles.feedIcon}>{GAME_ICONS[ev.game_id ?? ''] ?? '📅'}</Text>
-                <View style={styles.feedInfo}>
-                  <Text style={styles.feedHeadline} numberOfLines={1}>{ev.name}</Text>
-                  <Text style={styles.feedSub}>{date} · {time}</Text>
-                </View>
-                {ev.entry_fee != null && ev.entry_fee > 0 ? (
-                  <Text style={styles.feedMeta}>${ev.entry_fee}</Text>
-                ) : (
-                  <Text style={[styles.feedMeta, { color: '#22c55e' }]}>Free</Text>
-                )}
+          upcomingEvents.map(ev => (
+            <View key={ev.id} style={styles.feedRow}>
+              <Text style={styles.feedIcon}>{ev.game?.icon ?? '📅'}</Text>
+              <View style={styles.feedInfo}>
+                <Text style={styles.feedHeadline} numberOfLines={1}>{ev.name}</Text>
+                <Text style={styles.feedSub}>{ev.date} · {ev.time}</Text>
               </View>
-            );
-          })
+              <Text style={[styles.feedMeta, ev.isFree && { color: '#22c55e' }]}>
+                {ev.entryFee}
+              </Text>
+            </View>
+          ))
         )}
       </View>
 
@@ -683,6 +676,13 @@ export default function DashboardScreen() {
                     manualStoreRef.current = store;
                     setSelectedStore(store);
                     setShowStoreSwitcher(false);
+                    const sid = store.id;
+                    api.get<{ banners: Banner[] }>(`/api/banners?store_id=${sid}`)
+                      .then(b => setBanners(b.banners ?? [])).catch(() => {});
+                    api.get<{ updates: StoreUpdate[] }>(`/api/store-updates?store_id=${sid}`)
+                      .then(d => setStoreUpdates(d.updates ?? [])).catch(() => {});
+                    api.get<{ events: UpcomingEvent[] }>(`/api/events?status=upcoming&limit=3&store_id=${sid}`)
+                      .then(d => setUpcomingEvents(d.events ?? [])).catch(() => {});
                   }}
                 >
                   <View style={[styles.storeOptionDot, { backgroundColor: store.color ?? '#7a7060' }]} />

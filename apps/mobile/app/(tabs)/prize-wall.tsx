@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
@@ -238,11 +238,11 @@ export default function PrizeWallScreen() {
   );
 }
 
-function ImageWithFallback({ uri, style }: { uri: string; style: object | object[] }) {
+function ImageWithFallback({ uri, style }: { uri: string; style: ComponentProps<typeof Image>['style'] }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <View style={[Array.isArray(style) ? style[0] : style, { alignItems: 'center', justifyContent: 'center' }]}>
+      <View style={[style, { alignItems: 'center', justifyContent: 'center' }]}>
         <Feather name="image" size={20} color={C.textTertiary} />
       </View>
     );
@@ -250,7 +250,7 @@ function ImageWithFallback({ uri, style }: { uri: string; style: object | object
   return (
     <Image
       source={{ uri }}
-      style={style as never}
+      style={style}
       resizeMode="cover"
       onError={() => setFailed(true)}
     />
