@@ -468,11 +468,29 @@ export default function CommunityScreen() {
           {searching ? <ActivityIndicator style={styles.searchLoader} color={C.accent} /> : searchQuery.trim() && searchResults.length === 0 ? (
             <View style={styles.searchEmpty}><Text style={styles.emptyBody}>No players found</Text></View>
           ) : (
-            <ScrollView keyboardShouldPersistTaps="handled">{searchResults.map(result => (
-              <Pressable key={result.id} style={styles.searchResultRow} onPress={() => setSelectedResult(result)}>
-                <AvatarBubble avatar={result.avatar} /><View style={styles.info}><Text style={styles.name} numberOfLines={1}>{result.name}</Text><Text style={styles.meta}>Lv.{result.level ?? 1} · {(result.totalXp ?? 0).toLocaleString()} XP</Text></View><Text style={styles.resultChevron}>›</Text>
-              </Pressable>
-            ))}</ScrollView>
+            <ScrollView keyboardShouldPersistTaps="handled">{searchResults.map(result => {
+              const alreadyFriend = result.isFriend;
+              const sent = requestsSent.has(result.odid);
+              const canAdd = !alreadyFriend && !sent && result.allowFriendRequests;
+              return (
+                <View key={result.id} style={styles.searchResultRow}>
+                  <AvatarBubble avatar={result.avatar} />
+                  <View style={styles.info}>
+                    <Text style={styles.name} numberOfLines={1}>{result.name}</Text>
+                    <Text style={styles.meta}>Lv.{result.level ?? 1} · {(result.totalXp ?? 0).toLocaleString()} XP</Text>
+                  </View>
+                  <Pressable
+                    disabled={!canAdd || sendingRequest}
+                    style={[styles.addBtn, !canAdd && styles.addBtnDisabled]}
+                    onPress={() => sendFriendRequest(result)}
+                  >
+                    <Text style={[styles.addBtnText, !canAdd && styles.addBtnTextDisabled]}>
+                      {alreadyFriend ? '✓' : sent ? '📨' : !result.allowFriendRequests ? '—' : '+ Add'}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}</ScrollView>
           )}
           {selectedResult && <View style={styles.profileOverlay}>
             <Pressable style={styles.profileBackdrop} onPress={() => setSelectedResult(null)} />
@@ -623,7 +641,10 @@ const styles = StyleSheet.create({
   searchLoader: { marginTop: 32 },
   searchEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   searchResultRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  resultChevron: { color: C.textTertiary, fontSize: 26 },
+  addBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.accent },
+  addBtnDisabled: { backgroundColor: C.bgElevated, borderWidth: 1, borderColor: C.border },
+  addBtnText: { color: C.accentFg, fontSize: 13, fontWeight: '700' },
+  addBtnTextDisabled: { color: C.textTertiary },
   profileOverlay: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end' },
   profileBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.65)' },
   miniProfile: { backgroundColor: C.bgElevated, borderTopLeftRadius: 24, borderTopRightRadius: 24, alignItems: 'center', paddingTop: 12, paddingHorizontal: 24 },

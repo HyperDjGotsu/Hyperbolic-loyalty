@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     // Search by display_name or player_id
     const { data: players, error } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, privacy_profile_visibility, privacy_hide_from_search, privacy_allow_friend_requests')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config, privacy_profile_visibility, privacy_hide_from_search, privacy_allow_friend_requests')
       .or(`display_name.ilike.%${query}%,player_id.ilike.%${query}%`)
       .neq('id', currentPlayer?.id || '')
       .limit(20);
@@ -87,14 +87,17 @@ export async function GET(request: Request) {
         title: isPrivate ? '???' : `Level ${level}`,
         level: isPrivate ? null : level,
         totalXp: isPrivate ? null : totalXp,
-        avatar: {
-          type: 'emoji' as const,
-          base: player.avatar_base || '😎',
-          photoUrl: null,
-          background: player.avatar_background || '#3b82f6',
-          frame: player.avatar_frame || 'none',
-          badge: player.avatar_badge || null,
-        },
+        avatar: (() => {
+          const photoUrl = (player.avatar_config as Record<string, unknown> | null)?.photo_url as string | null ?? null;
+          return {
+            type: photoUrl ? 'photo' as const : 'emoji' as const,
+            base: player.avatar_base || '😎',
+            photoUrl,
+            background: player.avatar_background || '#3b82f6',
+            frame: player.avatar_frame || 'none',
+            badge: player.avatar_badge || null,
+          };
+        })(),
         privacy: {
           profileVisibility: player.privacy_profile_visibility || 'public',
         },
