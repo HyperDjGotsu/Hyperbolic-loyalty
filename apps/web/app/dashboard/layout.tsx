@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useClerk } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/ui';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
@@ -118,6 +119,7 @@ function MobileNavItem({
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { signOut } = useClerk();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isStaff, setIsStaff] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
@@ -199,16 +201,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <NavItem key={item.href} item={item} pathname={pathname} />
           ))}
         </nav>
-        {isStaff && (
-          <div className="p-4 border-t border-border-token">
+        <div className="p-4 border-t border-border-token flex flex-col gap-2">
+          {isStaff && (
             <Link
               href="/hq"
               className="text-xs text-tertiary hover:text-secondary transition-colors"
             >
               Staff HQ →
             </Link>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => signOut({ redirectUrl: '/' })}
+            className="text-xs text-tertiary hover:text-red-400 transition-colors text-left"
+          >
+            Sign out
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}

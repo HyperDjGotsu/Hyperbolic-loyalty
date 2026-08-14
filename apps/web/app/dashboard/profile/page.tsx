@@ -1236,8 +1236,19 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Sign Out */}
+      <div className="px-4 mt-8">
+        <button
+          type="button"
+          onClick={() => signOut({ redirectUrl: '/' })}
+          className="w-full py-3 rounded-xl border border-border-token text-secondary hover:text-primary hover:border-border-token/80 font-medium text-sm transition-colors"
+        >
+          Sign Out
+        </button>
+      </div>
+
       {/* Danger Zone */}
-      <div className="px-4 mt-8 mb-6">
+      <div className="px-4 mt-6 mb-6">
         <div className="border-t border-red-500/20 pt-6">
           <h2 className="text-xs font-bold text-secondary/60 uppercase tracking-widest mb-3">
             Danger Zone
