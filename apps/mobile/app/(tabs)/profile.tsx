@@ -336,12 +336,10 @@ export default function ProfileScreen() {
     try {
       const asset = result.assets[0];
       const jwt = await getToken();
+      const fileRes = await fetch(asset.uri);
+      const blob = await fileRes.blob();
       const formData = new FormData();
-      formData.append('file', {
-        uri: asset.uri,
-        type: asset.mimeType ?? 'image/jpeg',
-        name: 'avatar.jpg',
-      } as unknown as Blob);
+      formData.append('file', blob, 'avatar.jpg');
 
       const res = await fetch(`${API_BASE}/api/player/avatar-photo`, {
         method: 'POST',
