@@ -259,7 +259,7 @@ export default function CommunityScreen() {
     if (inFlightPrefs.current.has(requestKey)) return;
     inFlightPrefs.current.add(requestKey);
     try {
-      await api.delete(`/api/community/friends/${odid}`);
+      await api.post('/api/community/unfriend', { friendId: odid });
       setFriends(current => current.filter(friend => friend.odid !== odid));
     } catch {
       // Keep the friend in place so the player can retry.

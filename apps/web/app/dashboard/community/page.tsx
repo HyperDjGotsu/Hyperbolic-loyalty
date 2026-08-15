@@ -554,8 +554,10 @@ export default function CommunityPage() {
   const unfriend = async (targetUuid: string, displayId: string) => {
     setUnfriending(displayId);
     try {
-      const res = await fetch(`/api/community/friends/${targetUuid}`, {
-        method: 'DELETE',
+      const res = await fetch('/api/community/unfriend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: targetUuid }),
       });
       
       if (res.ok) {
@@ -1290,7 +1292,7 @@ export default function CommunityPage() {
 
       {/* Member Profile Modal */}
       {selectedMember && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
+        <div className="fixed inset-0 bg-black/95 z-[60] flex flex-col">
           <div className="p-4 border-b border-border-token flex items-center justify-between">
             <button onClick={() => setSelectedMember(null)} className="text-secondary">
               ← Back
