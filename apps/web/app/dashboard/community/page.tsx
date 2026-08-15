@@ -531,10 +531,10 @@ export default function CommunityPage() {
   const respondToRequest = async (friendshipId: string, action: 'accept' | 'decline') => {
     setRespondingTo(friendshipId);
     try {
-      const res = await fetch(`/api/community/friend-requests/${friendshipId}`, {
-        method: 'PUT',
+      const res = await fetch('/api/community/respond-request', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ friendshipId, action }),
       });
       
       if (res.ok) {

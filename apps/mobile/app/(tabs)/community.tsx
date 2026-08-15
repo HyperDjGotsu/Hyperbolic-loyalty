@@ -125,6 +125,7 @@ export default function CommunityScreen() {
   const [sendingRequest, setSendingRequest] = useState(false);
   const homeStoreId = useRef<string | null>(null);
   const friendsLoaded = useRef(false);
+  const friendsLoadInFlight = useRef(false);
   const inFlightPrefs = useRef(new Set<string>());
 
   useEffect(() => {
@@ -141,6 +142,13 @@ export default function CommunityScreen() {
     }, 300);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [searchQuery, searchOpen]);
+
+  // Silently pre-load friends and requests on mount so the badge is visible
+  // before the user taps Friends. Uses showLoading=false to avoid spinner flash.
+  useEffect(() => {
+    loadFriends(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load the player's homeStoreId once so we know what to pass to the store leaderboard
   useEffect(() => {
@@ -196,6 +204,8 @@ export default function CommunityScreen() {
   }
 
   async function loadFriends(showLoading = true) {
+    if (friendsLoadInFlight.current) return;
+    friendsLoadInFlight.current = true;
     if (showLoading) setFriendsLoading(true);
     try {
       const [friendsData, requestsData] = await Promise.all([
@@ -208,6 +218,7 @@ export default function CommunityScreen() {
     } catch {
       // Keep any previously loaded data visible if refreshing fails.
     } finally {
+      friendsLoadInFlight.current = false;
       setFriendsLoading(false);
       setFriendsRefreshing(false);
     }
@@ -230,7 +241,7 @@ export default function CommunityScreen() {
     if (inFlightPrefs.current.has(requestKey)) return;
     inFlightPrefs.current.add(requestKey);
     try {
-      await api.put(`/api/community/friend-requests/${friendshipId}`, { action });
+      await api.post('/api/community/respond-request', { friendshipId, action });
       setFriendRequests(current => current.filter(r => r.friendshipId !== friendshipId));
       if (action === 'accept') {
         const data = await api.get<{ friends: Friend[] }>('/api/community/friends');
@@ -285,9 +296,16 @@ export default function CommunityScreen() {
           { id: 'friends' as const, label: '👥 Friends' },
         ]).map(tab => (
           <Pressable key={tab.id} style={styles.tab} onPress={() => handleTab(tab.id)}>
-            <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+              {tab.id === 'friends' && friendRequests.length > 0 && (
+                <View style={styles.requestBadge}>
+                  <Text style={styles.requestBadgeText}>{friendRequests.length}</Text>
+                </View>
+              )}
+            </View>
             {activeTab === tab.id && <View style={styles.tabUnderline} />}
           </Pressable>
         ))}
@@ -521,6 +539,21 @@ const styles = StyleSheet.create({
     height: 2,
     borderRadius: 1,
     backgroundColor: C.accent,
+  },
+  requestBadge: {
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  requestBadgeText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
+    lineHeight: 14,
   },
   searchHeaderButton: { position: 'absolute', right: 8, top: 5, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   searchHeaderIcon: { fontSize: 19 },
