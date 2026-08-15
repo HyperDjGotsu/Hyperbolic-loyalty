@@ -87,7 +87,7 @@ export function PlayerPassCard({
               <p className="mt-0.5 text-lg font-bold tabular-nums text-white">{formatValue(prizePoints)} pts</p>
             </div>
             <Link
-              href="/dashboard/shop"
+              href="/dashboard/prize-wall"
               className="rounded-lg bg-cyan-400 px-4 py-2.5 text-sm font-bold text-zinc-950 transition-colors hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
             >
               Spend at Prize Wall

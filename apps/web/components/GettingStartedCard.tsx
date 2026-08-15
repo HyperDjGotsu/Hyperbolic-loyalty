@@ -40,7 +40,7 @@ const ITEMS: ChecklistItem[] = [
     key: 'shop',
     label: 'Visit the Prize Wall',
     description: 'See what you can unlock',
-    href: '/dashboard/shop',
+    href: '/dashboard/prize-wall',
     storageKey: 'hxp_done_shop',
   },
   {
