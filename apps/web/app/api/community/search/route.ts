@@ -91,14 +91,17 @@ export async function GET(request: Request) {
         level: isPrivate ? null : level,
         totalXp: isPrivate ? null : totalXp,
         avatar: (() => {
-          const photoUrl = (player.avatar_config as Record<string, unknown> | null)?.photo_url as string | null ?? null;
+          const cfg = (player.avatar_config && typeof player.avatar_config === 'object' && !Array.isArray(player.avatar_config))
+            ? player.avatar_config as Record<string, unknown>
+            : null;
+          const photoUrl = typeof cfg?.photo_url === 'string' ? cfg.photo_url : null;
           return {
             type: photoUrl ? 'photo' as const : 'emoji' as const,
-            base: player.avatar_base || '😎',
+            base: (cfg !== null ? (typeof cfg.base === 'string' ? cfg.base : null) : null) || player.avatar_base || '😎',
             photoUrl,
-            background: player.avatar_background || '#3b82f6',
-            frame: player.avatar_frame || 'none',
-            badge: player.avatar_badge || null,
+            background: (cfg !== null ? (typeof cfg.background === 'string' ? cfg.background : null) : null) || player.avatar_background || '#3b82f6',
+            frame: (cfg !== null ? (typeof cfg.frame === 'string' ? cfg.frame : null) : null) || player.avatar_frame || 'none',
+            badge: cfg !== null ? (typeof cfg.badge === 'string' ? cfg.badge : null) : (player.avatar_badge ?? null),
           };
         })(),
         privacy: {

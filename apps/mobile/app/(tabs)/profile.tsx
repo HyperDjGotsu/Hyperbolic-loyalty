@@ -40,6 +40,7 @@ type AvatarConfig = {
   frame: string;
   badge: string | null;
   photo_url: string | null;
+  previous_photo_url?: string | null;
 };
 
 type InventoryItem = {
@@ -355,8 +356,8 @@ export default function ProfileScreen() {
         return;
       }
 
-      const { photo_url } = await res.json() as { photo_url: string };
-      setAvatarDraft(d => d ? { ...d, photo_url, base: d.base ?? '😎' } : d);
+      const { photo_url, previous_photo_url } = await res.json() as { photo_url: string; previous_photo_url: string | null };
+      setAvatarDraft(d => d ? { ...d, photo_url, previous_photo_url: previous_photo_url ?? null, base: d.base ?? '😎' } : d);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       Alert.alert('Upload failed', msg);
@@ -369,13 +370,40 @@ export default function ProfileScreen() {
     setPhotoUploading(true);
     try {
       const jwt = await getToken();
-      await fetch(`${API_BASE}/api/player/avatar-photo`, {
+      const res = await fetch(`${API_BASE}/api/player/avatar-photo`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${jwt}` },
       });
-      setAvatarDraft(d => d ? { ...d, photo_url: null } : d);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        Alert.alert('Error', err.error ?? 'Could not remove photo.');
+        return;
+      }
+      setAvatarDraft(d => d ? { ...d, photo_url: null, previous_photo_url: null } : d);
     } catch {
       Alert.alert('Error', 'Could not remove photo.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  async function revertPhoto() {
+    setPhotoUploading(true);
+    try {
+      const jwt = await getToken();
+      const res = await fetch(`${API_BASE}/api/player/avatar-photo`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as Record<string, string>;
+        Alert.alert('Error', err.error ?? 'Could not revert photo.');
+        return;
+      }
+      const { photo_url, previous_photo_url } = await res.json() as { photo_url: string | null; previous_photo_url: string | null };
+      setAvatarDraft(d => d ? { ...d, photo_url: photo_url ?? null, previous_photo_url: previous_photo_url ?? null } : d);
+    } catch {
+      Alert.alert('Error', 'Could not revert photo.');
     } finally {
       setPhotoUploading(false);
     }
@@ -589,7 +617,7 @@ export default function ProfileScreen() {
       </Modal>
 
       <Modal visible={avatarOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setAvatarOpen(false)}>
-        <View style={[styles.modal, { paddingTop: insets.top }]}><View style={styles.modalHeader}><Pressable onPress={() => setAvatarOpen(false)}><Text style={styles.modalAction}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Edit Avatar</Text><Pressable disabled={modalSaving} onPress={saveAvatar}><Text style={styles.modalAction}>{modalSaving ? 'Saving…' : 'Save'}</Text></Pressable></View>
+        <View style={[styles.modal, { paddingTop: insets.top }]}><View style={styles.modalHeader}><Pressable disabled={photoUploading} onPress={() => setAvatarOpen(false)}><Text style={[styles.modalAction, photoUploading && styles.buttonDisabledOp]}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Edit Avatar</Text><Pressable disabled={modalSaving || photoUploading} onPress={saveAvatar}><Text style={[styles.modalAction, (modalSaving || photoUploading) && styles.buttonDisabledOp]}>{modalSaving ? 'Saving…' : 'Save'}</Text></Pressable></View>
           {avatarDraft && <>
             <View style={[styles.avatarPreview, {
               backgroundColor: avatarAsset('background', avatarDraft.background)?.color ?? avatarDraft.background ?? '#29241d',
@@ -619,6 +647,15 @@ export default function ProfileScreen() {
                       >
                         <Text style={styles.photoBtnText}>{photoUploading ? 'Uploading…' : '📷 Change Photo'}</Text>
                       </Pressable>
+                      {avatarDraft.previous_photo_url && (
+                        <Pressable
+                          style={[styles.photoBtn, { backgroundColor: '#1e3a5f' }, photoUploading && styles.buttonDisabledOp]}
+                          onPress={() => void revertPhoto()}
+                          disabled={photoUploading}
+                        >
+                          <Text style={styles.photoBtnText}>↩ Revert to Previous Photo</Text>
+                        </Pressable>
+                      )}
                       <Pressable
                         style={[styles.photoRemoveBtn, photoUploading && styles.buttonDisabledOp]}
                         onPress={() => void removePhoto()}

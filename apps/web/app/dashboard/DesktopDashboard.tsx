@@ -901,6 +901,18 @@ export default function DesktopDashboard() {
     badge: avatar.badge || null,
   };
 
+  const HERO_FRAME_COLORS: Record<string, string> = {
+    none: 'var(--accent)',
+    silver: '#94a3b8',
+    gold: '#eab308',
+    diamond: '#22d3ee',
+    fire: '#f97316',
+    pirate: '#dc2626',
+    electric: '#facc15',
+    legendary: '#a855f7',
+  };
+  const heroBorderColor = HERO_FRAME_COLORS[avatarForComponent.frame] ?? 'var(--accent)';
+
   const [bannerIndex, setBannerIndex] = useState(0);
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -962,8 +974,11 @@ export default function DesktopDashboard() {
               {/* Avatar */}
               <div className="relative">
                 <div
-                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] border-accent overflow-hidden"
-                  style={avatarForComponent.photoUrl ? {} : { background: 'linear-gradient(135deg, #0a2a3a, #0f3a4a)' }}
+                  className="w-[100px] h-[100px] rounded-3xl flex items-center justify-center text-[50px] border-[3px] overflow-hidden"
+                  style={{
+                    borderColor: heroBorderColor,
+                    background: avatarForComponent.photoUrl ? undefined : avatarForComponent.background,
+                  }}
                 >
                   {avatarForComponent.photoUrl ? (
                     <img src={avatarForComponent.photoUrl} alt="avatar" className="w-full h-full object-cover" />

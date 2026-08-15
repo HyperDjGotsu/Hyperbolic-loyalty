@@ -47,7 +47,7 @@ export async function GET() {
     const requesterIds = requests.map(r => r.requester_id);
     const { data: requesters, error: requestersError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config')
       .in('id', requesterIds);
 
     if (requestersError) {
@@ -70,18 +70,24 @@ export async function GET() {
       else if (diffHours > 0) timeAgo = `${diffHours}h ago`;
       else if (diffMins > 0) timeAgo = `${diffMins}m ago`;
 
+      const cfg = (requester?.avatar_config && typeof requester.avatar_config === 'object' && !Array.isArray(requester.avatar_config))
+        ? requester.avatar_config as Record<string, unknown>
+        : null;
+      const photoUrl = typeof cfg?.photo_url === 'string' ? cfg.photo_url : null;
+
       return {
         friendshipId: request.id,
         id: requester?.player_id || 'Unknown',
         odid: request.requester_id,
         name: requester?.display_name || 'Unknown',
         avatar: {
-          type: 'emoji' as const,
-          base: requester?.avatar_base || '😎',
-          photoUrl: null,
-          background: requester?.avatar_background || '#3b82f6',
-          frame: requester?.avatar_frame || 'none',
-          badge: requester?.avatar_badge || null,
+          type: photoUrl ? 'photo' as const : 'emoji' as const,
+          base: (cfg !== null ? (typeof cfg.base === 'string' ? cfg.base : null) : null) || requester?.avatar_base || '😎',
+          photoUrl,
+          background: (cfg !== null ? (typeof cfg.background === 'string' ? cfg.background : null) : null) || requester?.avatar_background || '#3b82f6',
+          frame: (cfg !== null ? (typeof cfg.frame === 'string' ? cfg.frame : null) : null) || requester?.avatar_frame || 'none',
+          // Use cfg badge when config exists (even if null); fall back to legacy only when no config at all
+          badge: cfg !== null ? (typeof cfg.badge === 'string' ? cfg.badge : null) : (requester?.avatar_badge ?? null),
         },
         timestamp: timeAgo,
         createdAt: request.created_at,

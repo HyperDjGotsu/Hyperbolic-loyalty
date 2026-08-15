@@ -21,6 +21,7 @@ interface AvatarConfig {
   frame: string;
   badge: string | null;
   photo_url: string | null;
+  previous_photo_url?: string | null;
 }
 
 interface PrivacySettings {
@@ -430,12 +431,14 @@ export default function ProfilePage() {
         body: JSON.stringify(tempAvatar),
       });
 
+      const data = await res.json();
       if (res.ok) {
-        setPlayerData(prev => prev ? { ...prev, avatarConfig: tempAvatar } : null);
+        const saved: AvatarConfig = data.avatarConfig ?? tempAvatar;
+        setPlayerData(prev => prev ? { ...prev, avatarConfig: saved } : null);
+        setTempAvatar(saved);
         setEditingAvatar(false);
         alert('✅ Avatar saved!');
       } else {
-        const data = await res.json();
         alert('Failed to save avatar: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
@@ -446,14 +449,70 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setTempAvatar(prev => ({ ...prev, photo_url: reader.result as string, base: '😎' }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    // Reset input so the same file can be re-selected after an error
+    e.target.value = '';
+    setPhotoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/player/avatar-photo', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        alert('Photo upload failed: ' + (data.error || 'Unknown error'));
+        return;
+      }
+      setTempAvatar(prev => ({
+        ...prev,
+        photo_url: data.photo_url,
+        previous_photo_url: data.previous_photo_url ?? null,
+      }));
+    } catch {
+      alert('Photo upload failed. Please try again.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const handleRevertPhoto = async () => {
+    setPhotoUploading(true);
+    try {
+      const res = await fetch('/api/player/avatar-photo', { method: 'PATCH' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert('Revert failed: ' + (data.error || 'Unknown error'));
+        return;
+      }
+      setTempAvatar(prev => ({
+        ...prev,
+        photo_url: data.photo_url,
+        previous_photo_url: data.previous_photo_url ?? null,
+      }));
+    } catch {
+      alert('Revert failed. Please try again.');
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setPhotoUploading(true);
+    try {
+      const res = await fetch('/api/player/avatar-photo', { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        alert('Remove failed: ' + (data.error || 'Unknown error'));
+        return;
+      }
+      setTempAvatar(prev => ({ ...prev, photo_url: null, previous_photo_url: null }));
+    } catch {
+      alert('Remove failed. Please try again.');
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -810,11 +869,12 @@ export default function ProfilePage() {
       <div className="p-4 border-b border-border-token flex items-center justify-between bg-surface">
         <button
           type="button"
+          disabled={photoUploading}
           onClick={() => {
             setTempAvatar(playerData?.avatarConfig || defaultAvatarConfig);
             setEditingAvatar(false);
           }}
-          className="text-secondary hover:text-primary transition-colors"
+          className="text-secondary hover:text-primary transition-colors disabled:opacity-40"
         >
           Cancel
         </button>
@@ -822,7 +882,7 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={saveAvatar}
-          disabled={saving}
+          disabled={saving || photoUploading}
           className="text-accent font-bold disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save'}
@@ -873,17 +933,28 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full p-6 border-2 border-dashed border-border-token rounded-xl text-center hover:border-accent transition-colors bg-elevated/50"
+              disabled={photoUploading}
+              className="w-full p-6 border-2 border-dashed border-border-token rounded-xl text-center hover:border-accent transition-colors bg-elevated/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="text-4xl mb-2">📷</div>
-              <div className="text-primary font-medium">Upload Photo</div>
-              <div className="text-secondary text-sm">Tap to select an image</div>
+              <div className="text-4xl mb-2">{photoUploading ? '⏳' : '📷'}</div>
+              <div className="text-primary font-medium">{photoUploading ? 'Uploading…' : 'Upload Photo'}</div>
+              <div className="text-secondary text-sm">Tap to select an image (max 2 MB)</div>
             </button>
+            {tempAvatar.previous_photo_url && !photoUploading && (
+              <button
+                type="button"
+                onClick={handleRevertPhoto}
+                className="w-full p-3 bg-blue-500/20 text-blue-300 rounded-xl border border-blue-500/30 text-sm"
+              >
+                ↩ Revert to previous photo
+              </button>
+            )}
             {tempAvatar.photo_url && (
               <button
                 type="button"
-                onClick={() => setTempAvatar(prev => ({ ...prev, photo_url: null }))}
-                className="w-full p-3 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30"
+                disabled={photoUploading}
+                onClick={() => void handleRemovePhoto()}
+                className="w-full p-3 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30 disabled:opacity-50"
               >
                 Remove Photo
               </button>

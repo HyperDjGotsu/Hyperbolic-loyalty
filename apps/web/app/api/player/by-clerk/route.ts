@@ -114,6 +114,7 @@ interface AvatarConfig {
   frame: string;
   badge: string | null;
   photo_url: string | null;
+  previous_photo_url?: string | null;
 }
 
 const defaultAvatarConfig: AvatarConfig = {
@@ -122,6 +123,7 @@ const defaultAvatarConfig: AvatarConfig = {
   frame: 'none',
   badge: null,
   photo_url: null,
+  previous_photo_url: null,
 };
 
 function parseAvatarConfig(avatarConfig: unknown): AvatarConfig {
@@ -133,6 +135,7 @@ function parseAvatarConfig(avatarConfig: unknown): AvatarConfig {
       frame: typeof config.frame === 'string' ? config.frame : defaultAvatarConfig.frame,
       badge: typeof config.badge === 'string' ? config.badge : null,
       photo_url: typeof config.photo_url === 'string' ? config.photo_url : null,
+      previous_photo_url: typeof config.previous_photo_url === 'string' ? config.previous_photo_url : null,
     };
   }
   return defaultAvatarConfig;
