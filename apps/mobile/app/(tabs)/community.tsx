@@ -15,6 +15,7 @@ import {
 import { useApi } from '@/lib/api';
 import { LoadingView } from '@/components/ui';
 import { C } from '@/lib/theme';
+import { useAlertsContext } from '@/lib/alerts-context';
 
 type Avatar = {
   type: 'emoji' | 'photo';
@@ -116,6 +117,7 @@ export default function CommunityScreen() {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [friendsRefreshing, setFriendsRefreshing] = useState(false);
+  const { refreshBadge } = useAlertsContext();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -243,6 +245,7 @@ export default function CommunityScreen() {
     try {
       await api.post('/api/community/respond-request', { friendshipId, action });
       setFriendRequests(current => current.filter(r => r.friendshipId !== friendshipId));
+      refreshBadge();
       if (action === 'accept') {
         const data = await api.get<{ friends: Friend[] }>('/api/community/friends');
         setFriends(data.friends ?? []);

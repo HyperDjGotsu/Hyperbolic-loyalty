@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
+import { useAlertsContext } from '@/lib/alerts-context';
 
 type Notification = {
   id: string;
@@ -79,6 +80,8 @@ export default function AlertsScreen() {
   const [clearing, setClearing] = useState(false);
   const [error, setError] = useState(false);
   const storeIdRef = useRef<string | null>(null);
+  const { friendRequests, removeFriendRequest, refreshBadge } = useAlertsContext();
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
 
   async function load() {
     setError(false);
@@ -94,6 +97,7 @@ export default function AlertsScreen() {
       if (notifications.some(n => !n.is_read)) {
         setItems(notifications.map(n => ({ ...n, is_read: true })));
         api.post('/api/notifications', { markAll: true }).catch(() => {});
+        refreshBadge();
       } else {
         setItems(notifications);
       }
@@ -102,6 +106,19 @@ export default function AlertsScreen() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  }
+
+  async function respondToRequest(friendshipId: string, action: 'accept' | 'decline') {
+    if (respondingTo) return;
+    setRespondingTo(friendshipId);
+    try {
+      await api.post('/api/community/respond-request', { friendshipId, action });
+      removeFriendRequest(friendshipId);
+    } catch {
+      // keep the card visible so the user can retry
+    } finally {
+      setRespondingTo(null);
     }
   }
 
@@ -164,6 +181,33 @@ export default function AlertsScreen() {
           </Pressable>
         )}
       </View>
+      {friendRequests.length > 0 && (
+        <View style={styles.friendSection}>
+          <Text style={styles.friendSectionTitle}>👥 Friend Requests</Text>
+          {friendRequests.map(req => (
+            <View key={req.friendshipId} style={styles.friendCard}>
+              <View style={styles.friendInfo}>
+                <Text style={styles.friendName}>{req.name}</Text>
+                <Text style={styles.friendTime}>{req.timestamp}</Text>
+              </View>
+              <Pressable
+                disabled={respondingTo === req.friendshipId}
+                style={[styles.friendBtn, styles.acceptBtn]}
+                onPress={() => respondToRequest(req.friendshipId, 'accept')}
+              >
+                <Text style={styles.friendBtnText}>✓ Accept</Text>
+              </Pressable>
+              <Pressable
+                disabled={respondingTo === req.friendshipId}
+                style={[styles.friendBtn, styles.declineBtn]}
+                onPress={() => respondToRequest(req.friendshipId, 'decline')}
+              >
+                <Text style={[styles.friendBtnText, { color: '#7a7060' }]}>✗</Text>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      )}
       {error ? (
         <View style={styles.empty}>
           <Feather name="bell" size={48} color="#7a7060" />
@@ -175,12 +219,12 @@ export default function AlertsScreen() {
             <Text style={styles.retryText}>Retry</Text>
           </Pressable>
         </View>
-      ) : items.length === 0 ? (
+      ) : items.length === 0 && friendRequests.length === 0 ? (
         <View style={styles.empty}>
           <Feather name="bell" size={48} color="#7a7060" />
           <Text style={styles.emptyText}>No alerts yet</Text>
         </View>
-      ) : items.map(item => (
+      ) : items.length === 0 ? null : items.map(item => (
         <View key={item.id} style={[styles.row, !item.is_read && styles.rowUnread]}>
           <View style={styles.iconWrap}>
             <Feather name={typeIcon(item.type)} size={18} color={item.is_read ? '#7a7060' : '#c4b5fd'} />
@@ -262,4 +306,30 @@ const styles = StyleSheet.create({
   title: { color: '#f2efe8', fontWeight: '700', fontSize: 14, flex: 1, marginRight: 8 },
   time: { color: '#7a7060', fontSize: 11 },
   body: { color: '#a89f90', fontSize: 13, lineHeight: 18 },
+  friendSection: { marginHorizontal: 16, marginTop: 8, marginBottom: 4 },
+  friendSectionTitle: { color: '#f2efe8', fontWeight: '800', fontSize: 14, marginBottom: 8 },
+  friendCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a1810',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#c4b5fd',
+    padding: 12,
+    marginBottom: 8,
+    gap: 8,
+  },
+  friendInfo: { flex: 1 },
+  friendName: { color: '#f2efe8', fontWeight: '700', fontSize: 14 },
+  friendTime: { color: '#7a7060', fontSize: 11, marginTop: 2 },
+  friendBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  acceptBtn: { backgroundColor: 'rgba(196,181,253,0.15)', borderWidth: 1, borderColor: '#c4b5fd' },
+  declineBtn: { backgroundColor: 'rgba(242,239,232,0.06)', borderWidth: 1, borderColor: 'rgba(242,239,232,0.12)' },
+  friendBtnText: { color: '#c4b5fd', fontWeight: '700', fontSize: 13 },
 });

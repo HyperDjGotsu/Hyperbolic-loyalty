@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
+import { AlertsProvider, useAlertsContext } from '@/lib/alerts-context';
 
 const TAB_BAR_STYLE = {
   backgroundColor: '#111009',
@@ -10,7 +11,9 @@ const TAB_BAR_STYLE = {
   height: Platform.OS === 'ios' ? 84 : 60,
 };
 
-export default function TabsLayout() {
+function TabsNav() {
+  const { badgeCount } = useAlertsContext();
+
   return (
     <Tabs
       screenOptions={{
@@ -61,6 +64,7 @@ export default function TabsLayout() {
           title: 'Alerts',
           tabBarLabel: 'Alerts',
           tabBarIcon: ({ color }) => <Feather name="bell" size={22} color={color} />,
+          tabBarBadge: badgeCount > 0 ? badgeCount : undefined,
         }}
       />
       <Tabs.Screen
@@ -72,5 +76,13 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+  );
+}
+
+export default function TabsLayout() {
+  return (
+    <AlertsProvider>
+      <TabsNav />
+    </AlertsProvider>
   );
 }
