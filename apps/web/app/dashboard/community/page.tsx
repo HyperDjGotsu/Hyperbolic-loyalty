@@ -562,12 +562,26 @@ export default function CommunityPage() {
       
       if (res.ok) {
         setFriends(prev => prev.filter(f => f.odid !== targetUuid));
+        setRequestSent(prev => { const s = new Set(prev); s.delete(displayId); return s; });
         setSelectedMember(null);
       }
     } catch (error) {
       console.error('Error unfriending:', error);
     } finally {
       setUnfriending(null);
+    }
+  };
+
+  const cancelFriendRequest = async (targetUuid: string, displayId: string) => {
+    try {
+      await fetch('/api/community/cancel-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetPlayerId: targetUuid }),
+      });
+      setRequestSent(prev => { const s = new Set(prev); s.delete(displayId); return s; });
+    } catch (error) {
+      console.error('Error cancelling friend request:', error);
     }
   };
 
@@ -1344,7 +1358,18 @@ export default function CommunityPage() {
                 >
                   {unfriending === selectedMember.id ? 'Removing...' : '✓ Friends (tap to unfriend)'}
                 </button>
-              ) : ('isFriend' in selectedMember && selectedMember.isFriend) || requestSent.has(selectedMember.id) ? (
+              ) : requestSent.has(selectedMember.id) ? (
+                <button
+                  className="flex-1 py-3 bg-elevated text-secondary rounded-xl font-bold border border-border-token hover:border-red-500/50 hover:text-red-400 transition-colors"
+                  onClick={() => {
+                    if ('odid' in selectedMember && selectedMember.odid) {
+                      cancelFriendRequest(selectedMember.odid, selectedMember.id);
+                    }
+                  }}
+                >
+                  ✕ Cancel Request
+                </button>
+              ) : ('isFriend' in selectedMember && selectedMember.isFriend) ? (
                 <button className="flex-1 py-3 bg-elevated text-green-400 rounded-xl font-bold border border-green-500/30">
                   📨 Request Sent
                 </button>

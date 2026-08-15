@@ -261,8 +261,23 @@ export default function CommunityScreen() {
     try {
       await api.post('/api/community/unfriend', { friendId: odid });
       setFriends(current => current.filter(friend => friend.odid !== odid));
+      setRequestsSent(current => { const s = new Set(current); s.delete(odid); return s; });
     } catch {
       // Keep the friend in place so the player can retry.
+    } finally {
+      inFlightPrefs.current.delete(requestKey);
+    }
+  }
+
+  async function cancelFriendRequest(odid: string) {
+    const requestKey = `cancel:${odid}`;
+    if (inFlightPrefs.current.has(requestKey)) return;
+    inFlightPrefs.current.add(requestKey);
+    try {
+      await api.post('/api/community/cancel-request', { targetPlayerId: odid });
+      setRequestsSent(current => { const s = new Set(current); s.delete(odid); return s; });
+    } catch {
+      // Keep "sent" state visible so the player can retry.
     } finally {
       inFlightPrefs.current.delete(requestKey);
     }
@@ -497,15 +512,24 @@ export default function CommunityScreen() {
                     <Text style={styles.name} numberOfLines={1}>{result.name}</Text>
                     <Text style={styles.meta}>Lv.{result.level ?? 1} · {(result.totalXp ?? 0).toLocaleString()} XP</Text>
                   </View>
-                  <Pressable
-                    disabled={!canAdd || sendingRequest}
-                    style={[styles.addBtn, !canAdd && styles.addBtnDisabled]}
-                    onPress={() => sendFriendRequest(result)}
-                  >
-                    <Text style={[styles.addBtnText, !canAdd && styles.addBtnTextDisabled]}>
-                      {alreadyFriend ? '✓' : sent ? '📨' : !result.allowFriendRequests ? '—' : '+ Add'}
-                    </Text>
-                  </Pressable>
+                  {sent ? (
+                    <Pressable
+                      style={styles.cancelBtn}
+                      onPress={() => cancelFriendRequest(result.odid)}
+                    >
+                      <Text style={styles.cancelBtnText}>✕ Cancel</Text>
+                    </Pressable>
+                  ) : (
+                    <Pressable
+                      disabled={!canAdd || sendingRequest}
+                      style={[styles.addBtn, !canAdd && styles.addBtnDisabled]}
+                      onPress={() => sendFriendRequest(result)}
+                    >
+                      <Text style={[styles.addBtnText, !canAdd && styles.addBtnTextDisabled]}>
+                        {alreadyFriend ? '✓' : !result.allowFriendRequests ? '—' : '+ Add'}
+                      </Text>
+                    </Pressable>
+                  )}
                 </View>
               );
             })}</ScrollView>
@@ -513,7 +537,15 @@ export default function CommunityScreen() {
           {selectedResult && <View style={styles.profileOverlay}>
             <Pressable style={styles.profileBackdrop} onPress={() => setSelectedResult(null)} />
             <View style={[styles.miniProfile, { paddingBottom: Math.max(insets.bottom, 20) }]}><View style={styles.sheetHandle} /><AvatarBubble avatar={selectedResult.avatar} /><Text style={styles.profileName}>{selectedResult.name}</Text><Text style={styles.profileMeta}>Level {selectedResult.level ?? 1} · {(selectedResult.totalXp ?? 0).toLocaleString()} XP</Text>
-              <Pressable disabled={selectedResult.isFriend || requestsSent.has(selectedResult.odid) || !selectedResult.allowFriendRequests || sendingRequest} style={[styles.friendRequestButton, (selectedResult.isFriend || requestsSent.has(selectedResult.odid) || !selectedResult.allowFriendRequests) && styles.friendRequestDisabled]} onPress={() => sendFriendRequest(selectedResult)}><Text style={styles.friendRequestText}>{selectedResult.isFriend ? '✓ Friends' : requestsSent.has(selectedResult.odid) ? '📨 Request Sent' : !selectedResult.allowFriendRequests ? 'Friend Requests Disabled' : sendingRequest ? 'Sending…' : 'Send Friend Request'}</Text></Pressable>
+              {requestsSent.has(selectedResult.odid) ? (
+                <Pressable style={styles.cancelRequestButton} onPress={() => cancelFriendRequest(selectedResult.odid)}>
+                  <Text style={styles.cancelRequestText}>✕ Cancel Request</Text>
+                </Pressable>
+              ) : (
+                <Pressable disabled={selectedResult.isFriend || !selectedResult.allowFriendRequests || sendingRequest} style={[styles.friendRequestButton, (selectedResult.isFriend || !selectedResult.allowFriendRequests) && styles.friendRequestDisabled]} onPress={() => sendFriendRequest(selectedResult)}>
+                  <Text style={styles.friendRequestText}>{selectedResult.isFriend ? '✓ Friends' : !selectedResult.allowFriendRequests ? 'Friend Requests Disabled' : sendingRequest ? 'Sending…' : 'Send Friend Request'}</Text>
+                </Pressable>
+              )}
             </View>
           </View>}
         </View>
@@ -678,6 +710,8 @@ const styles = StyleSheet.create({
   addBtnDisabled: { backgroundColor: C.bgElevated, borderWidth: 1, borderColor: C.border },
   addBtnText: { color: C.accentFg, fontSize: 13, fontWeight: '700' },
   addBtnTextDisabled: { color: C.textTertiary },
+  cancelBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: C.bgElevated, borderWidth: 1, borderColor: C.border },
+  cancelBtnText: { color: C.textTertiary, fontSize: 12, fontWeight: '700' },
   profileOverlay: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end' },
   profileBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.65)' },
   miniProfile: { backgroundColor: C.bgElevated, borderTopLeftRadius: 24, borderTopRightRadius: 24, alignItems: 'center', paddingTop: 12, paddingHorizontal: 24 },
@@ -687,4 +721,6 @@ const styles = StyleSheet.create({
   friendRequestButton: { width: '100%', minHeight: 48, borderRadius: 12, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
   friendRequestDisabled: { backgroundColor: C.bgSurface, borderWidth: 1, borderColor: C.border },
   friendRequestText: { color: C.accentFg, fontSize: 14, fontWeight: '800' },
+  cancelRequestButton: { width: '100%', minHeight: 48, borderRadius: 12, backgroundColor: C.bgElevated, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  cancelRequestText: { color: C.textTertiary, fontSize: 14, fontWeight: '700' },
 });
