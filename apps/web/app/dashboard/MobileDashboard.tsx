@@ -86,6 +86,9 @@ export default function MobileDashboard() {
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
   const [prizeHighlights, setPrizeHighlights] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
+  const [friendActivity, setFriendActivity] = useState<any[]>([]);
   const [passStatus, setPassStatus] = useState<{
     tier: 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
     lifetimeXp: number;
@@ -289,6 +292,33 @@ export default function MobileDashboard() {
       .then(d => setPrizeHighlights((d.items || []).slice(0, 4)))
       .catch(() => {});
   }, [selectedStore?.id]);
+
+  useEffect(() => {
+    const storeId = selectedStore?.id || localStorage.getItem('ggc_selected_store_id');
+    const url = storeId
+      ? `/api/events?status=upcoming&limit=3&store_id=${storeId}`
+      : '/api/events?status=upcoming&limit=3';
+    fetch(url)
+      .then(r => r.ok ? r.json() : { events: [] })
+      .then(d => setUpcomingEvents(d.events || []))
+      .catch(() => {});
+  }, [selectedStore?.id]);
+
+  useEffect(() => {
+    const storeId = selectedStore?.id || localStorage.getItem('ggc_selected_store_id');
+    const url = storeId ? `/api/store-updates?store_id=${storeId}` : '/api/store-updates';
+    fetch(url)
+      .then(r => r.ok ? r.json() : { updates: [] })
+      .then(d => setStoreUpdates(d.updates || []))
+      .catch(() => {});
+  }, [selectedStore?.id]);
+
+  useEffect(() => {
+    fetch('/api/friends-activity')
+      .then(r => r.ok ? r.json() : { activity: [] })
+      .then(d => setFriendActivity(d.activity || []))
+      .catch(() => {});
+  }, []);
 
   // Load banners — re-runs when selected store changes so carousel reflects current context:
   // network-wide banners + banners for the selected store
@@ -659,28 +689,124 @@ export default function MobileDashboard() {
         )}
       </div>
 
-      {/* Prize Wall Footer */}
+      {/* Upcoming Events */}
+      <div className="mx-4 mt-6">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="font-bold text-primary flex items-center gap-2">
+            <span className="text-xl">📅</span> Upcoming Events
+          </h2>
+          <a href="/dashboard/events" className="text-accent text-sm">View Calendar →</a>
+        </div>
+        <div className="space-y-2">
+          {upcomingEvents.length === 0 ? (
+            <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl opacity-60">
+              <div className="w-9 h-9 bg-elevated/50 rounded-lg flex items-center justify-center text-lg">📅</div>
+              <div className="text-sm text-secondary">No upcoming events</div>
+            </div>
+          ) : upcomingEvents.map((event: any) => (
+            <div key={event.id} className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                style={{ backgroundColor: `${event.game?.color || '#3b82f6'}20` }}
+              >
+                {event.game?.icon || '🎮'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">{event.name}</div>
+                <div className="text-xs text-secondary">{event.date}, {event.time}</div>
+              </div>
+              {event.isFree && <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded flex-shrink-0">Free</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Store Updates */}
+      {storeUpdates.length > 0 && (
+        <div className="mx-4 mt-6">
+          <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
+            <span className="text-xl">📡</span> Store Updates
+          </h2>
+          <div className="space-y-2">
+            {storeUpdates.map((update: any, i: number) => (
+              <div
+                key={i}
+                className={`flex items-start gap-3 p-3 bg-elevated border border-border-token rounded-xl ${update.link ? 'cursor-pointer hover:border-accent/40 transition-colors' : ''}`}
+                onClick={() => update.link && (window.location.href = update.link)}
+              >
+                <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">{update.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] text-accent uppercase tracking-wide font-medium mb-0.5">{update.label}</div>
+                  <div className="text-sm font-medium leading-snug">{update.headline}</div>
+                  {update.subtext && <div className="text-xs text-secondary mt-0.5">{update.subtext}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Friends Activity */}
+      <div className="mx-4 mt-6">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="font-bold text-primary flex items-center gap-2">
+            <span className="text-xl">👥</span> Friends Activity
+          </h2>
+          <a href="/dashboard/community" className="text-accent text-sm">Community →</a>
+        </div>
+        {friendActivity.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-6 text-center gap-2 bg-elevated border border-border-token rounded-xl">
+            <div className="text-3xl">👥</div>
+            <div className="text-sm font-medium text-secondary">No friend activity yet</div>
+            <div className="text-xs text-tertiary">Add friends to see what they&apos;re up to</div>
+            <a href="/dashboard/community" className="mt-2 text-xs text-accent border border-accent/30 px-3 py-1.5 rounded-lg">
+              Find players →
+            </a>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {friendActivity.map((item: any, i: number) => (
+              <div key={i} className="flex items-start gap-3 p-3 bg-elevated border border-border-token rounded-xl">
+                <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center text-base flex-shrink-0">{item.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm leading-snug">{item.headline}</div>
+                  {item.subtext && <div className="text-xs text-secondary mt-0.5">{item.subtext}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Prize Wall */}
       {prizeHighlights.length > 0 && (
         <div className="mx-4 mt-6 mb-6">
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-bold text-primary flex items-center gap-2">
               <span className="text-xl">🏆</span> Prize Wall
             </h2>
-            <a href="/dashboard/prize-wall" className="text-accent text-sm">
-              Visit →
-            </a>
+            <a href="/dashboard/prize-wall" className="text-accent text-sm">Visit →</a>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {prizeHighlights.map((item: any) => (
               <a
                 key={item.id}
                 href="/dashboard/prize-wall"
-                className="bg-elevated border border-border-token rounded-xl p-3 text-center hover:border-accent/40 transition-colors block"
+                className="bg-elevated border border-border-token rounded-xl overflow-hidden hover:border-accent/40 transition-colors block"
               >
-                <div className="text-3xl mb-2">🎁</div>
-                <div className="text-xs font-medium truncate">{item.name}</div>
-                <div className="text-[10px] text-accent mt-1">
-                  {item.xp_cost.toLocaleString()} Guild Points
+                {item.image_url ? (
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="w-full h-24 object-contain bg-black/20"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <div className="w-full h-24 flex items-center justify-center text-3xl bg-surface">🎁</div>
+                )}
+                <div className="p-2">
+                  <div className="text-xs font-medium truncate">{item.name}</div>
+                  <div className="text-[10px] text-accent mt-0.5">{item.xp_cost.toLocaleString()} Guild Points</div>
                 </div>
               </a>
             ))}
