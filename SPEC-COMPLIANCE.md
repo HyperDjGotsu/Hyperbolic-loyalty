@@ -148,6 +148,17 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 
 ---
 
+### Avatar Security
+
+| Requirement | Canonical Spec | Production State | Status | Priority | Notes |
+|-------------|---------------|-----------------|--------|----------|-------|
+| Avatar upload scoped to authenticated player | Yes | Storage path `avatars/${player.id}/...` constructed server-side from Clerk session — request cannot supply destination | ✅ | — | |
+| Avatar config DB update scoped to authenticated player | Yes | All updates use `.eq('id', player.id)` with session-derived ID | ✅ | — | |
+| Avatar deletion scoped to authenticated player | Yes | `ownedStoragePath()` validates URL must start with `avatars/${playerId}/` | ✅ | — | |
+| `photo_url` restricted to caller's own storage objects | Post-launch | Currently accepts any Supabase storage URL — affects only caller's own profile, no cross-user write/delete possible | 🔒 | Post-launch | Restrict using existing `ownedStoragePath(url, player.id)` check — defense-in-depth / anti-impersonation, not a launch blocker |
+
+---
+
 ### Reserved Mechanics (Out of Scope for Launch)
 
 | Mechanic | Status |
