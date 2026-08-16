@@ -35,7 +35,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId, managedStoreId } = body;
+    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId } = body;
+    // Note: managedStoreId is intentionally NOT accepted here.
+    // Staff store assignments are granted through the staff invitation flow
+    // (staff_store_roles table), never through account creation.
 
     // Check if user already has a linked player
     const { data: existingLink } = await supabaseAdmin
@@ -79,19 +82,29 @@ export async function POST(request: Request) {
       const user = await currentUser();
       const clerkEmail = user?.emailAddresses?.[0]?.emailAddress || null;
 
-      // Link the player to this Clerk user and update email if missing
-      const { error: updateError } = await supabaseAdmin
+      // Atomic claim: the WHERE clerk_user_id IS NULL condition ensures only one
+      // concurrent request wins. If two requests race, one gets 0 rows back.
+      const { data: claimed, error: updateError } = await supabaseAdmin
         .from('players')
         .update({
           clerk_user_id: userId,
           // Only update email if it's missing in Supabase
           ...(clerkEmail && !player.email ? { email: clerkEmail } : {}),
         })
-        .eq('id', player.id);
+        .eq('id', player.id)
+        .is('clerk_user_id', null)
+        .select('id');
 
       if (updateError) {
         console.error('Update error:', updateError);
         return NextResponse.json({ error: 'Failed to link player' }, { status: 500 });
+      }
+
+      if (!claimed || claimed.length === 0) {
+        return NextResponse.json(
+          { error: 'This player was already claimed by another account' },
+          { status: 409 }
+        );
       }
 
       return NextResponse.json({
@@ -173,7 +186,6 @@ export async function POST(request: Request) {
           primary_game_id: primaryGame || null,
           // Store assignment
           home_store_id: homeStoreId || null,
-          managed_store_id: managedStoreId || null,
           // Referral fields
           referred_by: referrerId,
           referral_bonus_paid: false,
@@ -205,28 +217,14 @@ export async function POST(request: Request) {
         .update({ referral_code: newReferralCode })
         .eq('id', newPlayer.id);
 
-      // If valid referral code was used, award +30 XP to the new player
-      if (referrerId) {
-        await supabaseAdmin
-          .from('xp_ledger')
-          .insert({
-            player_id: newPlayer.id,
-            game_id: 'general',
-            base_xp: 30,
-            final_xp: 30,
-            multiplier: 1,
-            description: `Referral bonus - invited by ${referrerName}`,
-            source: 'referral',
-          });
-
-        console.log(`🎁 Referral bonus: +30 XP awarded to ${displayName} (referred by ${referrerName})`);
-      }
+      // Welcome bonus (+30 LXP) is awarded atomically by the player_welcome_bonus
+      // DB trigger — no application-level insert needed here.
 
       return NextResponse.json({
         success: true,
         player_id: newPlayer.player_id,
         displayName: newPlayer.display_name,
-        referralBonus: referrerId ? 30 : 0,
+        welcomeBonus: 30,
         referredBy: referrerName,
       });
 
