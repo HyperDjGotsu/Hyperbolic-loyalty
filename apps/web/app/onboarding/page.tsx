@@ -10,7 +10,7 @@ const GAME_OPTIONS = [
   { id: 'mtg', name: 'Magic: The Gathering', icon: '✨' },
   { id: 'gundam', name: 'Gundam', icon: '🤖' },
   { id: 'lorcana', name: 'Lorcana', icon: '🪄' },
-  { id: 'star_wars', name: 'Star Wars Unlimited', icon: '🌟' },
+  { id: 'sw_unlimited', name: 'Star Wars Unlimited', icon: '🌟' },
   { id: 'vanguard', name: 'Vanguard', icon: '⚔️' },
   { id: 'yugioh', name: 'Yu-Gi-Oh!', icon: '🃏' },
   { id: 'digimon', name: 'Digimon', icon: '🦖' },
