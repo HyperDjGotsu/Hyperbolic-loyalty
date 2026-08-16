@@ -10,7 +10,7 @@ const ATTENDANCE_PRIZE_POINTS = 35;
 const WIN_PRIZE_POINTS = 5;
 const ATTENDANCE_LIFETIME_XP = 35;
 const WIN_LIFETIME_XP = 5;
-const REFERRAL_PRIZE_POINTS = 100;
+const REFERRAL_PRIZE_POINTS = 10; // supersedes 100 PP — 2026-08-16
 const REFERRAL_LIFETIME_XP = 50;
 
 function calcEventPrizePoints(rawDbTier: string | null, roundsWon: number): number {
@@ -70,6 +70,6 @@ describe('Guild Points (Lifetime XP) — NEVER multiplied', () => {
 });
 
 describe('Referral bonuses — flat, no multiplier', () => {
-  it('Referral PP is a constant', () => expect(REFERRAL_PRIZE_POINTS).toBe(100));
+  it('Referral PP is a constant (10 PP flat — supersedes 100 PP)', () => expect(REFERRAL_PRIZE_POINTS).toBe(10));
   it('Referral LXP is a constant', () => expect(REFERRAL_LIFETIME_XP).toBe(50));
 });

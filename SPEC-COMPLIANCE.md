@@ -12,9 +12,10 @@
 | Event attendance Prize Points (base) | 35 PP × tier multiplier | checkin/route.ts:10 |
 | Win bonus Lifetime XP | 5 LXP per round (flat) | checkin/route.ts:11 |
 | Win bonus Prize Points (base) | 5 PP per round × tier multiplier | checkin/route.ts:12 |
-| Max rounds per event | 3 | checkin/route.ts:13 |
+| Max rounds per event (checkin path) | 3 | checkin/route.ts:13 |
+| HQ win awards | Additive `+ Win` (no cap) — each press = +5 LXP + 5 PP base × multiplier | hq/xp/route.ts TILE_PP — DECISION 2026-08-16 |
 | Referral LXP (to referrer, on referred's first event) | 50 LXP flat | checkin/route.ts:14 |
-| Referral PP (to referrer, on referred's first event) | 100 PP flat, no multiplier | checkin/route.ts:15 |
+| Referral PP (to referrer, on referred's first event) | **10 PP flat** (supersedes 100 PP) — community recognition, not farming | checkin/route.ts:15 — DECISION 2026-08-16 |
 | Welcome bonus (every new account) | 30 LXP, unconditional | player/link/route.ts — DECISION 2026-08-16 |
 | Bronze trial gate | 720 Lifetime XP (eligibility only, not spent) | claim-trial/route.ts:7 — DECISION 2026-08-16 |
 | Bronze trial duration | 30 days | claim-trial/route.ts:8 |
@@ -77,8 +78,8 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | Requirement | Canonical Spec | Production State | Status | Priority | Notes |
 |-------------|---------------|-----------------|--------|----------|-------|
 | Max 3 rounds per event check-in | 3 wins max | `MAX_ROUNDS = 3` enforced in checkin/route.ts:13 | ✅ | — | |
-| HQ XP tile max wins | 3 wins max | `TILE_PP` has `'4 Wins': 20` — no cap enforced | ❌ | P1 | P1-G: Staff can manually over-award 4-win tile |
-| Referral bonus awarded once | One-time only | `referral_bonus_paid` guard in both paths | ✅ | — | |
+| HQ win awards | Additive `+ Win` (no hard cap) | `TILE_PP['+1 Win'] = 5`; frontend sends N repeated labels; staff sees live count *(fixed 2026-08-16)* | ✅ | — | P1-G FIXED: numbered 1/2/3/4 Win tiles replaced with additive counter |
+| Referral bonus awarded once | One-time lock | Atomic `UPDATE WHERE referral_bonus_paid = false` in both paths *(hardened 2026-08-16)* | ✅ | — | |
 
 ---
 
@@ -87,9 +88,9 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | Requirement | Canonical Spec | Production State | Status | Priority | Notes |
 |-------------|---------------|-----------------|--------|----------|-------|
 | Referrer gets 50 LXP on referred's first event | 50 LXP flat | Path A (checkin) ✅ · Path B (hq/xp) ✅ | ✅ | — | |
-| Referrer gets 100 PP on referred's first event | 100 PP flat | Path A (checkin) ✅ · Path B (hq/xp) awards **0 PP** ❌ | ⚠️ | P1 | P1-H: If hq/xp fires first, flag is set → checkin path skips → referrer misses 100 PP |
-| `referral_bonus_paid` guard | One-time lock | Both paths check + set flag | ✅ | — | Guard correct; ordering risk is the bug |
-| Profile referral hint copy | "+50 LXP + 100 PP" | Shows "+50 XP" only — 100 PP omitted | ⚠️ | P3 | UI copy only |
+| Referrer gets 10 PP on referred's first event | **10 PP flat** (supersedes 100 PP) | Both paths ✅ *(fixed 2026-08-16)* | ✅ | — | P1-H FIXED: was Path A=100 PP, Path B=0 PP. Now both=10 PP, atomic claim prevents double-award |
+| `referral_bonus_paid` atomic guard | One-time lock | `UPDATE WHERE referral_bonus_paid = false RETURNING id` in both paths; reverts on XP failure *(hardened 2026-08-16)* | ✅ | — | |
+| Profile referral hint copy | "+50 XP + 10 Points" | Web + mobile copy updated *(fixed 2026-08-16)* | ✅ | — | Was P3; updated alongside P1-H |
 
 ---
 
@@ -170,8 +171,8 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | P1-C | Bronze 5% singles discount | Needs WONTFIX or build decision |
 | P1-D | Silver early event registration | Needs WONTFIX or build decision |
 | P1-E | Gold priority/circuit access | Needs WONTFIX or build decision |
-| P1-G | HQ XP `4 Wins` tile exceeds 3-round max | Fix: remove `'4 Wins'` entry from TILE_PP |
-| P1-H | Referral Path B (hq/xp) missing 100 PP to referrer | Fix: add PP award in checkReferralBonus() |
+| P1-G | HQ XP `4 Wins` tile exceeds 3-round max | ✅ FIXED — additive `+ Win` counter replaces numbered tiles; no cap; each press = +5 LXP +5 PP |
+| P1-H | Referral Path B (hq/xp) missing 100 PP to referrer | ✅ FIXED — both paths now award 50 LXP + 10 PP (superseded value); atomic claim prevents double-award |
 | P1-Welcome | Universal welcome bonus | ✅ FIXED — c7e488e |
 
 ---
@@ -187,3 +188,5 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | 2026-08-16 | Daily Spin economy | UNCHANGED — sole daily app-engagement mechanic | Darrell |
 | 2026-08-16 | Welcome bonus | DECIDED — 30 LXP universal on `create_new`, independent of referral code | Darrell |
 | 2026-08-16 | P2 Prize Wall formula | DEFERRED — keep manual staff entry for launch | Darrell |
+| 2026-08-16 | P1-G HQ win awards | CHANGED — numbered tiles replaced with additive `+ Win`; no arbitrary cap; each press = 1 win | Darrell |
+| 2026-08-16 | P1-H Referral PP | SUPERSEDED — 100 PP → 10 PP; community recognition not farming pathway | Darrell |

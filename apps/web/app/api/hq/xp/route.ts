@@ -21,8 +21,9 @@ const MONTHLY_THRESHOLD: Record<string, number> = {
 const DEFAULT_THRESHOLD = 3;  // 1x/week = ~4 events/month, need 3
 const MONTHLY_BONUS_XP = 30;
 
-// Referral bonus amount
-const REFERRAL_FIRST_EVENT_BONUS = 50;
+// Referral bonus amounts — must match checkin/route.ts exactly
+const REFERRAL_FIRST_EVENT_BONUS = 50;   // Lifetime XP, flat, never multiplied
+const REFERRAL_PRIZE_POINTS = 10;        // Prize Points, flat, no multiplier (supersedes 100 PP — 2026-08-16)
 
 // Get current month boundaries (Pacific Time)
 function getCurrentMonthBoundaries(): { start: string; end: string; monthLabel: string; monthKey: string } {
@@ -83,87 +84,99 @@ async function getMonthlyAttendanceCount(playerId: string, gameId: string, month
 }
 
 // Check and award referral bonus when player attends first event
-async function checkReferralBonus(playerId: string, staffId: string): Promise<{
+async function checkReferralBonus(playerId: string, staffId: string, storeId: string | null): Promise<{
   awarded: boolean;
   referrerName?: string;
   newPlayerName?: string;
 } | null> {
   try {
-    // Get player's referral info
     const { data: player } = await supabaseAdmin
       .from('players')
       .select('id, referred_by, referral_bonus_paid, display_name')
       .eq('id', playerId)
       .single();
 
-    // Skip if no referrer or bonus already paid
-    if (!player?.referred_by || player.referral_bonus_paid) {
-      return null;
-    }
+    if (!player?.referred_by || player.referral_bonus_paid) return null;
 
-    // Check total "Attended" entries for this player (across all games)
     const { count } = await supabaseAdmin
       .from('xp_ledger')
       .select('id', { count: 'exact', head: true })
       .eq('player_id', playerId)
       .ilike('description', '%Attended%');
 
-    // If this is their first attendance (count is 1 because we just added it)
-    if (count === 1) {
-      // Get referrer info
-      const { data: referrer } = await supabaseAdmin
+    if (count !== 1) return null;
+
+    const { data: referrer } = await supabaseAdmin
+      .from('players')
+      .select('id, display_name')
+      .eq('id', player.referred_by)
+      .single();
+
+    if (!referrer) return null;
+
+    // Atomic claim — only one concurrent path (checkin vs hq/xp) can flip this.
+    const { data: claimed } = await supabaseAdmin
+      .from('players')
+      .update({ referral_bonus_paid: true })
+      .eq('id', playerId)
+      .eq('referral_bonus_paid', false)
+      .select('id');
+
+    if (!claimed || claimed.length === 0) return null; // checkin path already claimed
+
+    // Lifetime XP for referrer (never multiplied).
+    // If this fails, revert the claim so the referral can fire again.
+    const { error: bonusError } = await supabaseAdmin
+      .from('xp_ledger')
+      .insert({
+        player_id: referrer.id,
+        game_id: 'general',
+        base_xp: REFERRAL_FIRST_EVENT_BONUS,
+        final_xp: REFERRAL_FIRST_EVENT_BONUS,
+        multiplier: 1,
+        description: `Referral reward — ${player.display_name} attended first event`,
+        source: 'referral',
+        awarded_by: staffId,
+      });
+
+    if (bonusError) {
+      console.error('Referral XP insert failed — reverting claim:', bonusError);
+      await supabaseAdmin
         .from('players')
-        .select('id, display_name')
-        .eq('id', player.referred_by)
-        .single();
-
-      if (referrer) {
-        // Award +50 XP to referrer (General game)
-        const { error: bonusError } = await supabaseAdmin
-          .from('xp_ledger')
-          .insert({
-            player_id: referrer.id,
-            game_id: 'general',
-            base_xp: REFERRAL_FIRST_EVENT_BONUS,
-            final_xp: REFERRAL_FIRST_EVENT_BONUS,
-            multiplier: 1,
-            description: `Referral reward - ${player.display_name} attended first event`,
-            source: 'referral',
-            awarded_by: staffId,
-          });
-
-        if (bonusError) {
-          console.error('Referral bonus insert error:', bonusError);
-          return null;
-        }
-
-        // Mark bonus as paid so it doesn't trigger again
-        await supabaseAdmin
-          .from('players')
-          .update({ referral_bonus_paid: true })
-          .eq('id', playerId);
-
-        console.log(`🎁 Referral reward: +${REFERRAL_FIRST_EVENT_BONUS} XP awarded to ${referrer.display_name} (${player.display_name} attended first event)`);
-
-        // Notify the referrer (non-blocking)
-        createNotification(
-          referrer.id,
-          'referral',
-          'Referral bonus earned! 🎁',
-          `${player.display_name} attended their first event — you earned +${REFERRAL_FIRST_EVENT_BONUS} XP!`,
-          { new_player_name: player.display_name, xp: String(REFERRAL_FIRST_EVENT_BONUS) },
-          'social'
-        ).catch(() => {});
-
-        return {
-          awarded: true,
-          referrerName: referrer.display_name,
-          newPlayerName: player.display_name,
-        };
-      }
+        .update({ referral_bonus_paid: false })
+        .eq('id', playerId);
+      return null;
     }
 
-    return null;
+    // Prize Points for referrer (flat, no multiplier) — only when store context available
+    if (storeId) {
+      await logPointTransaction({
+        playerId: referrer.id,
+        storeId,
+        amount: REFERRAL_PRIZE_POINTS,
+        type: 'earn',
+        source: 'referral_bonus',
+        referenceId: playerId,
+        note: `${player.display_name} attended first event`,
+      });
+    }
+
+    console.log(`🎁 Referral reward: +${REFERRAL_FIRST_EVENT_BONUS} XP +${REFERRAL_PRIZE_POINTS} PP → ${referrer.display_name}`);
+
+    createNotification(
+      referrer.id,
+      'referral',
+      'Referral bonus earned! 🎁',
+      `${player.display_name} attended their first event — you earned +${REFERRAL_FIRST_EVENT_BONUS} XP and +${REFERRAL_PRIZE_POINTS} Points!`,
+      { new_player_name: player.display_name, xp: String(REFERRAL_FIRST_EVENT_BONUS) },
+      'social'
+    ).catch(() => {});
+
+    return {
+      awarded: true,
+      referrerName: referrer.display_name,
+      newPlayerName: player.display_name,
+    };
   } catch (error) {
     console.error('Referral bonus check error:', error);
     return null;
@@ -259,12 +272,10 @@ export async function POST(request: Request) {
     // ================================================
     // PRIZE POINTS: Award for event tiles (with tier multiplier)
     // ================================================
+    // Each '+1 Win' label = one win's PP (5). Frontend sends N repeated labels for N wins.
     const TILE_PP: Record<string, number> = {
       'Attended': 35,
-      '1 Win': 5,
-      '2 Wins': 10,
-      '3 Wins': 15,
-      '4 Wins': 20,
+      '+1 Win': 5,
     };
 
     let prizePointsAwarded = 0;
@@ -347,8 +358,10 @@ export async function POST(request: Request) {
         }
       }
       
-      // Check referral bonus (first event attendance)
-      const referralResult = await checkReferralBonus(playerId, staffCheck.id);
+      // Check referral bonus (first event attendance) — requires store context to award PP
+      const referralResult = storeId
+        ? await checkReferralBonus(playerId, staffCheck.id, storeId)
+        : null;
       if (referralResult?.awarded) {
         referralBonusAwarded = true;
         referralInfo = {

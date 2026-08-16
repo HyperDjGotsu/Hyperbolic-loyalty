@@ -1165,7 +1165,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center gap-2 text-primary">
                   <span className="text-green-400">✓</span>
-                  <span>They attend their first event → You get <span className="text-purple-400">+50 XP</span></span>
+                  <span>They attend their first event → You get <span className="text-purple-400">+50 XP + 10 Points</span></span>
                 </div>
               </div>
             </div>

@@ -549,7 +549,7 @@ export default function ProfileScreen() {
               </View>
             </View>
             <Text style={styles.referralHint}>
-              You earn +50 XP when a referral attends their first event
+              You earn +50 XP + 10 Points when a referral attends their first event
             </Text>
           </View>
         </>

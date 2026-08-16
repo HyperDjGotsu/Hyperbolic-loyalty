@@ -12,7 +12,7 @@ const WIN_LIFETIME_XP = 5;
 const WIN_PRIZE_POINTS = 5;
 const MAX_ROUNDS = 3;
 const REFERRAL_LIFETIME_XP = 50;
-const REFERRAL_PRIZE_POINTS = 100; // flat, no multiplier
+const REFERRAL_PRIZE_POINTS = 10; // flat, no multiplier — supersedes old 100 PP value (2026-08-16)
 
 async function awardReferralBonus(
   playerId: string,
@@ -44,8 +44,20 @@ async function awardReferralBonus(
 
     if (!referrer) return null;
 
-    // Lifetime XP for referrer
-    await supabaseAdmin.from('xp_ledger').insert({
+    // Atomic claim — only one concurrent request can flip this from false→true.
+    // If two checkin calls race on a player's first event, exactly one wins here.
+    const { data: claimed } = await supabaseAdmin
+      .from('players')
+      .update({ referral_bonus_paid: true })
+      .eq('id', playerId)
+      .eq('referral_bonus_paid', false)
+      .select('id');
+
+    if (!claimed || claimed.length === 0) return null; // lost race
+
+    // Lifetime XP for referrer (never multiplied).
+    // If this fails, revert the claim so the referral can fire on the next eligible event.
+    const { error: xpError } = await supabaseAdmin.from('xp_ledger').insert({
       player_id: referrer.id,
       game_id: 'general',
       base_xp: REFERRAL_LIFETIME_XP,
@@ -57,7 +69,16 @@ async function awardReferralBonus(
       store_id: storeId,
     });
 
-    // Prize Points for referrer (flat, no multiplier per spec)
+    if (xpError) {
+      console.error('Referral XP insert failed — reverting claim:', xpError);
+      await supabaseAdmin
+        .from('players')
+        .update({ referral_bonus_paid: false })
+        .eq('id', playerId);
+      return null;
+    }
+
+    // Prize Points for referrer (flat, no multiplier)
     await logPointTransaction({
       playerId: referrer.id,
       storeId,
@@ -68,16 +89,11 @@ async function awardReferralBonus(
       note: `${player.display_name} attended first event`,
     });
 
-    await supabaseAdmin
-      .from('players')
-      .update({ referral_bonus_paid: true })
-      .eq('id', playerId);
-
     createNotification(
       referrer.id,
       'referral',
       'Referral bonus earned!',
-      `${player.display_name} attended their first event — you earned +${REFERRAL_LIFETIME_XP} XP and +${REFERRAL_PRIZE_POINTS} Prize Points!`,
+      `${player.display_name} attended their first event — you earned +${REFERRAL_LIFETIME_XP} XP and +${REFERRAL_PRIZE_POINTS} Points!`,
       { new_player_name: player.display_name },
       'social'
     ).catch(() => {});

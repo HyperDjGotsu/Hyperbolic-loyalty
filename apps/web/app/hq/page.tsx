@@ -719,6 +719,8 @@ export default function HQPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [gameFilter, setGameFilter] = useState('with_xp'); // 'all', 'with_xp', or specific game_id
   const [selectedTiles, setSelectedTiles] = useState<Array<{ label: string; xp: number }>>([]); // Multi-select XP tiles
+  const [winCount, setWinCount] = useState(0); // Additive win counter — each press = +1 win (+5 XP / +5 PP base)
+  const [isAwardingXp, setIsAwardingXp] = useState(false);
 
   // Prize Points state
   const [ppAmount, setPpAmount] = useState('');
@@ -1308,24 +1310,26 @@ export default function HQPage() {
     return selectedTiles.some(t => t.label === label);
   };
 
-  // Get total XP from selected tiles
+  // Get total XP from selected tiles + win counter
   const getSelectedTotal = () => {
-    return selectedTiles.reduce((sum, t) => sum + t.xp, 0);
+    return selectedTiles.reduce((sum, t) => sum + t.xp, 0) + winCount * 5;
   };
 
   // Award all selected XP tiles
   const awardSelectedXp = async () => {
-    if (!playerDetails || !selectedGame) return;
-    
+    if (!playerDetails || !selectedGame || isAwardingXp) return;
+
     const totalXp = getSelectedTotal();
-    if (totalXp === 0 && selectedTiles.length === 0) {
+    if (totalXp === 0 && selectedTiles.length === 0 && winCount === 0) {
       showToast('Select at least one XP tile', 'error');
       return;
     }
+
+    // Build reason: tile labels + one '+1 Win' entry per win (backend maps each to 5 PP)
+    const winLabels = Array.from({ length: winCount }, () => '+1 Win');
+    const reason = [...selectedTiles.map(t => t.label), ...winLabels].join(', ');
     
-    // Build reason from selected tile labels
-    const reason = selectedTiles.map(t => t.label).join(', ');
-    
+    setIsAwardingXp(true);
     try {
       const res = await fetch('/api/hq/xp', {
         method: 'POST',
@@ -1338,24 +1342,25 @@ export default function HQPage() {
           storeId: hqStore.activeStoreId,
         }),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.error) {
         showToast(data.error, 'error');
       } else {
-        // Check if bonus was awarded
         if (data.bonusAwarded) {
           showToast(`🏴 ${data.achievementName} unlocked! +${totalXp} XP + ${data.bonusXp} bonus!`, 'success');
         } else {
           showToast(`${totalXp > 0 ? '+' : ''}${totalXp} XP awarded! (${reason})`, 'success');
         }
-        setSelectedTiles([]); // Clear selections
-        // Refresh player data
+        setSelectedTiles([]);
+        setWinCount(0);
         searchPlayer();
       }
     } catch (error) {
       showToast('Failed to add XP', 'error');
+    } finally {
+      setIsAwardingXp(false);
     }
   };
 
@@ -2863,27 +2868,40 @@ export default function HQPage() {
                   {/* Match Wins */}
                   <div className="mb-4">
                     <div className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2">🏆 Match Wins</div>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: '1 Win', xp: 5 },
-                        { label: '2 Wins', xp: 10 },
-                        { label: '3 Wins', xp: 15 },
-                        { label: '4 Wins', xp: 20 },
-                        { label: 'Undefeated', xp: 5 },
-                      ].map(item => (
+                    <div className="flex flex-wrap gap-3 items-center">
+                      {/* Additive + Win counter — each press = one win (+5 XP / +5 PP base) */}
+                      <div className="flex items-center gap-2 bg-elevated border-2 border-border-token rounded-xl px-3 py-2">
                         <button
-                          key={item.label}
-                          onClick={() => toggleTile(item.label, item.xp)}
-                          className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
-                            isTileSelected(item.label)
-                              ? 'bg-green-500/20 border-green-500 text-primary'
-                              : 'bg-elevated border-border-token hover:border-green-500 hover:bg-green-500/10'
-                          }`}
-                        >
-                          <span className="font-medium">{item.label}</span>
-                          <span className="text-xs text-green-400">+{item.xp} XP</span>
-                        </button>
-                      ))}
+                          onClick={() => setWinCount(c => Math.max(0, c - 1))}
+                          disabled={winCount === 0}
+                          className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 font-bold text-lg hover:bg-green-500/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >−</button>
+                        <div className="text-center w-12">
+                          <div className="text-lg font-bold text-primary leading-none">{winCount}</div>
+                          <div className="text-[10px] text-green-400 mt-0.5">{winCount === 1 ? 'win' : 'wins'}</div>
+                        </div>
+                        <button
+                          onClick={() => setWinCount(c => c + 1)}
+                          className="px-3 h-8 rounded-lg bg-green-500/20 border border-green-500/40 text-green-400 font-bold text-sm hover:bg-green-500/30 transition-colors"
+                        >+ Win</button>
+                      </div>
+                      {winCount > 0 && (
+                        <div className="text-xs text-green-400">
+                          +{winCount * 5} XP · +{winCount * 5} PP base
+                        </div>
+                      )}
+                      {/* Undefeated stays as a standalone bonus tile */}
+                      <button
+                        onClick={() => toggleTile('Undefeated', 5)}
+                        className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
+                          isTileSelected('Undefeated')
+                            ? 'bg-green-500/20 border-green-500 text-primary'
+                            : 'bg-elevated border-border-token hover:border-green-500 hover:bg-green-500/10'
+                        }`}
+                      >
+                        <span className="font-medium">Undefeated</span>
+                        <span className="text-xs text-green-400">+5 XP</span>
+                      </button>
                     </div>
                   </div>
 
@@ -2914,12 +2932,12 @@ export default function HQPage() {
                   </div>
 
                   {/* Selected Summary & Award Button */}
-                  {selectedTiles.length > 0 && (
+                  {(selectedTiles.length > 0 || winCount > 0) && (
                     <div className="mb-4 p-4 bg-elevated rounded-xl border border-accent/30">
                       <div className="flex items-center justify-between mb-3">
                         <div className="text-sm text-secondary">Selected:</div>
                         <button
-                          onClick={() => setSelectedTiles([])}
+                          onClick={() => { setSelectedTiles([]); setWinCount(0); }}
                           className="text-xs text-secondary hover:text-primary"
                         >
                           Clear all
@@ -2934,6 +2952,11 @@ export default function HQPage() {
                             {tile.label} (+{tile.xp})
                           </span>
                         ))}
+                        {winCount > 0 && (
+                          <span className="px-2 py-1 bg-green-500/10 text-green-400 rounded text-sm">
+                            {winCount} {winCount === 1 ? 'Win' : 'Wins'} (+{winCount * 5} XP)
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="text-lg font-bold text-accent">
@@ -2941,7 +2964,8 @@ export default function HQPage() {
                         </div>
                         <button
                           onClick={awardSelectedXp}
-                          className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg font-bold text-white hover:opacity-90"
+                          disabled={isAwardingXp}
+                          className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg font-bold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           ⚡ Award XP
                         </button>
