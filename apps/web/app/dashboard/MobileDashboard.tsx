@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Avatar,
   GlowButton,
@@ -14,7 +12,7 @@ import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { GettingStartedCard } from '@/components/GettingStartedCard';
 import { PlayerPassCard } from '@/components/PlayerPassCard';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
-import type { Player, ActivityItem, Banner } from '@/lib/types';
+import type { DashboardData } from './useDashboardData';
 
 // Type for displayed game data
 interface GameDisplay {
@@ -72,288 +70,40 @@ function StaticCounter({ value }: { value: number }) {
   return <span>{value.toLocaleString()}</span>;
 }
 
-export default function MobileDashboard() {
-  const { user, isLoaded } = useUser();
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [playerData, setPlayerData] = useState<any>(null);
+export default function MobileDashboard({ dashboard }: { dashboard: DashboardData }) {
+  const {
+    loading,
+    player: playerData,
+    homeStore,
+    selectedStore,
+    selectStore,
+    refreshPlayer,
+    storeConfig,
+    banners,
+    passStatus,
+    favoriteGameIds: favoriteGames,
+    upcomingEvents,
+    storeUpdates,
+    friendActivity,
+    prizeHighlights,
+    spin,
+    claimDailySpin,
+  } = dashboard;
+  const { hasSpunToday, isSpinning, message: spinMessage } = spin;
+
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
   const [showAllGames, setShowAllGames] = useState(false);
-  const [hasSpunToday, setHasSpunToday] = useState(false);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [spinMessage, setSpinMessage] = useState<string | null>(null);
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
-  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐' });
-  const [prizeHighlights, setPrizeHighlights] = useState<any[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-  const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
-  const [friendActivity, setFriendActivity] = useState<any[]>([]);
-  const [passStatus, setPassStatus] = useState<{
-    tier: 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
-    lifetimeXp: number;
-    prizePoints: number;
-    multiplier: number;
-  } | null>(null);
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
-  // homeStore: DB-persisted primary store — only changes via explicit "Change Home Store" action
-  const [homeStore, setHomeStore] = useState<{
-    id: string; name: string; city: string; slug: string;
-    is_flagship: boolean; color: string | null;
-  } | null>(null);
-  // selectedStore: temporary browsing context — controls events, leaderboard, banners, prize wall
-  const [selectedStore, setSelectedStore] = useState<{
-    id: string; name: string; city: string; slug: string;
-    is_flagship: boolean; color: string | null;
-  } | null>(null);
 
   const gamesContainerRef = useRef<HTMLDivElement>(null);
   const activityContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load favorite games
+  // Legacy players may have no home store yet — force switcher open
   useEffect(() => {
-    async function loadFavorites() {
-      try {
-        const res = await fetch('/api/player/favorite-games');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.favorites && data.favorites.length > 0) {
-            setFavoriteGames(data.favorites);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading favorite games:', error);
-      }
+    if (playerData && !playerData.homeStoreId && !homeStore) {
+      setShowStoreSwitcher(true);
     }
-    if (isLoaded && user) {
-      loadFavorites();
-    }
-  }, [isLoaded, user]);
-
-  // Load player data on mount
-  useEffect(() => {
-    async function loadPlayer() {
-      if (!isLoaded) return;
-      
-      // If user is logged in with Clerk, try to get their linked player
-      if (user) {
-        try {
-          const response = await fetch('/api/player/by-clerk');
-          const data = await response.json();
-
-          if (data.linked) {
-            // Store for future reference
-            localStorage.setItem('hyperbolic_player_id', data.player_id);
-            localStorage.setItem('hyperbolic_player_uuid', data.id);
-            setPlayerData(data);
-            const homeStoreFromDb = data.homeStore ?? null;
-            setHomeStore(homeStoreFromDb);
-
-            // Restore selected-store from localStorage (player may have switched stores).
-            // Priority: localStorage → homeStore fallback.
-            // NEVER overwrite a valid saved selection with homeStore on every load.
-            const savedStoreId = localStorage.getItem('ggc_selected_store_id');
-            const savedStoreName = localStorage.getItem('ggc_selected_store_name');
-
-            if (savedStoreId && savedStoreName) {
-              // Validate: fetch active stores and confirm saved id is still valid
-              try {
-                const storesRes = await fetch('/api/stores');
-                if (storesRes.ok) {
-                  const storesData = await storesRes.json();
-                  const activeStores: Array<{ id: string; name: string; city: string; slug: string; is_flagship: boolean; color: string | null }> = storesData.stores || [];
-                  const matched = activeStores.find((s) => s.id === savedStoreId);
-                  if (matched) {
-                    // Valid saved selection — use it, don't touch homeStore
-                    setSelectedStore(matched);
-                    // Refresh the cached name in case it changed
-                    localStorage.setItem('ggc_selected_store_name', matched.name);
-                  } else {
-                    // Saved store no longer active — fall back to homeStore
-                    setSelectedStore(homeStoreFromDb);
-                    if (homeStoreFromDb) {
-                      localStorage.setItem('ggc_selected_store_id', homeStoreFromDb.id);
-                      localStorage.setItem('ggc_selected_store_name', homeStoreFromDb.name);
-                    } else {
-                      localStorage.removeItem('ggc_selected_store_id');
-                      localStorage.removeItem('ggc_selected_store_name');
-                    }
-                  }
-                } else {
-                  // API error — use homeStore as safe fallback
-                  setSelectedStore(homeStoreFromDb);
-                }
-              } catch {
-                setSelectedStore(homeStoreFromDb);
-              }
-            } else if (homeStoreFromDb) {
-              // No saved selection — seed from homeStore
-              setSelectedStore(homeStoreFromDb);
-              localStorage.setItem('ggc_selected_store_id', homeStoreFromDb.id);
-              localStorage.setItem('ggc_selected_store_name', homeStoreFromDb.name);
-            } else {
-              setSelectedStore(null);
-            }
-
-            // Guardrail: legacy players may have no home store yet
-            if (!data.homeStoreId) {
-              setShowStoreSwitcher(true);
-            }
-            setLoading(false);
-            return;
-          } else {
-            // User is logged in but hasn't linked a player yet
-            router.push('/onboarding');
-            return;
-          }
-        } catch (error) {
-          console.error('Error loading player via Clerk:', error);
-        }
-      }
-
-      // Fallback: try localStorage (for backwards compatibility or non-logged-in access)
-      const playerId = localStorage.getItem('hyperbolic_player_id');
-
-      if (!playerId) {
-        // No player found anywhere, redirect to sign-in or onboarding
-        router.push(user ? '/onboarding' : '/sign-in');
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/player/${playerId}`);
-        const data = await response.json();
-
-        if (response.ok && !data.error) {
-          setPlayerData(data);
-        } else {
-          console.error('Failed to load player:', data.error);
-          // Clear invalid player ID
-          localStorage.removeItem('hyperbolic_player_id');
-          localStorage.removeItem('hyperbolic_player_uuid');
-          router.push(user ? '/onboarding' : '/sign-in');
-        }
-      } catch (error) {
-        console.error('Error loading player:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadPlayer();
-  }, [isLoaded, user, router]);
-
-  // Load spin status when player is loaded
-  useEffect(() => {
-    async function loadSpinStatus() {
-      if (!playerData || !user) return;
-      try {
-        const spinRes = await fetch('/api/xp/daily-spin');
-        if (spinRes.ok) {
-          const spinData = await spinRes.json();
-          setHasSpunToday(!spinData.canSpin);
-        }
-      } catch (error) {
-        console.error('Error loading spin status:', error);
-      }
-    }
-    loadSpinStatus();
-  }, [playerData, user]);
-
-  // Load player pass status (tier, dual currency)
-  useEffect(() => {
-    if (!user) return;
-    fetch('/api/player/pass-status')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setPassStatus(data); })
-      .catch(() => {});
-  }, [user]);
-
-  // Load store config
-  useEffect(() => {
-    async function loadStoreConfig() {
-      try {
-        const res = await fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          setStoreConfig(data);
-        }
-      } catch (error) {
-        console.error('Error loading store config:', error);
-      }
-    }
-    loadStoreConfig();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedStore?.id) return;
-    fetch(`/api/prize-wall?storeId=${selectedStore.id}`)
-      .then(r => r.ok ? r.json() : { items: [] })
-      .then(d => setPrizeHighlights((d.items || []).slice(0, 4)))
-      .catch(() => {});
-  }, [selectedStore?.id]);
-
-  useEffect(() => {
-    const storeId = selectedStore?.id || localStorage.getItem('ggc_selected_store_id');
-    const url = storeId
-      ? `/api/events?status=upcoming&limit=3&store_id=${storeId}`
-      : '/api/events?status=upcoming&limit=3';
-    fetch(url)
-      .then(r => r.ok ? r.json() : { events: [] })
-      .then(d => setUpcomingEvents(d.events || []))
-      .catch(() => {});
-  }, [selectedStore?.id]);
-
-  useEffect(() => {
-    const storeId = selectedStore?.id || localStorage.getItem('ggc_selected_store_id');
-    const url = storeId ? `/api/store-updates?store_id=${storeId}` : '/api/store-updates';
-    fetch(url)
-      .then(r => r.ok ? r.json() : { updates: [] })
-      .then(d => setStoreUpdates(d.updates || []))
-      .catch(() => {});
-  }, [selectedStore?.id]);
-
-  useEffect(() => {
-    fetch('/api/friends-activity')
-      .then(r => r.ok ? r.json() : { activity: [] })
-      .then(d => setFriendActivity(d.activity || []))
-      .catch(() => {});
-  }, []);
-
-  // Load banners — re-runs when selected store changes so carousel reflects current context:
-  // network-wide banners + banners for the selected store
-  useEffect(() => {
-    async function loadBanners() {
-      try {
-        const url = selectedStore
-          ? `/api/banners?store_id=${selectedStore.id}`
-          : '/api/banners';
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          const transformedBanners = (data.banners || []).map((b: any) => ({
-            id: b.id,
-            title: b.title,
-            subtitle: b.subtitle || '',
-            colorFrom: b.colorFrom || '#8b5cf6',
-            colorTo: b.colorTo || '#ec4899',
-            icon: b.icon || '🎮',
-            badge: b.badge || '',
-            hasStream: b.hasStream || false,
-            twitchUrl: b.twitchUrl,
-            youtubeUrl: b.youtubeUrl,
-            backgroundImage: b.backgroundImage || b.background_image || null,
-            bgSize: b.bgSize || 'cover',
-            bgPosition: b.bgPosition || 'center',
-          }));
-          setBanners(transformedBanners);
-        }
-      } catch (error) {
-        console.error('Error loading banners:', error);
-      }
-    }
-    loadBanners();
-  }, [selectedStore?.id]);
+  }, [playerData, homeStore]);
 
   // Derive display values from real data
   const totalXp = playerData?.xp || 0;
@@ -407,22 +157,8 @@ export default function MobileDashboard() {
     icon: '⭐',
   }));
 
-  const handleSpin = async () => {
-    if (hasSpunToday || isSpinning) return;
-    setIsSpinning(true);
-    try {
-      const res = await fetch('/api/xp/daily-spin', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setHasSpunToday(true);
-        setSpinMessage(`+${data.prize.xp} XP — ${data.prize.label}`);
-        setTimeout(() => setSpinMessage(null), 3000);
-      }
-    } catch (e) {
-      console.error('Spin error:', e);
-    } finally {
-      setIsSpinning(false);
-    }
+  const handleSpin = () => {
+    void claimDailySpin();
   };
 
   if (loading) {
@@ -532,15 +268,11 @@ export default function MobileDashboard() {
           homeStoreId={homeStore?.id ?? null}
           required={!homeStore}
           onSwitch={(store) => {
-            if (!homeStore) {
-              // Null-home-store guardrail: this IS the permanent home store selection
-              // The PATCH is called inside the modal only in this mode
-              setHomeStore(store);
-            }
-            setSelectedStore(store);
-            localStorage.setItem('ggc_selected_store_id', store.id);
-            localStorage.setItem('ggc_selected_store_name', store.name);
+            selectStore(store);
             setShowStoreSwitcher(false);
+            // Null-home-store case: modal already PATCHed /api/player/home-store;
+            // refresh player data so homeStore state updates and required=true clears.
+            if (!homeStore) refreshPlayer();
           }}
           onClose={() => setShowStoreSwitcher(false)}
         />
