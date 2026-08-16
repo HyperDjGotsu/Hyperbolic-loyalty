@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/ui';
@@ -119,6 +119,7 @@ function MobileNavItem({
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { signOut } = useClerk();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isStaff, setIsStaff] = useState(false);
@@ -148,6 +149,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetch('/api/player/by-clerk')
       .then((r) => r.ok ? r.json() : null)
       .then((d) => {
+        // Only redirect to onboarding on an explicit linked:false — not on API errors
+        if (d && d.linked === false) {
+          router.replace('/onboarding');
+          return;
+        }
         if (!d) return;
         if (d.isStaff) setIsStaff(true);
         if (d.homeStore?.id) setHomeStoreId(d.homeStore.id);

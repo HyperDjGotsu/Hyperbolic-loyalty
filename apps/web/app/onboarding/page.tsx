@@ -54,6 +54,10 @@ function OnboardingContent() {
 
       try {
         const response = await fetch('/api/player/by-clerk');
+        if (!response.ok) {
+          setCheckingLink(false);
+          return;
+        }
         const data = await response.json();
 
         if (data.linked) {
