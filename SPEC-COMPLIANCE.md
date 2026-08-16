@@ -96,10 +96,11 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 
 | Requirement | Canonical Spec | Production State | Status | Priority | Notes |
 |-------------|---------------|-----------------|--------|----------|-------|
-| Welcome bonus — every new account | 30 LXP unconditional | Currently conditional on referral code | 🔄 | P1 | **PENDING Codex review** — fix drafted, awaiting approval |
-| Welcome bonus — with referral code | 30 LXP (part of above) | 30 LXP awarded correctly | ✅ | — | Will be absorbed into universal award |
-| Welcome bonus — `link_existing` action | No bonus | link_existing is for legacy players linking Clerk account — no bonus intended | ✅ | — | Only `create_new` awards bonus |
-| Idempotency guard | DB-level UNIQUE(clerk_user_id) | `players_clerk_user_id_key` confirmed in production | ✅ | — | Prevents duplicate player creation; XP award fires only after successful INSERT |
+| Welcome bonus — every new account | 30 LXP unconditional | AFTER INSERT trigger `player_welcome_bonus` awards 30 LXP atomically *(c7e488e)* | ✅ | — | Trigger: SECURITY DEFINER, search_path=pg_catalog, ON CONFLICT targeted, proacl={postgres=X/postgres} |
+| Welcome bonus — with referral code | Included in universal award | welcome_bonus awarded regardless; referrer bonus tracked separately via referred_by+referral_bonus_paid | ✅ | — | |
+| Welcome bonus — `link_existing` action | No bonus | Trigger is AFTER INSERT only; link_existing does UPDATE, trigger does not fire | ✅ | — | |
+| Idempotency — player creation | DB UNIQUE(clerk_user_id) | `players_clerk_user_id_key` confirmed | ✅ | — | |
+| Idempotency — welcome XP award | Partial UNIQUE INDEX on xp_ledger(player_id) WHERE source='welcome_bonus' | `xp_ledger_welcome_one_per_player` confirmed in production | ✅ | — | ON CONFLICT DO NOTHING in trigger; atomic with player INSERT |
 
 ---
 
@@ -170,7 +171,7 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | P1-E | Gold priority/circuit access | Needs WONTFIX or build decision |
 | P1-G | HQ XP `4 Wins` tile exceeds 3-round max | Fix: remove `'4 Wins'` entry from TILE_PP |
 | P1-H | Referral Path B (hq/xp) missing 100 PP to referrer | Fix: add PP award in checkReferralBonus() |
-| P1-Welcome | Universal welcome bonus not yet unconditional | 🔄 Codex review in progress |
+| P1-Welcome | Universal welcome bonus | ✅ FIXED — c7e488e |
 
 ---
 
