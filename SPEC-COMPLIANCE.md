@@ -174,6 +174,9 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | P1-G | HQ XP `4 Wins` tile exceeds 3-round max | ✅ FIXED — additive `+ Win` counter replaces numbered tiles; no cap; each press = +5 LXP +5 PP |
 | P1-H | Referral Path B (hq/xp) missing 100 PP to referrer | ✅ FIXED — both paths now award 50 LXP + 10 PP (superseded value); atomic claim prevents double-award |
 | P1-Welcome | Universal welcome bonus | ✅ FIXED — c7e488e |
+| P1-Expiry | Pass expiry not enforced — expired trial kept multiplier forever and blocked re-trial | ✅ FIXED — effectivePassTier() in lib/points.ts; threaded into checkin, hq/xp, pass-status; claim-trial allows re-trial after expiry — 426301a |
+| P1-MobileXP | Mobile QR checkin XP display blank — `res.xp_awarded` undefined (API returned `lifetimeXpAwarded`) | ✅ FIXED — added `xp_awarded` alias to checkin API response — 426301a |
+| P1-Onboarding | Mobile onboarding store load failure silent — user stuck at empty picker with no feedback | ✅ FIXED — loadStores() with error state + Retry button — 426301a |
 
 ---
 
@@ -194,3 +197,6 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | 2026-08-16 | P1-C Bronze discount | DEFERRED AUTOMATION — honor operationally; automate post-launch with Square | Darrell |
 | 2026-08-16 | P1-D Silver early reg | DEFERRED POST-LAUNCH — build alongside event-reservation system | Darrell |
 | 2026-08-16 | P1-E Gold priority/Circuit | DEFERRED POST-LAUNCH — redesign alongside Circuit/event-registration | Darrell |
+| 2026-08-16 | P1-Expiry pass enforcement | FIXED — effectivePassTier() centralizes expiry logic; all benefit-granting routes now treat expired passes as 'none' | — |
+| 2026-08-16 | P1-MobileXP checkin display | FIXED — xp_awarded alias added to checkin API response | — |
+| 2026-08-16 | P1-Onboarding store load | FIXED — error surfaced with retry; no silent empty-state | — |
