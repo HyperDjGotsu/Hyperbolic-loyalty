@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
-import { Avatar } from '@/components/ui';
 import { CardOfTheDay } from '@/components/CardOfTheDay';
 import NotificationBell from '@/components/NotificationBell';
-import type { Banner } from '@/lib/types';
+import type { DashboardData } from './useDashboardData';
 
 // Scouter-style number counting component - only animates on hover trigger
 function ScouterNumber({ 
@@ -561,22 +559,23 @@ function getEarnedAchievements(stats: GameDisplay['stats']): Achievement[] {
   return ACHIEVEMENTS.filter(a => a.check(stats));
 }
 
-export default function DesktopDashboard() {
-  const { user, isLoaded } = useUser();
+export default function DesktopDashboard({ dashboard }: { dashboard: DashboardData }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [playerData, setPlayerData] = useState<any>(null);
-  const [hasSpunToday, setHasSpunToday] = useState(false);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [spinMessage, setSpinMessage] = useState<string | null>(null);
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const {
+    loading,
+    player: playerData,
+    storeConfig,
+    banners,
+    gameStats,
+    upcomingEvents,
+    storeUpdates,
+    friendActivity,
+    prizeHighlights,
+    spin,
+    claimDailySpin,
+  } = dashboard;
+  const { hasSpunToday, isSpinning, message: spinMessage } = spin;
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
-  const [gameStats, setGameStats] = useState<Record<string, any>>({});
-  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Player Pass' });
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-  const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
-  const [friendActivity, setFriendActivity] = useState<any[]>([]);
-  const [prizeHighlights, setPrizeHighlights] = useState<any[]>([]);
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -619,186 +618,6 @@ export default function DesktopDashboard() {
 
     return () => ctx.revert();
   }, [loading, playerData]);
-
-  // Load player data on mount
-  useEffect(() => {
-    async function loadPlayer() {
-      if (!isLoaded) return;
-
-      if (user) {
-        try {
-          const response = await fetch('/api/player/by-clerk');
-          const data = await response.json();
-
-          if (data.linked) {
-            localStorage.setItem('hyperbolic_player_id', data.player_id);
-            localStorage.setItem('hyperbolic_player_uuid', data.id);
-            setPlayerData(data);
-            setLoading(false);
-            return;
-          } else {
-            router.push('/onboarding');
-            return;
-          }
-        } catch (error) {
-          console.error('Error loading player via Clerk:', error);
-        }
-      }
-
-      const playerId = localStorage.getItem('hyperbolic_player_id');
-
-      if (!playerId) {
-        router.push(user ? '/onboarding' : '/sign-in');
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/player/${playerId}`);
-        const data = await response.json();
-
-        if (response.ok && !data.error) {
-          setPlayerData(data);
-        } else {
-          localStorage.removeItem('hyperbolic_player_id');
-          localStorage.removeItem('hyperbolic_player_uuid');
-          router.push(user ? '/onboarding' : '/sign-in');
-        }
-      } catch (error) {
-        console.error('Error loading player:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadPlayer();
-  }, [isLoaded, user, router]);
-
-  // Load spin status
-  useEffect(() => {
-    async function loadSpinStatus() {
-      if (!playerData || !user) return;
-      try {
-        const spinRes = await fetch('/api/xp/daily-spin');
-        if (spinRes.ok) {
-          const spinData = await spinRes.json();
-          setHasSpunToday(!spinData.canSpin);
-        }
-      } catch (error) {
-        console.error('Error loading spin status:', error);
-      }
-    }
-    loadSpinStatus();
-  }, [playerData, user]);
-
-  // Load game stats for flippable cards
-  useEffect(() => {
-    async function loadGameStats() {
-      if (!playerData || !user) return;
-
-      try {
-        const response = await fetch('/api/player/game-stats');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.stats) {
-            // Convert array to map by gameId
-            const statsMap: Record<string, any> = {};
-            for (const stat of data.stats) {
-              statsMap[stat.gameId] = stat;
-            }
-            setGameStats(statsMap);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading game stats:', error);
-      }
-    }
-
-    loadGameStats();
-  }, [playerData, user]);
-
-  // Load store config
-  useEffect(() => {
-    async function loadStoreConfig() {
-      try {
-        const res = await fetch(`/api/store-config?t=${Date.now()}`, { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          setStoreConfig(data);
-        }
-      } catch (error) {
-        console.error('Error loading store config:', error);
-      }
-    }
-    loadStoreConfig();
-  }, []);
-
-  // Load banners
-  useEffect(() => {
-    async function loadBanners() {
-      try {
-        const res = await fetch('/api/banners');
-        if (res.ok) {
-          const data = await res.json();
-          const transformedBanners = (data.banners || []).map((b: any) => ({
-            id: b.id,
-            title: b.title,
-            subtitle: b.subtitle || '',
-            colorFrom: b.colorFrom || '#8b5cf6',
-            colorTo: b.colorTo || '#ec4899',
-            icon: b.icon || '🎮',
-            badge: b.badge || '',
-            hasStream: b.hasStream || false,
-            twitchUrl: b.twitchUrl,
-            youtubeUrl: b.youtubeUrl,
-            backgroundImage: b.backgroundImage || null,
-            bgSize: b.bgSize || 'cover',
-            bgPosition: b.bgPosition || 'center',
-            textColor: b.textColor || '#ffffff',
-          }));
-          setBanners(transformedBanners);
-        }
-      } catch (error) {
-        console.error('Error loading banners:', error);
-      }
-    }
-    loadBanners();
-  }, []);
-
-  useEffect(() => {
-    const storeId = localStorage.getItem('ggc_selected_store_id');
-    const url = storeId
-      ? `/api/events?status=upcoming&limit=3&store_id=${storeId}`
-      : '/api/events?status=upcoming&limit=3';
-    fetch(url)
-      .then(r => r.ok ? r.json() : { events: [] })
-      .then(d => setUpcomingEvents(d.events || []))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const storeId = localStorage.getItem('ggc_selected_store_id');
-    const url = storeId ? `/api/store-updates?store_id=${storeId}` : '/api/store-updates';
-    fetch(url)
-      .then(r => r.ok ? r.json() : { updates: [] })
-      .then(d => setStoreUpdates(d.updates || []))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/friends-activity')
-      .then(r => r.ok ? r.json() : { activity: [] })
-      .then(d => setFriendActivity(d.activity || []))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const storeId = localStorage.getItem('ggc_selected_store_id');
-    if (!storeId) return;
-    fetch(`/api/prize-wall?storeId=${storeId}`)
-      .then(r => r.ok ? r.json() : { items: [] })
-      .then(d => setPrizeHighlights((d.items || []).slice(0, 4)))
-      .catch(() => {});
-  }, []);
 
   // Derive display values
   const totalXp = playerData?.xp || 0;
@@ -872,22 +691,8 @@ export default function DesktopDashboard() {
     return '🎮';
   }
 
-  const handleSpin = async () => {
-    if (hasSpunToday || isSpinning) return;
-    setIsSpinning(true);
-    try {
-      const res = await fetch('/api/xp/daily-spin', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setHasSpunToday(true);
-        setSpinMessage(`+${data.prize.xp} XP — ${data.prize.label}`);
-        setTimeout(() => setSpinMessage(null), 3000);
-      }
-    } catch (e) {
-      console.error('Spin error:', e);
-    } finally {
-      setIsSpinning(false);
-    }
+  const handleSpin = () => {
+    void claimDailySpin();
   };
 
   // Avatar setup

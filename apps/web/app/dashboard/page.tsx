@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
+import { useDashboardData, type DashboardData } from './useDashboardData';
 
 // Dynamic imports - only loads the version needed
 const MobileDashboard = dynamic(() => import('./MobileDashboard'), {
@@ -25,19 +26,19 @@ function DashboardLoadingSkeleton() {
           <div className="h-8 bg-elevated rounded w-48 mx-auto mb-2"></div>
           <div className="h-4 bg-elevated rounded w-32 mx-auto"></div>
         </div>
-        
+
         {/* Profile card skeleton */}
         <div className="h-40 bg-elevated rounded-2xl mb-4"></div>
-        
+
         {/* Action buttons skeleton */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 h-14 bg-elevated rounded-xl"></div>
           <div className="flex-1 h-14 bg-elevated rounded-xl"></div>
         </div>
-        
+
         {/* Banner skeleton */}
         <div className="h-32 bg-elevated rounded-2xl mb-4"></div>
-        
+
         {/* Games section skeleton */}
         <div className="h-6 bg-elevated rounded w-32 mb-3"></div>
         <div className="grid grid-cols-2 gap-3">
@@ -53,30 +54,27 @@ function DashboardLoadingSkeleton() {
 
 export default function DashboardPage() {
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
+  const dashboard = useDashboardData();
 
   useEffect(() => {
     const checkScreenSize = () => {
       setIsDesktop(window.innerWidth >= 1024);
     };
-    
-    // Initial check
     checkScreenSize();
-    
-    // Listen for resize
     window.addEventListener('resize', checkScreenSize);
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Show loading while detecting screen size
-  if (isDesktop === null) {
-    return <DashboardLoadingSkeleton />;
-  }
-
-  // Only render ONE component based on screen size
   return (
     <>
       <WelcomeOverlay />
-      {isDesktop ? <DesktopDashboard /> : <MobileDashboard />}
+      {isDesktop === null ? (
+        <DashboardLoadingSkeleton />
+      ) : isDesktop ? (
+        <DesktopDashboard dashboard={dashboard as DashboardData} />
+      ) : (
+        <MobileDashboard dashboard={dashboard as DashboardData} />
+      )}
     </>
   );
 }
