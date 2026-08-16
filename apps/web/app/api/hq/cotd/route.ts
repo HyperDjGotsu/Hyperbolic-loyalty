@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import https from 'https';
 import dns from 'dns';
+import { requireAnyStaff } from '@/lib/auth-helpers';
 
 // Force dynamic rendering (not static)
 export const dynamic = 'force-dynamic';
@@ -333,6 +334,9 @@ export async function GET(request: Request) {
 // =============================================================================
 
 export async function POST(request: Request) {
+  const staffCtx = await requireAnyStaff();
+  if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+
   try {
     const body = await request.json();
     const { action } = body;
@@ -551,6 +555,9 @@ export async function POST(request: Request) {
 // =============================================================================
 
 export async function DELETE(request: Request) {
+  const staffCtx = await requireAnyStaff();
+  if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+
   try {
     const body = await request.json();
     const { date } = body;
