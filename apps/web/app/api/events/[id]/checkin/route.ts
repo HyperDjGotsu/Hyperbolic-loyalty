@@ -3,13 +3,9 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
 import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier } from '@/lib/points';
+import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP, ATTENDANCE_PRIZE_POINTS, WIN_PRIZE_POINTS } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
-
-const ATTENDANCE_LIFETIME_XP = 35;
-const ATTENDANCE_PRIZE_POINTS = 35;
-const WIN_LIFETIME_XP = 5;
-const WIN_PRIZE_POINTS = 5;
 const MAX_ROUNDS = 3;
 const REFERRAL_LIFETIME_XP = 50;
 const REFERRAL_PRIZE_POINTS = 10; // flat, no multiplier — supersedes old 100 PP value (2026-08-16)

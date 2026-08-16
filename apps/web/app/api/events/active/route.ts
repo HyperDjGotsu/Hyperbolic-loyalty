@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { ATTENDANCE_LIFETIME_XP } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +77,7 @@ export async function GET() {
       id: event.id,
       name: event.name,
       gameId: event.game_id,
-      attendanceXp: event.attendance_xp || 20,
+      attendanceXp: ATTENDANCE_LIFETIME_XP,
       scheduledAt: event.scheduled_at,
       game: game ? { name: game.name, icon: game.icon || '🎮', color: game.color || '#3b82f6' } : null,
       attendanceCount,

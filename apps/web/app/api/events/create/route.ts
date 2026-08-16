@@ -47,7 +47,7 @@ export async function POST(request: Request) {
         ends_at: ends_at || null,
         max_players: max_players || null,
         entry_fee: entry_fee || null,
-        attendance_xp: attendance_xp || 20,
+        attendance_xp: 35,
         status: 'scheduled',
         event_type,
         store_id: store_id || null,

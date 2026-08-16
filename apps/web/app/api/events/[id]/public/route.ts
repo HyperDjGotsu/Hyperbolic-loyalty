@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -122,8 +123,8 @@ export async function GET(
       twitchUrl: event.twitch_url,
       youtubeUrl: event.youtube_url,
       interestedCount: interestedCount || 0,
-      attendanceXp: event.attendance_xp ?? 10,
-      winXp: event.win_xp ?? 10,
+      attendanceXp: ATTENDANCE_LIFETIME_XP,
+      winXp: WIN_LIFETIME_XP,
       prizing: event.prizing || [],
       location: 'Games of Martinez',
       address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',

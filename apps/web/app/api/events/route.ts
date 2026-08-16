@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -237,8 +238,8 @@ export async function GET(request: Request) {
         hasStream: event.has_stream,
         twitchUrl: event.twitch_url,
         youtubeUrl: event.youtube_url,
-        attendanceXp: event.attendance_xp || 20,
-        winXp: event.win_xp || 10,
+        attendanceXp: ATTENDANCE_LIFETIME_XP,
+        winXp: WIN_LIFETIME_XP,
         interestedCount: interest.count,
         isInterested: interest.isInterested,
         interestedFriends: interest.friends,
