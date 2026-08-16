@@ -4,7 +4,7 @@ import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 import type { Database } from '@/types/database.types';
 import { createNotification } from '@/lib/notifications';
 import { enforceRateLimitStrict } from '@/lib/rate-limit';
-import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
+import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
 
@@ -286,11 +286,11 @@ export async function POST(request: Request) {
       if (basePP > 0) {
         const { data: playerRow } = await supabaseAdmin
           .from('players')
-          .select('pass_tier')
+          .select('pass_tier, pass_expires_at')
           .eq('id', playerId)
           .single();
 
-        const tier = playerRow?.pass_tier || 'free';
+        const tier = effectivePassTier(playerRow?.pass_tier ?? null, playerRow?.pass_expires_at ?? null);
         const multiplier = TIER_MULTIPLIERS[tier] ?? 1.0;
         prizePointsAwarded = Math.round(basePP * multiplier);
 

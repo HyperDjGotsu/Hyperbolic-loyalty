@@ -24,7 +24,9 @@ export async function POST() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    if (player.pass_tier && player.pass_tier !== 'none') {
+    const tierIsActive = player.pass_tier && player.pass_tier !== 'none';
+    const tierIsExpired = player.pass_expires_at && new Date(player.pass_expires_at) <= new Date();
+    if (tierIsActive && !tierIsExpired) {
       return NextResponse.json({ error: 'Already on a pass tier' }, { status: 409 });
     }
     const playerId = player.id;

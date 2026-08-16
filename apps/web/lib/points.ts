@@ -47,6 +47,13 @@ export async function getPlayerBalance(playerId: string, storeId?: string): Prom
   return data ?? 0;
 }
 
+// Returns the effective pass tier, treating expired passes as 'none'.
+// Use this in every route that gates benefits on pass_tier.
+export function effectivePassTier(tier: string | null, expiresAt: string | null | undefined): string {
+  if (expiresAt && new Date(expiresAt) <= new Date()) return 'none';
+  return tier ?? 'none';
+}
+
 // Keys cover both canonical DB enum values and friendly-name aliases.
 // Callers use the raw DB pass_tier value; both forms resolve correctly.
 export const TIER_MULTIPLIERS: Record<string, number> = {

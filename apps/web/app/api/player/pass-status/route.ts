@@ -69,7 +69,7 @@ export async function GET() {
 
     const playerResult = await supabaseAdmin
       .from('players')
-      .select('id, pass_tier, gems, home_store_id')
+      .select('id, pass_tier, pass_expires_at, gems, home_store_id')
       .eq('clerk_user_id', userId)
       .maybeSingle();
 
@@ -87,7 +87,11 @@ export async function GET() {
       getLifetimeXp(player.id),
       getPrizePoints(player.id),
     ]);
-    const tier = normalizeTier(player.pass_tier);
+    // Treat expired passes as 'none' before normalizing to UI tier names
+    const rawTier = (player.pass_expires_at && new Date(player.pass_expires_at) <= new Date())
+      ? 'none'
+      : player.pass_tier;
+    const tier = normalizeTier(rawTier);
 
     return NextResponse.json({
       tier,

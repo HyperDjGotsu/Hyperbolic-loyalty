@@ -59,18 +59,27 @@ export default function OnboardingScreen() {
   const [stores, setStores]         = useState<Store[]>([]);
   const [homeStoreId, setHomeStoreId] = useState('');
   const [storesLoading, setStoresLoading] = useState(false);
+  const [storesError, setStoresError] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
-  // Load stores on mount
-  useEffect(() => {
+  async function loadStores() {
     setStoresLoading(true);
-    api.get<{ stores: Store[] }>('/api/stores')
-      .then(d => setStores(d.stores ?? []))
-      .catch(() => {})
-      .finally(() => setStoresLoading(false));
-  }, []);
+    setStoresError('');
+    try {
+      const d = await api.get<{ stores: Store[] }>('/api/stores');
+      setStores(d.stores ?? []);
+      if ((d.stores ?? []).length === 0) setStoresError('No stores found. Please try again.');
+    } catch {
+      setStoresError('Could not load stores. Tap to retry.');
+    } finally {
+      setStoresLoading(false);
+    }
+  }
+
+  // Load stores on mount
+  useEffect(() => { loadStores(); }, []);
 
   // Referral code validation with debounce
   useEffect(() => {
@@ -328,6 +337,13 @@ export default function OnboardingScreen() {
 
             {storesLoading ? (
               <ActivityIndicator color={C.accent} style={{ marginVertical: 24 }} />
+            ) : storesError ? (
+              <View style={{ marginVertical: 16, alignItems: 'center', gap: 12 }}>
+                <Text style={{ color: '#f87171', textAlign: 'center' }}>{storesError}</Text>
+                <Pressable onPress={loadStores} style={[styles.btn, { paddingVertical: 10 }]}>
+                  <Text style={styles.btnText}>Retry</Text>
+                </Pressable>
+              </View>
             ) : (
               stores.map(store => (
                 <Pressable

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
-import { logPointTransaction, TIER_MULTIPLIERS } from '@/lib/points';
+import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,7 +142,7 @@ export async function POST(
 
     const { data: authedPlayer } = await supabaseAdmin
       .from('players')
-      .select('id, display_name, pass_tier, home_store_id, is_staff')
+      .select('id, display_name, pass_tier, pass_expires_at, home_store_id, is_staff')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -165,7 +165,7 @@ export async function POST(
 
       const { data: player } = await supabaseAdmin
         .from('players')
-        .select('id, display_name, pass_tier, home_store_id')
+        .select('id, display_name, pass_tier, pass_expires_at, home_store_id')
         .eq('player_id', body.player_id.toUpperCase())
         .single();
 
@@ -174,13 +174,13 @@ export async function POST(
       }
       playerId = player.id;
       playerName = player.display_name || body.player_id;
-      playerTier = player.pass_tier || 'free';
+      playerTier = effectivePassTier(player.pass_tier, player.pass_expires_at);
       playerHomeStoreId = player.home_store_id;
     } else {
       // Player's own phone path
       playerId = authedPlayer.id;
       playerName = authedPlayer.display_name || 'Player';
-      playerTier = authedPlayer.pass_tier || 'free';
+      playerTier = effectivePassTier(authedPlayer.pass_tier, authedPlayer.pass_expires_at);
       playerHomeStoreId = authedPlayer.home_store_id;
       if (authedPlayer.is_staff) staffId = authedPlayer.id;
     }
@@ -277,6 +277,7 @@ export async function POST(
       playerName,
       eventName: event.name,
       lifetimeXpAwarded: lifetimeXp,
+      xp_awarded: lifetimeXp,   // mobile compat alias
       prizePointsAwarded: prizePoints,
       roundsWon,
       multiplier,
