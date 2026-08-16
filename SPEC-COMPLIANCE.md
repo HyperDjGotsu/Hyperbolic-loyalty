@@ -66,7 +66,8 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | Requirement | Canonical Spec | Production State | Status | Priority | Notes |
 |-------------|---------------|-----------------|--------|----------|-------|
 | Daily Check-In mechanic | **RETIRED** | No generic daily check-in route | ✅ | — | Deliberately superseded by Daily Spin — rewarding same behavior (opening app) twice is redundant |
-| Daily Spin = sole daily app engagement | Yes | `/api/xp/daily-spin` — 5/10/25/50/100 LXP weighted | ✅ | — | |
+| Daily Gacha UI | **RETIRED** | `DailyGacha.tsx` removed from Player Pass *(2026-08-16)* | ✅ | — | Card shuffle/reveal animation archived to `archive/daily-gacha` branch + `~/hyperbolic/archive/daily-gacha/` for reuse in future first-party app |
+| Daily Spin = sole daily app engagement | Yes | `/api/xp/daily-spin` — 5/10/25/50/100 LXP weighted; direct call in dashboard-desktop + mobile | ✅ | — | Spin mechanic active; gacha animation wrapper retired |
 | Event check-in = in-store/community participation | Yes | `/api/events/[id]/checkin` — 35 LXP + PP with tier multiplier | ✅ | — | Separate and distinct from daily spin |
 
 ---

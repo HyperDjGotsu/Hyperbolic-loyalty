@@ -173,14 +173,6 @@ export interface ShopItem {
   gems?: number;
 }
 
-export interface GachaReward {
-  name: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  probability: number;
-  icon: string;
-  xp: number;
-}
-
 // ========== COMMERCE TYPES ==========
 export interface PurchaseHistoryItem {
   id: string;

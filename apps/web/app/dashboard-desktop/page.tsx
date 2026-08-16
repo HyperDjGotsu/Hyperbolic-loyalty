@@ -5,7 +5,6 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { Avatar } from '@/components/ui';
-import { DailyGacha } from '@/components/DailyGacha';
 import { CheckInModal } from '@/components/CheckInModal';
 import NotificationBell from '@/components/NotificationBell';
 import type { Banner } from '@/lib/types';
@@ -574,9 +573,10 @@ export default function DesktopDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [playerData, setPlayerData] = useState<any>(null);
-  const [showGacha, setShowGacha] = useState(false);
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [hasSpunToday, setHasSpunToday] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinMessage, setSpinMessage] = useState<string | null>(null);
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
@@ -847,7 +847,23 @@ export default function DesktopDashboard() {
   }
 
   // Handlers
-  const handleGachaComplete = () => setHasSpunToday(true);
+  const handleSpin = async () => {
+    if (hasSpunToday || isSpinning) return;
+    setIsSpinning(true);
+    try {
+      const res = await fetch('/api/xp/daily-spin', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setHasSpunToday(true);
+        setSpinMessage(`+${data.prize.xp} XP — ${data.prize.label}`);
+        setTimeout(() => setSpinMessage(null), 3000);
+      }
+    } catch (e) {
+      console.error('Spin error:', e);
+    } finally {
+      setIsSpinning(false);
+    }
+  };
   const handleCheckInComplete = () => setHasCheckedInToday(true);
 
   // Avatar setup
@@ -1072,19 +1088,21 @@ export default function DesktopDashboard() {
 
                   {/* Daily Spin */}
                   <button
-                    onClick={() => setShowGacha(true)}
-                    disabled={hasSpunToday}
+                    onClick={handleSpin}
+                    disabled={hasSpunToday || isSpinning}
                     className="bg-elevated border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div 
+                    <div
                       className="w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] relative z-10"
                       style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.1))' }}
                     >
                       🎰
                     </div>
                     <div className="relative z-10 text-left">
-                      <div className="text-base font-bold">{hasSpunToday ? 'Claimed!' : 'Daily Spin'}</div>
+                      <div className="text-base font-bold">
+                        {spinMessage || (hasSpunToday ? 'Claimed!' : isSpinning ? 'Spinning…' : 'Daily Spin')}
+                      </div>
                       <div className="text-xs text-tertiary">Try your luck!</div>
                     </div>
                   </button>
@@ -1399,9 +1417,6 @@ export default function DesktopDashboard() {
       </div>
 
       {/* Modals */}
-      {showGacha && (
-        <DailyGacha onComplete={handleGachaComplete} onClose={() => setShowGacha(false)} />
-      )}
       {showCheckIn && (
         <CheckInModal
           hasCheckedIn={hasCheckedInToday}
