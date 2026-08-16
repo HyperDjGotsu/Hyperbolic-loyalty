@@ -167,10 +167,10 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 
 | ID | Item | Status |
 |----|------|--------|
-| P1-B | Teaching mechanic (20 LXP) — no implementation | Needs WONTFIX or build decision |
-| P1-C | Bronze 5% singles discount | Needs WONTFIX or build decision |
-| P1-D | Silver early event registration | Needs WONTFIX or build decision |
-| P1-E | Gold priority/circuit access | Needs WONTFIX or build decision |
+| P1-B | Teaching mechanic (20 LXP) — no implementation | DEFERRED POST-LAUNCH — not a v1 launch blocker |
+| P1-C | Bronze 5% singles discount | DEFERRED AUTOMATION — benefit honored operationally at launch; Square/commerce integration automates enforcement later |
+| P1-D | Silver early event registration | DEFERRED POST-LAUNCH — no event-registration/reservation system to gate against; will be built alongside that system |
+| P1-E | Gold priority/Circuit access | DEFERRED POST-LAUNCH — requirement insufficiently defined; redesign alongside Circuit/event-registration functionality |
 | P1-G | HQ XP `4 Wins` tile exceeds 3-round max | ✅ FIXED — additive `+ Win` counter replaces numbered tiles; no cap; each press = +5 LXP +5 PP |
 | P1-H | Referral Path B (hq/xp) missing 100 PP to referrer | ✅ FIXED — both paths now award 50 LXP + 10 PP (superseded value); atomic claim prevents double-award |
 | P1-Welcome | Universal welcome bonus | ✅ FIXED — c7e488e |
@@ -190,3 +190,7 @@ Legend: ✅ CORRECT · ⚠️ PARTIAL · ❌ MISSING/BROKEN · 🔒 RESERVED (ou
 | 2026-08-16 | P2 Prize Wall formula | DEFERRED — keep manual staff entry for launch | Darrell |
 | 2026-08-16 | P1-G HQ win awards | CHANGED — numbered tiles replaced with additive `+ Win`; no arbitrary cap; each press = 1 win | Darrell |
 | 2026-08-16 | P1-H Referral PP | SUPERSEDED — 100 PP → 10 PP; community recognition not farming pathway | Darrell |
+| 2026-08-16 | P1-B Teaching mechanic | DEFERRED POST-LAUNCH — not a v1 requirement | Darrell |
+| 2026-08-16 | P1-C Bronze discount | DEFERRED AUTOMATION — honor operationally; automate post-launch with Square | Darrell |
+| 2026-08-16 | P1-D Silver early reg | DEFERRED POST-LAUNCH — build alongside event-reservation system | Darrell |
+| 2026-08-16 | P1-E Gold priority/Circuit | DEFERRED POST-LAUNCH — redesign alongside Circuit/event-registration | Darrell |
