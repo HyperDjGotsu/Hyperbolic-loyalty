@@ -25,6 +25,7 @@ function normalizeTier(tier: string | null): PlayerPassTier {
   if (tier === 'access') return 'bronze';
   if (tier === 'player') return 'silver';
   if (tier === 'all_access' || tier === 'shadow_vip') return 'gold';
+  if (tier === 'diamond') return 'diamond';
   return 'free';
 }
 

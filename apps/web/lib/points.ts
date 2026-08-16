@@ -47,10 +47,19 @@ export async function getPlayerBalance(playerId: string, storeId?: string): Prom
   return data ?? 0;
 }
 
+// Keys cover both canonical DB enum values and friendly-name aliases.
+// Callers use the raw DB pass_tier value; both forms resolve correctly.
 export const TIER_MULTIPLIERS: Record<string, number> = {
+  // DB enum values (what callers read from players.pass_tier)
+  none: 1.0,
+  access: 1.25,      // Bronze
+  player: 1.5,       // Silver
+  all_access: 2.0,   // Gold
+  shadow_vip: 2.0,   // Gold (legacy)
+  diamond: 2.0,
+  // Friendly-name aliases (fallback string 'free' and any direct usage)
   free: 1.0,
   bronze: 1.25,
   silver: 1.5,
   gold: 2.0,
-  diamond: 2.0,
 };
