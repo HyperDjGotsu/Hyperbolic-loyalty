@@ -76,7 +76,7 @@ export default function PublicEventPage() {
       try {
         await navigator.share({
           title: event?.name,
-          text: `Check out this event at Games of Martinez: ${event?.name}`,
+          text: `Check out this event at ${event?.location ?? 'Player Pass'}: ${event?.name}`,
           url: url,
         });
       } catch (err) {
@@ -335,7 +335,7 @@ export default function PublicEventPage() {
         {/* CTA Section */}
         <div className="card p-6 text-center">
           <div className="text-4xl mb-4">🎮</div>
-          <h2 className="font-display text-xl font-bold text-primary mb-2">Join Games of Martinez</h2>
+          <h2 className="font-display text-xl font-bold text-primary mb-2">Join {event?.location ?? 'Player Pass'}</h2>
           <p className="text-secondary mb-4">
             Track your XP, compete on leaderboards, and never miss an event!
           </p>
@@ -352,10 +352,10 @@ export default function PublicEventPage() {
       <footer className="bg-surface border-t border-border-token mt-12">
         <div className="max-w-2xl mx-auto px-4 py-8 text-center">
           <div className="text-secondary text-sm mb-2">
-            Games of Martinez • 1155 Arnold Dr Ste E & F, Martinez, CA
+            {event.location}{event.address ? ` • ${event.address}` : ''}
           </div>
           <div className="text-tertiary text-xs">
-            Powered by Hyperbolic XP
+            Powered by Player Pass
           </div>
         </div>
       </footer>

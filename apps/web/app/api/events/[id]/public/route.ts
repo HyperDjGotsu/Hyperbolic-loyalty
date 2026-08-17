@@ -63,7 +63,8 @@ export async function GET(
         youtube_url,
         attendance_xp,
         win_xp,
-        prizing
+        prizing,
+        stores!events_store_id_fkey ( name, city, state, address )
       `)
       .eq('id', eventId)
       .single();
@@ -126,8 +127,12 @@ export async function GET(
       attendanceXp: ATTENDANCE_LIFETIME_XP,
       winXp: WIN_LIFETIME_XP,
       prizing: event.prizing || [],
-      location: 'Games of Martinez',
-      address: '1155 Arnold Dr Ste E & F, Martinez, CA 94553',
+      location: (event.stores as unknown as { name: string } | null)?.name ?? 'Player Pass Event',
+      address: (() => {
+        const s = event.stores as unknown as { address?: string | null; city?: string | null; state?: string | null } | null;
+        if (!s) return '';
+        return s.address ?? [s.city, s.state].filter(Boolean).join(', ');
+      })(),
     };
 
     return NextResponse.json({ event: publicEvent });
