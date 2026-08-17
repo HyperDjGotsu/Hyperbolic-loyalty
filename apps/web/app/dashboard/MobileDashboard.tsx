@@ -155,6 +155,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
     text: a.description || a.source?.replace(/_/g, ' ') || 'XP Earned',
     xp: a.final_xp || a.base_xp || 0,
     time: new Date(a.created_at).toLocaleDateString(),
+    storeTag: a.store_short_id ?? null,
     icon: '⭐',
   }));
 
@@ -406,7 +407,9 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-primary text-sm truncate">{a.text}</div>
-                  <div className="text-secondary text-xs">{a.time}</div>
+                  <div className="text-secondary text-xs">
+                    {a.time}{a.storeTag ? ` · @ ${a.storeTag}` : ''}
+                  </div>
                 </div>
                 <div className={`font-bold text-sm ${a.xp >= 0 ? 'text-xp' : 'text-danger'}`}>
                   {a.xp >= 0 ? '+' : ''}{a.xp}

@@ -2206,6 +2206,7 @@ export type Database = {
           org_id: string | null
           phone: string | null
           player_id_prefix: string
+          short_id: string | null
           slug: string | null
           state: string | null
         }
@@ -2224,6 +2225,7 @@ export type Database = {
           org_id?: string | null
           phone?: string | null
           player_id_prefix?: string
+          short_id?: string | null
           slug?: string | null
           state?: string | null
         }
@@ -2242,6 +2244,7 @@ export type Database = {
           org_id?: string | null
           phone?: string | null
           player_id_prefix?: string
+          short_id?: string | null
           slug?: string | null
           state?: string | null
         }
@@ -2535,7 +2538,13 @@ export type Database = {
       event_status: "scheduled" | "active" | "completed" | "cancelled"
       friend_status: "pending" | "accepted" | "blocked"
       pass_status: "active" | "grace_period" | "cancelled" | "expired"
-      pass_tier: "none" | "access" | "player" | "all_access" | "shadow_vip" | "diamond"
+      pass_tier:
+        | "none"
+        | "access"
+        | "player"
+        | "all_access"
+        | "shadow_vip"
+        | "diamond"
       privacy_visibility: "public" | "friends" | "private"
       xp_source:
         | "event_attendance"
@@ -2679,7 +2688,14 @@ export const Constants = {
       event_status: ["scheduled", "active", "completed", "cancelled"],
       friend_status: ["pending", "accepted", "blocked"],
       pass_status: ["active", "grace_period", "cancelled", "expired"],
-      pass_tier: ["none", "access", "player", "all_access", "shadow_vip", "diamond"],
+      pass_tier: [
+        "none",
+        "access",
+        "player",
+        "all_access",
+        "shadow_vip",
+        "diamond",
+      ],
       privacy_visibility: ["public", "friends", "private"],
       xp_source: [
         "event_attendance",
@@ -2697,4 +2713,3 @@ export const Constants = {
     },
   },
 } as const
-

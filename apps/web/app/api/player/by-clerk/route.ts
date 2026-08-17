@@ -280,13 +280,26 @@ export async function GET() {
       };
     });
 
-    // Get recent activity
-    const { data: activity } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('id, base_xp, final_xp, source, description, created_at, game_id')
-      .eq('player_id', player.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
+    // Get recent activity with store attribution
+    const [{ data: activity }, { data: storeList }] = await Promise.all([
+      supabaseAdmin
+        .from('xp_ledger')
+        .select('id, base_xp, final_xp, source, description, created_at, game_id, store_id')
+        .eq('player_id', player.id)
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabaseAdmin
+        .from('stores')
+        .select('id, short_id'),
+    ]);
+    const storeShortIds: Record<string, string> = {};
+    for (const s of storeList ?? []) {
+      if (s.id && s.short_id) storeShortIds[s.id] = s.short_id;
+    }
+    const activityWithStore = (activity ?? []).map(a => ({
+      ...a,
+      store_short_id: a.store_id ? (storeShortIds[a.store_id] ?? null) : null,
+    }));
 
     // Get live point balance from ledger (network-wide, source of truth)
     const { data: balanceData } = await supabaseAdmin
@@ -324,7 +337,7 @@ export async function GET() {
       xp: totalXp,
       gems: liveGems,
       gameXP,
-      recentActivity: activity || [],
+      recentActivity: activityWithStore,
       primaryGameId: player.primary_game_id,
       isStaff: player.is_staff,
       isFoundingMember: player.is_founding_member,

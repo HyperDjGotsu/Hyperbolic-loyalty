@@ -675,6 +675,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
     text: a.description || a.source?.replace(/_/g, ' ') || 'XP Earned',
     xp: a.final_xp || a.base_xp || 0,
     time: new Date(a.created_at).toLocaleDateString(),
+    storeTag: a.store_short_id ?? null,
     icon: getActivityIcon(a.source || a.description || ''),
   }));
 
@@ -1032,7 +1033,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium truncate">{activity.text}</div>
-                            <div className="text-[11px] text-secondary">{activity.time}</div>
+                            <div className="text-[11px] text-secondary">
+                              {activity.time}{activity.storeTag ? ` · @ ${activity.storeTag}` : ''}
+                            </div>
                           </div>
                           <div className={`text-sm font-bold shrink-0 ${activity.xp >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                             {activity.xp >= 0 ? '+' : ''}{activity.xp}

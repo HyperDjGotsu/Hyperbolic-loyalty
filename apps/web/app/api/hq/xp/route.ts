@@ -262,6 +262,7 @@ export async function POST(request: Request) {
         description: reason || (amount > 0 ? 'Admin adjustment' : 'Admin correction'),
         source: 'manual_adjustment',
         awarded_by: staffCheck.id,
+        store_id: storeId || null,
       });
 
     if (insertError) {
