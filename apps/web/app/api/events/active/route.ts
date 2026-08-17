@@ -4,14 +4,23 @@ import { ATTENDANCE_LIFETIME_XP } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const storeId = searchParams.get('store_id');
+
   // Find the active event — use .in() to match the working pattern in /api/events
-  const { data: activeEvents, error: eventError } = await supabaseAdmin
+  let query = supabaseAdmin
     .from('events')
     .select('id, name, game_id, attendance_xp, scheduled_at, status')
     .in('status', ['active'])
     .order('scheduled_at', { ascending: true })
     .limit(1);
+
+  if (storeId) {
+    query = query.eq('store_id', storeId);
+  }
+
+  const { data: activeEvents, error: eventError } = await query;
 
   if (eventError) {
     console.error('Active event query error:', eventError);

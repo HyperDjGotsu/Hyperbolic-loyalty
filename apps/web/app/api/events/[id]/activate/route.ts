@@ -57,13 +57,17 @@ export async function POST(
     }
 
     if (action === 'end') {
-      const { error } = await supabaseAdmin
+      const { data: updated, error } = await supabaseAdmin
         .from('events')
         .update({ status: 'completed' })
-        .eq('id', eventId);
+        .eq('id', eventId)
+        .select('id');
 
       if (error) {
         return NextResponse.json({ error: 'Failed to end event' }, { status: 500 });
+      }
+      if (!updated || updated.length === 0) {
+        return NextResponse.json({ error: 'Event not found' }, { status: 404 });
       }
 
       return NextResponse.json({ success: true, status: 'completed' });

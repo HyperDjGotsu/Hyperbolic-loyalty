@@ -1068,9 +1068,12 @@ export default function HQPage() {
       const eventsUrl = requestedStoreId
         ? `/api/events?status=upcoming&limit=20&store_id=${encodeURIComponent(requestedStoreId)}`
         : '/api/events?status=upcoming&limit=20';
+      const activeUrl = requestedStoreId
+        ? `/api/events/active?store_id=${encodeURIComponent(requestedStoreId)}`
+        : '/api/events/active';
       const [eventsRes, activeRes] = await Promise.all([
         fetch(eventsUrl),
-        fetch('/api/events/active'),
+        fetch(activeUrl),
       ]);
       // Stale-response guard: discard if store switched while awaiting
       if (requestedStoreId !== activeStoreRef.current) return;
