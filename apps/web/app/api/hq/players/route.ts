@@ -4,10 +4,11 @@ import { getStaffContext } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
-// Lightweight player search — returns a list, used by Circuit standings picker.
-// Network admins search network-wide. Store staff/managers only see players
-// whose home_store_id is one of their authorized stores. Players with
-// home_store_id = null are excluded for non-admins.
+// Lightweight player search — network-wide for any authorized staff.
+// Player Pass identity is network-wide: a player's home store does not restrict
+// which staff can find and service them (e.g. a visiting player at a different store).
+// Returns only identification fields; sensitive fields are exposed only on the
+// individual player route with appropriate store-scoped authorization.
 export async function GET(request: Request) {
   const staffCtx = await getStaffContext();
   if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
@@ -18,20 +19,15 @@ export async function GET(request: Request) {
   if (q.length < 2) return NextResponse.json({ players: [] });
 
   const isId = q.toUpperCase().startsWith('HYP') || q.includes('-');
-  let query = supabaseAdmin
+  const query = supabaseAdmin
     .from('players')
     .select('id, player_id, display_name')
     .limit(8);
 
-  query = isId
-    ? query.ilike('player_id', `%${q}%`)
-    : query.ilike('display_name', `%${q}%`);
+  const { data, error } = isId
+    ? await query.ilike('player_id', `%${q}%`)
+    : await query.ilike('display_name', `%${q}%`);
 
-  if (!staffCtx.isNetworkAdmin) {
-    query = query.in('home_store_id', staffCtx.allStoreIds);
-  }
-
-  const { data, error } = await query;
   if (error) return NextResponse.json({ players: [] });
 
   return NextResponse.json({ players: data || [] });
