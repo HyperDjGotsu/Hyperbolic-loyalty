@@ -114,7 +114,7 @@ export async function POST(request: Request) {
       throw insertErr;
     }
 
-    const acceptUrl = `${getAppUrl()}/staff/accept-invite?token=${rawToken}`;
+    const acceptUrl = `${getAppUrl()}/staff/accept-invite/${rawToken}`;
     const roleLabel = role === 'store_manager' ? 'Store Manager' : 'Store Staff';
     const storeName = store.name;
 
