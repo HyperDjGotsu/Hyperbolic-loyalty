@@ -121,12 +121,12 @@ export async function POST(request: Request) {
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       resend.emails.send({
-        from: 'Hyperbolic XP <onboarding@resend.dev>',
+        from: 'Player Pass <onboarding@resend.dev>',
         to: normalizedEmail,
-        subject: `You've been invited to join ${storeName} on Hyperbolic XP`,
+        subject: `You've been invited to join ${storeName} on Player Pass`,
         html: `
           <p>You have been invited to join <strong>${storeName}</strong>
-          as <strong>${roleLabel}</strong> on Hyperbolic XP.</p>
+          as <strong>${roleLabel}</strong> on Player Pass.</p>
           <p>
             <a href="${acceptUrl}"
                style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:6px;

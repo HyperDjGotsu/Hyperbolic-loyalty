@@ -5456,12 +5456,12 @@ export default function HQPage() {
                       ...c,
                       player_id_prefix: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5),
                     }))}
-                    placeholder="HYP"
+                    placeholder="PREFIX"
                     maxLength={5}
                     className="w-28 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono tracking-widest"
                   />
                   <span className="text-secondary text-sm font-mono">
-                    {storeConfig.player_id_prefix || 'HYP'}-XXXXXX
+                    {storeConfig.player_id_prefix || 'PREFIX'}-XXXXXX
                   </span>
                 </div>
                 <p className="text-xs text-tertiary mt-2">

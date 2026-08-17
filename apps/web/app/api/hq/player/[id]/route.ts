@@ -14,11 +14,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       .eq('id', params.id)
       .single();
 
-    // Use requireStoreAccess if the player has a home store; otherwise fall back
-    // TODO: scope to store_id once per-store player data model lands
+    // Players without a home_store_id are only editable by network admins — no fallback to any-staff.
     const staffCtx = player?.home_store_id
       ? await requireStoreAccess(player.home_store_id)
-      : await requireAnyStaff();
+      : await requireNetworkAdmin();
 
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -61,10 +60,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-// DELETE — remove player and all associated records
+// DELETE — remove player and all associated records (network admin only — permanent, irreversible)
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
-    const staffCtx = await requireAnyStaff();
+    const staffCtx = await requireNetworkAdmin();
     if (!staffCtx) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

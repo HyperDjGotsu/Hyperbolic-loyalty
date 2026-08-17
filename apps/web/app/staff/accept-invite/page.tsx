@@ -48,21 +48,13 @@ function AcceptInviteContent() {
 
         if (res.ok) {
           const roleLabel = data.role === 'store_manager' ? 'Store Manager' : 'Store Staff';
-          if (data.code === 'ALREADY_ASSIGNED') {
-            setMessage(`You already have the ${roleLabel} role at this store.`);
-            setStatus('already_active');
-          } else if (data.code === 'UPGRADED') {
-            setMessage(`Your role has been upgraded to ${roleLabel}.`);
-            setStatus('success');
-          } else {
-            setMessage(`You are now ${roleLabel}.`);
-            setStatus('success');
-          }
+          setMessage(`You are now ${roleLabel}.`);
+          setStatus('success');
           return;
         }
 
         // Already accepted — check if this user has staff access anyway
-        if (res.status === 410 && data.error?.includes('already been accepted')) {
+        if (res.status === 410 && data.error?.includes('already accepted')) {
           fetch('/api/hq/auth')
             .then(r => r.json())
             .then(d => {

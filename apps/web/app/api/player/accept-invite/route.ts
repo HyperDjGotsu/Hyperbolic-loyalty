@@ -5,14 +5,16 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-const ERROR_MESSAGES: Record<string, { message: string; status: number }> = {
-  NOT_FOUND:        { message: 'Invitation not found or invalid token',                          status: 404 },
-  REVOKED:          { message: 'This invitation has been revoked',                               status: 410 },
-  ALREADY_ACCEPTED: { message: 'This invitation has already been accepted',                      status: 410 },
-  EXPIRED:          { message: 'This invitation has expired',                                    status: 410 },
-  EMAIL_MISMATCH:   { message: 'This invitation was sent to a different email address',          status: 403 },
-  WOULD_DOWNGRADE:  { message: 'You already have a higher role at this store — no change made',  status: 409 },
-};
+// SQL function returns { success: true, ... } or { error: "message" }.
+// Map error substrings to HTTP status codes.
+function mapSqlError(msg: string): { message: string; status: number } {
+  if (msg.includes('Invalid') || msg.includes('expired invitation')) return { message: msg, status: 404 };
+  if (msg.includes('revoked'))          return { message: msg, status: 410 };
+  if (msg.includes('already accepted')) return { message: msg, status: 410 };
+  if (msg.includes('expired'))          return { message: msg, status: 410 };
+  if (msg.includes('mismatch') || msg.includes('different address')) return { message: msg, status: 403 };
+  return { message: msg, status: 400 };
+}
 
 function hashToken(raw: string): string {
   return createHash('sha256').update(raw).digest('hex');
@@ -59,28 +61,22 @@ export async function POST(request: Request) {
     if (error) throw error;
 
     const result = data as {
-      ok: boolean;
-      code?: string;
+      success?: boolean;
+      error?: string;
+      app_user_id?: string;
       store_id?: string;
       role?: string;
-      existing_role?: string;
-      invited_role?: string;
     };
 
-    if (!result.ok) {
-      const mapped = ERROR_MESSAGES[result.code ?? ''];
-      return NextResponse.json(
-        { error: mapped?.message ?? 'Invitation could not be accepted' },
-        { status: mapped?.status ?? 400 }
-      );
+    if (!result.success) {
+      const { message, status } = mapSqlError(result.error ?? 'Invitation could not be accepted');
+      return NextResponse.json({ error: message }, { status });
     }
 
-    // ok=true covers: new assignment, ALREADY_ASSIGNED (idempotent), UPGRADED
     return NextResponse.json({
       accepted: true,
       store_id: result.store_id,
       role: result.role,
-      code: result.code ?? 'ASSIGNED',
     });
   } catch (err) {
     console.error('accept-invite POST error:', err);
