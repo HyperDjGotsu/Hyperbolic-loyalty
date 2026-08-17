@@ -1,13 +1,13 @@
 <claude-mem-context>
 # Memory Context
 
-# [hyperbolic-app/agent-a757abb76f53e7913] recent context, 2026-08-16 3:28pm PDT
+# [hyperbolic-app] recent context, 2026-08-16 3:18pm PDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (26,818t read) | 904,007t work | 97% savings
+Stats: 50 obs (26,261t read) | 867,621t work | 97% savings
 
 ### Apr 26, 2026
 S148 DailyGacha Spinner Transparency Fixed — Opaque Background and Brighter Ready Orb (Apr 26, 11:18 PM)
@@ -21,6 +21,11 @@ S230 User asked "how do i use it?" — Claude explained how to use the dev reset
 S231 Big one incoming — primary session signaled a large upcoming task, observer standing by (Apr 27, 6:23 PM)
 S233 DailyGacha Preview Page Deployed to Production — Commit 5d66a52 (Apr 27, 9:29 PM)
 S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for Visual Approval (Apr 27, 9:41 PM)
+### Jul 16, 2026
+941 3:53a 🔵 Pre-existing TypeScript Errors in events/checkin and prize-wall/redeem Routes
+### Aug 12, 2026
+1793 11:57p 🔵 PlayerPass Mobile — Release-Oriented Code Review Initiated on Three Core Tab Files
+1794 11:58p 🔵 Mobile Release Code Review — events.tsx, profile.tsx, index.tsx Audit
 ### Aug 13, 2026
 1798 9:49a 🔵 PlayerPass Mobile Alerts Tab — Code Audit Confirms Correct and Complete Implementation
 1799 " 🔵 Web Dashboard Prize Wall Footer — Exists in DesktopDashboard Only, Missing from MobileDashboard
@@ -72,9 +77,6 @@ S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for 
 2197 10:17a ⚖️ Avatar Cross-User Write/Delete Attack Surface — Independent Security Audit Scoped
 2198 10:18a 🔵 Avatar Route Security Audit — All Four Cross-User Attack Vectors Verified SECURE
 2223 2:50p 🔵 Clerk Auth Redirect Loop Analysis — Three-Change Safety Audit
-2236 3:18p 🔵 Dashboard Component Divergence Audit — Desktop vs Mobile Data Fetching Gap
-2238 3:19p 🔵 Dashboard Component Full Audit — Detailed Divergences and Architecture Map
-2239 " 🔵 Pre-Patch MobileDashboard State — Confirmed 3 Missing Data Sections Before 0a88dce
 
-Access 904k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 868k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

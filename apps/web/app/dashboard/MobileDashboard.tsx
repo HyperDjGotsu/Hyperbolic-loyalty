@@ -137,9 +137,10 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
     });
 
   // Filter to favorite games (if any), sort by XP, show top 3
+  // Always include 'general' (Guild Points) — it's not a favoritable game but always relevant
   const filteredGames = favoriteGames.length > 0
     ? games
-        .filter(g => favoriteGames.includes(g.id))
+        .filter(g => g.id === 'general' || favoriteGames.includes(g.id))
         .sort((a, b) => b.xp - a.xp)
     : games.sort((a, b) => b.xp - a.xp);
   
