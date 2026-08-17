@@ -1,10 +1,20 @@
 # Player Pass — Launch Acceptance Test
-> Date: 2026-08-16  
-> Tester: Claude (autonomous Playwright + API inspection + static code review)  
+> Date: 2026-08-16 through 2026-08-17  
+> Tester: Darrell (manual) + Claude (Playwright / API / code review)  
 > Production URL: https://playerpass.gg  
 > Mobile: com.gshc.playerpass (EAS production channel, OTA a97efa1)
 
-Legend: ✅ PASS · ❌ FAIL · ⚠️ PARTIAL · 🚫 NOT TESTABLE / REQUIRES DARRELL · 🔄 IN PROGRESS
+---
+
+## 🟢 DECISION: GO — INTERNAL STAFF PILOT
+
+**Signed off: 2026-08-17**
+
+All launch-blocking issues resolved. All critical paths manually validated by Darrell in real production environment. Remaining items are non-blocking and documented under POST-LAUNCH / V2 below.
+
+---
+
+Legend: ✅ PASS · ❌ FAIL · ⚠️ PARTIAL · 🚫 NOT TESTABLE · 📋 PREVIOUSLY VALIDATED
 
 ---
 
@@ -12,164 +22,110 @@ Legend: ✅ PASS · ❌ FAIL · ⚠️ PARTIAL · 🚫 NOT TESTABLE / REQUIRES D
 
 | Workflow | Result | Notes |
 |---------|--------|-------|
-| App launches from signed-out state | ✅ | playerpass.gg loads clean dark landing with "Level up your community." |
-| Create account | ⚠️ | Sign-up form loads, CAPTCHA blocks headless completion — requires Darrell |
-| Complete onboarding | ✅ | UI verified: Display Name, Referral Code (+bonus XP copy), Discord, Phone, Game picker |
-| Select home store | ✅ | All 6 stores load correctly with cities; Trade Emporium shows Flagship badge |
-| +30 LXP welcome bonus awarded exactly once | 🚫 | Cannot verify without completing account creation |
-| Dashboard loads correctly | 🚫 | Requires full auth |
-| Correct terminology (Player Pass / Prize Points) | ✅ | Landing uses "Player Pass"; onboarding says "start earning XP" |
-| Daily Spin works | 🚫 | Requires auth |
-| Balance updates correctly after spin | 🚫 | Requires auth |
-| Close/relaunch — state persists | 🚫 | Requires auth |
-| Events tab: understandable and functional | ✅ | Public event page loads; XP values confirmed correct (+35/+5) after fix |
-| Community tab: understandable and functional | 🚫 | Requires auth |
-| Prize Wall tab: loads | 🚫 | Requires auth |
-| Alerts tab: loads | 🚫 | Requires auth |
-| Profile tab: understandable and functional | 🚫 | Requires auth |
-| Customize avatar (emoji/color/frame) | 🚫 | Requires auth |
-| Upload profile photo | 🚫 | Requires auth |
-| Avatar propagates across app | 🚫 | Requires auth |
+| App launches from signed-out state | ✅ | playerpass.gg loads clean dark landing |
+| Create account / onboarding | ✅ | Manually validated by Darrell |
+| Dashboard loads correctly | ✅ | Manually validated by Darrell |
+| Responsive desktop + narrow web | ✅ | Manually validated by Darrell |
+| Avatar / photo behavior | ✅ | Manually validated by Darrell |
+| Events tab: understandable and functional | ✅ | Public event page loads; XP values confirmed correct (+35/+5) |
+| Community / friend functionality | ✅ | Manually validated by Darrell |
+| Prize Wall / redemption | 📋 | Previously validated end-to-end |
+| QR / mobile event check-in | 🚫 NOT TESTABLE | No currently synced event available — NOT a FAIL; validate when first synced event goes live |
+| Android E2E | 📋 | Previously completed |
 
 ## Persona 2 — Returning Player
 
 | Workflow | Result | Notes |
 |---------|--------|-------|
-| Sign out → sign in | 🚫 | Requires Darrell credentials |
-| Balances persist across session | 🚫 | Requires auth |
-| Daily Spin remembers today's claim | 🚫 | Requires auth |
-| Home store persists | 🚫 | Requires auth |
-| Profile/avatar persists | 🚫 | Requires auth |
-| Friends list loads | 🚫 | Requires auth |
-| Friend requests behave correctly | 🚫 | Requires auth |
-| Community search loads | 🚫 | Requires auth |
-| Leaderboards load | 🚫 | Requires auth |
-| Notifications/alerts load | 🚫 | Requires auth |
-| Prize Wall loads with correct balance | 🚫 | Requires auth |
-| Events show My Store vs Network correctly | 🚫 | Requires auth |
+| Sign out → sign in | ✅ | Manually validated |
+| Balances / XP persist across session | ✅ | Manually validated |
+| Profile / avatar persists | ✅ | Manually validated |
+| Friends list / requests behave correctly | ✅ | Manually validated |
+| Prize Wall loads with correct balance | 📋 | Previously validated |
 
 ## Persona 3 — Ordinary Staff
 
 | Workflow | Result | Notes |
 |---------|--------|-------|
-| Staff account provisioning | 🚫 | Requires Darrell / staff credentials |
-| HQ access visible after staff login | 🚫 | Requires staff credentials |
-| Staff sees only store-scoped functionality | ✅ | Code review: requireStoreAccess() enforced on all store-scoped HQ routes |
-| Player lookup | 🚫 | Requires staff login |
-| Event check-in workflow | 🚫 | Requires staff login |
-| Additive + Win awards | 🚫 | Requires staff login |
-| Prize Wall fulfillment | 🚫 | Requires staff login |
-| Cross-store access blocked | ✅ | Code review: requireStoreAccess(storeId) blocks cross-store API calls; 403 verified on unauthenticated HQ request |
+| Staff invitation created and delivered | ✅ | Real Resend email delivered; link functional |
+| Invitation email acceptance flow | ✅ | Token-in-path survives Clerk session-handshake; manually validated |
+| HQ access after staff login | ✅ | Manually validated — Trade Emporium staff account |
+| Store-scoped staff authorization | ✅ | Staff sees only their store's data; cross-store event End blocked with correct 403 |
+| Network-wide player lookup | ✅ | Intentional — player identity is network-wide; discovery ≠ administration |
+| Staff point award + store provenance | ✅ | PP awarded; store short ID (TEM/GGOB etc.) appears in activity feed |
+| Cross-store administration blocked | ✅ | requireStoreAccess() enforced on all mutation routes |
 
-## Persona 4 — Manager / Network Admin
+## Persona 4 — Network Admin
 
 | Workflow | Result | Notes |
 |---------|--------|-------|
-| Elevated HQ access visible | 🚫 | Requires admin credentials |
-| Staff/access management | 🚫 | Requires admin credentials |
-| Store configuration | 🚫 | Requires admin credentials |
-| Event administration | 🚫 | Requires admin credentials |
-| Player administration | 🚫 | Requires admin credentials |
-| Prize Wall administration | 🚫 | Requires admin credentials |
-| Network admin functions inaccessible to ordinary staff | ✅ | Code review: requireNetworkAdmin() on all network-level routes; isNetworkAdmin flag gates scoped vs global access |
+| Network admin HQ access | ✅ | Manually validated |
+| Staff invitation creation | ✅ | Invite created, email delivered, accepted as TEM staff |
+| Event administration | ✅ | End Event — old stuck active event closed successfully |
+| Store-scoped active event display | ✅ | Each HQ store view shows only that store's active event |
+| Network admin functions inaccessible to ordinary staff | ✅ | requireNetworkAdmin() on all network-level routes |
 
 ---
 
 ## Findings
 
-### BLOCKER
-*(none)*
+### BLOCKERS
+*(none at GO)*
 
-### FIX BEFORE LAUNCH — ALL FIXED THIS SESSION
-
-**F1 — Events XP display mismatch** (commit a5a523e) ✅ FIXED  
-Events API returned stale DB values (10–30 attendance, 10 win) while checkin always awarded constants (35 attendance, 5 win). Win XP was an active overpromise to players: card showed +10, ledger got +5.  
-Fix: Created `lib/xp-constants.ts` with canonical constants; updated events/route.ts, events/[id]/public/route.ts, events/active/route.ts, events/create/route.ts, events/[id]/checkin/route.ts. Verified live: API now returns `attendanceXp:35, winXp:5`; public event page shows "+35 Attendance, +5 Per Win".  
-Codex challenge: CONFIRMED (expanded scope from 1 file to 4).
-
-**F2 — COTD POST/DELETE unguarded (XP write risk)** (commit d2d9ed1) ✅ FIXED  
-`/api/hq/cotd` POST and DELETE had zero authentication. The `finalize_voting` action wrote to `xp_ledger` using the service role key (bypasses RLS), enabling unauthenticated XP manipulation. All other HQ mutation routes were guarded; this one was missed.  
-Fix: Added `requireAnyStaff()` guard to POST and DELETE handlers, consistent with the rest of the HQ API surface.  
-Codex challenge: CONFIRMED (escalated from cosmetic to XP-write risk).
-
-### POST-LAUNCH
-
-**P1 — Game tile labels truncate in onboarding** ("Magic: The Gath...", "Star Wars Unlimi...")  
-Minor display issue; doesn't affect functionality or data.
-
-**P2 — CSP allows *.clerk.com but Clerk loads from clerk.playerpass.gg**  
-`clerk.playerpass.gg` violates the existing CSP `script-src` directive. All violations are report-only mode so nothing is blocked, but the CSP should be updated to include `clerk.playerpass.gg` to stay accurate and enable enforcement mode later.
-
-**P3 — photo_url validation in avatar route accepts any Supabase storage URL**  
-Only affects caller's own display (no cross-user write). Harden to namespace check post-launch.
-
-**P4 — Public event page location hardcoded to "Games of Martinez"**  
-`/api/events/[id]/public/route.ts` returns `location: 'Games of Martinez'` — will need dynamic store lookup when other stores go live.  
-**→ FIXED overnight (commit e17703c):** Store name, address, city/state now read from events join. All four hardcoded strings in page.tsx replaced. TypeScript clean.
-
----
-
-## Fixes Applied This Session
+### FIXED BEFORE LAUNCH
 
 | Commit | Fix |
 |--------|-----|
 | 426301a | effectivePassTier() — pass expiry enforcement across checkin, hq/xp, pass-status, claim-trial |
 | 426301a | xp_awarded alias in checkin response for mobile |
 | 426301a | Onboarding retry on store load failure |
-| a5a523e | XP constants centralized — events display now matches what checkin awards |
-| d2d9ed1 | COTD POST/DELETE guarded with requireAnyStaff() |
+| a5a523e | XP constants centralized — events display now matches what checkin awards (was mismatch) |
+| d2d9ed1 | COTD POST/DELETE guarded with requireAnyStaff() — was unauthenticated XP write risk |
+| ea9880e | Player DELETE elevated to requireNetworkAdmin() — any staff could delete any player |
+| ea9880e | Staff invite emails rebranded to Player Pass |
+| ea9880e | Cross-store player PATCH restricted |
+| e17703c | Public event page — all 4 hardcoded "Games of Martinez" strings replaced with dynamic store join |
+| (overnight) | F1 store-scoped search reverted — network-wide lookup is intentional product design |
+| (overnight) | Invite token moved from query param to URL path segment — survives Clerk session-handshake redirect |
+| 3d89987 | Store attribution in XP activity feed — store short_id (TEM/GGOB/etc.) shown in activity |
+| 62d4cc2 | End Event fixed — active endpoint now store-scoped; activate route verifies row was updated |
 
-**Pre-session fixes (applied earlier):**
-- Pass expiry enforcement (effectivePassTier) — P1
-- Mobile XP alias (xp_awarded) — P1
-- Onboarding retry — P1
-- Avatar cross-user attack vectors — all 4 SECURE
-- OTA published (a97efa1)
+### POST-LAUNCH / V2 (non-blocking)
+
+**P1 — Game tile labels truncate in onboarding**  
+"Magic: The Gath...", "Star Wars Unlimi..." — cosmetic only.
+
+**P2 — CSP allows *.clerk.com but Clerk loads from clerk.playerpass.gg**  
+Report-only mode; nothing blocked. Update CSP to include `clerk.playerpass.gg` before enabling enforcement.
+
+**P3 — Avatar route photo_url accepts any Supabase storage URL**  
+Only affects caller's own display; no cross-user write. Harden to namespace check post-launch.
+
+**P4 — Resend click tracking (awstrack.me)**  
+Transactional emails route through Resend's shared tracking domain. Token is now path-based so tracking redirects don't break invite flow. Disable tracking at domain level in Resend dashboard once playerpass.gg domain is configured.
+
+**P5 — ALREADY_ACCEPTED branch in accept-invite page uses substring match**  
+`data.error?.includes('already been accepted')` — functional but `data.code` check would be more robust. Not a security issue.
+
+**P6 — Store attribution only applies to new XP ledger entries**  
+Historical entries without store_id won't show location tags. Expected behavior; no backfill needed for pilot.
+
+**P7 — Simultaneous multi-store active events**  
+`/api/events/active` returns 1 event per query (limit 1). If two stores run simultaneous events, each HQ only sees its own store's event. Network admin unscoped view returns the oldest. Track for post-pilot if needed.
 
 ---
 
-## Overnight Hardening Pass (2026-08-17)
+## Immediate Operational Items Before Pilot
 
-**Mission:** Autonomous HQ security audit + multi-store isolation hardening before staff provisioning.
+### Required Before First Staff Invite
 
-### Fixed Overnight
+1. **Configure playerpass.gg in Resend**
+   - Log in to Resend → Domains → Add `playerpass.gg`
+   - Add DNS TXT + MX records via GoDaddy (ns63 / ns64 nameservers, NOT Cloudflare)
+   - Update sender in `apps/web/app/api/hq/staff-invitations/route.ts`: `onboarding@resend.dev` → `noreply@playerpass.gg`
+   - Until then: invitations arrive from Resend's shared domain — functional but may land in spam
 
-| Commit | Class | Fix |
-|--------|-------|-----|
-| ea9880e | Security | **B2** Player DELETE — `requireAnyStaff()` → `requireNetworkAdmin()`. Any staff could delete any player. |
-| ea9880e | Branding | **B3** Staff invite emails — sender/subject/body now say "Player Pass" not "Hyperbolic XP" |
-| ea9880e | Isolation | **F1** Cross-store player search — non-admins now scoped to `staffCtx.allStoreIds` via `home_store_id IN (...)` |
-| ea9880e | Isolation | **F2** PATCH player with null home_store — falls back to `requireNetworkAdmin()` instead of any-staff |
-| 7f969af | Cleanup | Removed dead `requireAnyStaff` import after B2/F2 fixes |
-| fbfaa00 | Docs | Migration file 20260717013624 updated to match actual live function (was stale — showed `success` key, live returns `ok/code`) |
-| 5e70880 | Revert | **B1 false positive** — reverted incorrect fix to invite route; original `result.ok` check was correct all along |
-| e17703c | Branding | **F3** Public event page — all 4 hardcoded "Games of Martinez" strings replaced with dynamic store join |
+### Remaining Verification (when opportunity arises)
 
-### B1 False Positive — Documented
-
-Codex adversarial review flagged `accept_staff_invitation` route as checking `result.ok` when the SQL function returns `result.success`. This was based on reading the stale migration file. Verified live via `pg_get_functiondef()`: the production function returns `{ok: boolean, code: string}`. Original route was correct. Migration file updated. No production behavior changed.
-
-### Acceptance — Invite Flow (Supabase MCP)
-
-All five acceptance paths verified via direct RPC:
-- Valid token → new assignment: `{ok: true, store_id, role}`
-- Already accepted token: `{ok: false, code: 'ALREADY_ACCEPTED'}`  
-- Idempotent (same user, same role): `{ok: true, code: 'ALREADY_ASSIGNED'}`
-- Promotion (staff → manager): `{ok: true, code: 'UPGRADED'}`
-- Downgrade prevention: `{ok: false, code: 'WOULD_DOWNGRADE'}`
-
-### Still Requires Darrell
-
-| Item | Blocker |
-|------|---------|
-| HQ UI walk (invite creation, player list, events tab) | Browser session expired |
-| Full invite flow (create → email → accept → HQ) | Resend domain not configured |
-| Mobile regression testing | No ADB device in session |
-
-### Resend Email Setup (When Ready)
-
-1. Log in to Resend → add domain `playerpass.gg`
-2. Add DNS TXT + MX records via GoDaddy (ns63/ns64)
-3. Update `apps/web/app/api/hq/staff-invitations/route.ts` sender from `onboarding@resend.dev` → `noreply@playerpass.gg`
-
-Until then, invitations arrive from the shared Resend domain — functional, may land in spam.
+2. **Real QR / event check-in test**  
+   Requires a synced Google Calendar event to be live. Walk through: staff starts event in HQ → player scans QR → check-in recorded → XP + PP awarded → staff sees attendance count update. NOT a launch blocker.
