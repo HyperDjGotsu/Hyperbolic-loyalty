@@ -816,6 +816,36 @@ export default function HQPage() {
     network_calendar_url: '',
   });
 
+  // Staff & Access state
+  type StaffMember = {
+    row_id: string;
+    app_user_id: string | null;
+    role: 'network_admin' | 'store_manager' | 'store_staff';
+    store_id: string | null;
+    store_name: string | null;
+    display_name: string;
+    player_id: string | null;
+    email: string | null;
+    granted_at: string;
+  };
+  type PlayerSearchResult = {
+    id: string;
+    player_id: string;
+    display_name: string;
+    email: string | null;
+    clerk_user_id: string | null;
+  };
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [staffMembersLoading, setStaffMembersLoading] = useState(false);
+  const [promoteSearch, setPromoteSearch] = useState('');
+  const [promoteResults, setPromoteResults] = useState<PlayerSearchResult[]>([]);
+  const [promoteSearching, setPromoteSearching] = useState(false);
+  const [promoteTarget, setPromoteTarget] = useState<PlayerSearchResult | null>(null);
+  const [promoteRole, setPromoteRole] = useState<'store_staff' | 'store_manager'>('store_staff');
+  const [promoteStoreId, setPromoteStoreId] = useState('');
+  const [promoting, setPromoting] = useState(false);
+  const [revoking, setRevoking] = useState<string | null>(null);
+
   // Staff invitations state
   const [allStores, setAllStores] = useState<Array<{ id: string; name: string }>>([]);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'store_staff', store_id: '' });
@@ -1549,6 +1579,10 @@ export default function HQPage() {
     if (activeTab === 'broadcasts') {
       loadBroadcastHistory();
     }
+    if (activeTab === 'access') {
+      loadStaffMembers();
+      loadAllStores();
+    }
   }, [activeTab]);
 
   // Store-context effect — fires when the active store changes, reloads only store-scoped tabs
@@ -1978,6 +2012,67 @@ export default function HQPage() {
       }
     } catch { /* ignore */ } finally {
       setInvitationsLoading(false);
+    }
+  };
+
+  const loadStaffMembers = async () => {
+    setStaffMembersLoading(true);
+    try {
+      const res = await fetch('/api/hq/staff/members');
+      if (res.ok) {
+        const data = await res.json();
+        setStaffMembers(data.members || []);
+      }
+    } catch { /* ignore */ } finally {
+      setStaffMembersLoading(false);
+    }
+  };
+
+  const searchPlayers = async (q: string) => {
+    if (q.length < 2) { setPromoteResults([]); return; }
+    setPromoteSearching(true);
+    try {
+      const res = await fetch(`/api/hq/staff/search-player?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPromoteResults(data.players || []);
+      }
+    } catch { /* ignore */ } finally {
+      setPromoteSearching(false);
+    }
+  };
+
+  const assignRole = async () => {
+    if (!promoteTarget || !promoteStoreId) return;
+    setPromoting(true);
+    try {
+      const res = await fetch('/api/hq/staff/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player_uuid: promoteTarget.id, role: promoteRole, store_id: promoteStoreId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Failed to assign role', 'error'); return; }
+      showToast(`${data.display_name} is now ${data.role} at ${data.store_name}`, 'success');
+      setPromoteTarget(null);
+      setPromoteSearch('');
+      setPromoteResults([]);
+      loadStaffMembers();
+    } catch { showToast('Failed to assign role', 'error'); } finally {
+      setPromoting(false);
+    }
+  };
+
+  const revokeRole = async (row_id: string) => {
+    setRevoking(row_id);
+    try {
+      const res = await fetch(`/api/hq/staff/promote?row_id=${row_id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Failed to revoke role', 'error'); return; }
+      showToast('Role revoked', 'success');
+      loadStaffMembers();
+    } catch { showToast('Failed to revoke role', 'error'); } finally {
+      setRevoking(null);
     }
   };
 
@@ -2616,6 +2711,7 @@ export default function HQPage() {
               <option value="prize-wall">🏆 Prize Wall</option>
               <option value="redemptions">🎟️ Redemptions</option>
               <option value="circuit">🏆 Circuit</option>
+              <option value="access">👥 Staff & Access</option>
               <option value="broadcasts">📢 Broadcasts</option>
               <option value="settings">⚙️ Settings</option>
             </select>
@@ -2632,6 +2728,7 @@ export default function HQPage() {
               { id: 'prize-wall', label: '🏆 Prize Wall' },
               { id: 'redemptions', label: '🎟️ Redemptions' },
               { id: 'circuit', label: '🏆 Circuit' },
+              { id: 'access', label: '👥 Staff & Access' },
               { id: 'broadcasts', label: '📢 Broadcasts' },
               { id: 'settings', label: '⚙️ Settings' },
             ].map(tab => (
@@ -5261,6 +5358,155 @@ export default function HQPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Staff & Access Tab */}
+        {activeTab === 'access' && (
+          <div className="space-y-6">
+
+            {/* Promote Existing Player */}
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <h2 className="font-semibold text-primary mb-1">Promote Existing Player</h2>
+              <p className="text-xs text-tertiary mb-5">
+                Find a Player Pass account and assign a staff role. Use Staff Invitations (in Settings) for people who don&apos;t yet have an account.
+              </p>
+
+              {/* Search */}
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  placeholder="Search by name, Player ID, or email…"
+                  value={promoteSearch}
+                  onChange={e => {
+                    setPromoteSearch(e.target.value);
+                    setPromoteTarget(null);
+                    searchPlayers(e.target.value);
+                  }}
+                  className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                />
+                {promoteSearching && (
+                  <span className="absolute right-3 top-2 text-xs text-secondary">Searching…</span>
+                )}
+              </div>
+
+              {/* Search results */}
+              {promoteResults.length > 0 && !promoteTarget && (
+                <div className="border border-border-token rounded-lg overflow-hidden mb-4">
+                  {promoteResults.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setPromoteTarget(p); setPromoteResults([]); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-elevated border-b border-border-token last:border-0 transition-colors"
+                    >
+                      <span className="text-accent font-mono text-xs">{p.player_id}</span>
+                      <span className="text-primary text-sm font-medium flex-1">{p.display_name}</span>
+                      {p.email && <span className="text-tertiary text-xs">{p.email}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Selected player + role assignment */}
+              {promoteTarget && (
+                <div className="bg-elevated rounded-xl p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-primary font-semibold">{promoteTarget.display_name}</p>
+                      <p className="text-tertiary text-xs font-mono">{promoteTarget.player_id}</p>
+                      {promoteTarget.email && <p className="text-tertiary text-xs">{promoteTarget.email}</p>}
+                    </div>
+                    <button onClick={() => { setPromoteTarget(null); setPromoteSearch(''); }} className="text-secondary text-sm hover:text-primary">✕</button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-secondary block mb-1">Role</label>
+                      <select
+                        value={promoteRole}
+                        onChange={e => setPromoteRole(e.target.value as 'store_staff' | 'store_manager')}
+                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      >
+                        <option value="store_staff">Store Staff</option>
+                        {staffContext?.isNetworkAdmin && <option value="store_manager">Store Manager</option>}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-secondary block mb-1">Store</label>
+                      <select
+                        value={promoteStoreId}
+                        onChange={e => setPromoteStoreId(e.target.value)}
+                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      >
+                        <option value="">Select store…</option>
+                        {(staffContext?.isNetworkAdmin ? allStores : (staffContext?.stores ?? [])).map((s: { id: string; name: string }) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={assignRole}
+                    disabled={promoting || !promoteStoreId}
+                    className="w-full bg-accent text-background py-2 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-accent/90 transition-colors"
+                  >
+                    {promoting ? 'Assigning…' : `Assign ${promoteRole === 'store_manager' ? 'Store Manager' : 'Store Staff'}`}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Current Staff */}
+            <div className="bg-surface rounded-xl p-6 border border-border-token">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-semibold text-primary">Current Staff</h2>
+                  <p className="text-xs text-tertiary">Active role assignments. Revoke to remove access immediately.</p>
+                </div>
+                <button onClick={loadStaffMembers} className="text-xs text-secondary hover:text-primary">Refresh</button>
+              </div>
+
+              {staffMembersLoading ? (
+                <p className="text-sm text-secondary">Loading…</p>
+              ) : staffMembers.length === 0 ? (
+                <p className="text-sm text-tertiary">No staff assigned yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {staffMembers.map(m => (
+                    <div key={m.row_id} className="flex items-center gap-3 p-3 bg-elevated rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-primary text-sm font-medium truncate">{m.display_name}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            m.role === 'network_admin'
+                              ? 'bg-accent/20 text-accent'
+                              : m.role === 'store_manager'
+                              ? 'bg-yellow-500/20 text-yellow-400'
+                              : 'bg-elevated text-secondary border border-border-token'
+                          }`}>
+                            {m.role === 'network_admin' ? 'Network Admin' : m.role === 'store_manager' ? 'Store Manager' : 'Store Staff'}
+                          </span>
+                          {m.store_name && <span className="text-xs text-tertiary">{m.store_name}</span>}
+                          {m.player_id && <span className="text-xs text-tertiary font-mono">{m.player_id}</span>}
+                        </div>
+                      </div>
+                      {/* Can't revoke network_admin from UI */}
+                      {m.role !== 'network_admin' && (
+                        <button
+                          onClick={() => revokeRole(m.row_id)}
+                          disabled={revoking === m.row_id}
+                          className="text-xs text-danger hover:text-danger/80 disabled:opacity-50 shrink-0"
+                        >
+                          {revoking === m.row_id ? 'Revoking…' : 'Revoke'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
         )}
 
