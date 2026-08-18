@@ -14,8 +14,10 @@ const GAME_CURRENCIES: Record<string, string> = {
   gundam: 'Pilot Points',
   pokemon: 'Pokepoints',
   mtg: 'Mana Marks',
-  star_wars: 'Holopoints',
+  // canonical + legacy aliases for Star Wars
   star_wars_unlimited: 'Holopoints',
+  star_wars: 'Holopoints',
+  sw_unlimited: 'Holopoints',
   vanguard: 'Ride Gauge',
   uvs: 'Versus Tokens',
   hololive: 'Fan Subs',
@@ -28,6 +30,9 @@ const GAME_CURRENCIES: Record<string, string> = {
   warhammer: 'War Honors',
   digimon: 'Digi-Points',
   yugioh: 'Star Chips',
+  azuki: 'Azuki Points',
+  blood_bowl: 'TD Points',
+  bolt_action: 'Command Points',
 };
 
 // Pirate's Life / Hyperlife configuration

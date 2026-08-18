@@ -1,5 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE } from '@/lib/config';
+import { SELECTABLE_GAMES } from '@/lib/games';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
@@ -93,14 +94,7 @@ const PREF_LABELS: { key: keyof NotifPrefs; label: string; icon: string }[] = [
   { key: 'store', label: 'Store Broadcasts', icon: '📢' },
 ];
 
-const GAMES = [
-  ['one_piece', 'One Piece', '🏴‍☠️'], ['pokemon', 'Pokemon', '⚡'], ['mtg', 'MTG', '✨'],
-  ['gundam', 'Gundam', '🤖'], ['star_wars_unlimited', 'Star Wars', '🌟'],
-  ['vanguard', 'Vanguard', '⚔️'], ['lorcana', 'Lorcana', '🪄'], ['uvs', 'UVS', '👊'],
-  ['digimon', 'Digimon', '🦖'], ['yugioh', 'Yu-Gi-Oh', '⭐'], ['riftbound', 'Riftbound', '🌀'],
-  ['hololive', 'Hololive', '🎤'], ['weiss', 'Weiss Schwarz', '🎴'], ['sw_legion', 'SW Legion', '🎖️'],
-  ['union_arena', 'Union Arena', '🛡️'], ['warhammer', 'Warhammer', '⚔️'],
-] as const;
+const GAMES = SELECTABLE_GAMES.map(g => [g.id, g.name, g.icon] as const);
 
 const EMOJI_OPTIONS = [
   '😎', '😊', '😄', '😍', '🤩', '😏', '😤', '🥳', '🤠', '👻', '🐶', '🐱',
@@ -305,9 +299,11 @@ export default function ProfileScreen() {
 
   function openFavorites() { setDraftFavorites(favorites); setFavoritesOpen(true); }
   function toggleFavorite(id: string) {
-    setDraftFavorites(current => current.includes(id)
-      ? current.filter(value => value !== id)
-      : current.length < 8 ? [...current, id] : current);
+    setDraftFavorites(current => {
+      if (current.includes(id)) return current.filter(value => value !== id);
+      const realGames = current.filter(v => v !== 'overall');
+      return realGames.length < 8 ? [...current, id] : current;
+    });
   }
   async function saveFavorites() {
     setModalSaving(true);
@@ -605,7 +601,7 @@ export default function ProfileScreen() {
 
       <Modal visible={favoritesOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setFavoritesOpen(false)}>
         <View style={[styles.modal, { paddingTop: insets.top }]}><View style={styles.modalHeader}><Pressable onPress={() => setFavoritesOpen(false)}><Text style={styles.modalAction}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Favorite Games</Text><Pressable disabled={modalSaving} onPress={saveFavorites}><Text style={styles.modalAction}>{modalSaving ? 'Saving…' : 'Save'}</Text></Pressable></View>
-          <Text style={styles.selectionCount}>{draftFavorites.length}/8 selected</Text><ScrollView contentContainerStyle={styles.optionGrid}>{GAMES.map(game => <Pressable key={game[0]} style={[styles.gameOption, draftFavorites.includes(game[0]) && styles.optionSelected]} onPress={() => toggleFavorite(game[0])}><Text style={styles.optionEmoji}>{game[2]}</Text><Text style={styles.optionName}>{game[1]}</Text></Pressable>)}</ScrollView></View>
+          <Text style={styles.selectionCount}>{draftFavorites.filter(v => v !== 'overall').length}/8 selected</Text><ScrollView contentContainerStyle={styles.optionGrid}>{GAMES.map(game => <Pressable key={game[0]} style={[styles.gameOption, draftFavorites.includes(game[0]) && styles.optionSelected]} onPress={() => toggleFavorite(game[0])}><Text style={styles.optionEmoji}>{game[2]}</Text><Text style={styles.optionName}>{game[1]}</Text></Pressable>)}</ScrollView></View>
       </Modal>
 
       <Modal visible={privacyOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setPrivacyOpen(false)}>

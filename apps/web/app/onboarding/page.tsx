@@ -3,18 +3,9 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { SELECTABLE_GAMES } from '@/lib/games';
 
-const GAME_OPTIONS = [
-  { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️' },
-  { id: 'pokemon', name: 'Pokémon', icon: '⚡' },
-  { id: 'mtg', name: 'Magic: The Gathering', icon: '✨' },
-  { id: 'gundam', name: 'Gundam', icon: '🤖' },
-  { id: 'lorcana', name: 'Lorcana', icon: '🪄' },
-  { id: 'sw_unlimited', name: 'Star Wars Unlimited', icon: '🌟' },
-  { id: 'vanguard', name: 'Vanguard', icon: '⚔️' },
-  { id: 'yugioh', name: 'Yu-Gi-Oh!', icon: '🃏' },
-  { id: 'digimon', name: 'Digimon', icon: '🦖' },
-];
+const GAME_OPTIONS = SELECTABLE_GAMES;
 
 // Inner component that uses useSearchParams
 interface Store {

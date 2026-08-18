@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Avatar, GlowButton } from '@/components/ui';
+import { SELECTABLE_GAMES } from '@/lib/games';
 
 // Types
 interface PlayerAvatar {
@@ -115,25 +116,10 @@ const defaultPrivacySettings: PrivacySettings = {
   showRealName: false,
 };
 
-// Game options for leaderboard filter - ALL SUPPORTED GAMES
+// Leaderboard filter includes Overall + all selectable games
 const ALL_LEADERBOARD_GAMES = [
   { id: 'overall', name: 'Overall', icon: '🏆', currency: 'XP' },
-  { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️', currency: 'Berries' },
-  { id: 'pokemon', name: 'Pokemon', icon: '⚡', currency: 'Pokepoints' },
-  { id: 'mtg', name: 'MTG', icon: '✨', currency: 'Mana Marks' },
-  { id: 'gundam', name: 'Gundam', icon: '🤖', currency: 'Pilot Points' },
-  { id: 'star_wars_unlimited', name: 'Star Wars', icon: '🌟', currency: 'Holopoints' },
-  { id: 'vanguard', name: 'Vanguard', icon: '⚔️', currency: 'Ride Gauge' },
-  { id: 'lorcana', name: 'Lorcana', icon: '🪄', currency: 'Lorepoints' },
-  { id: 'uvs', name: 'UVS', icon: '👊', currency: 'Versus Tokens' },
-  { id: 'digimon', name: 'Digimon', icon: '🦖', currency: 'Digi-Points' },
-  { id: 'yugioh', name: 'Yu-Gi-Oh', icon: '⭐', currency: 'Star Chips' },
-  { id: 'riftbound', name: 'Riftbound', icon: '🌀', currency: 'Essence' },
-  { id: 'hololive', name: 'Hololive', icon: '🎤', currency: 'Fan Subs' },
-  { id: 'weiss', name: 'Weiss Schwarz', icon: '🎴', currency: 'Climax Points' },
-  { id: 'sw_legion', name: 'SW Legion', icon: '🎖️', currency: 'Battle Orders' },
-  { id: 'union_arena', name: 'Union Arena', icon: '🛡️', currency: 'Plot Armor' },
-  { id: 'warhammer', name: 'Warhammer', icon: '⚔️', currency: 'War Honors' },
+  ...SELECTABLE_GAMES.map(g => ({ id: g.id, name: g.name, icon: g.icon, currency: g.currency })),
 ];
 
 export default function CommunityPage() {

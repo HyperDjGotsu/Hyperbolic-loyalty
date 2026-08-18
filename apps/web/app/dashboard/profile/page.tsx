@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
+import { SELECTABLE_GAMES } from '@/lib/games';
 
 interface ShopItem {
   id: string;
@@ -92,25 +93,7 @@ interface Game {
   icon: string;
 }
 
-// All supported games
-const ALL_GAMES: Game[] = [
-  { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️' },
-  { id: 'pokemon', name: 'Pokemon', icon: '⚡' },
-  { id: 'mtg', name: 'MTG', icon: '✨' },
-  { id: 'gundam', name: 'Gundam', icon: '🤖' },
-  { id: 'star_wars_unlimited', name: 'Star Wars', icon: '🌟' },
-  { id: 'vanguard', name: 'Vanguard', icon: '⚔️' },
-  { id: 'lorcana', name: 'Lorcana', icon: '🪄' },
-  { id: 'uvs', name: 'UVS', icon: '👊' },
-  { id: 'digimon', name: 'Digimon', icon: '🦖' },
-  { id: 'yugioh', name: 'Yu-Gi-Oh', icon: '⭐' },
-  { id: 'riftbound', name: 'Riftbound', icon: '🌀' },
-  { id: 'hololive', name: 'Hololive', icon: '🎤' },
-  { id: 'weiss', name: 'Weiss Schwarz', icon: '🎴' },
-  { id: 'sw_legion', name: 'SW Legion', icon: '🎖️' },
-  { id: 'union_arena', name: 'Union Arena', icon: '🛡️' },
-  { id: 'warhammer', name: 'Warhammer', icon: '⚔️' },
-];
+const ALL_GAMES = SELECTABLE_GAMES;
 
 const frameStyles: Record<string, string> = {
   none: 'border-transparent',
@@ -546,12 +529,14 @@ export default function ProfilePage() {
     }
   };
 
-  // Toggle a game in temp favorites
+  // Toggle a game in temp favorites — overall is system-managed and doesn't count toward the 8-game limit
   const toggleFavorite = (gameId: string) => {
     setTempFavorites(prev => {
       if (prev.includes(gameId)) {
         return prev.filter(id => id !== gameId);
-      } else if (prev.length < 8) {
+      }
+      const realGames = prev.filter(id => id !== 'overall');
+      if (realGames.length < 8) {
         return [...prev, gameId];
       }
       return prev;
@@ -1533,8 +1518,8 @@ export default function ProfilePage() {
 
           <div className="p-4 border-b border-border-token bg-surface/50">
             <div className="flex items-center justify-between">
-              <span className="text-secondary text-sm">Selected: {tempFavorites.length}/8</span>
-              {tempFavorites.length >= 8 && (
+              <span className="text-secondary text-sm">Selected: {tempFavorites.filter(id => id !== 'overall').length}/8</span>
+              {tempFavorites.filter(id => id !== 'overall').length >= 8 && (
                 <span className="text-orange-400 text-xs">Maximum reached</span>
               )}
             </div>
@@ -1567,7 +1552,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-3">
               {ALL_GAMES.map(game => {
                 const isSelected = tempFavorites.includes(game.id);
-                const isDisabled = !isSelected && tempFavorites.length >= 8;
+                const isDisabled = !isSelected && tempFavorites.filter(id => id !== 'overall').length >= 8;
                 return (
                   <button
                     key={game.id}

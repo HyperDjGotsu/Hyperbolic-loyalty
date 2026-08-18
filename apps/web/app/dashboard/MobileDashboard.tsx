@@ -50,8 +50,11 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   weiss_schwarz: { icon: '🎴', color: '#6366f1' },
   weiss: { icon: '🎴', color: '#6366f1' },
   union_arena: { icon: '🏟️', color: '#14b8a6' },
-  warhammer: { icon: '⚔️', color: '#dc2626' },
+  warhammer: { icon: '💀', color: '#dc2626' },
   sw_legion: { icon: '🎖️', color: '#059669' },
+  azuki: { icon: '⛩️', color: '#c084fc' },
+  blood_bowl: { icon: '🏈', color: '#b45309' },
+  bolt_action: { icon: '🎯', color: '#475569' },
   general: { icon: '🎮', color: '#64748b' },
 };
 

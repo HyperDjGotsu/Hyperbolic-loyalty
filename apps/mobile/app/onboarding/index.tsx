@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useApi } from '@/lib/api';
 import { C } from '@/lib/theme';
+import { SELECTABLE_GAMES } from '@/lib/games';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -22,17 +23,7 @@ type Step = 'profile' | 'store';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
-const GAMES = [
-  { id: 'one_piece',          name: 'One Piece',             icon: '🏴‍☠️' },
-  { id: 'pokemon',            name: 'Pokémon',               icon: '⚡' },
-  { id: 'mtg',                name: 'Magic: The Gathering',  icon: '✨' },
-  { id: 'gundam',             name: 'Gundam',                icon: '🤖' },
-  { id: 'lorcana',            name: 'Lorcana',               icon: '🪄' },
-  { id: 'star_wars',          name: 'Star Wars Unlimited',   icon: '🌟' },
-  { id: 'vanguard',           name: 'Vanguard',              icon: '⚔️' },
-  { id: 'yugioh',             name: 'Yu-Gi-Oh!',            icon: '🃏' },
-  { id: 'digimon',            name: 'Digimon',               icon: '🦖' },
-];
+const GAMES = SELECTABLE_GAMES;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 

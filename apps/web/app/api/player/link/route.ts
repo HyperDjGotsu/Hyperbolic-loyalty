@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { enforceRateLimitPermissive, getClientIp } from '@/lib/rate-limit';
+import { SELECTABLE_GAME_IDS, resolveGameId } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
 
@@ -170,6 +171,17 @@ export async function POST(request: Request) {
         }
       }
 
+      // Resolve canonical game ID (handles legacy aliases like sw_unlimited → star_wars_unlimited)
+      const canonicalPrimaryGame = primaryGame
+        ? (SELECTABLE_GAME_IDS.includes(resolveGameId(primaryGame)) ? resolveGameId(primaryGame) : null)
+        : null;
+
+      // Initialize favorite_games from the player's onboarding selection so the
+      // dashboard shows their actual choice instead of defaulting to One Piece.
+      const initialFavorites = canonicalPrimaryGame
+        ? ['overall', canonicalPrimaryGame]
+        : ['overall', 'one_piece'];
+
       // Create the player with all fields
       const { data: newPlayer, error: createError } = await supabaseAdmin
         .from('players')
@@ -183,7 +195,8 @@ export async function POST(request: Request) {
           // User-provided
           discord_username: discordUsername || null,
           phone: phone || null,
-          primary_game_id: primaryGame || null,
+          primary_game_id: canonicalPrimaryGame,
+          favorite_games: initialFavorites,
           // Store assignment
           home_store_id: homeStoreId || null,
           // Referral fields

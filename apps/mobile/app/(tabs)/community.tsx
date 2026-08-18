@@ -16,6 +16,7 @@ import { useApi } from '@/lib/api';
 import { LoadingView } from '@/components/ui';
 import { C } from '@/lib/theme';
 import { useAlertsContext } from '@/lib/alerts-context';
+import { SELECTABLE_GAMES } from '@/lib/games';
 
 type Avatar = {
   type: 'emoji' | 'photo';
@@ -71,14 +72,8 @@ type SearchResult = {
 };
 
 const GAMES = [
-  { id: 'overall',            label: 'Overall',    icon: '🏆' },
-  { id: 'one_piece',          label: 'One Piece',  icon: '🏴‍☠️' },
-  { id: 'pokemon',            label: 'Pokemon',    icon: '⚡' },
-  { id: 'mtg',                label: 'MTG',        icon: '✨' },
-  { id: 'star_wars_unlimited', label: 'Star Wars', icon: '🌟' },
-  { id: 'gundam',             label: 'Gundam',     icon: '🤖' },
-  { id: 'lorcana',            label: 'Lorcana',    icon: '🪄' },
-  { id: 'yugioh',             label: 'Yu-Gi-Oh',  icon: '⭐' },
+  { id: 'overall', label: 'Overall', icon: '🏆' },
+  ...SELECTABLE_GAMES.map(g => ({ id: g.id, label: g.name, icon: g.icon })),
 ];
 
 function rankColor(rank: number): string {

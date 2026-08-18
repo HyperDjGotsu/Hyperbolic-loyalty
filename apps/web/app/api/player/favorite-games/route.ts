@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { SELECTABLE_GAME_IDS } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
-
-// All supported games
-const ALL_GAMES = [
-  'overall', 'one_piece', 'pokemon', 'mtg', 'gundam', 'star_wars_unlimited',
-  'vanguard', 'lorcana', 'uvs', 'digimon', 'yugioh', 'riftbound',
-  'hololive', 'weiss', 'sw_legion', 'union_arena', 'warhammer'
-];
 
 // GET - Fetch player's favorite games
 export async function GET() {
@@ -57,16 +51,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Favorites must be an array' }, { status: 400 });
     }
 
-    // Filter to only valid game IDs
-    const validFavorites = favorites.filter(f => ALL_GAMES.includes(f));
+    // Filter to valid selectable game IDs, deduplicate, exclude system-managed 'overall'
+    const seen = new Set<string>();
+    const validGames = (favorites as string[]).filter(f => {
+      if (!SELECTABLE_GAME_IDS.includes(f) || seen.has(f)) return false;
+      seen.add(f);
+      return true;
+    });
 
-    // Ensure 'overall' is always included
-    if (!validFavorites.includes('overall')) {
-      validFavorites.unshift('overall');
-    }
-
-    // Limit to 8 favorites max
-    const limitedFavorites = validFavorites.slice(0, 8);
+    // 8-game limit applies to real games only; overall is always prepended and never counts
+    const limitedFavorites = ['overall', ...validGames.slice(0, 8)];
 
     const { error } = await supabaseAdmin
       .from('players')
