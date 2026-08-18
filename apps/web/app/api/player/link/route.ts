@@ -176,11 +176,12 @@ export async function POST(request: Request) {
         ? (SELECTABLE_GAME_IDS.includes(resolveGameId(primaryGame)) ? resolveGameId(primaryGame) : null)
         : null;
 
-      // Initialize favorite_games from the player's onboarding selection so the
-      // dashboard shows their actual choice instead of defaulting to One Piece.
+      // Initialize favorite_games from the player's onboarding selection.
+      // If no game was selected or the ID was unrecognized, start with only
+      // 'overall' — never substitute a real game silently.
       const initialFavorites = canonicalPrimaryGame
         ? ['overall', canonicalPrimaryGame]
-        : ['overall', 'one_piece'];
+        : ['overall'];
 
       // Create the player with all fields
       const { data: newPlayer, error: createError } = await supabaseAdmin
