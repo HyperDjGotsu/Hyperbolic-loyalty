@@ -125,7 +125,9 @@ Attended, +1 Win, Undefeated, First Timer, Returner, Signed Up, Taught Player
 
 Amounts are server-computed from `xp-constants.ts` — staff cannot supply amounts directly.
 
-### Prize Point RPC Invariant (migration 20260818000000, commit 8a7f462)
+### Prize Point RPC Invariant (migration 20260818000000, commit 8a7f462) — LIVE ✅
+
+Applied to production 2026-08-19. Verified in live DB: `pg_advisory_xact_lock` and non-negative balance guard both present.
 
 `adjust_prize_points` now:
 1. Acquires a transaction-scoped advisory lock per player (`pg_advisory_xact_lock`)
