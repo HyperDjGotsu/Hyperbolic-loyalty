@@ -17,12 +17,13 @@ import {
   WIN_LIFETIME_XP,
   ATTENDANCE_PRIZE_POINTS,
   WIN_PRIZE_POINTS,
+  BONUS_TILE_XP,
 } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
 
-// Reason labels allowed for operational awards
-const ALLOWED_REASONS = ['Attended', '+1 Win'] as const;
+// Reason labels allowed for operational awards — matches HQ tile definitions
+const ALLOWED_REASONS = ['Attended', '+1 Win', ...Object.keys(BONUS_TILE_XP)] as const;
 type AllowedReason = typeof ALLOWED_REASONS[number];
 
 export async function POST(request: Request) {
@@ -64,11 +65,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Server-compute award amounts from whitelist labels
+    // Server-compute award amounts from whitelist labels — client-supplied amounts are ignored
     const attended = labels.includes('Attended');
     const winCount = labels.filter(l => l === '+1 Win').length;
+    const bonusTileXp = labels.reduce((sum, l) => sum + (BONUS_TILE_XP[l] ?? 0), 0);
 
-    const lifetimeXp = (attended ? ATTENDANCE_LIFETIME_XP : 0) + winCount * WIN_LIFETIME_XP;
+    const lifetimeXp = (attended ? ATTENDANCE_LIFETIME_XP : 0) + winCount * WIN_LIFETIME_XP + bonusTileXp;
 
     // Look up target player's tier for prize point multiplier
     const { data: targetPlayer } = await supabaseAdmin
