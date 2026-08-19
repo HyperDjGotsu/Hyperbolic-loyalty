@@ -69,7 +69,7 @@ export async function GET() {
     // Only network admins can see all staff; store managers see their own stores only
     const filteredStoreRoles = ctx.isNetworkAdmin
       ? (storeRoles ?? [])
-      : (storeRoles ?? []).filter(r => ctx.managedStoreIds.includes(r.store_id));
+      : (storeRoles ?? []).filter(r => ctx.allStoreIds.includes(r.store_id));
 
     const members = [
       ...(ctx.isNetworkAdmin ? (networkAdmins ?? []).map(r => {

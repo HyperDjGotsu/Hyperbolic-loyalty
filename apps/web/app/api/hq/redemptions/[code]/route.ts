@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logPointTransaction } from '@/lib/points';
-import { requireAnyStaff, requireStoreAccess } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireStoreAccess, requireStoreManager } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,6 +89,16 @@ export async function PATCH(
 
     if (action !== 'claim' && action !== 'void') {
       return NextResponse.json({ error: 'action must be claim or void' }, { status: 400 });
+    }
+
+    if (action === 'void') {
+      const managerCtx = await requireStoreManager(requestedStoreId);
+      if (!managerCtx) {
+        return NextResponse.json(
+          { error: 'Store manager or network admin required to void redemptions' },
+          { status: 403 }
+        );
+      }
     }
 
     if (redemption.status !== 'pending') {

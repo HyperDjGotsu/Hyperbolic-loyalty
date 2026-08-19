@@ -1364,13 +1364,12 @@ export default function HQPage() {
     
     setIsAwardingXp(true);
     try {
-      const res = await fetch('/api/hq/xp', {
+      const res = await fetch('/api/hq/xp/operational', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           playerId: playerDetails.player.id,
           gameId: selectedGame,
-          amount: totalXp,
           reason: reason,
           storeId: hqStore.activeStoreId,
         }),

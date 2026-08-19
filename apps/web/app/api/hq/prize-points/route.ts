@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers'; // requireStoreAccess used in GET
 import { getPlayerBalance } from '@/lib/points';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -32,14 +32,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // storeId = null → network-level adjustment → network admin only
-    // storeId = uuid → store-scoped → any authorized staff for that store
-    const staffCtx = storeId
-      ? await requireStoreAccess(storeId)
-      : await requireNetworkAdmin();
+    // All Prize Point adjustments require network admin
+    const staffCtx = await requireNetworkAdmin();
 
     if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ error: 'Network admin required for Prize Point adjustments' }, { status: 403 });
     }
 
     // Verify player exists before calling the RPC.

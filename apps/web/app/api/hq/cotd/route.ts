@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import https from 'https';
 import dns from 'dns';
-import { requireAnyStaff } from '@/lib/auth-helpers';
+import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 // Force dynamic rendering (not static)
 export const dynamic = 'force-dynamic';
@@ -113,6 +113,9 @@ export async function GET(request: Request) {
   const action = searchParams.get('action');
 
   try {
+    const staffCtx = await requireAnyStaff();
+    if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+
     // Get current Card of the Day
     if (action === 'current') {
       const today = new Date().toLocaleDateString('en-CA', { 
@@ -334,8 +337,8 @@ export async function GET(request: Request) {
 // =============================================================================
 
 export async function POST(request: Request) {
-  const staffCtx = await requireAnyStaff();
-  if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+  const staffCtx = await requireNetworkAdmin();
+  if (!staffCtx) return NextResponse.json({ error: 'Network admin required' }, { status: 403 });
 
   try {
     const body = await request.json();
@@ -555,8 +558,8 @@ export async function POST(request: Request) {
 // =============================================================================
 
 export async function DELETE(request: Request) {
-  const staffCtx = await requireAnyStaff();
-  if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
+  const staffCtx = await requireNetworkAdmin();
+  if (!staffCtx) return NextResponse.json({ error: 'Network admin required' }, { status: 403 });
 
   try {
     const body = await request.json();

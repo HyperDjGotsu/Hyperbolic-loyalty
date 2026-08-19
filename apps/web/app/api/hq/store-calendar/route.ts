@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireStoreAccess, requireStoreManager, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +35,7 @@ export async function PATCH(request: Request) {
     if (!storeId) return NextResponse.json({ error: 'storeId required' }, { status: 400 });
 
     // Store managers or network admin can set the calendar URL
-    const staffCtx = await requireStoreAccess(storeId);
+    const staffCtx = await requireStoreManager(storeId);
     if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { ical_url } = await request.json() as { ical_url: string };

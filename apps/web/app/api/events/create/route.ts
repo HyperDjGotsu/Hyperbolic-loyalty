@@ -28,8 +28,8 @@ export async function POST(request: Request) {
       // Store events require access to that specific store
       const staffCtx = await requireAnyStaff();
       if (!staffCtx) return NextResponse.json({ error: 'Staff only' }, { status: 403 });
-      if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(store_id)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (!staffCtx.isNetworkAdmin && !staffCtx.managedStoreIds.includes(store_id)) {
+        return NextResponse.json({ error: 'Store manager or network admin required to create events' }, { status: 403 });
       }
     }
 

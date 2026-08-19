@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireStoreManager, requireNetworkAdmin } from '@/lib/auth-helpers';
 import type { Database } from '@/types/database.types';
-import { createNotification } from '@/lib/notifications';
 import { enforceRateLimitStrict } from '@/lib/rate-limit';
-import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,198 +12,8 @@ const supabaseAdmin = createClient<Database>(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Pirate's Life / Hyperlife configuration
-const MONTHLY_THRESHOLD: Record<string, number> = {
-  one_piece: 6,  // 2x/week = ~8 events/month, need 6
-};
-const DEFAULT_THRESHOLD = 3;  // 1x/week = ~4 events/month, need 3
-const MONTHLY_BONUS_XP = 30;
-
-// Referral bonus amounts — must match checkin/route.ts exactly
-const REFERRAL_FIRST_EVENT_BONUS = 50;   // Lifetime XP, flat, never multiplied
-const REFERRAL_PRIZE_POINTS = 10;        // Prize Points, flat, no multiplier (supersedes 100 PP — 2026-08-16)
-
-// Get current month boundaries (Pacific Time)
-function getCurrentMonthBoundaries(): { start: string; end: string; monthLabel: string; monthKey: string } {
-  const now = new Date();
-  const pacificNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-  
-  const year = pacificNow.getFullYear();
-  const month = pacificNow.getMonth();
-  
-  const startOfMonth = new Date(year, month, 1, 0, 0, 0, 0);
-  const startOfNextMonth = new Date(year, month + 1, 1, 0, 0, 0, 0);
-  
-  const start = startOfMonth.toISOString();
-  const end = startOfNextMonth.toISOString();
-  
-  // Month key for tracking (e.g., "2026-01")
-  const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-  
-  // Human readable month (e.g., "January 2026")
-  const monthLabel = pacificNow.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-  
-  return { start, end, monthLabel, monthKey };
-}
-
-// Check if player has already earned the monthly bonus for this game
-async function hasEarnedMonthlyBonus(playerId: string, gameId: string, monthStart: string, monthEnd: string): Promise<boolean> {
-  const achievementName = gameId === 'one_piece' ? "Pirate's Life" : 'Hyperlife';
-  
-  const { data } = await supabaseAdmin
-    .from('xp_ledger')
-    .select('id')
-    .eq('player_id', playerId)
-    .eq('game_id', gameId)
-    .gte('created_at', monthStart)
-    .lt('created_at', monthEnd)
-    .ilike('description', `%${achievementName}%`)
-    .limit(1);
-  
-  return data !== null && data.length > 0;
-}
-
-// Count monthly attendance for a player/game
-async function getMonthlyAttendanceCount(playerId: string, gameId: string, monthStart: string, monthEnd: string): Promise<number> {
-  const { data } = await supabaseAdmin
-    .from('xp_ledger')
-    .select('id, description')
-    .eq('player_id', playerId)
-    .eq('game_id', gameId)
-    .gte('created_at', monthStart)
-    .lt('created_at', monthEnd);
-  
-  if (!data) return 0;
-  
-  // Count entries that include "Attended" in description
-  return data.filter(entry => 
-    entry.description && entry.description.includes('Attended')
-  ).length;
-}
-
-// Check and award referral bonus when player attends first event
-async function checkReferralBonus(playerId: string, staffId: string, storeId: string | null): Promise<{
-  awarded: boolean;
-  referrerName?: string;
-  newPlayerName?: string;
-} | null> {
-  try {
-    const { data: player } = await supabaseAdmin
-      .from('players')
-      .select('id, referred_by, referral_bonus_paid, display_name')
-      .eq('id', playerId)
-      .single();
-
-    if (!player?.referred_by || player.referral_bonus_paid) return null;
-
-    const { count } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('id', { count: 'exact', head: true })
-      .eq('player_id', playerId)
-      .ilike('description', '%Attended%');
-
-    if (count !== 1) return null;
-
-    const { data: referrer } = await supabaseAdmin
-      .from('players')
-      .select('id, display_name')
-      .eq('id', player.referred_by)
-      .single();
-
-    if (!referrer) return null;
-
-    // Atomic claim — only one concurrent path (checkin vs hq/xp) can flip this.
-    const { data: claimed } = await supabaseAdmin
-      .from('players')
-      .update({ referral_bonus_paid: true })
-      .eq('id', playerId)
-      .eq('referral_bonus_paid', false)
-      .select('id');
-
-    if (!claimed || claimed.length === 0) return null; // checkin path already claimed
-
-    // Lifetime XP for referrer (never multiplied).
-    // If this fails, revert the claim so the referral can fire again.
-    const { error: bonusError } = await supabaseAdmin
-      .from('xp_ledger')
-      .insert({
-        player_id: referrer.id,
-        game_id: 'general',
-        base_xp: REFERRAL_FIRST_EVENT_BONUS,
-        final_xp: REFERRAL_FIRST_EVENT_BONUS,
-        multiplier: 1,
-        description: `Referral reward — ${player.display_name} attended first event`,
-        source: 'referral',
-        awarded_by: staffId,
-      });
-
-    if (bonusError) {
-      console.error('Referral XP insert failed — reverting claim:', bonusError);
-      await supabaseAdmin
-        .from('players')
-        .update({ referral_bonus_paid: false })
-        .eq('id', playerId);
-      return null;
-    }
-
-    // Prize Points for referrer (flat, no multiplier) — only when store context available
-    if (storeId) {
-      await logPointTransaction({
-        playerId: referrer.id,
-        storeId,
-        amount: REFERRAL_PRIZE_POINTS,
-        type: 'earn',
-        source: 'referral_bonus',
-        referenceId: playerId,
-        note: `${player.display_name} attended first event`,
-      });
-    }
-
-    console.log(`🎁 Referral reward: +${REFERRAL_FIRST_EVENT_BONUS} XP +${REFERRAL_PRIZE_POINTS} PP → ${referrer.display_name}`);
-
-    createNotification(
-      referrer.id,
-      'referral',
-      'Referral bonus earned! 🎁',
-      `${player.display_name} attended their first event — you earned +${REFERRAL_FIRST_EVENT_BONUS} XP and +${REFERRAL_PRIZE_POINTS} Points!`,
-      { new_player_name: player.display_name, xp: String(REFERRAL_FIRST_EVENT_BONUS) },
-      'social'
-    ).catch(() => {});
-
-    return {
-      awarded: true,
-      referrerName: referrer.display_name,
-      newPlayerName: player.display_name,
-    };
-  } catch (error) {
-    console.error('Referral bonus check error:', error);
-    return null;
-  }
-}
-
 export async function POST(request: Request) {
   try {
-    const staffCtx = await requireAnyStaff();
-    if (!staffCtx) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    // 60 XP awards per 5 minutes per staff user — allows rapid event check-ins
-    // while limiting a compromised account's XP farming throughput
-    const rl = await enforceRateLimitStrict(`hq-xp:${staffCtx.clerkUserId}`, 300, 60);
-    if (rl) return rl;
-
-    // Get the staff member's players record for awarded_by
-    const { data: staffCheck } = await supabaseAdmin
-      .from('players')
-      .select('id, player_id')
-      .eq('clerk_user_id', staffCtx.clerkUserId)
-      .single();
-
-    if (!staffCheck) {
-      return NextResponse.json({ error: 'Staff record not found' }, { status: 500 });
-    }
-
     const body = await request.json();
     const { playerId, gameId, amount, reason, storeId } = body;
 
@@ -213,24 +21,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Cap single XP award — network admins may exceed cap for corrections
-    const MAX_SINGLE_AWARD = 500;
-    if (!staffCtx.isNetworkAdmin && Math.abs(amount) > MAX_SINGLE_AWARD) {
-      return NextResponse.json({ error: `Single XP award cannot exceed ${MAX_SINGLE_AWARD}` }, { status: 400 });
-    }
-
-    // Validate store access.
-    // - storeId provided: staff must belong to that store (or be network admin).
-    // - storeId absent: only network admins may award XP without a store context
-    //   (e.g. manual network-level adjustments). Store staff must always supply a store.
+    // Auth: store-scoped requires store manager; no storeId requires network admin
+    let authCtx;
     if (storeId) {
-      if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(storeId)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      authCtx = await requireStoreManager(storeId);
+      if (!authCtx) {
+        return NextResponse.json({ error: 'Store manager or network admin required' }, { status: 403 });
       }
     } else {
-      // No storeId — require network admin
-      const adminCtx = await requireNetworkAdmin();
-      if (!adminCtx) {
+      authCtx = await requireNetworkAdmin();
+      if (!authCtx) {
         return NextResponse.json(
           { error: 'storeId is required for store staff' },
           { status: 400 }
@@ -238,14 +38,35 @@ export async function POST(request: Request) {
       }
     }
 
+    // Rate limit after auth
+    const rl = await enforceRateLimitStrict(`hq-xp:${authCtx.clerkUserId}`, 300, 60);
+    if (rl) return rl;
+
+    // Get the staff member's players record for awarded_by
+    const { data: staffCheck } = await supabaseAdmin
+      .from('players')
+      .select('id, player_id')
+      .eq('clerk_user_id', authCtx.clerkUserId)
+      .single();
+
+    if (!staffCheck) {
+      return NextResponse.json({ error: 'Staff record not found' }, { status: 500 });
+    }
+
+    // Cap single XP award — network admins may exceed cap for corrections
+    const MAX_SINGLE_AWARD = 500;
+    if (!authCtx.isNetworkAdmin && Math.abs(amount) > MAX_SINGLE_AWARD) {
+      return NextResponse.json({ error: `Single XP award cannot exceed ${MAX_SINGLE_AWARD}` }, { status: 400 });
+    }
+
     // Verify the target player belongs to a store this staff member can access
-    if (!staffCtx.isNetworkAdmin && storeId) {
+    if (!authCtx.isNetworkAdmin && storeId) {
       const { data: targetPlayer } = await supabaseAdmin
         .from('players')
         .select('home_store_id')
         .eq('id', playerId)
         .single();
-      if (targetPlayer && targetPlayer.home_store_id && !staffCtx.allStoreIds.includes(targetPlayer.home_store_id)) {
+      if (targetPlayer && targetPlayer.home_store_id && !authCtx.allStoreIds.includes(targetPlayer.home_store_id)) {
         return NextResponse.json({ error: 'Player does not belong to your store' }, { status: 403 });
       }
     }
@@ -270,118 +91,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to add XP' }, { status: 500 });
     }
 
-    // ================================================
-    // PRIZE POINTS: Award for event tiles (with tier multiplier)
-    // ================================================
-    // Each '+1 Win' label = one win's PP (5). Frontend sends N repeated labels for N wins.
-    const TILE_PP: Record<string, number> = {
-      'Attended': 35,
-      '+1 Win': 5,
-    };
-
-    let prizePointsAwarded = 0;
-    if (reason && storeId) {
-      const labels = reason.split(',').map((s: string) => s.trim());
-      const basePP = labels.reduce((sum: number, label: string) => sum + (TILE_PP[label] ?? 0), 0);
-
-      if (basePP > 0) {
-        const { data: playerRow } = await supabaseAdmin
-          .from('players')
-          .select('pass_tier, pass_expires_at')
-          .eq('id', playerId)
-          .single();
-
-        const tier = effectivePassTier(playerRow?.pass_tier ?? null, playerRow?.pass_expires_at ?? null);
-        const multiplier = TIER_MULTIPLIERS[tier] ?? 1.0;
-        prizePointsAwarded = Math.round(basePP * multiplier);
-
-        await logPointTransaction({
-          playerId,
-          storeId,
-          amount: prizePointsAwarded,
-          type: 'earn',
-          source: 'event_checkin',
-          note: `${reason} (${tier} ${multiplier}x)`,
-        });
-      }
-    }
-
-    // ================================================
-    // AUTO-AWARD: Pirate's Life / Hyperlife Check
-    // ================================================
-    let bonusAwarded = false;
-    let achievementName = '';
-    
-    // ================================================
-    // AUTO-AWARD: Referral Bonus Check (First Event)
-    // ================================================
-    let referralBonusAwarded = false;
-    let referralInfo: { referrerName?: string; newPlayerName?: string } | null = null;
-    
-    // Only check if this was an attendance entry
-    if (reason && reason.includes('Attended')) {
-      // Check Pirate's Life / Hyperlife
-      const { start: monthStart, end: monthEnd, monthLabel } = getCurrentMonthBoundaries();
-      const threshold = MONTHLY_THRESHOLD[gameId] || DEFAULT_THRESHOLD;
-      achievementName = gameId === 'one_piece' ? "Pirate's Life" : 'Hyperlife';
-      
-      // Check if already earned this month
-      const alreadyEarned = await hasEarnedMonthlyBonus(playerId, gameId, monthStart, monthEnd);
-      
-      if (!alreadyEarned) {
-        // Count attendance this month (including the one we just added)
-        const attendanceCount = await getMonthlyAttendanceCount(playerId, gameId, monthStart, monthEnd);
-        
-        // If they just hit the threshold, award the bonus!
-        if (attendanceCount >= threshold) {
-          const bonusDescription = `${achievementName} - ${monthLabel}`;
-          
-          const { error: bonusError } = await supabaseAdmin
-            .from('xp_ledger')
-            .insert({
-              player_id: playerId,
-              game_id: gameId,
-              base_xp: MONTHLY_BONUS_XP,
-              final_xp: MONTHLY_BONUS_XP,
-              multiplier: 1,
-              description: bonusDescription,
-              source: 'achievement',
-              awarded_by: staffCheck.id,
-            });
-          
-          if (bonusError) {
-            console.error('Bonus XP insert error:', bonusError);
-            // Don't fail the whole request, just log it
-          } else {
-            bonusAwarded = true;
-            console.log(`🏴 ${achievementName} awarded to player ${playerId} for ${gameId}!`);
-          }
-        }
-      }
-      
-      // Check referral bonus (first event attendance) — requires store context to award PP
-      const referralResult = storeId
-        ? await checkReferralBonus(playerId, staffCheck.id, storeId)
-        : null;
-      if (referralResult?.awarded) {
-        referralBonusAwarded = true;
-        referralInfo = {
-          referrerName: referralResult.referrerName,
-          newPlayerName: referralResult.newPlayerName,
-        };
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      prizePointsAwarded,
-      bonusAwarded,
-      achievementName: bonusAwarded ? achievementName : null,
-      bonusXp: bonusAwarded ? MONTHLY_BONUS_XP : 0,
-      referralBonusAwarded,
-      referralInfo,
-      referralBonusXp: referralBonusAwarded ? REFERRAL_FIRST_EVENT_BONUS : 0,
-    });
+    return NextResponse.json({ success: true, xpAwarded: amount });
   } catch (error) {
     console.error('XP add error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

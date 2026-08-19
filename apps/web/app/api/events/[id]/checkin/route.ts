@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
 import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier } from '@/lib/points';
 import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP, ATTENDANCE_PRIZE_POINTS, WIN_PRIZE_POINTS } from '@/lib/xp-constants';
+import { getStaffContext } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 const MAX_ROUNDS = 3;
@@ -153,9 +154,24 @@ export async function POST(
     let staffId: string | null = null;
 
     if (body.player_id) {
-      // Kiosk/NFC path — requires the requester to be a staff member
-      if (!authedPlayer.is_staff) {
+      // Kiosk/NFC path — authorize via role tables — players.is_staff is not authoritative for kiosk access
+      const staffCtx = await getStaffContext();
+      if (!staffCtx) {
         return NextResponse.json({ error: 'Staff access required for kiosk check-in' }, { status: 403 });
+      }
+      // Network events: store_manager or network_admin only
+      if (event.store_id === null) {
+        if (!staffCtx.isNetworkAdmin && staffCtx.managedStoreIds.length === 0) {
+          return NextResponse.json(
+            { error: 'Store manager or network admin required for network event check-in' },
+            { status: 403 }
+          );
+        }
+      } else if (!staffCtx.isNetworkAdmin && !staffCtx.allStoreIds.includes(event.store_id)) {
+        return NextResponse.json(
+          { error: 'Staff access required for kiosk check-in at this store' },
+          { status: 403 }
+        );
       }
       staffId = authedPlayer.id;
 

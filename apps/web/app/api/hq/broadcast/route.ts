@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
+import { requireStoreAccess, requireStoreManager, requireNetworkAdmin } from '@/lib/auth-helpers';
 import { enforceRateLimitPermissive } from '@/lib/rate-limit';
 import { notifyStorePlayers, notifyAllPlayers } from '@/lib/notifications';
 import { sendExpoPushToStorePlayers, sendExpoPushToAllPlayers } from '@/lib/expo-push';
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       const ctx = await requireNetworkAdmin();
       if (!ctx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     } else {
-      const ctx = await requireStoreAccess(storeId!);
+      const ctx = await requireStoreManager(storeId!);
       if (!ctx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
