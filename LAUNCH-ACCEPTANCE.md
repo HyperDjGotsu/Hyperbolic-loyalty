@@ -90,6 +90,58 @@ Legend: ✅ PASS · ❌ FAIL · ⚠️ PARTIAL · 🚫 NOT TESTABLE · 📋 PREV
 | 3d89987 | Store attribution in XP activity feed — store short_id (TEM/GGOB/etc.) shown in activity |
 | 62d4cc2 | End Event fixed — active endpoint now store-scoped; activate route verifies row was updated |
 
+---
+
+## Authorization Model — As of 2026-08-19
+
+### Staff Role Hierarchy
+
+| Role | Scope | Source Table | Capability |
+|------|-------|-------------|-----------|
+| `store_staff` | Per-store | `staff_store_roles` | Operational awards (server-calculated, whitelist-only), kiosk check-in, read staff roster for own store |
+| `store_manager` | Per-store | `staff_store_roles` | All store_staff + event creation, broadcast, store calendar, redemption void, discretionary XP corrections |
+| `network_admin` | Network-wide | `network_staff_roles` | All manager + COTD, Prize Point manual adjustment, player delete, staff promotion |
+
+**Policy**: Store Staff = operations. Store Managers = store configuration and correction. Network Admins = economic and network control.
+
+### Key Authorization Boundaries (hardened 2026-08-18, commit 5e5cca8)
+
+- **COTD read**: requireAnyStaff (was unauthenticated GET)
+- **COTD write/delete**: requireNetworkAdmin
+- **Event creation**: requireStoreManager (store-scoped) or requireNetworkAdmin
+- **Store calendar PATCH**: requireStoreManager
+- **Broadcast POST (store-scoped)**: requireStoreManager
+- **Prize Point manual adjustment**: requireNetworkAdmin (merged both branches)
+- **Redemption void**: requireStoreManager inline check added
+- **Kiosk check-in auth**: replaced `players.is_staff` boolean with `getStaffContext()` role-table check
+- **HQ XP tile awards** → `/api/hq/xp/operational` (requireAnyStaff, server-computed amounts, whitelist-only labels)
+- **HQ XP discretionary corrections** → `/api/hq/xp` (requireStoreManager)
+
+### XP Operational Award Whitelist (commit 502e138)
+
+```
+Attended, +1 Win, Undefeated, First Timer, Returner, Signed Up, Taught Player
+```
+
+Amounts are server-computed from `xp-constants.ts` — staff cannot supply amounts directly.
+
+### Prize Point RPC Invariant (migration 20260818000000, commit 8a7f462)
+
+`adjust_prize_points` now:
+1. Acquires a transaction-scoped advisory lock per player (`pg_advisory_xact_lock`)
+2. Reads current balance before inserting
+3. Rejects deductions that would produce a negative balance (returns error JSON with shortfall detail, no INSERT)
+
+`create_prize_redemption` is independent — has its own balance check, does not call this function.
+
+### Acknowledged Technical Debt
+
+**`players.is_staff` attribution** (checkin route line ~181): The `staffId` attribution still reads from `authedPlayer.is_staff` as a shortcut to get the staff player's DB id for the `awarded_by` field. This is attribution-only (not an auth gate). The actual gate above it uses `getStaffContext()`. Can be cleaned up when `staff_store_roles` is joined to return the player id directly.
+
+**Manager Prize Point correction limits**: No per-player/per-day cap on network admin Prize Point manual adjustments. Intentionally deferred — requires per-player/per-day limit design discussion.
+
+---
+
 ### POST-LAUNCH / V2 (non-blocking)
 
 **P1 — Game tile labels truncate in onboarding**  
