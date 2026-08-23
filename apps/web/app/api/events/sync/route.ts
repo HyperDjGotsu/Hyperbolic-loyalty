@@ -210,6 +210,33 @@ function parsePrizing(text: string): string[] | null {
 
 // Expand recurring events into individual instances
 // Supports WEEKLY recurrence for the next 4 weeks
+// Advance a Pacific-timezone date by N calendar days at the same local time.
+// Raw UTC arithmetic (+ N * 86400000ms) drifts by 1 hour across DST boundaries;
+// this re-anchors to the same wall-clock time in America/Los_Angeles each time.
+function advanceDaysPacific(date: Date, days: number): Date {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const p = Object.fromEntries(fmt.formatToParts(date).map(x => [x.type, x.value]));
+  // JS Date constructor handles month/year overflow when day > month-end
+  const next = new Date(parseInt(p.year), parseInt(p.month) - 1, parseInt(p.day) + days);
+  const yy = next.getFullYear();
+  const mo = String(next.getMonth() + 1).padStart(2, '0');
+  const dd = String(next.getDate()).padStart(2, '0');
+  const localStr = `${yy}-${mo}-${dd}`;
+  // Determine DST offset for the target date (probe 20:00 UTC → 13:00 PDT or 12:00 PST)
+  const probe = new Date(`${localStr}T20:00:00Z`);
+  const probeHour = parseInt(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', hour12: false })
+      .formatToParts(probe).find(x => x.type === 'hour')!.value
+  );
+  const offset = probeHour === 13 ? '-07:00' : '-08:00';
+  return new Date(`${localStr}T${p.hour}:${p.minute}:${p.second}${offset}`);
+}
+
 function expandRecurringEvent(
   baseEvent: ParsedEvent,
   rrule: string,
@@ -284,8 +311,8 @@ function expandRecurringEvent(
         }
       }
 
-      // Move to next week
-      currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+      // Move to next week, preserving local Pacific wall-clock time across DST
+      currentDate = advanceDaysPacific(currentDate, 7);
       count++;
     }
   } else if (freq === 'DAILY') {
@@ -314,7 +341,7 @@ function expandRecurringEvent(
         }
       }
 
-      currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
+      currentDate = advanceDaysPacific(currentDate, 1);
       count++;
     }
   } else {
