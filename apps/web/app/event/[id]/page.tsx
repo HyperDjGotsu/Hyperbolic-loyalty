@@ -133,7 +133,7 @@ export default function PublicEventPage() {
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">🎮</span>
             <span className="font-display font-bold text-primary">
-              HYPERBOLIC
+              Player Pass
             </span>
           </Link>
           <Link
