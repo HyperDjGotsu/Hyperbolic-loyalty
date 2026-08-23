@@ -102,11 +102,15 @@ function parseICalDate(dateStr: string, tzid?: string): Date {
       const min = String(minute).padStart(2, '0');
       const ss = String(second).padStart(2, '0');
       const isoLocal = `${year}-${mm}-${dd}T${hh}:${min}:${ss}`;
-      // Determine whether PDT (-07:00) or PST (-08:00) applies on this exact date
-      // by probing 20:00 UTC (noon Pacific in PDT = 13:00, in PST = 12:00)
+      // Determine whether PDT (-07:00) or PST (-08:00) applies on this exact date.
+      // Probe 20:00 UTC: in PDT (UTC-7) = 13:00, in PST (UTC-8) = 12:00.
+      // Use formatToParts to extract the hour reliably — toLocaleString returns a
+      // full datetime string that parseInt misreads as the month, not the hour.
       const probe = new Date(`${year}-${mm}-${dd}T20:00:00Z`);
       const probeHour = parseInt(
-        probe.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false })
+        new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', hour12: false })
+          .formatToParts(probe)
+          .find(p => p.type === 'hour')!.value
       );
       const offset = probeHour === 13 ? '-07:00' : '-08:00'; // 13 = PDT, 12 = PST
       return new Date(`${isoLocal}${offset}`);

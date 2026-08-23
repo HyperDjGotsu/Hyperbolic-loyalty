@@ -27,7 +27,11 @@ function parseICalDate(dateStr: string, tzid?: string): Date {
     const mm = String(month + 1).padStart(2, '0');
     const dd = String(day).padStart(2, '0');
     const probe = new Date(`${year}-${mm}-${dd}T20:00:00Z`);
-    const probeHour = parseInt(probe.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hour12: false }));
+    const probeHour = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', hour12: false })
+        .formatToParts(probe)
+        .find(p => p.type === 'hour')!.value
+    );
     const offset = probeHour === 13 ? '-07:00' : '-08:00';
     return new Date(`${year}-${mm}-${dd}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}:${String(second).padStart(2,'0')}${offset}`);
   }
