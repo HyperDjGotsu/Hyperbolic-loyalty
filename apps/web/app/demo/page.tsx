@@ -524,7 +524,7 @@ const MOCK_GAMES: GameDisplay[] = [
     monthlyAttendance: 3,
     monthlyThreshold: 4,
     earnedMonthlyBonus: false,
-    achievementName: 'Hyperlife',
+    achievementName: 'The Regular',
     leaderboardRank: 8,
     leaderboardTotal: 32,
     nextEvent: {
@@ -557,7 +557,7 @@ const MOCK_GAMES: GameDisplay[] = [
     monthlyAttendance: 4,
     monthlyThreshold: 4,
     earnedMonthlyBonus: true,
-    achievementName: 'Hyperlife',
+    achievementName: 'The Regular',
     leaderboardRank: 1,
     leaderboardTotal: 58,
     nextEvent: {
@@ -590,7 +590,7 @@ const MOCK_GAMES: GameDisplay[] = [
     monthlyAttendance: 2,
     monthlyThreshold: 4,
     earnedMonthlyBonus: false,
-    achievementName: 'Hyperlife',
+    achievementName: 'The Regular',
     leaderboardRank: 12,
     leaderboardTotal: 24,
     nextEvent: {
@@ -623,7 +623,7 @@ const MOCK_GAMES: GameDisplay[] = [
     monthlyAttendance: 1,
     monthlyThreshold: 4,
     earnedMonthlyBonus: false,
-    achievementName: 'Hyperlife',
+    achievementName: 'The Regular',
     leaderboardRank: 18,
     leaderboardTotal: 29,
     nextEvent: {
@@ -656,7 +656,7 @@ const MOCK_GAMES: GameDisplay[] = [
     monthlyAttendance: 1,
     monthlyThreshold: 4,
     earnedMonthlyBonus: false,
-    achievementName: 'Hyperlife',
+    achievementName: 'The Regular',
     // No leaderboard or next event for this one - minimal stats player
     stats: {
       totalEvents: 2,

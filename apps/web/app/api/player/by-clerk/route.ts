@@ -35,7 +35,7 @@ const GAME_CURRENCIES: Record<string, string> = {
   bolt_action: 'Command Points',
 };
 
-// Pirate's Life / Hyperlife configuration
+// Pirate's Life / The Regular configuration
 // One Piece: 6 events (2x/week = ~8 events/month)
 // All others: 3 events (1x/week = ~4 events/month)
 const MONTHLY_ATTENDANCE_THRESHOLD: Record<string, number> = {
@@ -255,7 +255,7 @@ export async function GET() {
             gameXpMap[game].monthlyAttendance += 1;
           }
           // Check if they already earned the monthly bonus
-          if (description.includes("Pirate's Life") || description.includes('Hyperlife')) {
+          if (description.includes("Pirate's Life") || description.includes('The Regular')) {
             gameXpMap[game].earnedMonthlyBonus = true;
           }
         }
@@ -265,7 +265,7 @@ export async function GET() {
     // Build gameXP array WITH RANKS, CURRENCY NAMES, AND MONTHLY PROGRESS
     const gameXP = Object.entries(gameXpMap).map(([game_id, data]) => {
       const threshold = MONTHLY_ATTENDANCE_THRESHOLD[game_id] || DEFAULT_ATTENDANCE_THRESHOLD;
-      const achievementName = game_id === 'one_piece' ? "Pirate's Life" : 'Hyperlife';
+      const achievementName = game_id === 'one_piece' ? "Pirate's Life" : 'The Regular';
       
       return {
         game_id,

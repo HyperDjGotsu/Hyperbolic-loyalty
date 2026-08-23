@@ -2,7 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { logPointTransaction } from '@/lib/points';
 import { createNotification } from '@/lib/notifications';
 
-// Pirate's Life / Hyperlife configuration
+// Pirate's Life / The Regular configuration
 export const MONTHLY_THRESHOLD: Record<string, number> = {
   one_piece: 6,  // 2x/week = ~8 events/month, need 6
 };
@@ -38,7 +38,7 @@ export function getCurrentMonthBoundaries(): { start: string; end: string; month
 
 // Check if player has already earned the monthly bonus for this game
 export async function hasEarnedMonthlyBonus(playerId: string, gameId: string, monthStart: string, monthEnd: string): Promise<boolean> {
-  const achievementName = gameId === 'one_piece' ? "Pirate's Life" : 'Hyperlife';
+  const achievementName = gameId === 'one_piece' ? "Pirate's Life" : 'The Regular';
 
   const { data } = await supabaseAdmin
     .from('xp_ledger')

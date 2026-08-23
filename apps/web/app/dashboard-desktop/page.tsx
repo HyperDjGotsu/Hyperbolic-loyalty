@@ -800,7 +800,7 @@ export default function DesktopDashboard() {
         monthlyAttendance: gxp.monthlyAttendance || 0,
         monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 6 : 3),
         earnedMonthlyBonus: gxp.earnedMonthlyBonus || false,
-        achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'Hyperlife'),
+        achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'The Regular'),
         // Include stats from API
         stats: stats ? {
           totalEvents: stats.totalEvents,

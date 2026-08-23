@@ -86,7 +86,7 @@ function CheckInContent() {
       <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="text-6xl">🔐</div>
         <h1 className="text-2xl font-bold text-primary">Sign In to Check In</h1>
-        <p className="text-secondary">You need a Hyperbolic account to earn XP</p>
+        <p className="text-secondary">You need a Player Pass account to earn XP</p>
         <Link
           href={`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`}
           className="px-8 py-4 bg-accent text-accent-fg font-bold rounded-2xl text-lg transition-opacity hover:opacity-90"

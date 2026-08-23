@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       note: `${reason} (${tier} ${tierMultiplier}x)`,
     });
 
-    // Pirate's Life / Hyperlife achievement check (if attended)
+    // Pirate's Life / The Regular achievement check (if attended)
     let bonusAwarded = false;
     let achievementName = '';
     let bonusXp = 0;
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
     if (attended) {
       const { start: monthStart, end: monthEnd, monthLabel } = getCurrentMonthBoundaries();
       const threshold = MONTHLY_THRESHOLD[gameId] || DEFAULT_THRESHOLD;
-      achievementName = gameId === 'one_piece' ? "Pirate's Life" : 'Hyperlife';
+      achievementName = gameId === 'one_piece' ? "Pirate's Life" : 'The Regular';
 
       const alreadyEarned = await hasEarnedMonthlyBonus(playerId, gameId, monthStart, monthEnd);
 

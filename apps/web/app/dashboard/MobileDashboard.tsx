@@ -24,7 +24,7 @@ interface GameDisplay {
   level: number;
   color: string;
   rank: string;
-  // Monthly attendance tracking (Pirate's Life / Hyperlife)
+  // Monthly attendance tracking (Pirate's Life / The Regular)
   monthlyAttendance?: number;
   monthlyThreshold?: number;
   monthlyBonus?: number;
@@ -135,7 +135,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 6 : 3),
         monthlyBonus: gxp.monthlyBonus || 30,
         earnedMonthlyBonus: gxp.earnedMonthlyBonus || false,
-        achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'Hyperlife'),
+        achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'The Regular'),
       };
     });
 
