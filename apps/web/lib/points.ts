@@ -58,8 +58,11 @@ export async function getPlayerBalance(playerId: string, storeId?: string): Prom
  * 2. `grace_period` status intentionally retains benefits — falls through to expiration check.
  * 3. null status is valid (trial players and legacy rows) — falls through to expiration check.
  * 4. Non-null expiresAt in the past → return 'none'.
- * 5. null expiresAt = permanent grant (shadow_vip only); no expiration applied.
- * 6. Otherwise return the tier (defaulting to 'none' if tier is null).
+ * 5. Null expiresAt on a non-shadow_vip paid tier → return 'none' (fail-closed).
+ *    Normal paid tiers MUST have an expiration date; null means malformed/incomplete
+ *    lifecycle data, not a permanent grant. Only shadow_vip is intentionally permanent.
+ * 6. Null expiresAt on shadow_vip → allowed (intentional permanent grant).
+ * 7. Otherwise return the tier (defaulting to 'none' if tier is null).
  */
 export function effectivePassTier(
   tier: string | null,
@@ -68,6 +71,9 @@ export function effectivePassTier(
 ): string {
   if (status === 'cancelled' || status === 'expired') return 'none';
   if (expiresAt && new Date(expiresAt) <= new Date()) return 'none';
+  // Null expiration is only valid for shadow_vip (intentionally permanent grant).
+  // Any other paid tier without an expiration date is malformed — fail closed.
+  if (!expiresAt && tier && tier !== 'none' && tier !== 'shadow_vip') return 'none';
   return tier ?? 'none';
 }
 
