@@ -60,7 +60,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         .eq('id', params.id)
         .single();
 
-      if (!existingPlayer?.pass_expires_at) {
+      // Reject if no expiration exists, or if the existing expiration is already in the past
+      // (a past expiration date is not a valid anchor for a new paid-tier grant)
+      if (!existingPlayer?.pass_expires_at || new Date(existingPlayer.pass_expires_at) <= new Date()) {
         return NextResponse.json(
           { error: 'pass_expires_at is required when assigning a paid pass tier' },
           { status: 400 }

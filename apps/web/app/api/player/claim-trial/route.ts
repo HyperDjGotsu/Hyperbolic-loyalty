@@ -25,10 +25,20 @@ export async function POST() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    // Use canonical effective tier — an expired paid tier must not block trial claim
+    // Active paid tier blocks trial claim
     const activeTier = effectivePassTier(player.pass_tier, player.pass_expires_at, player.pass_status);
     if (activeTier !== 'none') {
       return NextResponse.json({ error: 'Already on a pass tier' }, { status: 409 });
+    }
+
+    // Prior paid pass (even if expired) blocks trial — trial is for first-time pass holders only.
+    // Players whose membership lapsed should renew through staff, not claim a new trial.
+    const hadPriorPass = player.pass_tier !== null && player.pass_tier !== 'none';
+    if (hadPriorPass) {
+      return NextResponse.json(
+        { error: 'Trial not available after a paid membership — contact staff to renew' },
+        { status: 409 }
+      );
     }
     const playerId = player.id;
 
