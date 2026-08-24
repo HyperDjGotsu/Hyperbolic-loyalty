@@ -47,9 +47,26 @@ export async function getPlayerBalance(playerId: string, storeId?: string): Prom
   return data ?? 0;
 }
 
-// Returns the effective pass tier, treating expired passes as 'none'.
-// Use this in every route that gates benefits on pass_tier.
-export function effectivePassTier(tier: string | null, expiresAt: string | null | undefined): string {
+/**
+ * Canonical financial-benefit rule — use this in every route that gates benefits on pass_tier.
+ *
+ * Evaluation order:
+ * 1. `cancelled` and `expired` statuses → return 'none'.
+ *    These currently always co-occur with pass_tier='none', but the status check is
+ *    defense-in-depth against future cancel-at-period-end patterns where the tier might
+ *    remain set while the subscription is winding down.
+ * 2. `grace_period` status intentionally retains benefits — falls through to expiration check.
+ * 3. null status is valid (trial players and legacy rows) — falls through to expiration check.
+ * 4. Non-null expiresAt in the past → return 'none'.
+ * 5. null expiresAt = permanent grant (shadow_vip only); no expiration applied.
+ * 6. Otherwise return the tier (defaulting to 'none' if tier is null).
+ */
+export function effectivePassTier(
+  tier: string | null,
+  expiresAt: string | null | undefined,
+  status: string | null | undefined,
+): string {
+  if (status === 'cancelled' || status === 'expired') return 'none';
   if (expiresAt && new Date(expiresAt) <= new Date()) return 'none';
   return tier ?? 'none';
 }

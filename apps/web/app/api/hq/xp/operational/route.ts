@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     // Look up target player's tier for prize point multiplier
     const { data: targetPlayer } = await supabaseAdmin
       .from('players')
-      .select('pass_tier, pass_expires_at')
+      .select('pass_tier, pass_expires_at, pass_status')
       .eq('id', playerId)
       .single();
 
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const tier = effectivePassTier(targetPlayer.pass_tier ?? null, targetPlayer.pass_expires_at ?? null);
+    const tier = effectivePassTier(targetPlayer.pass_tier ?? null, targetPlayer.pass_expires_at ?? null, targetPlayer.pass_status ?? null);
     const tierMultiplier = TIER_MULTIPLIERS[tier] ?? 1.0;
     const prizePoints = Math.round(
       ((attended ? ATTENDANCE_PRIZE_POINTS : 0) + winCount * WIN_PRIZE_POINTS) * tierMultiplier

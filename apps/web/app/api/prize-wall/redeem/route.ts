@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { enforceRateLimitStrict } from '@/lib/rate-limit';
+import { effectivePassTier } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
 
     const { data: player } = await supabaseAdmin
       .from('players')
-      .select('id, pass_tier, home_store_id')
+      .select('id, pass_tier, pass_expires_at, pass_status, home_store_id')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     }
 
     // Check free tier gate server-side
-    if (player.pass_tier === 'none' || player.pass_tier === null) {
+    if (effectivePassTier(player.pass_tier, player.pass_expires_at, player.pass_status) === 'none') {
       const { data: config } = await supabaseAdmin
         .from('economy_config')
         .select('config')

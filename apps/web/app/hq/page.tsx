@@ -1731,7 +1731,7 @@ export default function HQPage() {
       const res = await fetch(`/api/hq/player/${playerDetails.player.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pass_tier: 'none', pass_status: 'inactive', is_staff: false }),
+        body: JSON.stringify({ pass_tier: 'none', pass_status: 'cancelled', pass_expires_at: null, is_staff: false }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

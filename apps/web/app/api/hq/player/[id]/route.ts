@@ -45,6 +45,29 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
+    // Coherent-state: paid tiers (except shadow_vip) must always have an expiration date.
+    // This prevents accidental permanent grants via direct API calls.
+    const paidTiersRequiringExpiry = ['access', 'player', 'all_access', 'diamond'];
+    if (
+      updates.pass_tier &&
+      paidTiersRequiringExpiry.includes(updates.pass_tier as string) &&
+      updates.pass_expires_at === undefined
+    ) {
+      // Check if the player already has a non-null expiration in the DB
+      const { data: existingPlayer } = await supabaseAdmin
+        .from('players')
+        .select('pass_expires_at')
+        .eq('id', params.id)
+        .single();
+
+      if (!existingPlayer?.pass_expires_at) {
+        return NextResponse.json(
+          { error: 'pass_expires_at is required when assigning a paid pass tier' },
+          { status: 400 }
+        );
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('players')
       .update(updates)

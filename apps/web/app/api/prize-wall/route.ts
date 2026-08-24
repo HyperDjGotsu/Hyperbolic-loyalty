@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'storeId is required' }, { status: 400 });
     }
 
+    const now = new Date().toISOString();
     const [itemsResult, subscriberResult] = await Promise.all([
       supabaseAdmin
         .from('prize_wall_items')
@@ -28,7 +29,10 @@ export async function GET(request: Request) {
       supabaseAdmin
         .from('players')
         .select('id', { count: 'exact', head: true })
-        .neq('pass_tier', 'none'),
+        .neq('pass_tier', 'none')
+        .not('pass_tier', 'is', null)
+        .or(`pass_expires_at.is.null,pass_expires_at.gt.${now}`)
+        .or('pass_status.is.null,pass_status.eq.active,pass_status.eq.grace_period'),
     ]);
 
     if (itemsResult.error) throw itemsResult.error;
