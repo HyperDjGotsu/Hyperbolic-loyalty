@@ -90,7 +90,7 @@ const GAME_RANKS: Record<string, string[]> = {
   warhammer: ['Conscript', 'Guardsman', 'Veteran', 'Sergeant', 'Captain', 'Chapter Master', 'Warmaster'],
   digimon: ['Baby', 'Rookie', 'Champion', 'Ultimate', 'Mega', 'Ultra', 'DigiDestined'],
   yugioh: ['Amateur Duelist', 'Duelist', 'Battle City Qualifier', 'Regional Champion', 'National Champion', 'World Finalist', 'King of Games'],
-  azuki: ['Wanderer', 'Initiate', 'Disciple', 'Adept', 'Sage', 'Elder', 'Grand Sage'],
+  azuki: ['Dawnling', 'Beanz', 'Black Jade Recruit', 'Black Jade Brawler', 'Black Jade Crewleader', 'Black Jade Warlord', 'Ikuzo!'],
   blood_bowl: ['Benchwarmer', 'Lineman', 'Blitzer', 'Star Player', 'Team Captain', 'All-Star', 'Blood Bowl Legend'],
   bolt_action: ['Private', 'Corporal', 'Sergeant', 'Lieutenant', 'Captain', 'Major', 'Colonel'],
 };
