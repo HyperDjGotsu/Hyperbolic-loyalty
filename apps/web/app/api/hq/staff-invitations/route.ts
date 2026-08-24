@@ -121,7 +121,7 @@ export async function POST(request: Request) {
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       resend.emails.send({
-        from: 'Player Pass <onboarding@resend.dev>',
+        from: 'Player Pass <noreply@playerpass.gg>',
         to: normalizedEmail,
         subject: `You've been invited to join ${storeName} on Player Pass`,
         html: `
