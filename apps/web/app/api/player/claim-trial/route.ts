@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { effectivePassTier } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export async function POST() {
 
     const { data: player, error: fetchError } = await supabaseAdmin
       .from('players')
-      .select('id, pass_tier, pass_expires_at')
+      .select('id, pass_tier, pass_expires_at, pass_status')
       .eq('clerk_user_id', userId)
       .maybeSingle();
 
@@ -24,9 +25,9 @@ export async function POST() {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const tierIsActive = player.pass_tier && player.pass_tier !== 'none';
-    const tierIsExpired = player.pass_expires_at && new Date(player.pass_expires_at) <= new Date();
-    if (tierIsActive && !tierIsExpired) {
+    // Use canonical effective tier — an expired paid tier must not block trial claim
+    const activeTier = effectivePassTier(player.pass_tier, player.pass_expires_at, player.pass_status);
+    if (activeTier !== 'none') {
       return NextResponse.json({ error: 'Already on a pass tier' }, { status: 409 });
     }
     const playerId = player.id;
@@ -51,16 +52,27 @@ export async function POST() {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
 
-    const { error: updateError } = await supabaseAdmin
+    // Atomic guard: the UPDATE only succeeds if pass_tier is still null/'none' at write time.
+    // If two concurrent requests race past the gate check above, exactly one will win here —
+    // the second will match 0 rows and get an empty data array.
+    const { data: claimed, error: updateError } = await supabaseAdmin
       .from('players')
       .update({
         pass_tier: 'access',
+        pass_status: 'active',
         pass_started_at: now.toISOString(),
         pass_expires_at: expiresAt.toISOString(),
       })
-      .eq('id', playerId);
+      .eq('id', playerId)
+      .or('pass_tier.is.null,pass_tier.eq.none')
+      .select('id');
 
     if (updateError) throw updateError;
+
+    // Race lost — another concurrent request already claimed the trial
+    if (!claimed || claimed.length === 0) {
+      return NextResponse.json({ error: 'Already on a pass tier' }, { status: 409 });
+    }
 
     return NextResponse.json({
       success: true,
