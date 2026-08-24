@@ -17,12 +17,17 @@ export async function POST() {
 
     const { data: player, error: fetchError } = await supabaseAdmin
       .from('players')
-      .select('id, pass_tier, pass_expires_at, pass_status')
+      .select('id, pass_tier, pass_expires_at, pass_status, has_claimed_trial')
       .eq('clerk_user_id', userId)
       .maybeSingle();
 
     if (fetchError || !player) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
+    // Lifetime gate: once claimed, never again (even if the trial expired)
+    if (player.has_claimed_trial) {
+      return NextResponse.json({ error: 'Trial already claimed' }, { status: 409 });
     }
 
     // Active paid tier blocks trial claim
@@ -72,8 +77,10 @@ export async function POST() {
         pass_status: 'active',
         pass_started_at: now.toISOString(),
         pass_expires_at: expiresAt.toISOString(),
+        has_claimed_trial: true,
       })
       .eq('id', playerId)
+      .eq('has_claimed_trial', false)
       .or('pass_tier.is.null,pass_tier.eq.none')
       .select('id');
 
@@ -81,7 +88,7 @@ export async function POST() {
 
     // Race lost — another concurrent request already claimed the trial
     if (!claimed || claimed.length === 0) {
-      return NextResponse.json({ error: 'Already on a pass tier' }, { status: 409 });
+      return NextResponse.json({ error: 'Trial already claimed' }, { status: 409 });
     }
 
     return NextResponse.json({

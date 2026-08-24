@@ -1344,6 +1344,7 @@ export type Database = {
           email: string | null
           favorite_games: Json | null
           gems: number | null
+          has_claimed_trial: boolean
           home_store_id: string | null
           id: string
           is_banned: boolean | null
@@ -1410,6 +1411,7 @@ export type Database = {
           email?: string | null
           favorite_games?: Json | null
           gems?: number | null
+          has_claimed_trial?: boolean
           home_store_id?: string | null
           id?: string
           is_banned?: boolean | null
@@ -1476,6 +1478,7 @@ export type Database = {
           email?: string | null
           favorite_games?: Json | null
           gems?: number | null
+          has_claimed_trial?: boolean
           home_store_id?: string | null
           id?: string
           is_banned?: boolean | null
