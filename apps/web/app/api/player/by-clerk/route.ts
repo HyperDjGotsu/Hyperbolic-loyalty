@@ -49,7 +49,12 @@ const MONTHLY_BONUS_XP = 30;
 // RANK CALCULATION FUNCTIONS
 // ============================================
 
-// One Piece uses higher thresholds (2x/week events)
+// One Piece rank thresholds are intentionally higher than the standard ladder.
+// Standard progression assumes ~1 organized-play event per week.
+// Games with materially higher recurring event frequency use an extended curve
+// so their ranks remain meaningful over comparable calendar time.
+// One Piece is tuned for ~2 event opportunities per week — do not normalize
+// these thresholds to match standard games.
 function getOnePieceRank(xp: number): string {
   if (xp >= 4000) return 'Yonko Commander';
   if (xp >= 2500) return 'Warlord';
