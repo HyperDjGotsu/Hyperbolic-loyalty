@@ -1,13 +1,13 @@
 <claude-mem-context>
 # Memory Context
 
-# [hyperbolic-app] recent context, 2026-08-16 3:18pm PDT
+# [hyperbolic-app] recent context, 2026-08-24 11:48am PDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (26,261t read) | 867,621t work | 97% savings
+Stats: 50 obs (27,316t read) | 982,784t work | 97% savings
 
 ### Apr 26, 2026
 S148 DailyGacha Spinner Transparency Fixed — Opaque Background and Brighter Ready Orb (Apr 26, 11:18 PM)
@@ -21,40 +21,8 @@ S230 User asked "how do i use it?" — Claude explained how to use the dev reset
 S231 Big one incoming — primary session signaled a large upcoming task, observer standing by (Apr 27, 6:23 PM)
 S233 DailyGacha Preview Page Deployed to Production — Commit 5d66a52 (Apr 27, 9:29 PM)
 S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for Visual Approval (Apr 27, 9:41 PM)
-### Jul 16, 2026
-941 3:53a 🔵 Pre-existing TypeScript Errors in events/checkin and prize-wall/redeem Routes
-### Aug 12, 2026
-1793 11:57p 🔵 PlayerPass Mobile — Release-Oriented Code Review Initiated on Three Core Tab Files
-1794 11:58p 🔵 Mobile Release Code Review — events.tsx, profile.tsx, index.tsx Audit
-### Aug 13, 2026
-1798 9:49a 🔵 PlayerPass Mobile Alerts Tab — Code Audit Confirms Correct and Complete Implementation
-1799 " 🔵 Web Dashboard Prize Wall Footer — Exists in DesktopDashboard Only, Missing from MobileDashboard
-1819 8:25p 🔵 Mobile Code Review Requested — Home Screen Feeds + Prize Wall
-### Aug 14, 2026
-1999 10:05a 🔐 get_card_of_the_day — Dead Function Security Hardening Review
-2000 10:16a 🔐 PlayerPass Rate-Limiting Infrastructure — Independent Security Review Initiated
-2001 10:23a 🔵 PlayerPass Rate-Limiting — Adversarial Security Review Initiated (10 Vectors Identified)
-2002 10:24a 🔵 PlayerPass Rate-Limiting Adversarial Security Review — 10 Attack Vectors Analyzed
 ### Aug 15, 2026
-2029 12:30a ⚖️ Shop API Retirement — Pre-Delete Security Review Scoped
-2030 " 🔐 Prize Wall — Three-Part Security/Correctness Review Before Production Apply
-2032 " 🔵 Shop Retirement — Zero API Callers Confirmed, Two Stale Nav Links Found
-2033 " 🔵 Prize Wall Migration Review — Duplicate Index Confirmed, CSPRNG Availability Verified, Function Grants Secure
-2038 12:34a 🔐 Prize Wall Claim Code Hardening Migration — Security Review Requested
-2039 12:35a ⚖️ Prize Wall Claim Code Migration — Final Hardening Approved
-2040 12:36a 🔵 Prize Wall Claim Code Migration — Full SQL Verified + Migration History Traced
-2067 8:43a 🔵 PlayerPass — Diamond Tier Entirely Absent from DB Enum and Codebase
-2068 " 🔵 PlayerPass — Daily Check-in Awards 5 XP Not 3; Daily Spin Is a Separate Undocumented Mechanic
-2069 " 🔵 PlayerPass — No Universal Sign-Up Bonus; 30 XP in Link Route Is Referral-Only
-2070 " 🔵 PlayerPass — hq/xp Route TILE_PP Table Allows 4 Wins (Exceeds Spec 3-Round Max)
-2071 " 🔵 PlayerPass — Referral Bonus Has Two Conflicting Implementations; Path B Missing 100 PP and Lacks referral_bonus_paid Guard
-2072 " 🔵 PlayerPass — Free Tier Gate Checks Different Currencies in claim-trial vs prize-wall/redeem Routes
-2073 " 🔵 PlayerPass — economy_config Prize Wall Divisor/Floor/Community Buffer Are Dead Config; Staff Manually Enters All Values
-2074 9:05a 🔵 PlayerPass Avatar Persistence — 4 Root Causes Identified via Code Review
-2075 " ⚖️ Avatar Fix Design — Rolling Two-Photo History + Revert Endpoint + Home Component Swap
-2076 " 🔵 Avatar Fix Design — 8 Security and Correctness Review Questions Raised
 2077 9:14a 🔵 PlayerPass Avatar Persistence — Four Root Causes Identified via Independent Code Review
-2078 " ⚖️ Avatar Fix Design — Four-Part Remediation Plan with Storage Lifecycle + Security Scope
 2079 9:58a 🔴 Friend Request Response — Wrong Endpoint Fixed on Web + Mobile
 2080 " 🟣 Mobile Community — Friend Request Badge Pre-Loaded on Mount
 ### Aug 16, 2026
@@ -77,6 +45,37 @@ S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for 
 2197 10:17a ⚖️ Avatar Cross-User Write/Delete Attack Surface — Independent Security Audit Scoped
 2198 10:18a 🔵 Avatar Route Security Audit — All Four Cross-User Attack Vectors Verified SECURE
 2223 2:50p 🔵 Clerk Auth Redirect Loop Analysis — Three-Change Safety Audit
+2236 3:18p 🔵 Dashboard Component Divergence Audit — Desktop vs Mobile Data Fetching Gap
+2238 3:19p 🔵 Dashboard Component Full Audit — Detailed Divergences and Architecture Map
+2239 " 🔵 Pre-Patch MobileDashboard State — Confirmed 3 Missing Data Sections Before 0a88dce
+2247 3:29p 🔵 Dashboard Consolidation Refactor — Pre-Merge Code Review Initiated
+2248 " 🔵 Dashboard Consolidation Code Review — useDashboardData Worktree Audit
+### Aug 17, 2026
+2277 11:38p 🔵 Independent Code Review — Player Pass Bug Diagnosis Framework
+2291 11:44p 🔵 PlayerPass Games System Diff — Code Review Commissioned for Six Risk Areas
+2300 11:52p 🔵 PlayerPass link/route.ts — initialFavorites null-primary-game fix under review
+2311 11:58p 🚨 Staff Promotion System Security Review — Six Vulnerability Categories Queued for Audit
+### Aug 23, 2026
+2423 11:19a 🔐 UNIQUE Constraint Migration Security Review — staff_store_roles
+2424 " 🔐 CSP Security Review — clerk.playerpass.gg Added to Four Directives
+2436 12:14p 🔵 Reconciliation Migration SQL Review — APPROVED
+2438 12:15p ⚖️ Reconciliation Migration 20260823000001 — Adversarial Review APPROVED
+2455 5:05p ⚖️ Email Sender Domain Migration Review — APPROVED
+2456 6:40p 🚨 Prize Wall Redemption — Expired Gold Tier Bypass (P0 Financial Exploit)
+2457 " 🚨 Prize Wall Unlock Threshold — Expired Members Inflate Subscriber Count (P1)
+2458 " 🚨 Player Inventory Display — Hardcoded Silver Tier Check Ignores Expiration (P1)
+2459 " 🔵 Adversarial Security Review — Pass Expiration Design Surface Map
+2461 6:41p 🔵 pass_tier Exposure Map — Full Codebase Scan Results
+2462 " 🔵 Staff Pass Override — No Validation on Tier/Expiry Combinations (P1 Security Note)
+2463 " 🔵 pass_status Field Not Auto-Managed — Inventory isActive Check Partially Mitigated but Unreliable
+### Aug 24, 2026
+2464 9:29a 🔐 Adversarial Review — claim-trial Double-Claim Prevention via Soft + Hard Gate
+2465 9:32a 🔵 Migration + Implementation Alignment Verified — Claim Trial Route Safe to Push
+2466 11:11a ⚖️ PlayerPass Membership Lifecycle Design — Adversarial Review Completed
+2467 " 🔵 PlayerPass Lifecycle — Eight Risk Domains Identified for Review
+2468 11:24a ⚖️ PlayerPass Membership Lifecycle — Adversarial Review Spec Submitted for Analysis
+2469 11:25a ⚖️ PlayerPass Membership Lifecycle — Complete Adversarial Spec Submitted for Review
+2470 11:34a ⚖️ PlayerPass Lifecycle v2 — Adversarial Security Review Commissioned (18 Attack Surfaces)
 
-Access 868k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 983k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

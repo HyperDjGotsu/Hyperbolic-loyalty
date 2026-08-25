@@ -29,10 +29,10 @@ export async function GET(request: Request) {
       supabaseAdmin
         .from('players')
         .select('id', { count: 'exact', head: true })
-        .neq('pass_tier', 'none')
-        .not('pass_tier', 'is', null)
-        .or(`pass_expires_at.is.null,pass_expires_at.gt.${now}`)
-        .or('pass_status.is.null,pass_status.eq.active,pass_status.eq.grace_period'),
+        .in('pass_tier', ['access', 'player', 'all_access', 'diamond'])
+        // TODO: change to .in('pass_status', ['active', 'cancel_scheduled']) after migration 20260824000003 lands and types are regenerated
+        .or('pass_status.eq.active,pass_status.eq.cancel_scheduled')
+        .gt('pass_expires_at', now),
     ]);
 
     if (itemsResult.error) throw itemsResult.error;

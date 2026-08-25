@@ -24,13 +24,19 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     const body = await request.json();
-    const { pass_tier, pass_status, pass_expires_at, pass_started_at, is_staff } = body;
 
+    // Membership fields must go through /api/hq/membership/* RPC endpoints — never direct PATCH.
+    const MEMBERSHIP_FIELD_KEYS = ['pass_tier', 'pass_status', 'pass_expires_at', 'pass_started_at', 'has_claimed_trial', 'payment_event_id'];
+    const forbiddenKeys = MEMBERSHIP_FIELD_KEYS.filter(k => k in body);
+    if (forbiddenKeys.length > 0) {
+      return NextResponse.json(
+        { error: `Membership fields [${forbiddenKeys.join(', ')}] must be updated via /api/hq/membership/* endpoints` },
+        { status: 400 }
+      );
+    }
+
+    const { is_staff } = body;
     const updates: Record<string, unknown> = {};
-    if (pass_tier !== undefined) updates.pass_tier = pass_tier;
-    if (pass_status !== undefined) updates.pass_status = pass_status;
-    if (pass_expires_at !== undefined) updates.pass_expires_at = pass_expires_at;
-    if (pass_started_at !== undefined) updates.pass_started_at = pass_started_at;
 
     // is_staff changes require network admin
     if (is_staff !== undefined) {
@@ -43,33 +49,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
-    }
-
-    // Coherent-state: paid tiers (except shadow_vip) must always have an expiration date.
-    // This prevents accidental permanent grants via direct API calls.
-    // Uses == null (loose equality) to catch both undefined (field omitted) and
-    // explicit null (field sent as null) — both are invalid for non-shadow_vip paid tiers.
-    const paidTiersRequiringExpiry = ['access', 'player', 'all_access', 'diamond'];
-    if (
-      updates.pass_tier &&
-      paidTiersRequiringExpiry.includes(updates.pass_tier as string) &&
-      updates.pass_expires_at == null
-    ) {
-      // Check if the player already has a non-null expiration in the DB
-      const { data: existingPlayer } = await supabaseAdmin
-        .from('players')
-        .select('pass_expires_at')
-        .eq('id', params.id)
-        .single();
-
-      // Reject if no expiration exists, or if the existing expiration is already in the past
-      // (a past expiration date is not a valid anchor for a new paid-tier grant)
-      if (!existingPlayer?.pass_expires_at || new Date(existingPlayer.pass_expires_at) <= new Date()) {
-        return NextResponse.json(
-          { error: 'pass_expires_at is required when assigning a paid pass tier' },
-          { status: 400 }
-        );
-      }
     }
 
     const { data, error } = await supabaseAdmin

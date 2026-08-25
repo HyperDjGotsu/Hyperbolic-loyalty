@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 // Must be declared before importing any module that transitively imports @/lib/supabase.
 vi.mock('@/lib/supabase', () => ({ supabase: {}, supabaseAdmin: {} }));
 
-import { TIER_MULTIPLIERS } from '../points';
+import { TIER_MULTIPLIERS, effectivePassTier } from '../points';
 
 // These constants mirror checkin/route.ts — tests break if the route diverges.
 const ATTENDANCE_PRIZE_POINTS = 35;
@@ -29,7 +29,7 @@ describe('TIER_MULTIPLIERS — DB enum value keys', () => {
   it('access (Bronze) → 1.25x', () => expect(TIER_MULTIPLIERS['access']).toBe(1.25));
   it('player (Silver) → 1.5x', () => expect(TIER_MULTIPLIERS['player']).toBe(1.5));
   it('all_access (Gold) → 2.0x', () => expect(TIER_MULTIPLIERS['all_access']).toBe(2.0));
-  it('shadow_vip (Gold legacy) → 2.0x', () => expect(TIER_MULTIPLIERS['shadow_vip']).toBe(2.0));
+  it('shadow_vip retired — not in multiplier table', () => expect(TIER_MULTIPLIERS['shadow_vip']).toBeUndefined());
   it('diamond → 2.0x', () => expect(TIER_MULTIPLIERS['diamond']).toBe(2.0));
   it('null/missing → fallback 1.0x via ?? operator', () =>
     expect(TIER_MULTIPLIERS[null as unknown as string] ?? 1.0).toBe(1.0));
@@ -72,4 +72,52 @@ describe('Guild Points (Lifetime XP) — NEVER multiplied', () => {
 describe('Referral bonuses — flat, no multiplier', () => {
   it('Referral PP is a constant (10 PP flat — supersedes 100 PP)', () => expect(REFERRAL_PRIZE_POINTS).toBe(10));
   it('Referral LXP is a constant', () => expect(REFERRAL_LIFETIME_XP).toBe(50));
+});
+
+const FUTURE = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+const PAST = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+describe('effectivePassTier — BENEFIT_BEARING_TIERS enforcement', () => {
+  it('shadow_vip is blocked (not in BENEFIT_BEARING_TIERS)', () =>
+    expect(effectivePassTier('shadow_vip', FUTURE, 'active')).toBe('none'));
+  it('unknown tier is blocked', () =>
+    expect(effectivePassTier('unknown_tier', FUTURE, 'active')).toBe('none'));
+  it('null tier is blocked', () =>
+    expect(effectivePassTier(null, FUTURE, 'active')).toBe('none'));
+  it('access → passes through', () =>
+    expect(effectivePassTier('access', FUTURE, 'active')).toBe('access'));
+  it('player → passes through', () =>
+    expect(effectivePassTier('player', FUTURE, 'active')).toBe('player'));
+  it('all_access → passes through', () =>
+    expect(effectivePassTier('all_access', FUTURE, 'active')).toBe('all_access'));
+  it('diamond → passes through', () =>
+    expect(effectivePassTier('diamond', FUTURE, 'active')).toBe('diamond'));
+});
+
+describe('effectivePassTier — BENEFIT_BEARING_STATUSES enforcement', () => {
+  it('expired status → none', () =>
+    expect(effectivePassTier('player', FUTURE, 'expired')).toBe('none'));
+  it('cancelled status → none', () =>
+    expect(effectivePassTier('player', FUTURE, 'cancelled')).toBe('none'));
+  it('grace_period status → none', () =>
+    expect(effectivePassTier('player', FUTURE, 'grace_period')).toBe('none'));
+  it('null status → none', () =>
+    expect(effectivePassTier('player', FUTURE, null)).toBe('none'));
+  it('active → allows benefits', () =>
+    expect(effectivePassTier('player', FUTURE, 'active')).toBe('player'));
+  it('cancel_scheduled → allows benefits through expiry', () =>
+    expect(effectivePassTier('player', FUTURE, 'cancel_scheduled')).toBe('player'));
+});
+
+describe('effectivePassTier — strict expiry validation', () => {
+  it('past expiry → none', () =>
+    expect(effectivePassTier('player', PAST, 'active')).toBe('none'));
+  it('date-only string rejected', () =>
+    expect(effectivePassTier('player', '2026-09-01', 'active')).toBe('none'));
+  it('non-UTC offset rejected', () =>
+    expect(effectivePassTier('player', '2026-09-01T00:00:00+05:00', 'active')).toBe('none'));
+  it('null expiry → none (no permanent grants)', () =>
+    expect(effectivePassTier('player', null, 'active')).toBe('none'));
+  it('future UTC ISO passes', () =>
+    expect(effectivePassTier('player', FUTURE, 'active')).toBe('player'));
 });

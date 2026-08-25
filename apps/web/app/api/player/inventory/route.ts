@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { effectivePassTier } from '@/lib/points';
 
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export async function GET() {
     // Get current player
     const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
-      .select('id, gems, avatar_config, pass_tier, pass_status')
+      .select('id, gems, avatar_config, pass_tier, pass_status, pass_expires_at')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -119,7 +120,7 @@ export async function GET() {
       passInfo: {
         tier: player.pass_tier || 'none',
         status: player.pass_status || 'none',
-        isActive: player.pass_tier === 'player' && player.pass_status === 'active',
+        isActive: effectivePassTier(player.pass_tier, player.pass_expires_at, player.pass_status) !== 'none',
       },
       avatarConfig: player.avatar_config || {
         base: '😎',

@@ -1,17 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { effectivePassTier } from '@/lib/points';
 
 export const dynamic = 'force-dynamic';
 
 type PlayerPassTier = 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
-
-interface PlayerRecord {
-  id: string;
-  pass_tier: string | null;
-  gems: number | null;
-  home_store_id: string | null;
-}
 
 const MULTIPLIERS: Record<PlayerPassTier, number> = {
   free: 1,
@@ -24,9 +18,10 @@ const MULTIPLIERS: Record<PlayerPassTier, number> = {
 function normalizeTier(tier: string | null): PlayerPassTier {
   if (tier === 'access') return 'bronze';
   if (tier === 'player') return 'silver';
-  if (tier === 'all_access' || tier === 'shadow_vip') return 'gold';
+  if (tier === 'all_access') return 'gold';
   if (tier === 'diamond') return 'diamond';
   return 'free';
+  // shadow_vip removed — effectivePassTier blocks it before reaching here
 }
 
 const PAGE_SIZE = 1000;
@@ -69,7 +64,7 @@ export async function GET() {
 
     const playerResult = await supabaseAdmin
       .from('players')
-      .select('id, pass_tier, pass_expires_at, gems, home_store_id')
+      .select('id, pass_tier, pass_expires_at, pass_status, gems, home_store_id')
       .eq('clerk_user_id', userId)
       .maybeSingle();
 
@@ -87,11 +82,8 @@ export async function GET() {
       getLifetimeXp(player.id),
       getPrizePoints(player.id),
     ]);
-    // Treat expired passes as 'none' before normalizing to UI tier names
-    const rawTier = (player.pass_expires_at && new Date(player.pass_expires_at) <= new Date())
-      ? 'none'
-      : player.pass_tier;
-    const tier = normalizeTier(rawTier);
+    const effectiveTier = effectivePassTier(player.pass_tier, player.pass_expires_at, player.pass_status);
+    const tier = normalizeTier(effectiveTier === 'none' ? null : effectiveTier);
 
     return NextResponse.json({
       tier,

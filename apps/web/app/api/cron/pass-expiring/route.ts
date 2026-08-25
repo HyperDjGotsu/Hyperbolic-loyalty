@@ -18,8 +18,9 @@ export async function GET(request: Request) {
     const { data: players } = await supabaseAdmin
       .from('players')
       .select('id, display_name, pass_tier, pass_expires_at')
-      .eq('pass_status', 'active')
-      .neq('pass_tier', 'none')
+      .or('pass_status.eq.active,pass_status.eq.cancel_scheduled')
+      .in('pass_tier', ['access', 'player', 'all_access', 'diamond'])
+      .gt('pass_expires_at', now.toISOString())
       .gte('pass_expires_at', sevenDaysOut.toISOString())
       .lte('pass_expires_at', eightDaysOut.toISOString());
 
@@ -28,9 +29,10 @@ export async function GET(request: Request) {
     let sent = 0;
     for (const player of players) {
       const tierLabel =
+        player.pass_tier === 'access' ? 'Access Pass' :
         player.pass_tier === 'player' ? 'Player Pass' :
         player.pass_tier === 'all_access' ? 'All Access Pass' :
-        player.pass_tier === 'shadow_vip' ? 'Shadow VIP' :
+        player.pass_tier === 'diamond' ? 'Diamond Pass' :
         'Pass';
 
       await createNotification(
