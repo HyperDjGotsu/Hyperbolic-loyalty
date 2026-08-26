@@ -13,7 +13,7 @@ interface EventInfo {
   game: { name: string; icon: string; color: string } | null;
 }
 
-type State = 'loading' | 'ready' | 'checking' | 'success' | 'already' | 'error' | 'no-event' | 'no-auth';
+type State = 'loading' | 'ready' | 'checking' | 'success' | 'already' | 'error' | 'no-event' | 'no-auth' | 'renewal-opportunity';
 
 function CheckInContent() {
   const searchParams = useSearchParams();
@@ -62,6 +62,8 @@ function CheckInContent() {
         setState('success');
       } else if (data.alreadyCheckedIn) {
         setState('already');
+      } else if (data.renewalOpportunity) {
+        setState('renewal-opportunity');
       } else {
         setErrorMsg(data.error || 'Check-in failed');
         setState('error');
@@ -160,6 +162,19 @@ function CheckInContent() {
       <button onClick={() => setState('ready')} className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
         Try Again
       </button>
+    </div>
+  );
+
+  if (state === 'renewal-opportunity') return (
+    <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
+      <div className="text-6xl">⚠️</div>
+      <h1 className="text-2xl font-bold text-warning">Player Pass Expired</h1>
+      <p className="text-secondary max-w-sm">
+        Your Player Pass has expired. Please see a staff member at the check-in kiosk to renew or complete your check-in.
+      </p>
+      <Link href="/dashboard" className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
+        Back to Dashboard
+      </Link>
     </div>
   );
 

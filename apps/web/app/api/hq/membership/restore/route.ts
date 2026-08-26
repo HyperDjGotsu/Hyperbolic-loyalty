@@ -83,6 +83,11 @@ export async function POST(request: Request) {
       p_tier: canonicalTier,
       p_expires_at: expiresAtDate.toISOString(),
       p_actor_clerk_id: staffCtx.clerkUserId,
+      // p_actor_store_id: NULL is semantically valid — network_admin operations have no store context,
+      // and pass_history.actor_store_id is a nullable UUID column. The Supabase-generated type
+      // declares this as `string` (non-nullable) because the function parameter has no DEFAULT NULL
+      // clause, but PostgreSQL imposes no NOT NULL constraint on function params. The `as string`
+      // cast is unavoidable until the generated type is corrected or the RPC adds DEFAULT NULL.
       p_actor_store_id: player.home_store_id as string,
       p_mutation_id: mutation_id,
       p_notes: notes ?? null,

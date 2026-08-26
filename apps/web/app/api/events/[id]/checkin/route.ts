@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
-import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier } from '@/lib/points';
+import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier, isRenewalOpportunity } from '@/lib/points';
 import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP, ATTENDANCE_PRIZE_POINTS, WIN_PRIZE_POINTS } from '@/lib/xp-constants';
 import { getStaffContext } from '@/lib/auth-helpers';
 
@@ -112,6 +112,7 @@ export async function POST(
       player_id?: string;
       rounds_won?: number;
       store_id?: string;
+      skip_renewal_opportunity?: boolean;
     };
 
     const roundsWon = Math.min(MAX_ROUNDS, Math.max(0, Math.floor(body.rounds_won ?? 0)));
@@ -139,7 +140,7 @@ export async function POST(
 
     const { data: authedPlayer } = await supabaseAdmin
       .from('players')
-      .select('id, display_name, pass_tier, pass_expires_at, pass_status, home_store_id, is_staff')
+      .select('id, display_name, pass_tier, pass_expires_at, pass_status, home_store_id, is_staff, has_been_paid_member')
       .eq('clerk_user_id', userId)
       .single();
 
@@ -152,6 +153,10 @@ export async function POST(
     let playerTier: string = 'free';
     let playerHomeStoreId: string | null = null;
     let staffId: string | null = null;
+    let playerRawStatus: string | null = null;
+    let playerRawTier: string | null = null;
+    let playerRawExpiresAt: string | null = null;
+    let playerHasBeenPaidMember = false;
 
     if (body.player_id) {
       // Kiosk/NFC path — authorize via role tables — players.is_staff is not authoritative for kiosk access
@@ -177,7 +182,7 @@ export async function POST(
 
       const { data: player } = await supabaseAdmin
         .from('players')
-        .select('id, display_name, pass_tier, pass_expires_at, pass_status, home_store_id')
+        .select('id, display_name, pass_tier, pass_expires_at, pass_status, home_store_id, has_been_paid_member')
         .eq('player_id', body.player_id.toUpperCase())
         .single();
 
@@ -188,6 +193,10 @@ export async function POST(
       playerName = player.display_name || body.player_id;
       playerTier = effectivePassTier(player.pass_tier, player.pass_expires_at, player.pass_status);
       playerHomeStoreId = player.home_store_id;
+      playerRawStatus = player.pass_status;
+      playerRawTier = player.pass_tier;
+      playerRawExpiresAt = player.pass_expires_at;
+      playerHasBeenPaidMember = player.has_been_paid_member ?? false;
     } else {
       // Player's own phone path
       playerId = authedPlayer.id;
@@ -195,6 +204,10 @@ export async function POST(
       playerTier = effectivePassTier(authedPlayer.pass_tier, authedPlayer.pass_expires_at, authedPlayer.pass_status);
       playerHomeStoreId = authedPlayer.home_store_id;
       if (authedPlayer.is_staff) staffId = authedPlayer.id;
+      playerRawStatus = authedPlayer.pass_status;
+      playerRawTier = authedPlayer.pass_tier;
+      playerRawExpiresAt = authedPlayer.pass_expires_at;
+      playerHasBeenPaidMember = authedPlayer.has_been_paid_member ?? false;
     }
 
     // store_id always comes from the event record, never from the request body
@@ -213,6 +226,27 @@ export async function POST(
         { error: 'Already checked in', alreadyCheckedIn: true, playerName },
         { status: 400 }
       );
+    }
+
+    // Renewal opportunity gate — fires after duplicate check so same-event rescans
+    // return alreadyCheckedIn instead of re-triggering the prompt.
+    // skip_renewal_opportunity honored only on the kiosk (staff) path.
+    const isKioskPath = !!body.player_id;
+    const skipApproved = isKioskPath && body.skip_renewal_opportunity === true;
+    const renewalOpportunityTriggered = isRenewalOpportunity(
+      playerRawStatus,
+      playerRawTier,
+      playerHasBeenPaidMember
+    );
+
+    if (renewalOpportunityTriggered && !skipApproved) {
+      return NextResponse.json({
+        renewalOpportunity: true,
+        playerName,
+        playerId,
+        expiredTier: playerRawTier,
+        expiredAt: playerRawExpiresAt,
+      });
     }
 
     // Calculate awards
@@ -239,9 +273,12 @@ export async function POST(
     }
 
     // Award Lifetime XP (flat, no multiplier ever)
+    const renewalDeclinedSuffix = renewalOpportunityTriggered && skipApproved
+      ? ' — renewal opportunity declined by staff'
+      : '';
     const xpDescription = roundsWon > 0
-      ? `Attended ${event.name} — ${roundsWon} round win${roundsWon > 1 ? 's' : ''}`
-      : `Attended ${event.name}`;
+      ? `Attended ${event.name} — ${roundsWon} round win${roundsWon > 1 ? 's' : ''}${renewalDeclinedSuffix}`
+      : `Attended ${event.name}${renewalDeclinedSuffix}`;
 
     await supabaseAdmin.from('xp_ledger').insert({
       player_id: playerId,
@@ -265,8 +302,8 @@ export async function POST(
         source: 'event_checkin',
         referenceId: eventId,
         note: roundsWon > 0
-          ? `${event.name} — attendance + ${roundsWon} win${roundsWon > 1 ? 's' : ''} (${playerTier} ${multiplier}x)`
-          : `${event.name} — attendance (${playerTier} ${multiplier}x)`,
+          ? `${event.name} — attendance + ${roundsWon} win${roundsWon > 1 ? 's' : ''} (${playerTier} ${multiplier}x)${renewalDeclinedSuffix}`
+          : `${event.name} — attendance (${playerTier} ${multiplier}x)${renewalDeclinedSuffix}`,
       });
     }
 
@@ -297,6 +334,7 @@ export async function POST(
       referralBonus: referralResult?.awarded
         ? { awarded: true, referrerName: referralResult.referrerName }
         : null,
+      ...(renewalOpportunityTriggered && skipApproved ? { renewalOpportunityDeclined: true } : {}),
     });
   } catch (error) {
     console.error('Event checkin error:', error);

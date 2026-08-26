@@ -75,6 +75,21 @@ export function effectivePassTier(
   return tier;
 }
 
+// Returns true when all three conditions that define a renewal opportunity at check-in are met:
+// expired status, historically paid tier, and confirmed past payment.
+// Used by the check-in route and its tests — both must call this function, not duplicate the logic.
+export function isRenewalOpportunity(
+  passStatus: string | null,
+  passTier: string | null,
+  hasBeenPaidMember: boolean
+): boolean {
+  return (
+    passStatus === 'expired' &&
+    BENEFIT_BEARING_TIERS.has(passTier ?? '') &&
+    hasBeenPaidMember
+  );
+}
+
 // Keys cover both canonical DB enum values and friendly-name aliases.
 // Callers use the raw DB pass_tier value; both forms resolve correctly.
 export const TIER_MULTIPLIERS: Record<string, number> = {
