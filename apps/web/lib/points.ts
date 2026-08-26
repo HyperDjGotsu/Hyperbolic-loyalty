@@ -47,7 +47,7 @@ export async function getPlayerBalance(playerId: string, storeId?: string): Prom
   return data ?? 0;
 }
 
-const BENEFIT_BEARING_TIERS = new Set(['access', 'player', 'all_access', 'diamond']);
+export const BENEFIT_BEARING_TIERS = new Set(['access', 'player', 'all_access', 'diamond']);
 const BENEFIT_BEARING_STATUSES = new Set(['active', 'cancel_scheduled']);
 
 // Strict UTC ISO 8601 parse — rejects non-UTC, date-only, and calendar-normalizing inputs.

@@ -712,6 +712,8 @@ export default function HQPage() {
   const [assignPassOpen, setAssignPassOpen] = useState(false);
   const [assignPassTier, setAssignPassTier] = useState<'free' | 'bronze' | 'silver' | 'gold' | 'diamond' | 'none'>('bronze');
   const [assignPassExpiry, setAssignPassExpiry] = useState('');
+  const [assignPassPaymentConfirmed, setAssignPassPaymentConfirmed] = useState(false);
+  const [assignPassMutationId, setAssignPassMutationId] = useState(() => crypto.randomUUID());
   const [assigningPass, setAssigningPass] = useState(false);
   const [selectedGame, setSelectedGame] = useState('');
   const [xpAmount, setXpAmount] = useState('');
@@ -1681,65 +1683,140 @@ export default function HQPage() {
     }
   };
 
-  // Assign / remove pass
+  // Assign / remove pass — routes to the correct /api/hq/membership/* endpoint based on player state.
   const assignPass = async () => {
     if (!playerDetails) return;
     setAssigningPass(true);
     try {
-      const isPaid = assignPassTier !== 'none' && assignPassTier !== 'free';
-      const expiresAt = isPaid
-        ? (assignPassExpiry
-            ? new Date(assignPassExpiry).toISOString()
-            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString())
-        : null;
-      const body = {
-        pass_tier: assignPassTier === 'none' ? 'none' : assignPassTier,
-        pass_status: assignPassTier === 'none' ? 'cancelled' : 'active',
-        pass_started_at: isPaid ? new Date().toISOString() : null,
-        pass_expires_at: expiresAt,
+      const currentStatus = playerDetails.player.pass_status ?? 'none';
+      const isRemove = assignPassTier === 'none' || assignPassTier === 'free';
+
+      const TIER_MAP: Record<string, string> = {
+        bronze: 'access', silver: 'player', gold: 'all_access', diamond: 'diamond',
       };
-      const res = await fetch(`/api/hq/player/${playerDetails.player.id}`, {
-        method: 'PATCH',
+
+      if (isRemove) {
+        if (currentStatus !== 'active' && currentStatus !== 'cancel_scheduled') {
+          showToast('No active subscription to remove', 'error');
+          return;
+        }
+        const res = await fetch('/api/hq/membership/revoke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            player_id: playerDetails.player.id,
+            mutation_id: assignPassMutationId,
+            notes: 'Removed via HQ Assign Pass panel',
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setPlayerDetails(prev => prev ? {
+          ...prev,
+          player: { ...prev.player, pass_status: 'cancelled', pass_expires_at: null },
+        } : prev);
+        showToast('Pass removed — subscription cancelled', 'success');
+        setAssignPassOpen(false);
+        return;
+      }
+
+      const canonicalTier = TIER_MAP[assignPassTier];
+      if (!canonicalTier) {
+        showToast('Invalid tier selected', 'error');
+        return;
+      }
+
+      const expiresAt = assignPassExpiry
+        ? new Date(assignPassExpiry).toISOString()
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const durationDays = Math.max(1, Math.round(
+        (new Date(expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+      ));
+
+      let endpoint: string;
+      let reqBody: Record<string, unknown>;
+
+      if (currentStatus === 'none' || currentStatus === 'expired') {
+        endpoint = '/api/hq/membership/grant';
+        reqBody = {
+          player_id: playerDetails.player.id,
+          tier: canonicalTier,
+          duration_days: durationDays,
+          mutation_id: assignPassMutationId,
+          payment_confirmed: assignPassPaymentConfirmed,
+        };
+      } else if (currentStatus === 'cancelled') {
+        endpoint = '/api/hq/membership/restore';
+        reqBody = {
+          player_id: playerDetails.player.id,
+          tier: canonicalTier,
+          expires_at: expiresAt,
+          mutation_id: assignPassMutationId,
+          payment_confirmed: assignPassPaymentConfirmed,
+        };
+      } else {
+        // active or cancel_scheduled — extend the current pass
+        endpoint = '/api/hq/membership/renew';
+        reqBody = {
+          player_id: playerDetails.player.id,
+          duration_days: durationDays,
+          mutation_id: assignPassMutationId,
+          payment_confirmed: assignPassPaymentConfirmed,
+        };
+      }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(reqBody),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      const actionLabel = currentStatus === 'cancelled' ? 'restored' : currentStatus === 'none' || currentStatus === 'expired' ? 'granted' : 'renewed';
       setPlayerDetails(prev => prev ? {
         ...prev,
-        player: { ...prev.player, pass_tier: data.pass_tier, pass_status: data.pass_status, pass_expires_at: data.pass_expires_at, pass_started_at: data.pass_started_at },
+        player: { ...prev.player, pass_status: 'active', pass_expires_at: expiresAt },
       } : prev);
       showToast(
-        assignPassTier === 'none'
-          ? 'Pass removed — player reverted to free tier'
-          : `${assignPassTier.charAt(0).toUpperCase() + assignPassTier.slice(1)} Pass assigned${expiresAt ? ` — renews ${new Date(expiresAt).toLocaleDateString()}` : ''}`,
+        `${assignPassTier.charAt(0).toUpperCase() + assignPassTier.slice(1)} Pass ${actionLabel} — renews ${new Date(expiresAt).toLocaleDateString()}`,
         'success'
       );
       setAssignPassOpen(false);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to assign pass', 'error');
+      setAssignPassPaymentConfirmed(false);
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed to update pass', 'error');
     } finally {
       setAssigningPass(false);
     }
   };
 
-  // Player account actions
+  // Immediately revoke a player's subscription (network_admin only).
+  // Staff authorization (is_staff, staff_store_roles) is NOT changed here — membership and
+  // employment are independent domains. Staff deprovisioning is a separate admin action.
   const suspendPlayer = async () => {
     if (!playerDetails) return;
     setDangerLoading(true);
     try {
-      const res = await fetch(`/api/hq/player/${playerDetails.player.id}`, {
-        method: 'PATCH',
+      const res = await fetch('/api/hq/membership/revoke', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pass_tier: 'none', pass_status: 'cancelled', pass_expires_at: null, is_staff: false }),
+        body: JSON.stringify({
+          player_id: playerDetails.player.id,
+          mutation_id: crypto.randomUUID(),
+          notes: 'Subscription removed by network admin via HQ Danger Zone',
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setPlayerDetails(prev => prev ? { ...prev, player: { ...prev.player, is_staff: false } } : prev);
+      setPlayerDetails(prev => prev ? {
+        ...prev,
+        player: { ...prev.player, pass_status: 'cancelled', pass_expires_at: null },
+      } : prev);
       showToast(`${playerDetails.player.display_name}'s subscription removed`, 'success');
       setDangerAction(null);
-    } catch (err: any) {
-      showToast(err.message || 'Failed', 'error');
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Failed', 'error');
     } finally {
       setDangerLoading(false);
     }
@@ -3215,7 +3292,7 @@ export default function HQPage() {
                     {!assignPassOpen && (
                       <button
                         type="button"
-                        onClick={() => { setAssignPassOpen(true); setAssignPassTier('bronze'); setAssignPassExpiry(''); }}
+                        onClick={() => { setAssignPassOpen(true); setAssignPassTier('bronze'); setAssignPassExpiry(''); setAssignPassPaymentConfirmed(false); setAssignPassMutationId(crypto.randomUUID()); }}
                         className="px-4 py-2 text-sm font-medium rounded-lg bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 transition-colors"
                       >
                         Assign / Change Pass
@@ -3250,14 +3327,25 @@ export default function HQPage() {
                           ))}
                         </div>
                         {assignPassTier !== 'none' && assignPassTier !== 'free' && (
-                          <div>
-                            <label className="text-xs text-secondary block mb-1">Next renewal date (leave blank = 30 days)</label>
-                            <input
-                              type="date"
-                              value={assignPassExpiry}
-                              onChange={e => setAssignPassExpiry(e.target.value)}
-                              className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
-                            />
+                          <div className="space-y-2">
+                            <div>
+                              <label className="text-xs text-secondary block mb-1">Next renewal date (leave blank = 30 days)</label>
+                              <input
+                                type="date"
+                                value={assignPassExpiry}
+                                onChange={e => setAssignPassExpiry(e.target.value)}
+                                className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                              />
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={assignPassPaymentConfirmed}
+                                onChange={e => setAssignPassPaymentConfirmed(e.target.checked)}
+                                className="w-4 h-4 accent-accent"
+                              />
+                              <span className="text-xs text-secondary">Payment received</span>
+                            </label>
                           </div>
                         )}
                         <div className="flex gap-2 pt-1">
@@ -3271,7 +3359,7 @@ export default function HQPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => setAssignPassOpen(false)}
+                            onClick={() => { setAssignPassOpen(false); setAssignPassPaymentConfirmed(false); }}
                             className="px-4 py-2 text-sm text-secondary hover:text-primary rounded-lg hover:bg-surface transition-colors"
                           >
                             Cancel
@@ -3310,7 +3398,7 @@ export default function HQPage() {
                       <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
                         <p className="text-sm text-yellow-300 mb-1 font-medium">Remove Subscription</p>
                         <p className="text-xs text-secondary mb-4">
-                          This will set {playerDetails.player.display_name}&apos;s pass to inactive, revoke staff access, and remove any subscription permissions. Their XP and data stay intact.
+                          This immediately cancels {playerDetails.player.display_name}&apos;s Player Pass. Their XP and data stay intact. Staff access is managed separately.
                         </p>
                         <div className="flex gap-2">
                           <button
