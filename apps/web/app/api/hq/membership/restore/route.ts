@@ -78,13 +78,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: result, error } = await (supabaseAdmin as any).rpc('membership_restore', {
+    const { data: result, error } = await supabaseAdmin.rpc('membership_restore', {
       p_player_id: player_id,
       p_tier: canonicalTier,
       p_expires_at: expiresAtDate.toISOString(),
       p_actor_clerk_id: staffCtx.clerkUserId,
-      p_actor_store_id: player.home_store_id,
+      p_actor_store_id: player.home_store_id as string,
       p_mutation_id: mutation_id,
       p_notes: notes ?? null,
       p_payment_event_id: payment_event_id ?? null,

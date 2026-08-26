@@ -31,19 +31,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const status = player.pass_status as string;
-    if (status !== 'active' && status !== 'cancel_scheduled') {
+    if (player.pass_status !== 'active' && player.pass_status !== 'cancel_scheduled') {
       return NextResponse.json(
         { error: `revoke requires active or cancel_scheduled status (current: ${player.pass_status})` },
         { status: 409 }
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: result, error } = await (supabaseAdmin as any).rpc('membership_revoke', {
+    const { data: result, error } = await supabaseAdmin.rpc('membership_revoke', {
       p_player_id: player_id,
       p_actor_clerk_id: staffCtx.clerkUserId,
-      p_actor_store_id: player.home_store_id,
+      p_actor_store_id: player.home_store_id as string,
       p_mutation_id: mutation_id,
       p_notes: notes ?? null,
     });

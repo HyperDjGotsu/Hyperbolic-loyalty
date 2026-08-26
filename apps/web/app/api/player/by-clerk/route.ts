@@ -354,7 +354,6 @@ export async function GET() {
       primaryGameId: player.primary_game_id,
       isStaff: player.is_staff,
       isFoundingMember: player.is_founding_member,
-      isShadowVip: player.is_shadow_vip,
       createdAt: player.created_at,
       homeStoreId: player.home_store_id,
       homeStore,

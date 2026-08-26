@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -1056,6 +1056,7 @@ export type Database = {
         Row: {
           created_at: string | null
           data: Json | null
+          dedup_key: string | null
           id: string
           is_read: boolean | null
           message: string
@@ -1067,6 +1068,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           data?: Json | null
+          dedup_key?: string | null
           id?: string
           is_read?: boolean | null
           message: string
@@ -1078,6 +1080,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           data?: Json | null
+          dedup_key?: string | null
           id?: string
           is_read?: boolean | null
           message?: string
@@ -1129,46 +1132,61 @@ export type Database = {
       }
       pass_history: {
         Row: {
-          amount_paid: number | null
-          change_reason: string | null
-          created_at: string | null
-          discount_percent: number | null
-          games: string[] | null
+          actor_clerk_id: string | null
+          actor_store_id: string | null
+          actor_type: string
+          change_type: string
+          changed_at: string
           id: string
-          period_end: string
-          period_start: string
-          player_id: string | null
-          status: Database["public"]["Enums"]["pass_status"]
-          stripe_invoice_id: string | null
-          tier: Database["public"]["Enums"]["pass_tier"]
+          mutation_id: string
+          mutation_params: Json
+          new_expires_at: string | null
+          new_status: string | null
+          new_tier: string | null
+          notes: string | null
+          old_expires_at: string | null
+          old_status: string | null
+          old_tier: string | null
+          payment_event_id: string | null
+          player_id: string
         }
         Insert: {
-          amount_paid?: number | null
-          change_reason?: string | null
-          created_at?: string | null
-          discount_percent?: number | null
-          games?: string[] | null
+          actor_clerk_id?: string | null
+          actor_store_id?: string | null
+          actor_type: string
+          change_type: string
+          changed_at?: string
           id?: string
-          period_end: string
-          period_start: string
-          player_id?: string | null
-          status: Database["public"]["Enums"]["pass_status"]
-          stripe_invoice_id?: string | null
-          tier: Database["public"]["Enums"]["pass_tier"]
+          mutation_id: string
+          mutation_params: Json
+          new_expires_at?: string | null
+          new_status?: string | null
+          new_tier?: string | null
+          notes?: string | null
+          old_expires_at?: string | null
+          old_status?: string | null
+          old_tier?: string | null
+          payment_event_id?: string | null
+          player_id: string
         }
         Update: {
-          amount_paid?: number | null
-          change_reason?: string | null
-          created_at?: string | null
-          discount_percent?: number | null
-          games?: string[] | null
+          actor_clerk_id?: string | null
+          actor_store_id?: string | null
+          actor_type?: string
+          change_type?: string
+          changed_at?: string
           id?: string
-          period_end?: string
-          period_start?: string
-          player_id?: string | null
-          status?: Database["public"]["Enums"]["pass_status"]
-          stripe_invoice_id?: string | null
-          tier?: Database["public"]["Enums"]["pass_tier"]
+          mutation_id?: string
+          mutation_params?: Json
+          new_expires_at?: string | null
+          new_status?: string | null
+          new_tier?: string | null
+          notes?: string | null
+          old_expires_at?: string | null
+          old_status?: string | null
+          old_tier?: string | null
+          payment_event_id?: string | null
+          player_id?: string
         }
         Relationships: [
           {
@@ -1344,12 +1362,12 @@ export type Database = {
           email: string | null
           favorite_games: Json | null
           gems: number | null
+          has_been_paid_member: boolean
           has_claimed_trial: boolean
           home_store_id: string | null
           id: string
           is_banned: boolean | null
           is_founding_member: boolean | null
-          is_shadow_vip: boolean | null
           is_staff: boolean | null
           last_check_in_at: string | null
           last_seen_at: string | null
@@ -1411,12 +1429,12 @@ export type Database = {
           email?: string | null
           favorite_games?: Json | null
           gems?: number | null
+          has_been_paid_member?: boolean
           has_claimed_trial?: boolean
           home_store_id?: string | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
-          is_shadow_vip?: boolean | null
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
@@ -1478,12 +1496,12 @@ export type Database = {
           email?: string | null
           favorite_games?: Json | null
           gems?: number | null
+          has_been_paid_member?: boolean
           has_claimed_trial?: boolean
           home_store_id?: string | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
-          is_shadow_vip?: boolean | null
           is_staff?: boolean | null
           last_check_in_at?: string | null
           last_seen_at?: string | null
@@ -2535,12 +2553,96 @@ export type Database = {
         Returns: number
       }
       get_xp_discount: { Args: { p_player_id: string }; Returns: number }
+      membership_cancel_renewal: {
+        Args: {
+          p_actor_clerk_id: string
+          p_actor_store_id: string
+          p_mutation_id: string
+          p_player_id: string
+        }
+        Returns: string
+      }
+      membership_change_tier: {
+        Args: {
+          p_actor_clerk_id: string
+          p_actor_store_id: string
+          p_mutation_id: string
+          p_new_tier: string
+          p_notes?: string
+          p_player_id: string
+        }
+        Returns: string
+      }
+      membership_expire_player: {
+        Args: { p_mutation_id: string; p_player_id: string }
+        Returns: string
+      }
+      membership_grant: {
+        Args: {
+          p_actor_clerk_id: string
+          p_actor_store_id: string
+          p_allow_cancelled?: boolean
+          p_duration_days: number
+          p_mutation_id: string
+          p_payment_confirmed?: boolean
+          p_payment_event_id?: string
+          p_player_id: string
+          p_tier: string
+        }
+        Returns: string
+      }
+      membership_notify_expiring: {
+        Args: { p_milestone: string; p_player_id: string }
+        Returns: number
+      }
+      membership_renew: {
+        Args: {
+          p_actor_clerk_id: string
+          p_actor_store_id: string
+          p_duration_days: number
+          p_mutation_id: string
+          p_payment_confirmed?: boolean
+          p_payment_event_id?: string
+          p_player_id: string
+        }
+        Returns: string
+      }
+      membership_restore: {
+        Args: {
+          p_actor_clerk_id: string
+          p_actor_store_id: string
+          p_allow_cancelled?: boolean
+          p_expires_at: string
+          p_mutation_id: string
+          p_notes?: string
+          p_payment_confirmed?: boolean
+          p_payment_event_id?: string
+          p_player_id: string
+          p_tier: string
+        }
+        Returns: string
+      }
+      membership_revoke: {
+        Args: {
+          p_actor_clerk_id: string
+          p_actor_store_id: string
+          p_mutation_id: string
+          p_notes?: string
+          p_player_id: string
+        }
+        Returns: string
+      }
       refresh_xp_aggregates: { Args: never; Returns: undefined }
     }
     Enums: {
       event_status: "scheduled" | "active" | "completed" | "cancelled"
       friend_status: "pending" | "accepted" | "blocked"
-      pass_status: "active" | "grace_period" | "cancelled" | "expired"
+      pass_status:
+        | "active"
+        | "cancel_scheduled"
+        | "grace_period"
+        | "cancelled"
+        | "expired"
       pass_tier:
         | "none"
         | "access"
@@ -2690,7 +2792,13 @@ export const Constants = {
     Enums: {
       event_status: ["scheduled", "active", "completed", "cancelled"],
       friend_status: ["pending", "accepted", "blocked"],
-      pass_status: ["active", "grace_period", "cancelled", "expired"],
+      pass_status: [
+        "active",
+        "cancel_scheduled",
+        "grace_period",
+        "cancelled",
+        "expired",
+      ],
       pass_tier: [
         "none",
         "access",

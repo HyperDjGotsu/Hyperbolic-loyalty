@@ -65,27 +65,24 @@ export async function POST(request: Request) {
     }
 
     // Active/cancel_scheduled requires renew or change-tier, not a fresh grant.
-    // Cast to string: cancel_scheduled not yet in generated DB types (regenerate after migration).
-    const status = player.pass_status as string;
-    if (status === 'active' || status === 'cancel_scheduled') {
+    if (player.pass_status === 'active' || player.pass_status === 'cancel_scheduled') {
       return NextResponse.json(
         { error: 'Player already has an active pass — use /renew to extend or /change-tier to upgrade.' },
         { status: 409 }
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: result, error } = await (supabaseAdmin as any).rpc('membership_grant', {
+    const { data: result, error } = await supabaseAdmin.rpc('membership_grant', {
       p_player_id: player_id,
       p_tier: canonicalTier,
       p_duration_days: duration_days,
       p_actor_clerk_id: staffCtx.clerkUserId,
-      p_actor_store_id: player.home_store_id,
+      p_actor_store_id: player.home_store_id as string,
       p_mutation_id: mutation_id,
       p_payment_event_id: payment_event_id ?? null,
       p_payment_confirmed: payment_confirmed,
       // RPC enforces this gate under advisory lock — prevents TOCTOU on cancelled→active.
-      p_allow_cancelled: status === 'cancelled' && staffCtx.isNetworkAdmin,
+      p_allow_cancelled: player.pass_status === 'cancelled' && staffCtx.isNetworkAdmin,
     });
 
     if (error) throw error;
