@@ -2,7 +2,7 @@
 > Date: 2026-08-16 through 2026-08-17  
 > Tester: Darrell (manual) + Claude (Playwright / API / code review)  
 > Production URL: https://playerpass.gg  
-> Mobile: com.gshc.playerpass (EAS production channel, OTA a97efa1)
+> Mobile: gg.playerpass.app (EAS production channel, OTA a97efa1)
 
 ---
 

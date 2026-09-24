@@ -25,8 +25,8 @@ If that doesn't exist, use the Windows SDK bridge:
 - `adb shell input swipe <x1> <y1> <x2> <y2> <ms>` — swipe
 - `adb shell input text '<text>'` — type text
 - `adb shell input keyevent <code>` — key events (4=back, 3=home, 66=enter)
-- `adb shell am force-stop com.gshc.playerpass` — kill app
-- `adb shell monkey -p com.gshc.playerpass -c android.intent.category.LAUNCHER 1` — relaunch
+- `adb shell am force-stop gg.playerpass.app` — kill app
+- `adb shell monkey -p gg.playerpass.app -c android.intent.category.LAUNCHER 1` — relaunch
 - `adb logcat -d -s ReactNativeJS:V` — read JS logs
 
 **E2E test protocol:**
@@ -37,7 +37,7 @@ If that doesn't exist, use the Windows SDK bridge:
 5. PASS/FAIL each behavior being tested
 6. Stop on destructive/account-affecting actions unless the test account is explicitly marked disposable
 
-**Test package ID:** `com.gshc.playerpass`
+**Test package ID:** `gg.playerpass.app`
 
 ---
 
