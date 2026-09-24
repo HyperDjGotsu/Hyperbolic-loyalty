@@ -1,4 +1,4 @@
-// GSHC Player Pass — Service Worker
+// Player Pass — Service Worker
 // Handles background push notifications
 
 self.addEventListener('push', (event) => {
@@ -8,17 +8,17 @@ self.addEventListener('push', (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: 'GSHC Player Pass', body: event.data.text() };
+    payload = { title: 'Player Pass', body: event.data.text() };
   }
 
   const { title, body, icon, badge, url, tag } = payload;
 
   event.waitUntil(
-    self.registration.showNotification(title || 'GSHC Player Pass', {
+    self.registration.showNotification(title || 'Player Pass', {
       body: body || '',
       icon: icon || '/icons/icon-192.png',
       badge: badge || '/icons/badge-72.png',
-      tag: tag || 'gshc-default',
+      tag: tag || 'pp-default',
       data: { url: url || '/dashboard' },
       requireInteraction: false,
     })

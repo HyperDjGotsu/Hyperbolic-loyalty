@@ -48,7 +48,8 @@ export async function GET(request: Request) {
         attendance_xp,
         win_xp,
         prizing,
-        store_id
+        store_id,
+        stores(name)
       `)
       .order('scheduled_at', { ascending: true })
       .limit(limit);
@@ -247,6 +248,7 @@ export async function GET(request: Request) {
         isLive: event.status === 'active',
         prizing: event.prizing || null,
         isNetworkEvent: event.store_id === null,
+        storeName: (event.stores as { name: string } | null)?.name ?? null,
       };
     });
 

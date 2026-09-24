@@ -813,7 +813,7 @@ export default function HQPage() {
   const [storeConfig, setStoreConfig] = useState({
     currency_name: 'Points',
     currency_icon: '⭐',
-    store_name: 'GSHC Player Pass',
+    store_name: 'Player Pass',
     player_id_prefix: 'HYP',
     network_calendar_url: '',
   });

@@ -11,6 +11,13 @@ export const metadata: Metadata = {
     title: 'Player Pass',
     description: 'Level up your TCG journey',
     type: 'website',
+    url: 'https://playerpass.gg',
+    siteName: 'Player Pass',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Player Pass',
+    description: 'Level up your TCG journey',
   },
 };
 

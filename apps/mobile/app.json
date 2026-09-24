@@ -10,6 +10,9 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.gshc.playerpass",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Player Pass uses your photo library to set your profile avatar."
+      },
       "privacyManifests": {
         "NSPrivacyTracking": false,
         "NSPrivacyTrackingDomains": [],

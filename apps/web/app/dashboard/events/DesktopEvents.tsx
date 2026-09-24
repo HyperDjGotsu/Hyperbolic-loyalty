@@ -44,6 +44,7 @@ interface CalendarEvent {
   isLive: boolean;
   prizing: string[] | null;
   isNetworkEvent: boolean;
+  storeName: string | null;
 }
 
 interface Friend {
@@ -195,7 +196,9 @@ const ShareModal = ({
       try {
         await navigator.share({
           title: event.name,
-          text: `Check out this event at Games of Martinez: ${event.name} on ${event.date} @ ${event.time}`,
+          text: event.isNetworkEvent || !event.storeName
+            ? `Check out this Player Pass event: ${event.name} on ${event.date} @ ${event.time}`
+            : `Check out this event at ${event.storeName}: ${event.name} on ${event.date} @ ${event.time}`,
           url: publicUrl,
         });
       } catch (err) {
