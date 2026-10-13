@@ -83,12 +83,6 @@
     },
     "android": {
       "package": "gg.playerpass.app",
-      "adaptiveIcon": {
-        "backgroundColor": "#0a0a0f",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA"
@@ -107,7 +101,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#0a0a0f"
+          "backgroundColor": "#000000"
         }
       ],
       "expo-secure-store",
