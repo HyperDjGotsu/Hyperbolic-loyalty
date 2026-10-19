@@ -46,6 +46,7 @@ export interface DashboardData {
   passStatus: DashboardPassStatus | null;
   favoriteGameIds: string[];
   gameStats: Record<string, any>;
+  overallStats: { eventsAttended: number; matchWins: number; weekStreak: number } | null;
   upcomingEvents: any[];
   storeUpdates: any[];
   friendActivity: any[];
@@ -75,6 +76,7 @@ export function useDashboardData(): DashboardData {
   const [passStatus, setPassStatus] = useState<DashboardPassStatus | null>(null);
   const [favoriteGameIds, setFavoriteGameIds] = useState<string[]>([]);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
+  const [overallStats, setOverallStats] = useState<DashboardData['overallStats']>(null);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
   const [friendActivity, setFriendActivity] = useState<any[]>([]);
@@ -291,6 +293,24 @@ export function useDashboardData(): DashboardData {
     return () => { cancelled = true; };
   }, [player, user]);
 
+  // Overall stats (events attended, match wins, week streak)
+  useEffect(() => {
+    if (!player || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/player/overall-stats');
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && data.success && data.stats) setOverallStats(data.stats);
+        }
+      } catch (error) {
+        console.error('Error loading overall stats:', error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [player, user]);
+
   // Game stats
   useEffect(() => {
     if (!player || !user) return;
@@ -432,6 +452,7 @@ export function useDashboardData(): DashboardData {
     passStatus,
     favoriteGameIds,
     gameStats,
+    overallStats,
     upcomingEvents,
     storeUpdates,
     friendActivity,

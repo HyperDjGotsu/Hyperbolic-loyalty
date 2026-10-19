@@ -570,6 +570,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
     storeConfig,
     banners,
     gameStats,
+    overallStats,
     upcomingEvents,
     storeUpdates,
     friendActivity,
@@ -1064,21 +1065,17 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
                   Your Stats
                 </h3>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-accent">{games.length}</div>
-                    <div className="text-[10px] text-secondary uppercase mt-1">Games Played</div>
-                  </div>
-                  <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-green-400">{playerData?.totalEventsAttended || 0}</div>
+                    <div className="text-2xl font-bold text-green-400">{overallStats?.eventsAttended ?? 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Events Attended</div>
                   </div>
                   <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-accent">{totalXp.toLocaleString()}</div>
-                    <div className="text-[10px] text-secondary uppercase mt-1">Total XP</div>
+                    <div className="text-2xl font-bold text-accent">{overallStats?.matchWins ?? 0}</div>
+                    <div className="text-[10px] text-secondary uppercase mt-1">Match Wins</div>
                   </div>
                   <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
+                    <div className="text-2xl font-bold text-yellow-400">🔥 {overallStats?.weekStreak ?? 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Week Streak</div>
                   </div>
                 </div>
