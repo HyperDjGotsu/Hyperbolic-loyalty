@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: 'What Player Pass collects, why, who handles it, and how to delete it.',
 };
 
-const CONTACT_EMAIL = 'support@playerpass.gg';
+const CONTACT_EMAIL = 'darrell@hyperbolictcg.com';
 const LAST_UPDATED = 'October 18, 2026';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
