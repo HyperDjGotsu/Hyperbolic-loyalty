@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -62,8 +63,13 @@ export default function QRCheckinScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.permissionText}>Camera access is needed to scan QR codes</Text>
-        <Pressable style={styles.btn} onPress={requestPermission}>
-          <Text style={styles.btnText}>Allow Camera</Text>
+        <Pressable
+          style={styles.btn}
+          onPress={permission.canAskAgain ? requestPermission : () => Linking.openSettings()}
+        >
+          <Text style={styles.btnText}>
+            {permission.canAskAgain ? 'Allow Camera' : 'Open Settings'}
+          </Text>
         </Pressable>
       </View>
     );

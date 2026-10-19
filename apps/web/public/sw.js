@@ -17,7 +17,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(title || 'Player Pass', {
       body: body || '',
       icon: icon || '/icons/icon-192.png',
-      badge: badge || '/icons/badge-72.png',
+      badge: badge || '/icons/icon-192.png',
       tag: tag || 'pp-default',
       data: { url: url || '/dashboard' },
       requireInteraction: false,

@@ -21,6 +21,7 @@ export default function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resent, setResent] = useState(false);
 
   async function handleSignUp() {
     if (!isLoaded) return;
@@ -34,6 +35,18 @@ export default function SignUpScreen() {
       setError(e instanceof Error ? e.message : 'Sign up failed');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    if (!isLoaded) return;
+    setError('');
+    setResent(false);
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setResent(true);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Could not resend code');
     }
   }
 
@@ -116,6 +129,9 @@ export default function SignUpScreen() {
               disabled={loading}
             >
               {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify</Text>}
+            </Pressable>
+            <Pressable onPress={handleResend} disabled={loading}>
+              <Text style={styles.link}>{resent ? 'Code sent — check your email' : 'Resend code'}</Text>
             </Pressable>
           </>
         )}

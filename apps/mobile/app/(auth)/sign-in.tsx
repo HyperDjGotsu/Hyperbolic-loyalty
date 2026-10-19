@@ -4,6 +4,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -79,7 +80,11 @@ export default function SignInScreen() {
           )}
         </Pressable>
 
-        <Link href="/(auth)/sign-up" style={styles.link}>
+        <Pressable onPress={() => Linking.openURL('https://playerpass.gg/sign-in')}>
+          <Text style={styles.link}>Forgot password?</Text>
+        </Pressable>
+
+        <Link href="/(auth)/sign-up" style={[styles.link, styles.linkSecondary]}>
           New player? Create account
         </Link>
       </View>
@@ -150,5 +155,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 24,
     fontSize: 14,
+  },
+  linkSecondary: {
+    marginTop: 16,
   },
 });

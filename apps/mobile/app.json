@@ -11,7 +11,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "gg.playerpass.app",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Player Pass uses your photo library to set your profile avatar."
+        "NSPhotoLibraryUsageDescription": "Player Pass uses your photo library to set your profile avatar.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -86,7 +87,11 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#000000"
+      }
     },
     "web": {
       "bundler": "metro",
