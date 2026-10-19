@@ -5,7 +5,6 @@ import {
   Avatar,
   GlowButton,
   GameXpCard,
-  StatCard,
 } from '@/components/ui';
 import { BannerCarousel } from '@/components/BannerCarousel';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
@@ -193,8 +192,9 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* Header with Player Card */}
       <div className="relative bg-base pt-4 pb-6">
         {/* Logo */}
-        <div className="text-center mb-4">
-          <div className="text-2xl font-black text-secondary font-display">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <img src="/icons/icon-192.png" alt="" width={28} height={28} className="rounded-md" />
+          <div className="text-2xl font-black text-primary font-display">
             Player Pass
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                 </div>
                 <div className="text-secondary text-sm">Level {level} Player</div>
                 <div className="mt-2">
-                  <div className="h-2 bg-border-border-token rounded-full overflow-hidden">
+                  <div className="h-2 bg-elevated rounded-full overflow-hidden">
                     <div
                       className="h-full bg-accent rounded-full transition-all duration-1000 ease-out"
                       style={{ width: `${levelProgress}%` }}
@@ -232,10 +232,15 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-border-token">
-              <StatCard icon="🎮" label="Games" value={games.length} />
-              <StatCard icon="📋" label="Activity" value={recentActivity.length} />
-              <StatCard icon={storeConfig.currency_icon} label={storeConfig.currency_name} value={playerData?.gems || 0} color="text-accent" />
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-border-token">
+              <div>
+                <p className="text-xs font-medium text-tertiary uppercase tracking-wide">Games</p>
+                <p className="font-display text-3xl font-black text-primary">{games.length}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-tertiary uppercase tracking-wide">{storeConfig.currency_name}</p>
+                <p className="font-display text-3xl font-black text-accent">{playerData?.gems || 0}</p>
+              </div>
             </div>
 
             {/* Store Context — shows selected (browsing) store, not home store */}
@@ -292,7 +297,6 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
           className="w-full py-4 relative"
         >
           <div className="flex items-center justify-center gap-2">
-            <span className="text-xl">🎰</span>
             <span>{hasSpunToday ? (spinMessage || 'Claimed!') : isSpinning ? 'Spinning…' : 'Daily Spin'}</span>
           </div>
           {!hasSpunToday && !isSpinning && (
@@ -350,8 +354,8 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* My Games */}
       <div className="mx-4 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-primary flex items-center gap-2">
-            <span className="text-xl">🎮</span> My Games
+          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
+            My Games
             {favoriteGames.length > 0 && (
               <span className="text-xs text-secondary font-normal">(Favorites)</span>
             )}
@@ -379,24 +383,15 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
           </div>
         ) : (
           <div className="text-center py-8 text-secondary">
-            <div className="text-3xl mb-2">🎮</div>
             <p>No game XP yet - attend events to start earning!</p>
           </div>
         )}
-        <div className="mt-3 card p-3">
-          <div className="flex justify-between items-center">
-            <span className="text-tertiary text-sm">Total Combined XP</span>
-            <span className="xp-number text-xl">
-              <StaticCounter value={totalXp} />
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Recent Activity */}
       <div className="mx-4 mt-6 mb-6">
-        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
-          <span className="text-xl">📋</span> Recent Activity
+        <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
+          Recent Activity
         </h2>
         {recentActivity.length > 0 ? (
           <div className="space-y-2" ref={activityContainerRef}>
@@ -405,9 +400,6 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                 key={a.id}
                 className="activity-item card p-3 flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-full bg-elevated flex items-center justify-center text-xl">
-                  {a.icon}
-                </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-primary text-sm truncate">{a.text}</div>
                   <div className="text-secondary text-xs">
@@ -422,7 +414,6 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
           </div>
         ) : (
           <div className="text-center py-8 text-secondary">
-            <div className="text-3xl mb-2">📋</div>
             <p>No activity yet - check in to events!</p>
           </div>
         )}
@@ -431,15 +422,14 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* Upcoming Events */}
       <div className="mx-4 mt-6">
         <div className="flex justify-between items-center mb-3">
-          <h2 className="font-bold text-primary flex items-center gap-2">
-            <span className="text-xl">📅</span> Upcoming Events
+          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
+            Upcoming Events
           </h2>
           <a href="/dashboard/events" className="text-accent text-sm">View Calendar →</a>
         </div>
         <div className="space-y-2">
           {upcomingEvents.length === 0 ? (
             <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl opacity-60">
-              <div className="w-9 h-9 bg-elevated/50 rounded-lg flex items-center justify-center text-lg">📅</div>
               <div className="text-sm text-secondary">No upcoming events</div>
             </div>
           ) : upcomingEvents.map((event: any) => (
@@ -463,8 +453,8 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* Store Updates */}
       {storeUpdates.length > 0 && (
         <div className="mx-4 mt-6">
-          <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
-            <span className="text-xl">📡</span> Store Updates
+          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
+            Store Updates
           </h2>
           <div className="space-y-2">
             {storeUpdates.map((update: any, i: number) => (
@@ -488,14 +478,13 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* Friends Activity */}
       <div className="mx-4 mt-6">
         <div className="flex justify-between items-center mb-3">
-          <h2 className="font-bold text-primary flex items-center gap-2">
-            <span className="text-xl">👥</span> Friends Activity
+          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
+            Friends Activity
           </h2>
           <a href="/dashboard/community" className="text-accent text-sm">Community →</a>
         </div>
         {friendActivity.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 text-center gap-2 bg-elevated border border-border-token rounded-xl">
-            <div className="text-3xl">👥</div>
             <div className="text-sm font-medium text-secondary">No friend activity yet</div>
             <div className="text-xs text-tertiary">Add friends to see what they&apos;re up to</div>
             <a href="/dashboard/community" className="mt-2 text-xs text-accent border border-accent/30 px-3 py-1.5 rounded-lg">
@@ -521,8 +510,8 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {prizeHighlights.length > 0 && (
         <div className="mx-4 mt-6 mb-6">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="font-bold text-primary flex items-center gap-2">
-              <span className="text-xl">🏆</span> Prize Wall
+            <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
+              Prize Wall
             </h2>
             <a href="/dashboard/prize-wall" className="text-accent text-sm">Visit →</a>
           </div>
