@@ -100,7 +100,7 @@ export default function LandingPage() {
       {/* Hero */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-14 md:py-24 grid gap-12 md:grid-cols-2 md:items-center">
         <div>
-          <h1 className="font-display text-5xl md:text-6xl font-black leading-[1.05] mb-6">
+          <h1 className="font-display text-5xl md:text-5xl lg:text-6xl font-black leading-[1.05] mb-6">
             Your game store,
             <br />
             now with a scoreboard.
@@ -111,10 +111,10 @@ export default function LandingPage() {
             your local game store.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-md">
             <Link
               href="/sign-up"
-              className="flex-1 text-center bg-accent text-accent-fg font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity"
+              className="flex-1 text-center whitespace-nowrap bg-accent text-accent-fg font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity"
             >
               Create account
             </Link>
