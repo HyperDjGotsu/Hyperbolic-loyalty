@@ -94,7 +94,7 @@ function HeroStatCard({
   icon?: string;
 }) {
   return (
-    <div className="bg-surface border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
+    <div className="bg-surface border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-accent/30">
       <div className="text-[28px] font-extrabold text-accent">
         {value.toLocaleString()}
       </div>

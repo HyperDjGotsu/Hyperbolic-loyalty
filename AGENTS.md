@@ -1,13 +1,13 @@
 <claude-mem-context>
 # Memory Context
 
-# [hyperbolic-app] recent context, 2026-08-24 11:48am PDT
+# [hyperbolic-app] recent context, 2026-08-25 10:59pm PDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (27,316t read) | 982,784t work | 97% savings
+Stats: 50 obs (29,683t read) | 985,054t work | 97% savings
 
 ### Apr 26, 2026
 S148 DailyGacha Spinner Transparency Fixed — Opaque Background and Brighter Ready Orb (Apr 26, 11:18 PM)
@@ -21,14 +21,8 @@ S230 User asked "how do i use it?" — Claude explained how to use the dev reset
 S231 Big one incoming — primary session signaled a large upcoming task, observer standing by (Apr 27, 6:23 PM)
 S233 DailyGacha Preview Page Deployed to Production — Commit 5d66a52 (Apr 27, 9:29 PM)
 S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for Visual Approval (Apr 27, 9:41 PM)
-### Aug 15, 2026
-2077 9:14a 🔵 PlayerPass Avatar Persistence — Four Root Causes Identified via Independent Code Review
-2079 9:58a 🔴 Friend Request Response — Wrong Endpoint Fixed on Web + Mobile
-2080 " 🟣 Mobile Community — Friend Request Badge Pre-Loaded on Mount
 ### Aug 16, 2026
 2114 12:04a 🔵 P0-A Migration Review — ALTER TYPE ADD VALUE IF NOT EXISTS Safety Analysis
-2115 " 🔵 P0-B Review — TIER_MULTIPLIERS Dual-Key Fix in points.ts
-2116 " 🔵 P0-A normalizeTier Fix Review — Diamond Added to pass-status Route
 2118 12:05a 🔵 database.types.ts — Enum Type vs Constants Array Stale Mismatch After Diamond Migration
 2119 " 🔵 Hidden Postgres Functions get_pass_multiplier and get_player_multiplier May Bypass TypeScript Fix
 2120 " 🔵 Pass Tier Codebase Audit — Additional Diamond Gaps in Cron and Inventory Routes
@@ -76,6 +70,12 @@ S234 DailyGacha Card Visual Redesign — New Card System Built and Deployed for 
 2468 11:24a ⚖️ PlayerPass Membership Lifecycle — Adversarial Review Spec Submitted for Analysis
 2469 11:25a ⚖️ PlayerPass Membership Lifecycle — Complete Adversarial Spec Submitted for Review
 2470 11:34a ⚖️ PlayerPass Lifecycle v2 — Adversarial Security Review Commissioned (18 Attack Surfaces)
+2511 11:33p 🚨 Adversarial Security Review — Manual-Renewal Check-In Safeguard Design
+2519 11:41p ⚖️ Adversarial Security Review — Manual-Renewal Check-In Safeguard Design (Three Corrections)
+### Aug 25, 2026
+2532 10:36p ⚖️ PlayerPass Membership Lifecycle — Adversarial Security Review Queued (5 Attack Vectors)
+2533 10:37p 🔐 Adversarial Security Review Initiated — PlayerPass Membership Lifecycle (5 Attack Vectors)
+2545 10:46p ⚖️ has_been_paid_member Backfill — Both Strategies Blocked, No-Backfill Confirmed Safe
 
-Access 983k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 985k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
