@@ -235,11 +235,11 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
             <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-border-token">
               <div>
                 <p className="text-xs font-medium text-tertiary uppercase tracking-wide">Games</p>
-                <p className="font-display text-3xl font-black text-primary">{games.length}</p>
+                <p className="text-3xl font-extrabold tabular-nums tracking-tight text-primary">{games.length}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-tertiary uppercase tracking-wide">{storeConfig.currency_name}</p>
-                <p className="font-display text-3xl font-black text-accent">{playerData?.gems || 0}</p>
+                <p className="text-3xl font-extrabold tabular-nums tracking-tight text-accent">{playerData?.gems || 0}</p>
               </div>
             </div>
 

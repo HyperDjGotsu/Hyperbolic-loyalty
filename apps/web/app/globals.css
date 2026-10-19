@@ -143,10 +143,12 @@ body {
     border-radius: 12px;
   }
 
-  /* XP number — Fraunces + gold */
+  /* XP number — Plus Jakarta Sans (Fraunces numerals are old-style and read oddly) + gold */
   .xp-number {
-    font-family: var(--font-display), serif;
-    font-weight: 900;
+    font-family: var(--font-sans), sans-serif;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
     color: #f4c542;
   }
 }

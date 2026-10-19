@@ -248,7 +248,7 @@ export const StatCard: React.FC<{
         : <p className="text-lg mb-1">{icon}</p>
     )}
     <p className="text-xs font-medium text-tertiary uppercase tracking-wide mb-1">{label}</p>
-    <p className={`font-display text-3xl font-black ${color || 'text-primary'}`}>{value}</p>
+    <p className={`text-3xl font-extrabold tabular-nums tracking-tight ${color || 'text-primary'}`}>{value}</p>
     {sublabel && <p className="text-xs text-secondary mt-0.5">{sublabel}</p>}
   </Card>
 );
