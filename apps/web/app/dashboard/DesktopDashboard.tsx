@@ -981,7 +981,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                      🎮 My Games
+                      My Games
                     </h3>
                     <button 
                       onClick={() => router.push('/dashboard/profile')}
@@ -1014,7 +1014,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                      📋 Recent Activity
+                      Recent Activity
                     </h3>
                     <button 
                       onClick={() => router.push('/dashboard/profile')}
@@ -1062,20 +1062,12 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               {/* Overall Stats Summary */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
-                  📊 Your Stats
+                  Your Stats
                 </h3>
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-accent">{games.length}</div>
-                    <div className="text-[10px] text-secondary uppercase mt-1">Games Played</div>
-                  </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-green-400">{playerData?.totalEventsAttended || 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Events Attended</div>
-                  </div>
-                  <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-accent">{totalXp.toLocaleString()}</div>
-                    <div className="text-[10px] text-secondary uppercase mt-1">Total XP</div>
                   </div>
                   <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
@@ -1088,7 +1080,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    📅 Upcoming Events
+                    Upcoming Events
                   </h3>
                   <button
                     onClick={() => router.push('/dashboard/events')}
@@ -1130,7 +1122,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               {/* Store Updates */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
-                  📡 Store Updates
+                  Store Updates
                 </h3>
                 {storeUpdates.length === 0 ? null : (
                   <div className="space-y-3">
@@ -1158,7 +1150,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    👥 Friends Activity
+                    Friends Activity
                   </h3>
                   <button
                     onClick={() => router.push('/dashboard/community')}
@@ -1202,7 +1194,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 mt-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    🏆 Prize Wall
+                    Prize Wall
                   </h3>
                   <button
                     onClick={() => router.push('/dashboard/prize-wall')}
