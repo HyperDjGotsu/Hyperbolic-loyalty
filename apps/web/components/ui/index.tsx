@@ -17,7 +17,7 @@ const buttonBase = 'inline-flex items-center justify-center gap-2 font-medium ro
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:   'bg-accent text-accent-fg hover:opacity-90 active:opacity-80',
-  secondary: 'border border-strong bg-transparent text-primary hover:bg-elevated active:bg-surface',
+  secondary: 'border border-border-strong bg-transparent text-primary hover:bg-elevated active:bg-surface',
   ghost:     'bg-transparent text-secondary hover:text-primary active:text-primary',
   danger:    'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20',
 };
@@ -104,7 +104,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       )}
       <input
         ref={ref}
-        className={`w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder:text-tertiary
+        className={`w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary placeholder:text-tertiary
           focus:outline-none focus:border-accent transition-colors duration-150 ${className}`}
         {...props}
       />

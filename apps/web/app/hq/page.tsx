@@ -463,7 +463,7 @@ function RedemptionsPanel({
             onKeyDown={e => e.key === 'Enter' && lookupCode()}
             placeholder="XXXX-XXXX"
             maxLength={9}
-            className="flex-1 bg-input border border-border-token rounded-lg px-4 py-2.5 text-primary font-mono text-lg tracking-widest focus:outline-none focus:border-accent uppercase"
+            className="flex-1 bg-input border border-border-strong rounded-lg px-4 py-2.5 text-primary font-mono text-lg tracking-widest focus:outline-none focus:border-accent uppercase"
           />
           <button
             onClick={lookupCode}
@@ -529,7 +529,7 @@ function RedemptionsPanel({
                       value={voidReason}
                       onChange={e => setVoidReason(e.target.value)}
                       placeholder="Reason (e.g. out of stock, player request)"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-red-400"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-red-400"
                     />
                     <div className="flex gap-2">
                       <button
@@ -3196,7 +3196,7 @@ export default function HQPage() {
                         value={ppAmount}
                         onChange={e => setPpAmount(e.target.value)}
                         placeholder="±amount (e.g. 50 or -25)"
-                        className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                        className="flex-1 bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
                       />
                     </div>
                     <input
@@ -3204,7 +3204,7 @@ export default function HQPage() {
                       value={ppReason}
                       onChange={e => setPpReason(e.target.value)}
                       placeholder="Reason (required)"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
                     />
                     <button
                       onClick={adjustPrizePoints}
@@ -3334,7 +3334,7 @@ export default function HQPage() {
                                 type="date"
                                 value={assignPassExpiry}
                                 onChange={e => setAssignPassExpiry(e.target.value)}
-                                className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                                className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
                               />
                             </div>
                             <label className="flex items-center gap-2 cursor-pointer">
@@ -4997,7 +4997,7 @@ export default function HQPage() {
                       value={prizeForm.name}
                       onChange={e => setPrizeForm(f => ({ ...f, name: e.target.value }))}
                       placeholder="e.g. Booster Pack"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                   <div>
@@ -5007,7 +5007,7 @@ export default function HQPage() {
                       value={prizeForm.description}
                       onChange={e => setPrizeForm(f => ({ ...f, description: e.target.value }))}
                       placeholder="Optional"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                   <div>
@@ -5018,7 +5018,7 @@ export default function HQPage() {
                       value={prizeForm.xp_cost}
                       onChange={e => setPrizeForm(f => ({ ...f, xp_cost: e.target.value }))}
                       placeholder="e.g. 350"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                   <div>
@@ -5030,7 +5030,7 @@ export default function HQPage() {
                       value={prizeForm.retail_value}
                       onChange={e => setPrizeForm(f => ({ ...f, retail_value: e.target.value }))}
                       placeholder="e.g. 7.00"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                   <div>
@@ -5041,7 +5041,7 @@ export default function HQPage() {
                       value={prizeForm.quantity}
                       onChange={e => setPrizeForm(f => ({ ...f, quantity: e.target.value }))}
                       placeholder="Leave blank for unlimited"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                   <div>
@@ -5052,7 +5052,7 @@ export default function HQPage() {
                       value={prizeForm.unlock_threshold}
                       onChange={e => setPrizeForm(f => ({ ...f, unlock_threshold: e.target.value }))}
                       placeholder="Leave blank = always available"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                     />
                   </div>
                 </div>
@@ -5161,7 +5161,7 @@ export default function HQPage() {
                     type="text"
                     value={circuitEventForm.name}
                     onChange={e => setCircuitEventForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                 </div>
                 <div>
@@ -5169,7 +5169,7 @@ export default function HQPage() {
                   <select
                     value={circuitEventForm.store_id}
                     onChange={e => setCircuitEventForm(f => ({ ...f, store_id: e.target.value }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   >
                     <option value="">— Select store —</option>
                     {circuitStores.map(s => (
@@ -5182,7 +5182,7 @@ export default function HQPage() {
                   <select
                     value={circuitEventForm.event_type}
                     onChange={e => setCircuitEventForm(f => ({ ...f, event_type: e.target.value as any }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   >
                     <option value="circuit_qualifier">Circuit Qualifier</option>
                     <option value="championship">Championship Finals</option>
@@ -5194,7 +5194,7 @@ export default function HQPage() {
                     type="datetime-local"
                     value={circuitEventForm.scheduled_at}
                     onChange={e => setCircuitEventForm(f => ({ ...f, scheduled_at: e.target.value }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                 </div>
                 <div>
@@ -5203,7 +5203,7 @@ export default function HQPage() {
                     type="number"
                     value={circuitEventForm.max_players}
                     onChange={e => setCircuitEventForm(f => ({ ...f, max_players: e.target.value }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                 </div>
                 <div>
@@ -5212,7 +5212,7 @@ export default function HQPage() {
                     type="number"
                     value={circuitEventForm.entry_fee}
                     onChange={e => setCircuitEventForm(f => ({ ...f, entry_fee: e.target.value }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                 </div>
                 <div>
@@ -5221,7 +5221,7 @@ export default function HQPage() {
                     type="number"
                     value={circuitEventForm.attendance_xp}
                     onChange={e => setCircuitEventForm(f => ({ ...f, attendance_xp: e.target.value }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                 </div>
               </div>
@@ -5253,7 +5253,7 @@ export default function HQPage() {
                   value={qualifyCount}
                   min={1} max={16}
                   onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n)) setQualifyCount(n); }}
-                  className="w-16 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  className="w-16 bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                 />
                 <label className="text-xs font-medium text-secondary">players per store</label>
               </div>
@@ -5265,7 +5265,7 @@ export default function HQPage() {
                     value={standingsSearch}
                     onChange={e => { setStandingsSearch(e.target.value); searchForStandings(e.target.value); }}
                     placeholder="Search player by name or Player ID…"
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                   {standingsSearchResults.length > 0 && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border-token rounded-xl shadow-xl z-20 overflow-hidden">
@@ -5318,7 +5318,7 @@ export default function HQPage() {
                       value={qualifierEventId}
                       onChange={e => setQualifierEventId(e.target.value)}
                       placeholder="Event UUID from Events tab"
-                      className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary font-mono"
                     />
                   </div>
                   <div className="pt-5">
@@ -5381,7 +5381,7 @@ export default function HQPage() {
                 onChange={e => setBroadcastTitle(e.target.value)}
                 placeholder="Title (e.g. Weekend Sale, Event Reminder)"
                 maxLength={80}
-                className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
               />
 
               <textarea
@@ -5390,7 +5390,7 @@ export default function HQPage() {
                 placeholder="Message body…"
                 rows={3}
                 maxLength={500}
-                className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent resize-none"
+                className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent resize-none"
               />
 
               <div className="flex items-center justify-between">
@@ -5470,7 +5470,7 @@ export default function HQPage() {
                     setPromoteTarget(null);
                     searchPlayers(e.target.value);
                   }}
-                  className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                  className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                 />
                 {promoteSearching && (
                   <span className="absolute right-3 top-2 text-xs text-secondary">Searching…</span>
@@ -5512,7 +5512,7 @@ export default function HQPage() {
                       <select
                         value={promoteRole}
                         onChange={e => setPromoteRole(e.target.value as 'store_staff' | 'store_manager')}
-                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                        className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                       >
                         <option value="store_staff">Store Staff</option>
                         {staffContext?.isNetworkAdmin && <option value="store_manager">Store Manager</option>}
@@ -5523,7 +5523,7 @@ export default function HQPage() {
                       <select
                         value={promoteStoreId}
                         onChange={e => setPromoteStoreId(e.target.value)}
-                        className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                        className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                       >
                         <option value="">Select store…</option>
                         {(staffContext?.isNetworkAdmin ? allStores : (staffContext?.stores ?? [])).map((s: { id: string; name: string }) => (
@@ -5612,7 +5612,7 @@ export default function HQPage() {
                     type="text"
                     value={storeConfig.store_name}
                     onChange={e => setStoreConfig(c => ({ ...c, store_name: e.target.value }))}
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                 </div>
 
@@ -5626,7 +5626,7 @@ export default function HQPage() {
                     value={storeConfig.currency_name}
                     onChange={e => setStoreConfig(c => ({ ...c, currency_name: e.target.value }))}
                     placeholder="Points"
-                    className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   />
                   <p className="text-xs text-tertiary mt-1">
                     Examples: Points, Credits, Gold, Marks, Flux, Fragments
@@ -5680,13 +5680,13 @@ export default function HQPage() {
                   placeholder="Email address"
                   value={inviteForm.email}
                   onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
+                  className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary placeholder-tertiary"
                 />
                 <div className="flex gap-3">
                   <select
                     value={inviteForm.role}
                     onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
-                    className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="flex-1 bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   >
                     <option value="store_staff">Store Staff</option>
                     <option value="store_manager">Store Manager</option>
@@ -5694,7 +5694,7 @@ export default function HQPage() {
                   <select
                     value={inviteForm.store_id}
                     onChange={e => setInviteForm(f => ({ ...f, store_id: e.target.value }))}
-                    className="flex-1 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary"
+                    className="flex-1 bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary"
                   >
                     {allStores.length === 0 && <option value="">Loading stores...</option>}
                     {allStores.map(s => (
@@ -5794,7 +5794,7 @@ export default function HQPage() {
                     }))}
                     placeholder="PREFIX"
                     maxLength={5}
-                    className="w-28 bg-input border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono tracking-widest"
+                    className="w-28 bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary font-mono tracking-widest"
                   />
                   <span className="text-secondary text-sm font-mono">
                     {storeConfig.player_id_prefix || 'PREFIX'}-XXXXXX

@@ -282,7 +282,7 @@ function OnboardingContent() {
                 value={playerId}
                 onChange={(e) => setPlayerId(e.target.value.toUpperCase())}
                 placeholder="GGC-XXXXXX"
-                className="w-full bg-input border border-border-token rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent font-mono text-lg tracking-wider"
+                className="w-full bg-input border border-border-strong rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent font-mono text-lg tracking-wider"
                 maxLength={10}
               />
             </div>
@@ -323,7 +323,7 @@ function OnboardingContent() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your gamer tag"
-                className="w-full bg-input border border-border-token rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
+                className="w-full bg-input border border-border-strong rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
                 maxLength={30}
               />
             </div>
@@ -384,7 +384,7 @@ function OnboardingContent() {
                   value={discordUsername}
                   onChange={(e) => setDiscordUsername(e.target.value.replace('@', ''))}
                   placeholder="username"
-                  className="w-full bg-input border border-border-token rounded-xl py-3 px-4 pl-9 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
+                  className="w-full bg-input border border-border-strong rounded-xl py-3 px-4 pl-9 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
                   maxLength={32}
                 />
               </div>
@@ -402,7 +402,7 @@ function OnboardingContent() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="(555) 123-4567"
-                className="w-full bg-input border border-border-token rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
+                className="w-full bg-input border border-border-strong rounded-xl py-3 px-4 text-primary placeholder-tertiary focus:outline-none focus:border-accent"
               />
               <p className="text-tertiary text-xs mt-1">For event reminders (we won't spam you)</p>
             </div>
@@ -418,7 +418,7 @@ function OnboardingContent() {
                     className={`p-3 rounded-xl border text-center transition-all ${
                       primaryGame === game.id
                         ? 'bg-accent/10 border-accent text-accent'
-                        : 'bg-input border-border-token text-secondary hover:border-border-strong'
+                        : 'bg-input border-border-strong text-secondary hover:border-border-strong'
                     }`}
                   >
                     <div className="text-xl mb-1">{game.icon}</div>
@@ -465,7 +465,7 @@ function OnboardingContent() {
                   className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
                     homeStoreId === store.id
                       ? 'bg-accent/10 border-accent'
-                      : 'bg-input border-border-token hover:border-border-strong'
+                      : 'bg-input border-border-strong hover:border-border-strong'
                   }`}
                 >
                   <div>

@@ -22,7 +22,7 @@ function Input({ value, onChange, placeholder, mono }: { value: string; onChange
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-xl px-3 py-2.5 text-sm text-primary border border-border-token bg-input outline-none focus:border-accent transition-colors"
+      className="w-full rounded-xl px-3 py-2.5 text-sm text-primary border border-border-strong bg-input outline-none focus:border-accent transition-colors"
       style={mono ? { fontFamily: 'monospace' } : {}}
     />
   );
@@ -34,7 +34,7 @@ function Textarea({ value, onChange, rows = 3 }: { value: string; onChange: (v: 
       value={value}
       onChange={e => onChange(e.target.value)}
       rows={rows}
-      className="w-full rounded-xl px-3 py-2.5 text-sm text-primary border border-border-token bg-input outline-none focus:border-accent transition-colors resize-none"
+      className="w-full rounded-xl px-3 py-2.5 text-sm text-primary border border-border-strong bg-input outline-none focus:border-accent transition-colors resize-none"
     />
   );
 }
@@ -45,7 +45,7 @@ function NumberInput({ value, onChange }: { value: number; onChange: (v: number)
       type="number"
       value={value}
       onChange={e => { const n = parseInt(e.target.value); if (!isNaN(n)) onChange(n); }}
-      className="w-full rounded-xl px-3 py-2.5 text-sm text-primary border border-border-token bg-input outline-none focus:border-accent transition-colors"
+      className="w-full rounded-xl px-3 py-2.5 text-sm text-primary border border-border-strong bg-input outline-none focus:border-accent transition-colors"
     />
   );
 }
@@ -218,7 +218,7 @@ export default function PitchEditPage() {
                   type="color"
                   value={cfg.hqColor}
                   onChange={e => update({ hqColor: e.target.value })}
-                  className="w-10 h-10 rounded-lg cursor-pointer border border-border-token bg-input"
+                  className="w-10 h-10 rounded-lg cursor-pointer border border-border-strong bg-input"
                 />
                 <Input value={cfg.hqColor} onChange={v => update({ hqColor: v })} mono />
               </div>
@@ -286,7 +286,7 @@ export default function PitchEditPage() {
                         type="color"
                         value={store.color}
                         onChange={e => updateStore(idx, { color: e.target.value })}
-                        className="w-10 h-10 rounded-lg cursor-pointer border border-border-token bg-input"
+                        className="w-10 h-10 rounded-lg cursor-pointer border border-border-strong bg-input"
                       />
                       <Input value={store.color} onChange={v => updateStore(idx, { color: v })} mono />
                     </div>
@@ -316,7 +316,7 @@ export default function PitchEditPage() {
                   type="color"
                   value={entry.color}
                   onChange={e => updateLeaderboard(idx, { color: e.target.value })}
-                  className="w-8 h-8 rounded-lg cursor-pointer border border-border-token bg-input"
+                  className="w-8 h-8 rounded-lg cursor-pointer border border-border-strong bg-input"
                 />
               </div>
             ))}

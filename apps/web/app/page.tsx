@@ -120,7 +120,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/sign-in"
-              className="flex-1 text-center border border-strong text-primary font-semibold px-6 py-3 rounded-lg hover:bg-elevated transition-colors"
+              className="flex-1 text-center border border-border-strong text-primary font-semibold px-6 py-3 rounded-lg hover:bg-elevated transition-colors"
             >
               Sign in
             </Link>
