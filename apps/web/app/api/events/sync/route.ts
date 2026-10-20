@@ -16,6 +16,7 @@ const GAME_PATTERNS: { pattern: RegExp; id: string }[] = [
   { pattern: /magic|mtg|friday\s*night\s*magic|fnm/i, id: 'mtg' },
   { pattern: /star\s*wars\s*unlimited|swu/i, id: 'star_wars_unlimited' },
   { pattern: /vanguard|cfv/i, id: 'vanguard' },
+  { pattern: /fusion\s*world|dragon\s*ball\s*fusion|\bfw\b|dbfw/i, id: 'dbfw' },
   { pattern: /dragon\s*ball|dbz|dbs|dbscg/i, id: 'dbs' },
   { pattern: /lorcana/i, id: 'lorcana' },
   { pattern: /yu-?gi-?oh|yugioh/i, id: 'yugioh' },
