@@ -11,6 +11,7 @@ import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { GettingStartedCard } from '@/components/GettingStartedCard';
 import { PlayerPassCard } from '@/components/PlayerPassCard';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
+import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
 
 // Type for displayed game data
@@ -85,6 +86,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
     passStatus,
     favoriteGameIds: favoriteGames,
     upcomingEvents,
+    specialEvents,
     storeUpdates,
     friendActivity,
     prizeHighlights,
@@ -418,6 +420,13 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
           </div>
         )}
       </div>
+
+      {/* Special Events */}
+      {specialEvents.length > 0 && (
+        <div className="mx-4 mt-6">
+          <SpecialEvents events={specialEvents} />
+        </div>
+      )}
 
       {/* Upcoming Events */}
       <div className="mx-4 mt-6">

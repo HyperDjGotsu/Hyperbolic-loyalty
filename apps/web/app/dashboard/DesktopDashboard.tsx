@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { CardOfTheDay } from '@/components/CardOfTheDay';
 import NotificationBell from '@/components/NotificationBell';
+import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
 
 // Scouter-style number counting component - only animates on hover trigger
@@ -571,6 +572,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
     banners,
     gameStats,
     upcomingEvents,
+    specialEvents,
     storeUpdates,
     friendActivity,
     prizeHighlights,
@@ -1083,6 +1085,13 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                   </div>
                 </div>
               </div>
+
+              {/* Special Events */}
+              {specialEvents.length > 0 && (
+                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 mb-6">
+                  <SpecialEvents events={specialEvents} />
+                </div>
+              )}
 
               {/* Upcoming Events */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">

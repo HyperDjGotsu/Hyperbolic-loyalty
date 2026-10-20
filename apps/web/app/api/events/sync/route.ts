@@ -186,14 +186,14 @@ function parseMaxPlayers(text: string): number | null {
 // Matches: "Prizing: Pack per win", "Prizing: 1-3-5, Promo", "Prizes: pack per win"
 function parsePrizing(text: string): string[] | null {
   // Look for "Prizing:" or "Prizes:" line
-  const prizingMatch = text.match(/(?:prizing|prizes?)\s*(?::|is|-)\s*(.+?)(?:\n|$)/i);
+  const prizingMatch = text.match(/(?:prizing|prizes?)\s*(?::|is|-)\s*(.+?)(?:\n|\\n|$)/i);
   
   if (prizingMatch) {
     const prizingText = prizingMatch[1].trim();
     
     // Split by comma or "and"
     const prizes = prizingText
-      .split(/,|\band\b/i)
+      .split(/,|\+|&|\band\b/i)
       .map(p => p.trim().toLowerCase())
       .filter(p => p.length > 0)
       .map(p => {
@@ -501,6 +501,7 @@ function parseICal(icalData: string): ParsedEvent[] {
       .replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';')
       .replace(/price\s*(?:is|:|-)\s*\$\d+(?:\.\d{2})?/gi, '')
       .replace(/players?\s*(?::|is)?\s*\d+/gi, '')
+      .replace(/(?:max|limit|capacity)(?:\s*:)?\s*\d+/gi, '')
       .replace(/prizing\s*(?::|is|-)\s*.+?(?:\n|$)/gi, '')
       .trim();
     return {

@@ -1,5 +1,6 @@
 'use client';
 
+import SpecialEvents from '@/components/SpecialEvents';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
@@ -343,6 +344,7 @@ const ShareModal = ({
 
 function EventsPageContent() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [specialEvents, setSpecialEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [calendarScope, setCalendarScope] = useState<'store' | 'network'>('store');
@@ -374,6 +376,11 @@ function EventsPageContent() {
       const storeId = calendarScope === 'store' ? localStorage.getItem('ggc_selected_store_id') : null;
       const storeParam = storeId ? `&store_id=${storeId}` : '';
       const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}${networkParam}`);
+      // Special events are pinned separately; they can fall outside the soonest-first window
+      fetch(`/api/events?status=upcoming&special=true&limit=5${storeParam}${networkParam}`)
+        .then(r => (r.ok ? r.json() : { events: [] }))
+        .then(d => setSpecialEvents(d.events || []))
+        .catch(() => setSpecialEvents([]));
       const data = await res.json();
       
       if (res.ok) {
@@ -851,6 +858,11 @@ function EventsPageContent() {
 
       {/* Content */}
       <div className="p-4">
+                {!loading && !error && specialEvents.length > 0 && (
+          <div className="mb-6">
+            <SpecialEvents events={specialEvents} />
+          </div>
+        )}
         {loading ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4 animate-bounce">📅</div>

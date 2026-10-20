@@ -48,11 +48,18 @@ export async function GET(request: Request) {
         attendance_xp,
         win_xp,
         prizing,
+        is_special,
         store_id,
         stores(name)
       `)
       .order('scheduled_at', { ascending: true })
       .limit(limit);
+
+    // Special events are pinned separately, so they bypass the soonest-first window
+    const specialOnly = searchParams.get('special') === 'true';
+    if (specialOnly) {
+      query = query.eq('is_special', true);
+    }
 
     // Filter by status
     const now = new Date().toISOString();
@@ -247,6 +254,7 @@ export async function GET(request: Request) {
         isStartingSoon: hoursUntil > 0 && hoursUntil <= 2,
         isLive: event.status === 'active',
         prizing: event.prizing || null,
+        isSpecial: event.is_special === true,
         isNetworkEvent: event.store_id === null,
         storeName: (event.stores as { name: string } | null)?.name ?? null,
       };

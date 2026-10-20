@@ -47,6 +47,7 @@ export interface DashboardData {
   favoriteGameIds: string[];
   gameStats: Record<string, any>;
   upcomingEvents: any[];
+  specialEvents: any[];
   storeUpdates: any[];
   friendActivity: any[];
   prizeHighlights: any[];
@@ -76,6 +77,7 @@ export function useDashboardData(): DashboardData {
   const [favoriteGameIds, setFavoriteGameIds] = useState<string[]>([]);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [specialEvents, setSpecialEvents] = useState<any[]>([]);
   const [storeUpdates, setStoreUpdates] = useState<any[]>([]);
   const [friendActivity, setFriendActivity] = useState<any[]>([]);
   const [prizeHighlights, setPrizeHighlights] = useState<any[]>([]);
@@ -362,6 +364,17 @@ export function useDashboardData(): DashboardData {
     return () => { cancelled = true; };
   }, [selectedStore?.id]);
 
+  // Special events (store-scoped) — pinned separately because they can be months out
+  useEffect(() => {
+    if (!selectedStore?.id) return;
+    let cancelled = false;
+    fetch(`/api/events?status=upcoming&special=true&limit=3&store_id=${selectedStore.id}`)
+      .then(r => r.ok ? r.json() : { events: [] })
+      .then(d => { if (!cancelled) setSpecialEvents(d.events || []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [selectedStore?.id]);
+
   // Store updates (store-scoped) — wait for selectedStore; no localStorage fallback to avoid double fetch
   useEffect(() => {
     if (!selectedStore?.id) return;
@@ -433,6 +446,7 @@ export function useDashboardData(): DashboardData {
     favoriteGameIds,
     gameStats,
     upcomingEvents,
+    specialEvents,
     storeUpdates,
     friendActivity,
     prizeHighlights,
