@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireNetworkAdmin } from '@/lib/auth-helpers';
 import { fetchICalSafe } from '@/lib/ical-fetch';
+import { parseIsSpecial, stripSpecialFlag } from '@/lib/event-flags';
 import { notifyStorePlayers } from '@/lib/notifications';
 
 
@@ -71,6 +72,7 @@ interface ParsedEvent {
   win_xp: number;
   status: string;
   prizing: string[] | null;
+  is_special: boolean;
 }
 
 // Parse iCal date format with timezone support
@@ -483,6 +485,7 @@ function parseICal(icalData: string): ParsedEvent[] {
     let winXp = 10;
     let hasStream = false;
     const prizing = parsePrizing(combinedText);
+    const isSpecial = parseIsSpecial(combinedText);
     for (const override of EVENT_OVERRIDES) {
       if (override.pattern.test(summary)) {
         if (entryFee === null && override.entryFee !== undefined) entryFee = override.entryFee;
@@ -493,7 +496,7 @@ function parseICal(icalData: string): ParsedEvent[] {
         break;
       }
     }
-    const cleanDescription = description
+    const cleanDescription = stripSpecialFlag(description)
       .replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';')
       .replace(/price\s*(?:is|:|-)\s*\$\d+(?:\.\d{2})?/gi, '')
       .replace(/players?\s*(?::|is)?\s*\d+/gi, '')
@@ -513,6 +516,7 @@ function parseICal(icalData: string): ParsedEvent[] {
       win_xp: winXp,
       status: 'scheduled',
       prizing,
+      is_special: isSpecial,
     };
   }
 
@@ -673,6 +677,7 @@ export async function POST(request: Request) {
               attendance_xp: event.attendance_xp,
               win_xp: event.win_xp,
               prizing: event.prizing,
+              is_special: event.is_special,
               store_id: storeId,
             })
             .eq('id', existing.id);
@@ -701,6 +706,7 @@ export async function POST(request: Request) {
             status: 'scheduled' as const,
             current_players: 0,
             prizing: event.prizing,
+            is_special: event.is_special,
             store_id: storeId,
           };
           const { error } = await supabaseAdmin

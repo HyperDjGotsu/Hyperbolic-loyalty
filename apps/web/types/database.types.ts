@@ -801,6 +801,7 @@ export type Database = {
           game_id: string | null
           gcal_uid: string | null
           has_stream: boolean | null
+          is_special: boolean
           id: string
           max_players: number | null
           name: string
@@ -825,6 +826,7 @@ export type Database = {
           game_id?: string | null
           gcal_uid?: string | null
           has_stream?: boolean | null
+          is_special?: boolean
           id?: string
           max_players?: number | null
           name: string
@@ -849,6 +851,7 @@ export type Database = {
           game_id?: string | null
           gcal_uid?: string | null
           has_stream?: boolean | null
+          is_special?: boolean
           id?: string
           max_players?: number | null
           name?: string
