@@ -100,7 +100,7 @@ function MobileNavItem({
   return (
     <Link
       href={item.href}
-      className={`flex flex-col items-center gap-1 py-2 px-3 flex-1 transition-colors relative
+      className={`flex flex-col items-center gap-1 py-2 px-1 flex-1 min-w-0 transition-colors relative
         ${isActive ? 'text-primary' : 'text-tertiary hover:text-secondary'}`}
     >
       <div className="relative">
@@ -111,7 +111,7 @@ function MobileNavItem({
           </span>
         )}
       </div>
-      <span className="text-[10px] font-medium">{item.label}</span>
+      <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
       {isActive && <span className="absolute bottom-0 h-0.5 w-6 bg-accent rounded-full" />}
     </Link>
   );
