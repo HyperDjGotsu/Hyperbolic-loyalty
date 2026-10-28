@@ -9,6 +9,7 @@ import { BannerCarousel } from '@/components/BannerCarousel';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { GettingStartedCard } from '@/components/GettingStartedCard';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
+import { HomeSkeleton } from '@/components/Skeleton';
 import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
 
@@ -55,16 +56,6 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   bolt_action: { icon: '🎯', color: '#475569' },
   general: { icon: '🎮', color: '#64748b' },
 };
-
-// Loading skeleton component
-function LoadingSkeleton() {
-  return (
-    <div className="animate-pulse">
-      <div className="h-8 bg-elevated rounded w-32 mb-2"></div>
-      <div className="h-4 bg-elevated rounded w-24"></div>
-    </div>
-  );
-}
 
 const PASS_MULTIPLIER: Record<string, string> = { free: '1x', bronze: '1.25x', silver: '1.5x', gold: '2x', diamond: '2x★' };
 
@@ -208,16 +199,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
     void claimDailySpin();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-bounce">🎮</div>
-          <div className="text-secondary">Loading your profile...</div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <HomeSkeleton />;
 
   const avatar = playerData?.avatar || {};
 

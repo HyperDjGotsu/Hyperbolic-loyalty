@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ProfileSkeleton } from '@/components/Skeleton';
 import { useUser, useClerk } from '@clerk/nextjs';
 import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
 import { SELECTABLE_GAMES } from '@/lib/games';
@@ -203,45 +204,43 @@ export default function ProfilePage() {
         if (cfg) setStoreConfig(cfg);
       }).catch(() => {});
 
-      // Load player info
-      const playerRes = await fetch('/api/player/by-clerk');
+      // Player, inventory and status don't depend on each other: fetch all three at once.
+      const [playerRes, invRes, statusRes] = await Promise.all([
+        fetch('/api/player/by-clerk'),
+        fetch('/api/player/inventory').catch(() => null),
+        fetch('/api/player/status').catch(() => null),
+      ]);
       if (playerRes.ok) {
         const data = await playerRes.json();
-        if (data.linked) {
-          // Load inventory for avatar config and balance
-          const invRes = await fetch('/api/player/inventory');
-          if (invRes.ok) {
-            const invData = await invRes.json();
-            
-            // Load status
-            let status = null;
-            try {
-              const statusRes = await fetch('/api/player/status');
-              if (statusRes.ok) {
-                const statusData = await statusRes.json();
-                status = statusData.status;
-              }
-            } catch (e) {
-              console.error('Error loading status:', e);
-            }
+        if (data.linked && invRes?.ok) {
+          const invData = await invRes.json();
 
-            setPlayerData({
-              id: data.player_id,
-              odid: data.id,
-              displayName: data.displayName,
-              totalXp: data.xp || 0,
-              level: Math.floor((data.xp || 0) / 100) + 1,
-              gems: invData.gems || 0,
-              avatarConfig: invData.avatarConfig || defaultAvatarConfig,
-              status,
-              passTier: data.passTier || null,
-              passStatus: data.passStatus || null,
-              passExpiresAt: data.passExpiresAt || null,
-              isStaff: data.isStaff || false,
-            });
-            setTempAvatar(invData.avatarConfig || defaultAvatarConfig);
-            setOwnedItems(invData.grouped || {});
+          let status = null;
+          try {
+            if (statusRes?.ok) {
+              const statusData = await statusRes.json();
+              status = statusData.status;
+            }
+          } catch (e) {
+            console.error('Error loading status:', e);
           }
+
+          setPlayerData({
+            id: data.player_id,
+            odid: data.id,
+            displayName: data.displayName,
+            totalXp: data.xp || 0,
+            level: Math.floor((data.xp || 0) / 100) + 1,
+            gems: invData.gems || 0,
+            avatarConfig: invData.avatarConfig || defaultAvatarConfig,
+            status,
+            passTier: data.passTier || null,
+            passStatus: data.passStatus || null,
+            passExpiresAt: data.passExpiresAt || null,
+            isStaff: data.isStaff || false,
+          });
+          setTempAvatar(invData.avatarConfig || defaultAvatarConfig);
+          setOwnedItems(invData.grouped || {});
         }
       }
     } catch (error) {
@@ -987,11 +986,7 @@ export default function ProfilePage() {
   );
 
   if (loading || !isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-base">
-        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!playerData) {

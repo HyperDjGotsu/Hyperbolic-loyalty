@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
+import { HomeSkeleton } from '@/components/Skeleton';
 import { useDashboardData, type DashboardData } from './useDashboardData';
 
 // Dynamic imports - only loads the version needed
 const MobileDashboard = dynamic(() => import('./MobileDashboard'), {
-  loading: () => <DashboardLoadingSkeleton />,
+  loading: () => <HomeSkeleton />,
   ssr: false,
 });
 
@@ -69,7 +70,7 @@ export default function DashboardPage() {
     <>
       <WelcomeOverlay />
       {isDesktop === null ? (
-        <DashboardLoadingSkeleton />
+        <HomeSkeleton />
       ) : isDesktop ? (
         <DesktopDashboard dashboard={dashboard as DashboardData} />
       ) : (
