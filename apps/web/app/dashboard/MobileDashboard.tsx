@@ -1,15 +1,13 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Avatar,
-  GlowButton,
   GameXpCard,
 } from '@/components/ui';
 import { BannerCarousel } from '@/components/BannerCarousel';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { GettingStartedCard } from '@/components/GettingStartedCard';
-import { PlayerPassCard } from '@/components/PlayerPassCard';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
@@ -68,10 +66,45 @@ function LoadingSkeleton() {
   );
 }
 
-// Static counter component (replaces GSAP animated counter)
-function StaticCounter({ value }: { value: number }) {
-  return <span>{value.toLocaleString()}</span>;
+const PASS_MULTIPLIER: Record<string, string> = { free: '1x', bronze: '1.25x', silver: '1.5x', gold: '2x', diamond: '2x★' };
+
+// Circular progress ring. `pct` is 0-100; children render in the centre.
+function Ring({ pct, size, stroke, color, children }: { pct: number; size: number; stroke: number; color: string; children?: React.ReactNode }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="relative flex-none" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90" aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeOpacity={0.15} strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - Math.min(100, Math.max(0, pct)) / 100)}
+          style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-content-center text-center">{children}</div>
+    </div>
+  );
 }
+
+function SectionHeader({ title, href, linkLabel }: { title: string; href?: string; linkLabel?: string }) {
+  return (
+    <div className="flex items-baseline justify-between mb-3">
+      <h2 className="font-display text-2xl font-bold text-primary tracking-tight">{title}</h2>
+      {href && <a href={href} className="text-accent text-sm font-semibold">{linkLabel}</a>}
+    </div>
+  );
+}
+
+const RAIL = 'flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
+const TILE = 'snap-start flex-none rounded-[26px] bg-surface border border-border-token';
 
 export default function MobileDashboard({ dashboard }: { dashboard: DashboardData }) {
   const {
@@ -96,11 +129,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
   const { hasSpunToday, isSpinning, message: spinMessage } = spin;
 
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
-  const [showAllGames, setShowAllGames] = useState(false);
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
-
-  const gamesContainerRef = useRef<HTMLDivElement>(null);
-  const activityContainerRef = useRef<HTMLDivElement>(null);
 
   // Legacy players may have no home store yet — force switcher open
   useEffect(() => {
@@ -148,11 +177,6 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         .sort((a, b) => b.xp - a.xp)
     : games.sort((a, b) => b.xp - a.xp);
   
-  const displayedGames: GameDisplay[] = showAllGames ? filteredGames : filteredGames.slice(0, 3);
-  
-  // Count for "View All" button - show total favorites or total games
-  const totalGamesCount = favoriteGames.length > 0 ? filteredGames.length : games.length;
-
   // Transform activity for display
   const recentActivity = (playerData?.recentActivity || []).map((a: any) => ({
     id: a.id,
@@ -189,89 +213,31 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
     badge: avatar.badge || null,
   };
 
+  const storeForPill = selectedStore ?? homeStore;
+  const spendable = passStatus?.prizePoints ?? playerData?.gems ?? 0;
+  const selectedGame = filteredGames.find((g) => g.id === expandedGame) ?? null;
+
   return (
-    <div className="min-h-full pb-4">
-      {/* Header with Player Card */}
-      <div className="relative bg-base pt-4 pb-6">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <img src="/icons/icon-192.png" alt="" width={28} height={28} className="rounded-md" />
-          <div className="text-2xl font-black text-primary font-display">
-            Player Pass
-          </div>
+    <div className="min-h-full px-4 pt-3 pb-4">
+      {/* Title row */}
+      <header className="flex items-start justify-between gap-3 pt-2">
+        <div>
+          <h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Home</h1>
+          {storeForPill && (
+            <button
+              onClick={() => setShowStoreSwitcher(true)}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-token pl-2.5 pr-3 py-1.5 text-[13px] font-semibold text-secondary"
+            >
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: storeForPill.color ?? '#7c3aed' }} />
+              {storeForPill.name}
+              {storeForPill.is_flagship && <span className="text-[10px] uppercase tracking-wide text-xp">Flagship</span>}
+            </button>
+          )}
         </div>
-
-        {/* Player Card */}
-        <div className="mx-4">
-          <div className="card p-4 shadow-xl">
-            <div className="flex items-start gap-3">
-              <div className="relative">
-                <Avatar avatar={avatarForComponent} size="md" />
-                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-orange-500 to-yellow-500 text-primary text-xs font-bold px-2 py-0.5 rounded-full border-2 border-border-token">
-                  {level}
-                </div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-primary text-lg font-bold">{playerData?.displayName || 'Player'}</h1>
-                </div>
-                <div className="text-secondary text-sm">Level {level} Player</div>
-                <div className="mt-2">
-                  <div className="h-2 bg-elevated rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-accent rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: `${levelProgress}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between mt-1 text-xs">
-                    <span className="text-tertiary">XP to next level</span>
-                    <span className="text-secondary font-mono">
-                      <StaticCounter value={totalXp} /> / {nextLevelXp.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-border-token">
-              <div>
-                <p className="text-xs font-medium text-tertiary uppercase tracking-wide">Games</p>
-                <p className="text-3xl font-extrabold tabular-nums tracking-tight text-primary">{games.length}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-tertiary uppercase tracking-wide">{storeConfig.currency_name}</p>
-                <p className="text-3xl font-extrabold tabular-nums tracking-tight text-accent">{playerData?.gems || 0}</p>
-              </div>
-            </div>
-
-            {/* Store Context — shows selected (browsing) store, not home store */}
-            {(selectedStore || homeStore) && (
-              <button
-                onClick={() => setShowStoreSwitcher(true)}
-                className="mt-3 pt-3 border-t border-border-token w-full flex items-center justify-between text-left group"
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: (selectedStore ?? homeStore)!.color ?? '#7c3aed' }}
-                  />
-                  <div>
-                    <span className="text-tertiary text-xs">Viewing </span>
-                    <span className="text-secondary text-xs font-medium">{(selectedStore ?? homeStore)!.name}</span>
-                    {(selectedStore ?? homeStore)!.is_flagship && (
-                      <span className="ml-1 text-xs text-yellow-400 border border-yellow-500/30 bg-yellow-500/10 px-1 py-0.5 rounded leading-none">
-                        Flagship
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <span className="text-tertiary text-xs group-hover:text-secondary transition-colors">Switch →</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+        <a href="/dashboard/profile" aria-label="Profile" className="flex-none">
+          <Avatar avatar={avatarForComponent} size="md" />
+        </a>
+      </header>
 
       {/* Store Switcher Modal */}
       {showStoreSwitcher && (
@@ -290,36 +256,52 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         />
       )}
 
-      {/* Daily Spin */}
-      <div className="px-4 -mt-3 relative z-10">
-        <GlowButton
-          color="purple"
-          onClick={handleSpin}
-          disabled={hasSpunToday || isSpinning}
-          className="w-full py-4 relative"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <span>{hasSpunToday ? (spinMessage || 'Claimed!') : isSpinning ? 'Spinning…' : 'Daily Spin'}</span>
+      {/* Hero: level, points, spin */}
+      <section className="mt-5 rounded-[30px] bg-elevated border border-border-token p-5 shadow-xl">
+        <div className="flex items-center gap-5">
+          <Ring pct={levelProgress} size={112} stroke={9} color="var(--accent)">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-secondary">Level</span>
+            <span className="text-[40px] leading-none font-extrabold tabular-nums text-primary">{level}</span>
+          </Ring>
+          <div className="min-w-0">
+            <div className="text-lg font-bold text-primary truncate">{playerData?.displayName || 'Player'}</div>
+            <div className="text-[13px] text-secondary tabular-nums">{levelProgress} of 100 XP to Level {level + 1}</div>
+            <div className="mt-3 flex items-baseline gap-1.5">
+              <span className="text-3xl leading-none font-extrabold tabular-nums text-xp">{spendable.toLocaleString()}</span>
+              <span className="text-[13px] font-semibold text-secondary">{passStatus ? 'Prize Points' : storeConfig.currency_name}</span>
+            </div>
           </div>
-          {!hasSpunToday && !isSpinning && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
-          )}
-        </GlowButton>
-        {spinMessage && !hasSpunToday && (
-          <p className="text-center text-xs text-accent mt-1">{spinMessage}</p>
-        )}
-      </div>
-
-      {/* Player Pass — tier, dual currency, prize wall CTA */}
-      {passStatus && (
-        <div className="mt-4">
-          <PlayerPassCard
-            tier={passStatus.tier}
-            lifetimeXp={passStatus.lifetimeXp}
-            prizePoints={passStatus.prizePoints}
-          />
         </div>
-      )}
+
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          <button
+            onClick={handleSpin}
+            disabled={hasSpunToday || isSpinning}
+            className="relative h-[50px] rounded-2xl bg-accent text-accent-fg font-bold text-[15px] disabled:opacity-60"
+          >
+            {hasSpunToday ? (spinMessage || 'Claimed!') : isSpinning ? 'Spinning…' : 'Daily spin'}
+            {!hasSpunToday && !isSpinning && <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-red-500" />}
+          </button>
+          <a
+            href="/dashboard/prize-wall"
+            className="h-[50px] rounded-2xl bg-base border border-border-token text-primary font-bold text-[15px] grid place-items-center"
+          >
+            Prize Wall
+          </a>
+        </div>
+        {spinMessage && !hasSpunToday && <p className="text-center text-xs text-accent mt-2">{spinMessage}</p>}
+
+        {passStatus && (
+          <div className="mt-4 pt-3 border-t border-border-token flex items-center justify-between text-[13px] text-secondary">
+            <span>
+              {passStatus.tier === 'free'
+                ? `${passStatus.prizePoints.toLocaleString()} / 720 pts to unlock Prize Wall`
+                : `${PASS_MULTIPLIER[passStatus.tier] ?? '1x'} XP on every event`}
+            </span>
+            <span className="font-bold uppercase tracking-wider text-xs text-xp">{passStatus.tier} Pass</span>
+          </div>
+        )}
+      </section>
 
       {/* Getting Started checklist — shown to new players */}
       <div className="mt-4">
@@ -328,229 +310,179 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
 
       {/* Banner Carousel */}
       {banners.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-4 -mx-4">
           <BannerCarousel banners={banners} />
         </div>
       )}
 
-      {/* Card of the Day */}
-      <div className="mx-4 mt-4">
-        <CardOfTheDayCompact />
-      </div>
-
-      {/* Battle Pass Banner */}
-      {playerData?.passTier && playerData.passTier !== 'none' && (
-        <div className="mx-4 mt-4">
-          <div className="relative bg-gradient-to-r from-yellow-600/20 via-orange-500/20 to-yellow-600/20 border border-yellow-500/40 rounded-xl p-3 flex items-center justify-between overflow-hidden">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">👑</span>
-              <div>
-                <div className="font-bold text-yellow-400 text-sm uppercase">{playerData.passTier} PASS ACTIVE</div>
-                <div className="text-yellow-300/60 text-xs">Bonus XP multiplier on all events</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* My Games */}
-      <div className="mx-4 mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
-            My Games
-            {favoriteGames.length > 0 && (
-              <span className="text-xs text-secondary font-normal">(Favorites)</span>
-            )}
-          </h2>
-          {totalGamesCount > 3 && (
-            <button
-              onClick={() => setShowAllGames(!showAllGames)}
-              className="text-secondary text-sm"
-            >
-              {showAllGames ? 'Show Less' : `View All (${totalGamesCount})`}
-            </button>
-          )}
-        </div>
-        {filteredGames.length > 0 ? (
-          <div className="space-y-2" ref={gamesContainerRef}>
-            {displayedGames.map((game) => (
-              <div key={game.id} className="game-card">
-                <GameXpCard
-                  game={game}
-                  isExpanded={expandedGame === game.id}
-                  onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-secondary">
-            <p>No game XP yet - attend events to start earning!</p>
-          </div>
-        )}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="mx-4 mt-6 mb-6">
-        <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
-          Recent Activity
-        </h2>
-        {recentActivity.length > 0 ? (
-          <div className="space-y-2" ref={activityContainerRef}>
-            {recentActivity.map((a: any) => (
-              <div
-                key={a.id}
-                className="activity-item card p-3 flex items-center gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-primary text-sm truncate">{a.text}</div>
-                  <div className="text-secondary text-xs">
-                    {a.time}{a.storeTag ? ` · @ ${a.storeTag}` : ''}
-                  </div>
-                </div>
-                <div className={`font-bold text-sm ${a.xp >= 0 ? 'text-xp' : 'text-danger'}`}>
-                  {a.xp >= 0 ? '+' : ''}{a.xp}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-secondary">
-            <p>No activity yet - check in to events!</p>
-          </div>
-        )}
-      </div>
-
       {/* Special Events */}
       {specialEvents.length > 0 && (
-        <div className="mx-4 mt-6">
+        <div className="mt-6">
           <SpecialEvents events={specialEvents} />
         </div>
       )}
 
-      {/* Upcoming Events */}
-      <div className="mx-4 mt-6">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
-            Upcoming Events
-          </h2>
-          <a href="/dashboard/events" className="text-accent text-sm">View Calendar →</a>
-        </div>
-        <div className="space-y-2">
-          {upcomingEvents.length === 0 ? (
-            <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl opacity-60">
-              <div className="text-sm text-secondary">No upcoming events</div>
+      {/* Up next */}
+      <section className="mt-8">
+        <SectionHeader title="Up next" href="/dashboard/events" linkLabel="Calendar" />
+        {upcomingEvents.length === 0 ? (
+          <div className="rounded-[26px] bg-surface border border-border-token p-5 text-sm text-secondary">No upcoming events</div>
+        ) : (
+          <div className={RAIL}>
+            {upcomingEvents.map((event: any) => (
+              <a key={event.id} href="/dashboard/events" className={`${TILE} w-[250px] p-4 flex flex-col gap-3.5`}>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-[52px] h-[52px] rounded-2xl grid place-items-center text-2xl flex-none"
+                    style={{ backgroundColor: `${event.game?.color || '#3b82f6'}26` }}
+                  >
+                    {event.game?.icon || '🎮'}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-base font-bold leading-tight text-primary line-clamp-2">{event.name}</div>
+                    <div className="text-[13px] text-secondary mt-0.5">{event.date}, {event.time}</div>
+                  </div>
+                </div>
+                {event.isFree && (
+                  <span className="self-start text-xs font-bold text-green-400 bg-green-400/10 px-2.5 py-1 rounded-full">Free</span>
+                )}
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Your games */}
+      <section className="mt-8">
+        <SectionHeader title="Your games" />
+        {filteredGames.length > 0 ? (
+          <>
+            <div className={RAIL}>
+              {filteredGames.map((game) => (
+                <button
+                  key={game.id}
+                  onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
+                  aria-pressed={expandedGame === game.id}
+                  className={`${TILE} w-[132px] px-3.5 pt-4 pb-3.5 flex flex-col items-center gap-2.5 text-center ${expandedGame === game.id ? 'border-accent' : ''}`}
+                >
+                  <Ring pct={((game.xp % 50) / 50) * 100} size={64} stroke={5} color={game.color}>
+                    <span className="text-lg">{game.icon}</span>
+                  </Ring>
+                  <div>
+                    <div className="text-sm font-bold leading-tight text-primary">{game.name}</div>
+                    <div className="text-xs font-semibold text-secondary tabular-nums mt-0.5">Level {game.level}</div>
+                  </div>
+                </button>
+              ))}
             </div>
-          ) : upcomingEvents.map((event: any) => (
-            <div key={event.id} className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-                style={{ backgroundColor: `${event.game?.color || '#3b82f6'}20` }}
-              >
-                {event.game?.icon || '🎮'}
+            {selectedGame && (
+              <div className="mt-3">
+                <GameXpCard game={selectedGame} isExpanded onClick={() => setExpandedGame(null)} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{event.name}</div>
-                <div className="text-xs text-secondary">{event.date}, {event.time}</div>
+            )}
+          </>
+        ) : (
+          <div className="rounded-[26px] bg-surface border border-border-token p-5 text-sm text-secondary text-center">
+            No game XP yet. Attend events to start earning!
+          </div>
+        )}
+      </section>
+
+      {/* Card of the Day */}
+      <div className="mt-8">
+        <CardOfTheDayCompact />
+      </div>
+
+      {/* Prize Wall */}
+      {prizeHighlights.length > 0 && (
+        <section className="mt-8">
+          <SectionHeader title="Prize Wall" href="/dashboard/prize-wall" linkLabel="See all" />
+          <div className={RAIL}>
+            {prizeHighlights.map((item: any) => {
+              const cost = item.xp_cost ?? 0;
+              const canAfford = spendable >= cost;
+              return (
+                <a key={item.id} href="/dashboard/prize-wall" className={`${TILE} w-[168px] overflow-hidden`}>
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-[104px] object-contain bg-elevated"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="w-full h-[104px] grid place-items-center text-3xl bg-elevated">🎁</div>
+                  )}
+                  <div className="px-3.5 pt-3 pb-3.5">
+                    <div className="text-sm font-bold truncate text-primary">{item.name}</div>
+                    <div className="mt-1 flex items-center justify-between text-[13px] font-bold tabular-nums">
+                      <span className={canAfford ? 'text-xp' : 'text-tertiary'}>{cost.toLocaleString()} pts</span>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full ${canAfford ? 'bg-xp/15 text-xp' : 'bg-elevated text-secondary'}`}>
+                        {canAfford ? 'Redeem' : `${(cost - spendable).toLocaleString()} to go`}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Activity: yours, then friends */}
+      <section className="mt-8">
+        <SectionHeader title="Activity" href="/dashboard/community" linkLabel="Community" />
+        <div className="rounded-[26px] bg-surface border border-border-token overflow-hidden divide-y divide-border-token">
+          {recentActivity.map((a: any) => (
+            <div key={a.id} className="flex items-center gap-3 px-4 py-3.5">
+              <span className={`flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-[13px] font-extrabold tabular-nums bg-accent/10 ${a.xp >= 0 ? 'text-accent' : 'text-danger'}`}>
+                {a.xp >= 0 ? '+' : ''}{a.xp}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-primary truncate">{a.text}</div>
+                <div className="text-xs text-secondary">{a.time}{a.storeTag ? ` · @ ${a.storeTag}` : ''}</div>
               </div>
-              {event.isFree && <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded flex-shrink-0">Free</div>}
             </div>
           ))}
+          {friendActivity.map((item: any, i: number) => (
+            <div key={`f${i}`} className="flex items-start gap-3 px-4 py-3.5">
+              <span className="flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-base bg-elevated">{item.icon}</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-primary leading-snug">{item.headline}</div>
+                {item.subtext && <div className="text-xs text-secondary mt-0.5">{item.subtext}</div>}
+              </div>
+            </div>
+          ))}
+          {recentActivity.length === 0 && friendActivity.length === 0 && (
+            <div className="px-4 py-6 text-center text-sm text-secondary">
+              No activity yet. Check in to events, or <a href="/dashboard/community" className="text-accent font-semibold">find players</a>.
+            </div>
+          )}
         </div>
-      </div>
+      </section>
 
       {/* Store Updates */}
       {storeUpdates.length > 0 && (
-        <div className="mx-4 mt-6">
-          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
-            Store Updates
-          </h2>
-          <div className="space-y-2">
+        <section className="mt-8">
+          <SectionHeader title="Store updates" />
+          <div className="rounded-[26px] bg-surface border border-border-token overflow-hidden divide-y divide-border-token">
             {storeUpdates.map((update: any, i: number) => (
               <div
                 key={i}
-                className={`flex items-start gap-3 p-3 bg-elevated border border-border-token rounded-xl ${update.link ? 'cursor-pointer hover:border-accent/40 transition-colors' : ''}`}
+                className={`flex items-start gap-3 px-4 py-3.5 ${update.link ? 'cursor-pointer' : ''}`}
                 onClick={() => update.link && (window.location.href = update.link)}
               >
-                <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center text-lg flex-shrink-0">{update.icon}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] text-accent uppercase tracking-wide font-medium mb-0.5">{update.label}</div>
-                  <div className="text-sm font-medium leading-snug">{update.headline}</div>
+                <span className="flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-lg bg-accent/10">{update.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] text-accent uppercase tracking-wide font-bold mb-0.5">{update.label}</div>
+                  <div className="text-sm font-semibold leading-snug text-primary">{update.headline}</div>
                   {update.subtext && <div className="text-xs text-secondary mt-0.5">{update.subtext}</div>}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
-
-      {/* Friends Activity */}
-      <div className="mx-4 mt-6">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
-            Friends Activity
-          </h2>
-          <a href="/dashboard/community" className="text-accent text-sm">Community →</a>
-        </div>
-        {friendActivity.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center gap-2 bg-elevated border border-border-token rounded-xl">
-            <div className="text-sm font-medium text-secondary">No friend activity yet</div>
-            <div className="text-xs text-tertiary">Add friends to see what they&apos;re up to</div>
-            <a href="/dashboard/community" className="mt-2 text-xs text-accent border border-accent/30 px-3 py-1.5 rounded-lg">
-              Find players →
-            </a>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {friendActivity.map((item: any, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-                <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center text-base flex-shrink-0">{item.icon}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm leading-snug">{item.headline}</div>
-                  {item.subtext && <div className="text-xs text-secondary mt-0.5">{item.subtext}</div>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Prize Wall */}
-      {prizeHighlights.length > 0 && (
-        <div className="mx-4 mt-6 mb-6">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
-              Prize Wall
-            </h2>
-            <a href="/dashboard/prize-wall" className="text-accent text-sm">Visit →</a>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {prizeHighlights.map((item: any) => (
-              <a
-                key={item.id}
-                href="/dashboard/prize-wall"
-                className="bg-elevated border border-border-token rounded-xl overflow-hidden hover:border-accent/40 transition-colors block"
-              >
-                {item.image_url ? (
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-full h-24 object-contain bg-black/20"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  <div className="w-full h-24 flex items-center justify-center text-3xl bg-surface">🎁</div>
-                )}
-                <div className="p-2">
-                  <div className="text-xs font-medium truncate">{item.name}</div>
-                  <div className="text-[10px] text-accent mt-0.5">{item.xp_cost.toLocaleString()} Guild Points</div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
