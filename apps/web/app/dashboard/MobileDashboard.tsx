@@ -14,6 +14,7 @@ import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
 import { Gift } from 'lucide-react';
 import { CoverImage, HeroBackdrop, pickBackdropGame } from '@/components/CoverImage';
+import { parseBackdrop } from '@/lib/games';
 
 // Type for displayed game data
 interface GameDisplay {
@@ -268,7 +269,10 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
 
       {/* Hero: level, points, spin */}
       <section className="relative isolate overflow-hidden mt-5 rounded-[30px] bg-elevated border border-border-token p-5 shadow-xl">
-        <HeroBackdrop gameId={pickBackdropGame(favoriteGames)} />
+        <HeroBackdrop
+          gameId={parseBackdrop(playerData?.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)}
+          src={parseBackdrop(playerData?.heroBackdrop).uploadUrl}
+        />
         <div className="flex items-center gap-5">
           <Ring pct={levelProgress} size={112} stroke={9} color="var(--accent)">
             <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">Level</span>

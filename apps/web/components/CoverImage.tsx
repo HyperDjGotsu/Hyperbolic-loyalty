@@ -42,7 +42,7 @@ export function CoverImage({
 
 // Full-bleed art behind a hero card. Put `isolate` on the parent; this sits at -z-10 under its content.
 // Dark scrim keeps white text readable on any image; gradient shows until the art exists.
-export function HeroBackdrop({ gameId, color }: { gameId?: string | null; color?: string }) {
+export function HeroBackdrop({ gameId, src, color }: { gameId?: string | null; src?: string | null; color?: string }) {
   const [failed, setFailed] = useState(false);
   const base = color || 'var(--accent)';
   return (
@@ -53,7 +53,7 @@ export function HeroBackdrop({ gameId, color }: { gameId?: string | null; color?
     >
       {!failed && (
         <img
-          src={gameArtUrl(gameId)}
+          src={src || gameArtUrl(gameId)}
           alt=""
           onError={() => setFailed(true)}
           className="absolute inset-0 h-full w-full object-cover"

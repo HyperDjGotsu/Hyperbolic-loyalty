@@ -61,3 +61,11 @@ export function getGame(id: string): GameDefinition | undefined {
 export function gameArtUrl(id?: string | null): string {
   return `/games/${id ? resolveGameId(id) : 'general'}.jpg`;
 }
+
+// players.hero_backdrop: 'game:<id>' or 'upload:<https url>'. Uploads only render on the (private) Home hero.
+export function parseBackdrop(value: string | null | undefined): { gameId?: string; uploadUrl?: string } {
+  if (!value) return {};
+  if (value.startsWith('game:')) return { gameId: value.slice(5) };
+  if (value.startsWith('upload:')) return { uploadUrl: value.slice(7) };
+  return {};
+}

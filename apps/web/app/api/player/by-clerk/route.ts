@@ -343,6 +343,7 @@ export async function GET() {
       phone: player.phone,
       avatar,
       avatarConfig,
+      heroBackdrop: player.hero_backdrop ?? null,
       passTier: player.pass_tier,
       passStatus: player.pass_status,
       passExpiresAt: player.pass_expires_at,

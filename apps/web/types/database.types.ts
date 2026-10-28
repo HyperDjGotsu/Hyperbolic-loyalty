@@ -1368,6 +1368,7 @@ export type Database = {
           email: string | null
           favorite_games: Json | null
           gems: number | null
+          hero_backdrop: string | null
           has_been_paid_member: boolean
           has_claimed_trial: boolean
           home_store_id: string | null
@@ -1435,6 +1436,7 @@ export type Database = {
           email?: string | null
           favorite_games?: Json | null
           gems?: number | null
+          hero_backdrop?: string | null
           has_been_paid_member?: boolean
           has_claimed_trial?: boolean
           home_store_id?: string | null
@@ -1502,6 +1504,7 @@ export type Database = {
           email?: string | null
           favorite_games?: Json | null
           gems?: number | null
+          hero_backdrop?: string | null
           has_been_paid_member?: boolean
           has_claimed_trial?: boolean
           home_store_id?: string | null

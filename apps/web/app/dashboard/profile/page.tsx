@@ -4,10 +4,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ProfileSkeleton } from '@/components/Skeleton';
 import { useUser, useClerk } from '@clerk/nextjs';
 import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
-import { SELECTABLE_GAMES } from '@/lib/games';
+import { parseBackdrop } from '@/lib/games';
 import { Loader } from '@/components/Loader';
 import { Pencil } from 'lucide-react';
-import { HeroBackdrop, pickBackdropGame } from '@/components/CoverImage';
+import { HeroBackdrop, CoverImage, pickBackdropGame } from '@/components/CoverImage';
+import { SELECTABLE_GAMES } from '@/lib/games';
 
 interface ShopItem {
   id: string;
@@ -72,6 +73,7 @@ interface PlayerData {
   passStatus: string | null;
   passExpiresAt: string | null;
   isStaff: boolean;
+  heroBackdrop: string | null;
 }
 
 interface ReferralStats {
@@ -159,6 +161,29 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Hero backdrop picker
+  const [backdropOpen, setBackdropOpen] = useState(false);
+  const [backdropBusy, setBackdropBusy] = useState(false);
+  const backdropFileRef = useRef<HTMLInputElement>(null);
+
+  const saveBackdrop = async (body: FormData | { gameId: string | null }) => {
+    setBackdropBusy(true);
+    try {
+      const isForm = body instanceof FormData;
+      const res = await fetch('/api/player/backdrop', {
+        method: 'POST',
+        headers: isForm ? undefined : { 'Content-Type': 'application/json' },
+        body: isForm ? body : JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Could not save backdrop'); return; }
+      setPlayerData(prev => (prev ? { ...prev, heroBackdrop: data.heroBackdrop ?? null } : prev));
+      setBackdropOpen(false);
+    } finally {
+      setBackdropBusy(false);
+    }
+  };
+
   // Status editor state
   const [statusModalOpen, setStatusModalOpen] = useState(false);
 
@@ -241,6 +266,7 @@ export default function ProfilePage() {
             passStatus: data.passStatus || null,
             passExpiresAt: data.passExpiresAt || null,
             isStaff: data.isStaff || false,
+            heroBackdrop: data.heroBackdrop ?? null,
           });
           setTempAvatar(invData.avatarConfig || defaultAvatarConfig);
           setOwnedItems(invData.grouped || {});
@@ -993,7 +1019,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-base pb-20">
       {/* Hero: the player's picture, blurred, behind their avatar, name and numbers */}
       <div className="relative isolate overflow-hidden px-4 pt-10 pb-7">
-        <HeroBackdrop gameId={pickBackdropGame(favoriteGames)} />
+        <HeroBackdrop gameId={parseBackdrop(playerData.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)} />
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-base" />
         <div className="relative flex flex-col items-center">
           <AvatarPreview config={playerData.avatarConfig} size="xl" />
@@ -1025,6 +1051,13 @@ export default function ProfilePage() {
               className="px-5 py-2 rounded-full bg-elevated text-primary text-sm font-semibold"
             >
               Edit avatar
+            </button>
+            <button
+              type="button"
+              onClick={() => setBackdropOpen(true)}
+              className="px-5 py-2 rounded-full bg-elevated text-primary text-sm font-semibold"
+            >
+              Backdrop
             </button>
             <button type="button" onClick={() => setStatusModalOpen(true)}>
               {playerData.status ? (
@@ -1450,6 +1483,75 @@ export default function ProfilePage() {
 
       {/* Avatar Editor Modal */}
       {editingAvatar && <AvatarEditorModal />}
+
+      {/* Backdrop picker */}
+      {backdropOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+          <div className="absolute inset-0 bg-black/80" onClick={() => !backdropBusy && setBackdropOpen(false)} />
+          <div className="relative bg-surface rounded-t-[32px] sm:rounded-3xl w-full sm:max-w-md max-h-[85vh] overflow-auto p-5 pb-8">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-display text-2xl font-bold text-primary">Backdrop</h3>
+              <button type="button" onClick={() => setBackdropOpen(false)} className="text-secondary text-2xl leading-none" aria-label="Close">×</button>
+            </div>
+            <p className="text-secondary text-sm mb-4">Pick the art behind your profile and Home card.</p>
+
+            <button
+              type="button"
+              disabled={backdropBusy}
+              onClick={() => void saveBackdrop({ gameId: null })}
+              className={`w-full mb-3 rounded-2xl border p-3 text-left text-sm font-semibold ${!playerData.heroBackdrop ? 'border-accent text-accent' : 'border-border-token text-primary'}`}
+            >
+              Default <span className="font-normal text-secondary">(your first favorite game)</span>
+            </button>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {SELECTABLE_GAMES.map(g => {
+                const selected = playerData.heroBackdrop === `game:${g.id}`;
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    disabled={backdropBusy}
+                    onClick={() => void saveBackdrop({ gameId: g.id })}
+                    className={`rounded-2xl overflow-hidden border-2 ${selected ? 'border-accent' : 'border-transparent'}`}
+                  >
+                    <CoverImage gameId={g.id} color={g.color} className="h-24">
+                      <div className="absolute inset-x-2.5 bottom-2 text-left text-sm font-extrabold text-white leading-tight">{g.name}</div>
+                    </CoverImage>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-elevated p-4">
+              <div className="text-primary font-semibold text-sm">Use your own picture</div>
+              <p className="text-secondary text-xs mt-1">Shows on your Home card. Only you see it. JPG, PNG or WebP, up to 3 MB.</p>
+              <button
+                type="button"
+                disabled={backdropBusy}
+                onClick={() => backdropFileRef.current?.click()}
+                className="mt-3 px-5 py-2 rounded-full bg-accent text-accent-fg text-sm font-bold disabled:opacity-50"
+              >
+                {backdropBusy ? 'Saving...' : 'Upload'}
+              </button>
+              <input
+                ref={backdropFileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!f) return;
+                  const fd = new FormData();
+                  fd.append('file', f);
+                  void saveBackdrop(fd);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status Editor Modal */}
       <StatusEditor
