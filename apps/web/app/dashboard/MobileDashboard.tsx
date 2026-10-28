@@ -435,7 +435,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         <div className="rounded-[26px] bg-surface border border-border-token overflow-hidden divide-y divide-border-token">
           {recentActivity.map((a: any) => (
             <div key={a.id} className="flex items-center gap-3 px-4 py-3.5">
-              <span className={`flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-[13px] font-extrabold tabular-nums bg-accent/10 ${a.xp >= 0 ? 'text-accent' : 'text-danger'}`}>
+              <span className={`flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-[13px] font-extrabold tabular-nums bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] ${a.xp >= 0 ? 'text-accent' : 'text-danger'}`}>
                 {a.xp >= 0 ? '+' : ''}{a.xp}
               </span>
               <div className="min-w-0 flex-1">
@@ -472,7 +472,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                 className={`flex items-start gap-3 px-4 py-3.5 ${update.link ? 'cursor-pointer' : ''}`}
                 onClick={() => update.link && (window.location.href = update.link)}
               >
-                <span className="flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-lg bg-accent/10">{update.icon}</span>
+                <span className="flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-lg bg-[color-mix(in_srgb,var(--accent)_14%,transparent)]">{update.icon}</span>
                 <div className="min-w-0 flex-1">
                   <div className="text-[10px] text-accent uppercase tracking-wide font-bold mb-0.5">{update.label}</div>
                   <div className="text-sm font-semibold leading-snug text-primary">{update.headline}</div>

@@ -100,8 +100,9 @@ function MobileNavItem({
   return (
     <Link
       href={item.href}
-      className={`flex flex-col items-center gap-1 py-2 px-1 flex-1 min-w-0 transition-colors relative
-        ${isActive ? 'text-primary' : 'text-tertiary hover:text-secondary'}`}
+      aria-current={isActive ? 'page' : undefined}
+      className={`flex flex-col items-center gap-0.5 py-2 px-1 flex-1 min-w-0 rounded-[22px] transition-colors relative
+        ${isActive ? 'text-accent bg-white/10' : 'text-secondary hover:text-primary'}`}
     >
       <div className="relative">
         {item.icon}
@@ -112,7 +113,6 @@ function MobileNavItem({
         )}
       </div>
       <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
-      {isActive && <span className="absolute bottom-0 h-0.5 w-6 bg-accent rounded-full" />}
     </Link>
   );
 }
@@ -226,7 +226,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-56 pb-20 lg:pb-0">
+      <main className="lg:ml-56 pb-28 lg:pb-0">
         {/* Desktop header */}
         <div className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-border-token sticky top-0 bg-base/95 backdrop-blur-sm z-20">
           <h1 className="text-base font-semibold text-primary capitalize">
@@ -237,8 +237,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-border-token z-30">
-        <div className="flex items-center relative">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-3 pointer-events-none" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="pointer-events-auto flex items-center gap-0.5 p-1.5 rounded-[30px] border border-white/10 bg-[color-mix(in_srgb,var(--bg-surface)_72%,transparent)] backdrop-blur-xl backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
           {navItems.map((item) => (
             <MobileNavItem
               key={item.href}
