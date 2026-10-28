@@ -656,7 +656,7 @@ export default function ProfilePage() {
   const NotifToggle = ({ icon, label, description, value, onChange }: {
     icon?: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
   }) => (
-    <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+    <div className="bg-surface rounded-[22px] p-4 flex items-center justify-between border border-border-token">
       <div className="flex items-center gap-3">
         <div>
           <span className="text-primary text-sm font-medium">{label}</span>
@@ -733,7 +733,7 @@ export default function ProfilePage() {
   const ToggleSetting = ({ icon, label, description, value, onChange }: {
     icon?: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
   }) => (
-    <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+    <div className="bg-surface rounded-[22px] p-4 flex items-center justify-between border border-border-token">
       <div className="flex items-center gap-3">
         <div>
           <span className="text-primary text-sm">{label}</span>
@@ -990,76 +990,74 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-base pb-20">
-      {/* Header */}
-      <div className="bg-surface pt-8 pb-6 px-4">
-        <div className="flex flex-col items-center">
-          <AvatarPreview
-            config={playerData.avatarConfig}
-            size="xl"
-          />
-          <h1 className="text-primary text-2xl font-bold mt-4">{playerData.displayName}</h1>
+      {/* Hero: the player's picture, blurred, behind their avatar, name and numbers */}
+      <div className="relative overflow-hidden px-4 pt-10 pb-7">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 scale-125 bg-cover bg-center blur-2xl opacity-60"
+          style={
+            playerData.avatarConfig?.photo_url
+              ? { backgroundImage: `url(${JSON.stringify(playerData.avatarConfig.photo_url)})` }
+              : { backgroundImage: 'linear-gradient(135deg, var(--accent), #4d8dff)' }
+          }
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-transparent via-base/40 to-base" />
+        <div className="relative flex flex-col items-center">
+          <AvatarPreview config={playerData.avatarConfig} size="xl" />
+          <h1 className="font-display text-primary text-[32px] leading-tight font-extrabold tracking-tight mt-4 text-center">{playerData.displayName}</h1>
           <div className="text-secondary font-mono text-sm">{playerData.id}</div>
 
-          <button
-            type="button"
-            onClick={() => { setTempAvatar(playerData.avatarConfig); setEditingAvatar(true); }}
-            className="mt-3 px-4 py-1.5 rounded-full bg-elevated border border-border-token text-secondary text-sm hover:text-primary hover:border-border-strong transition-colors"
-          >
-            Edit Avatar
-          </button>
-
-          {/* Status Badge */}
-          <button
-            type="button"
-            onClick={() => setStatusModalOpen(true)}
-            className="mt-2"
-          >
-            {playerData.status ? (
-              <StatusBadge status={playerData.status} />
-            ) : (
-              <div className="px-4 py-2 rounded-full bg-elevated/50 border border-border-token text-secondary text-sm flex items-center gap-2">
-                <span>+ Set Status</span>
-              </div>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="px-4 -mt-2">
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            <div className="text-primary font-bold text-lg">{playerData.level}</div>
-            <div className="text-secondary text-xs">Level</div>
+          <div className="mt-5 grid w-full grid-cols-3 gap-2 text-center">
+            <div>
+              <div className="text-primary text-3xl font-extrabold tabular-nums">{playerData.level}</div>
+              <div className="text-secondary text-xs uppercase tracking-wide font-semibold">Level</div>
+            </div>
+            <div>
+              <div className="text-xp text-3xl font-extrabold tabular-nums">{playerData.totalXp.toLocaleString()}</div>
+              <div className="text-secondary text-xs uppercase tracking-wide font-semibold">Total XP</div>
+            </div>
+            <div>
+              {storeConfig.currency_icon.startsWith('http') && (
+                <img src={storeConfig.currency_icon} alt="" className="mx-auto mb-0.5 h-7 w-7 object-contain" />
+              )}
+              <div className="text-accent text-3xl font-extrabold tabular-nums">{playerData.gems.toLocaleString()}</div>
+              <div className="text-secondary text-xs uppercase tracking-wide font-semibold">{storeConfig.currency_name}</div>
+            </div>
           </div>
-          <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            <div className="text-accent font-bold">{playerData.totalXp.toLocaleString()}</div>
-            <div className="text-secondary text-xs">Total XP</div>
-          </div>
-          <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            {storeConfig.currency_icon.startsWith('http') && (
-              <div className="mb-1"><img src={storeConfig.currency_icon} alt="" className="w-7 h-7 object-contain mx-auto" /></div>
-            )}
-            <div className="text-purple-400 font-bold">{playerData.gems.toLocaleString()}</div>
-            <div className="text-secondary text-xs">{storeConfig.currency_name}</div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => { setTempAvatar(playerData.avatarConfig); setEditingAvatar(true); }}
+              className="px-5 py-2 rounded-full bg-elevated text-primary text-sm font-semibold"
+            >
+              Edit avatar
+            </button>
+            <button type="button" onClick={() => setStatusModalOpen(true)}>
+              {playerData.status ? (
+                <StatusBadge status={playerData.status} />
+              ) : (
+                <div className="px-5 py-2 rounded-full bg-elevated text-secondary text-sm font-semibold">Set status</div>
+              )}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Referral Section */}
       <div className="px-4 mt-6">
-        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
+        <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Invite Friends
         </h2>
         
         {referralLoading ? (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
+          <div className="bg-surface rounded-[22px] p-4 border border-border-token">
             <div className="flex items-center justify-center py-4">
               <Loader size={24} />
             </div>
           </div>
         ) : referralStats ? (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
+          <div className="bg-surface rounded-[22px] p-4 border border-border-token">
             {/* Referral Code */}
             <div className="mb-4">
               <div className="text-secondary text-xs mb-1">Your Referral Code</div>
@@ -1073,7 +1071,7 @@ export default function ProfilePage() {
                   className={`px-4 py-3 rounded-lg font-medium transition-all ${
                     copiedCode
                       ? 'bg-green-500 text-primary'
-                      : 'bg-purple-500 hover:bg-purple-400 text-primary'
+                      : 'bg-accent hover:opacity-90 text-accent-fg'
                   }`}
                 >
                   {copiedCode ? 'Copied' : 'Copy'}
@@ -1094,7 +1092,7 @@ export default function ProfilePage() {
                   className={`px-4 py-3 rounded-lg font-medium transition-all ${
                     copiedLink
                       ? 'bg-green-500 text-primary'
-                      : 'bg-accent hover:opacity-90 text-primary'
+                      : 'bg-accent hover:opacity-90 text-accent-fg'
                   }`}
                 >
                   {copiedLink ? 'Copied' : 'Link'}
@@ -1128,7 +1126,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center gap-2 text-primary">
                   <span className="text-green-400">✓</span>
-                  <span>They attend their first event → You get <span className="text-purple-400">+50 XP + 10 Points</span></span>
+                  <span>They attend their first event → You get <span className="text-accent">+50 XP + 10 Points</span></span>
                 </div>
               </div>
             </div>
@@ -1170,7 +1168,7 @@ export default function ProfilePage() {
             )}
           </div>
         ) : (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
+          <div className="bg-surface rounded-[22px] p-4 border border-border-token text-center">
             <p className="text-secondary">Unable to load referral info</p>
           </div>
         )}
@@ -1179,7 +1177,7 @@ export default function ProfilePage() {
       {/* Favorite Games */}
       <div className="px-4 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-primary flex items-center gap-2">
+          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
             Favorite Games
           </h2>
           <button
@@ -1192,7 +1190,7 @@ export default function ProfilePage() {
         </div>
         
         {favoriteGames.length > 0 ? (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
+          <div className="bg-surface rounded-[22px] p-4 border border-border-token">
             <div className="flex flex-wrap gap-2">
               {favoriteGames.map(gameId => {
                 const game = ALL_GAMES.find(g => g.id === gameId);
@@ -1213,7 +1211,7 @@ export default function ProfilePage() {
             </p>
           </div>
         ) : (
-          <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
+          <div className="bg-surface rounded-[22px] p-4 border border-border-token text-center">
             <p className="text-secondary">No favorite games selected</p>
             <button
               type="button"
@@ -1228,7 +1226,7 @@ export default function ProfilePage() {
 
       {/* Membership */}
       <div className="px-4 mt-6">
-        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
+        <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Membership
         </h2>
         <div className={`rounded-xl p-4 border ${
@@ -1309,12 +1307,12 @@ export default function ProfilePage() {
 
       {/* Settings */}
       <div className="px-4 mt-6 mb-6">
-        <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
+        <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Settings
         </h2>
         <div className="space-y-2">
           {/* Theme */}
-          <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
+          <div className="bg-surface rounded-[22px] p-4 flex items-center justify-between border border-border-token">
             <div className="flex items-center gap-3">
               <div>
                 <div className="text-primary text-sm font-medium">Theme</div>
@@ -1343,7 +1341,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setShowNotifModal(true)}
-            className="w-full bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
+            className="w-full bg-surface rounded-[22px] p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
           >
             <div className="flex items-center gap-3">
               <div className="text-left">
@@ -1358,7 +1356,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setShowPrivacyModal(true)}
-            className="w-full bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
+            className="w-full bg-surface rounded-[22px] p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
           >
             <div className="flex items-center gap-3">
               <div className="text-left">
