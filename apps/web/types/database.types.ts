@@ -799,6 +799,7 @@ export type Database = {
           entry_fee: number | null
           event_type: string
           game_id: string | null
+          image_url: string | null
           gcal_uid: string | null
           has_stream: boolean | null
           is_special: boolean
@@ -824,6 +825,7 @@ export type Database = {
           entry_fee?: number | null
           event_type?: string
           game_id?: string | null
+          image_url?: string | null
           gcal_uid?: string | null
           has_stream?: boolean | null
           is_special?: boolean
@@ -849,6 +851,7 @@ export type Database = {
           entry_fee?: number | null
           event_type?: string
           game_id?: string | null
+          image_url?: string | null
           gcal_uid?: string | null
           has_stream?: boolean | null
           is_special?: boolean

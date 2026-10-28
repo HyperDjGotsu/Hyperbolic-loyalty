@@ -325,6 +325,8 @@ interface HQEvent {
   attendance_xp: number;
   game?: { name: string; icon: string } | null;
   attendanceCount?: number;
+  imageUrl?: string | null;
+  isNetwork?: boolean;
 }
 
 interface HQShopItem {
@@ -1090,6 +1092,32 @@ export default function HQPage() {
     }
   };
 
+  const [eventImageBusy, setEventImageBusy] = useState<string | null>(null);
+  const setEventImage = async (event: HQEvent, file: File | null) => {
+    setEventImageBusy(event.id);
+    try {
+      let imageUrl: string | null = null;
+      if (file) {
+        const fd = new FormData();
+        fd.append('file', file);
+        if (!event.isNetwork && hqStore.activeStoreId) fd.append('storeId', hqStore.activeStoreId);
+        const up = await fetch('/api/hq/upload-event-image', { method: 'POST', body: fd });
+        const upData = await up.json();
+        if (!up.ok) { alert(upData.error || 'Upload failed'); return; }
+        imageUrl = upData.url;
+      }
+      const res = await fetch(`/api/events/${event.id}/image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error || 'Could not save image'); return; }
+      setHqEvents(list => list.map(e => (e.id === event.id ? { ...e, imageUrl } : e)));
+    } finally {
+      setEventImageBusy(null);
+    }
+  };
+
   const loadHQEvents = async () => {
     const requestedStoreId = hqStore.activeStoreId;
     setEventsLoading(true);
@@ -1116,6 +1144,8 @@ export default function HQPage() {
         id: e.id,
         name: e.name,
         game_id: e.game?.id || null,
+        imageUrl: e.imageUrl ?? null,
+        isNetwork: e.isNetworkEvent === true,
         scheduled_at: e.scheduledAt,
         status: e.status,
         attendance_xp: e.attendanceXp || 20,
@@ -4779,6 +4809,11 @@ export default function HQPage() {
                             : 'bg-elevated border-border-token'
                         }`}
                       >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className="relative h-14 w-20 flex-none overflow-hidden rounded-lg bg-surface border border-border-token"
+                            style={event.imageUrl ? { backgroundImage: `url(${event.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                          />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             {isActive && (
@@ -4794,6 +4829,24 @@ export default function HQPage() {
                           {isActive && event.attendanceCount !== undefined && (
                             <div className="text-emerald-400 text-xs mt-1">{event.attendanceCount} checked in</div>
                           )}
+                          <div className="mt-1.5 flex items-center gap-3 text-xs">
+                            <label className="cursor-pointer text-accent hover:underline">
+                              {eventImageBusy === event.id ? 'Saving...' : event.imageUrl ? 'Change cover' : 'Add cover image'}
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                className="hidden"
+                                disabled={eventImageBusy === event.id}
+                                onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) setEventImage(event, f); }}
+                              />
+                            </label>
+                            {event.imageUrl && (
+                              <button onClick={() => setEventImage(event, null)} disabled={eventImageBusy === event.id} className="text-tertiary hover:text-primary">
+                                Use game art
+                              </button>
+                            )}
+                          </div>
+                        </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {isActive ? (

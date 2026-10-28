@@ -35,6 +35,7 @@ export async function GET(request: Request) {
         name,
         game_id,
         description,
+        image_url,
         scheduled_at,
         ends_at,
         max_players,
@@ -230,6 +231,7 @@ export async function GET(request: Request) {
         time: timeStr,
         scheduledAt: event.scheduled_at,
         endsAt: event.ends_at,
+        imageUrl: event.image_url ?? null,
         game: game ? {
           id: game.id,
           name: game.name,
