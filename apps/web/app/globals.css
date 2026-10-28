@@ -58,10 +58,10 @@
 
 /* ── Light / Paper ──────────────────────────────────────── */
 [data-theme="light"][data-tone="paper"] {
-  --bg-base:        #e9e6dd;
-  --bg-surface:     #f7f5ee;
-  --bg-elevated:    #fbfaf6;
-  --bg-input:       #efece3;
+  --bg-base:        #e8e3d8;
+  --bg-surface:     #ddd8cc;
+  --bg-elevated:    #ede9e0;
+  --bg-input:       #e4dfd4;
   --text-primary:   #1a1810;
   --text-secondary: #6b6258;
   --text-tertiary:  #9a9288;
@@ -70,9 +70,6 @@
   --accent:         #7c3aed;
   --accent-fg:      #ffffff;
 }
-
-/* Gold reads too faint on light surfaces; darken the XP/points colour there. */
-[data-theme="light"] .text-xp { color: #94650a; }
 
 /* ── Light / Cloud ──────────────────────────────────────── */
 [data-theme="light"][data-tone="cloud"] {
