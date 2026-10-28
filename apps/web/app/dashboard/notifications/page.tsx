@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Bell, CalendarDays, Megaphone, Clock, CheckCircle2, UserPlus, Sparkles, RotateCw, Trophy, BarChart3, Gift, ShoppingBag, Hourglass, type LucideIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Loader } from '@/components/Loader';
+import { BrandMark } from '@/components/BrandMark';
 
 interface Notification {
   id: string;
@@ -126,7 +127,7 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-base pb-24">
       <div className="sticky top-0 bg-base/90 backdrop-blur-xl px-4 pt-5 pb-3 flex items-end justify-between z-10">
-        <h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Alerts</h1>
+        <div className="flex items-center gap-3"><BrandMark /><h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Alerts</h1></div>
         {unreadCount > 0 && (
           <button
             type="button"

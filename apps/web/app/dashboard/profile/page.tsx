@@ -9,6 +9,7 @@ import { Loader } from '@/components/Loader';
 import { Pencil } from 'lucide-react';
 import { HeroBackdrop, CoverImage, pickBackdropGame } from '@/components/CoverImage';
 import { SELECTABLE_GAMES } from '@/lib/games';
+import { BrandMark } from '@/components/BrandMark';
 
 interface ShopItem {
   id: string;
@@ -1021,6 +1022,7 @@ export default function ProfilePage() {
       <div className="relative isolate overflow-hidden px-4 pt-10 pb-7">
         <HeroBackdrop gameId={parseBackdrop(playerData.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)} />
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-base" />
+        <BrandMark className="absolute left-4 top-4 h-9" />
         <div className="relative flex flex-col items-center">
           <AvatarPreview config={playerData.avatarConfig} size="xl" />
           <h1 className="font-display text-white text-[32px] leading-tight font-extrabold tracking-tight mt-4 text-center">{playerData.displayName}</h1>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { BrandMark } from '@/components/BrandMark';
 
 const FREE_TIER_GATE = 720;
 
@@ -136,7 +137,7 @@ export default function PrizeWallPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
       <div>
-        <h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Prize Wall</h1>
+        <div className="flex items-center gap-3"><BrandMark /><h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Prize Wall</h1></div>
         <p className="text-secondary text-sm mt-2">
           Spend your Points on real prizes. Points never expire.
         </p>

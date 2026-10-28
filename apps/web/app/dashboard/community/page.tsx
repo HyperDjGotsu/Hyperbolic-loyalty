@@ -7,6 +7,7 @@ import { SELECTABLE_GAMES } from '@/lib/games';
 import { Loader } from '@/components/Loader';
 import { Trophy, Search, SearchX, Users, Shield, MessageCircle, Lock, Settings } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
+import { BrandMark } from '@/components/BrandMark';
 
 // Types
 interface PlayerAvatar {
@@ -886,7 +887,7 @@ export default function CommunityPage() {
       <div className="relative bg-base px-4 pt-5 pb-3">
         <div className="relative flex items-center justify-between">
           <div>
-            <h1 className="text-[44px] leading-none font-extrabold tracking-tight text-primary font-display">Community</h1>
+            <div className="flex items-center gap-3"><BrandMark className="h-9" /><h1 className="text-[36px] leading-none font-extrabold tracking-tight text-primary font-display">Community</h1></div>
             <p className="text-secondary text-sm mt-1.5">{leaderboard.length} players ranked</p>
           </div>
           {/* Header buttons: Search + Privacy */}
