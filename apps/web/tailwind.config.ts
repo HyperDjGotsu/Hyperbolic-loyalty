@@ -22,7 +22,7 @@ const config: Config = {
         accent:   'var(--accent)',
         'accent-fg': 'var(--accent-fg)',
         // Preserved semantic colors
-        xp:       '#f4c542',
+        xp:       '#4d8dff',
         success:  '#22c55e',
         warning:  '#f59e0b',
         danger:   '#ef4444',

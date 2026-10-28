@@ -22,8 +22,8 @@
   --text-tertiary:  #7a7060;
   --border:         rgba(242,239,232,0.14);
   --border-strong:  rgba(242,239,232,0.40);
-  --accent:         #c4b5fd;
-  --accent-fg:      #111009;
+  --accent:         #3ddc6a;
+  --accent-fg:      #06140a;
 }
 
 /* ── Dark / Slate ───────────────────────────────────────── */
@@ -37,8 +37,8 @@
   --text-tertiary:  #50587a;
   --border:         rgba(238,240,246,0.14);
   --border-strong:  rgba(238,240,246,0.40);
-  --accent:         #c4b5fd;
-  --accent-fg:      #0f1014;
+  --accent:         #3ddc6a;
+  --accent-fg:      #06140a;
 }
 
 /* ── Dark / Ink ─────────────────────────────────────────── */
@@ -52,8 +52,8 @@
   --text-tertiary:  #484848;
   --border:         rgba(240,240,240,0.14);
   --border-strong:  rgba(240,240,240,0.40);
-  --accent:         #c4b5fd;
-  --accent-fg:      #090909;
+  --accent:         #3ddc6a;
+  --accent-fg:      #06140a;
 }
 
 /* ── Light / Paper ──────────────────────────────────────── */
@@ -67,7 +67,7 @@
   --text-tertiary:  #9a9288;
   --border:         rgba(0,0,0,0.14);
   --border-strong:  rgba(0,0,0,0.45);
-  --accent:         #7c3aed;
+  --accent:         #15803d;
   --accent-fg:      #ffffff;
 }
 
@@ -82,7 +82,7 @@
   --text-tertiary:  #8890a4;
   --border:         rgba(0,0,0,0.14);
   --border-strong:  rgba(0,0,0,0.45);
-  --accent:         #7c3aed;
+  --accent:         #15803d;
   --accent-fg:      #ffffff;
 }
 
@@ -97,7 +97,7 @@
   --text-tertiary:  #a1a1aa;
   --border:         rgba(0,0,0,0.14);
   --border-strong:  rgba(0,0,0,0.45);
-  --accent:         #7c3aed;
+  --accent:         #15803d;
   --accent-fg:      #ffffff;
 }
 
@@ -149,6 +149,6 @@ body {
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
-    color: #f4c542;
+    color: #4d8dff;
   }
 }
