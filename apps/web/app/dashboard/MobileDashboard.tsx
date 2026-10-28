@@ -130,6 +130,23 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
 
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Alerts moved from the tab bar to the avatar badge, so Home reads the unread count itself.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/notifications?unread=true&limit=1');
+        if (res.ok && !cancelled) setUnreadCount((await res.json()).unreadCount ?? 0);
+      } catch {
+        // badge is optional
+      }
+    };
+    load();
+    const t = setInterval(load, 60000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, []);
 
   // Legacy players may have no home store yet — force switcher open
   useEffect(() => {
@@ -234,8 +251,17 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
             </button>
           )}
         </div>
-        <a href="/dashboard/profile" aria-label="Profile" className="flex-none">
+        <a
+          href="/dashboard/notifications"
+          aria-label={unreadCount > 0 ? `Alerts, ${unreadCount} unread` : 'Alerts'}
+          className="relative flex-none"
+        >
           <Avatar avatar={avatarForComponent} size="md" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold grid place-items-center border-2 border-base">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </a>
       </header>
 

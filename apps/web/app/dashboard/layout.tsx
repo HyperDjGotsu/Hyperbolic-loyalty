@@ -239,7 +239,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-3 pointer-events-none" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="pointer-events-auto flex items-center gap-0.5 p-1.5 rounded-[30px] border border-white/10 bg-[color-mix(in_srgb,var(--bg-surface)_72%,transparent)] backdrop-blur-xl backdrop-saturate-150 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-          {navItems.map((item) => (
+          {/* Alerts live on the Home avatar badge, not in the bar */}
+          {navItems.filter((i) => i.href !== '/dashboard/notifications').map((item) => (
             <MobileNavItem
               key={item.href}
               item={item}
