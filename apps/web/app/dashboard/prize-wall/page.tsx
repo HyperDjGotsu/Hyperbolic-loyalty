@@ -136,8 +136,8 @@ export default function PrizeWallPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Prize Wall</h1>
-        <p className="text-secondary text-sm mt-1">
+        <h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Prize Wall</h1>
+        <p className="text-secondary text-sm mt-2">
           Spend your Points on real prizes. Points never expire.
         </p>
       </div>
@@ -168,7 +168,7 @@ export default function PrizeWallPage() {
         <>
           {floor.length > 0 && (
             <section>
-              <h2 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">
+              <h2 className="font-display text-xl font-bold text-primary mb-4">
                 Always Available
               </h2>
               <ItemGrid
@@ -186,7 +186,7 @@ export default function PrizeWallPage() {
 
           {unlocked.length > 0 && (
             <section>
-              <h2 className="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">
+              <h2 className="font-display text-xl font-bold text-primary mb-4">
                 Community Unlocked
               </h2>
               <ItemGrid
@@ -289,21 +289,20 @@ function BalanceBar({
   }
 
   return (
-    <div className="bg-surface rounded-xl p-4">
-      <div className="flex items-center justify-between gap-4">
+    <div className="bg-elevated rounded-[30px] p-5 border border-border-token">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full bg-elevated text-xs font-semibold text-primary uppercase tracking-wide">
-              {passStatus.tier}
-            </span>
-            <span className="font-semibold text-primary">
-              {passStatus.prizePoints.toLocaleString()} Prize Points available
-            </span>
+          <div className="text-xs font-bold uppercase tracking-wide text-secondary">Prize points</div>
+          <div className="text-xp text-5xl font-extrabold tabular-nums leading-none mt-1.5">
+            {passStatus.prizePoints.toLocaleString()}
           </div>
-          <p className="text-xs text-tertiary mt-1">
-            Lifetime XP: {passStatus.lifetimeXp.toLocaleString()}
+          <p className="text-xs text-tertiary mt-2">
+            Lifetime XP {passStatus.lifetimeXp.toLocaleString()}
           </p>
         </div>
+        <span className="px-3 py-1 rounded-full bg-surface text-xs font-bold text-primary uppercase tracking-wide">
+          {passStatus.tier}
+        </span>
       </div>
       {gateLocked && (
         <div className="mt-4">
@@ -357,7 +356,7 @@ function ItemGrid({
   selectedStoreId: string | null | undefined;
 }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
       {items.map(item => (
         <ItemCard
           key={item.id}
@@ -403,52 +402,51 @@ function ItemCard({
   const disabled = disabledReason !== null || redeeming;
 
   return (
-    <div className="bg-surface rounded-xl overflow-hidden">
-      <div className="aspect-square bg-elevated relative">
+    <div className="bg-surface rounded-[26px] overflow-hidden border border-border-token">
+      <div className="aspect-[4/5] bg-elevated relative">
         {item.image_url ? (
-          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+          <img src={item.image_url} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-tertiary text-xs">
-            No image
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_30%,var(--bg-elevated))] to-elevated" />
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
         {item.is_network_prize && (
-          <span className="absolute top-2 left-2 text-xs bg-yellow-500/90 text-black font-semibold px-1.5 py-0.5 rounded">
+          <span className="absolute top-3 left-3 text-[11px] bg-yellow-400 text-black font-bold px-2.5 py-1 rounded-full">
             Grail
           </span>
         )}
-      </div>
-      <div className="p-4">
-        <div className="font-semibold text-primary text-sm leading-tight">{item.name}</div>
-        {item.description && (
-          <div className="text-xs text-tertiary mt-1 leading-snug">{item.description}</div>
-        )}
-        <div className="mt-3 flex items-end justify-between gap-2">
-          <div>
-            <span className="text-lg font-bold text-primary">{item.xp_cost.toLocaleString()}</span>
-            <span className="text-xs text-secondary ml-1">pts</span>
-          </div>
-          {item.retail_value != null && (
-            <span className="text-xs text-tertiary">${item.retail_value} value</span>
-          )}
-        </div>
         {item.quantity != null && (
-          <div className="text-xs text-tertiary mt-1">
-            {outOfStock ? 'Out of stock' : `${item.quantity} remaining`}
+          <span className="absolute top-3 right-3 text-[11px] bg-black/50 backdrop-blur text-white font-bold px-2.5 py-1 rounded-full">
+            {outOfStock ? 'Out of stock' : `${item.quantity} left`}
+          </span>
+        )}
+        <div className="absolute inset-x-3.5 bottom-3">
+          <div className="font-extrabold text-white text-base leading-tight line-clamp-2">{item.name}</div>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-xl font-extrabold text-white tabular-nums">{item.xp_cost.toLocaleString()}</span>
+            <span className="text-xs text-white/70">pts</span>
+            {item.retail_value != null && (
+              <span className="ml-auto text-[11px] text-white/60">${item.retail_value} value</span>
+            )}
           </div>
+        </div>
+      </div>
+      <div className="p-3">
+        {item.description && (
+          <div className="text-xs text-tertiary mb-2.5 leading-snug line-clamp-2">{item.description}</div>
         )}
         {isGrailViewedElsewhere ? (
-          <div className="mt-3 text-center py-2 px-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <div className="text-center py-2 px-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
             <p className="text-xs text-yellow-400 font-medium">Only redeemable at Trade Emporium</p>
           </div>
         ) : outOfStock ? (
-          <div className="mt-3 text-center py-2 px-3 bg-elevated rounded-lg">
+          <div className="text-center py-2.5 px-3 bg-elevated rounded-full">
             <p className="text-xs text-tertiary font-medium">Out of Stock</p>
           </div>
         ) : (
-          <span className="block mt-3" title={disabledReason ?? undefined}>
+          <span className="block" title={disabledReason ?? undefined}>
             <button
-              className="w-full py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-500 transition-colors disabled:bg-elevated disabled:text-tertiary disabled:cursor-not-allowed"
+              className="w-full py-2.5 bg-accent text-accent-fg text-sm font-bold rounded-full hover:opacity-90 transition-opacity disabled:bg-elevated disabled:text-tertiary disabled:cursor-not-allowed"
               disabled={disabled}
               onClick={() => onRedeem(item)}
             >
