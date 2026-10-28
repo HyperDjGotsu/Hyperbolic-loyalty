@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Bell, CalendarDays, UserPlus, Sparkles, Trophy } from 'lucide-react';
 
 interface Notification {
   id: string;
@@ -135,13 +136,8 @@ export default function NotificationBell() {
 
   // Get icon for notification type
   const getIcon = (type: string) => {
-    switch (type) {
-      case 'event_share': return '📅';
-      case 'friend_request': return '👋';
-      case 'xp_earned': return '⭐';
-      case 'achievement': return '🏆';
-      default: return '🔔';
-    }
+    const Icon = type === 'event_share' ? CalendarDays : type === 'friend_request' ? UserPlus : type === 'xp_earned' ? Sparkles : type === 'achievement' ? Trophy : Bell;
+    return <Icon size={20} strokeWidth={1.75} className="text-secondary" />;
   };
 
   return (
@@ -195,7 +191,6 @@ export default function NotificationBell() {
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-6 text-center">
-                <div className="text-3xl mb-2">🔔</div>
                 <div className="text-secondary">No notifications yet</div>
               </div>
             ) : (
@@ -208,7 +203,7 @@ export default function NotificationBell() {
                   }`}
                 >
                   <div className="flex gap-3">
-                    <div className="text-xl">{getIcon(notification.type)}</div>
+                    <div>{getIcon(notification.type)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-primary font-medium text-sm truncate">

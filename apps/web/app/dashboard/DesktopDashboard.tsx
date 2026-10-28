@@ -328,7 +328,7 @@ function GameCard({
                 </div>
                 <div className="bg-surface rounded-lg p-2.5">
                   <div className="text-[9px] text-secondary uppercase mb-1">Streak</div>
-                  <div className="text-base font-bold text-yellow-400">🔥{stats.currentStreak}</div>
+                  <div className="text-base font-bold text-yellow-400">{stats.currentStreak}</div>
                 </div>
               </div>
 
@@ -802,7 +802,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                     boxShadow: '0 4px 15px rgba(249, 115, 22, 0.5)'
                   }}
                 >
-                  ⭐ Level {level}
+                  Level {level}
                 </div>
               </div>
 
@@ -959,7 +959,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                             rel="noopener noreferrer"
                             className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#9146ff] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
                           >
-                            📺 Twitch
+                            Twitch
                           </a>
                         )}
                         {liveBanner.youtubeUrl && (
@@ -969,7 +969,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                             rel="noopener noreferrer"
                             className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#ff0000] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
                           >
-                            ▶️ YouTube
+                            YouTube
                           </a>
                         )}
                       </div>
@@ -981,7 +981,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                      🎮 My Games
+                      My Games
                     </h3>
                     <button 
                       onClick={() => router.push('/dashboard/profile')}
@@ -1014,7 +1014,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                      📋 Recent Activity
+                      Recent Activity
                     </h3>
                     <button 
                       onClick={() => router.push('/dashboard/profile')}
@@ -1047,7 +1047,6 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                       ))
                     ) : (
                       <div className="text-center py-12 text-secondary">
-                        <div className="text-3xl mb-3">📋</div>
                         <p className="text-sm">No activity yet</p>
                         <p className="text-xs text-tertiary mt-1">Attend events to start earning XP!</p>
                       </div>
@@ -1062,7 +1061,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               {/* Overall Stats Summary */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
-                  📊 Your Stats
+                  Your Stats
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
                   <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
@@ -1078,7 +1077,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                     <div className="text-[10px] text-secondary uppercase mt-1">Total XP</div>
                   </div>
                   <div className="bg-elevated border border-border-token rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-yellow-400">🔥 {playerData?.currentStreak || 0}</div>
+                    <div className="text-2xl font-bold text-yellow-400">{playerData?.currentStreak || 0}</div>
                     <div className="text-[10px] text-secondary uppercase mt-1">Week Streak</div>
                   </div>
                 </div>
@@ -1095,7 +1094,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    📅 Upcoming Events
+                    Upcoming Events
                   </h3>
                   <button
                     onClick={() => router.push('/dashboard/events')}
@@ -1137,7 +1136,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               {/* Store Updates */}
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
-                  📡 Store Updates
+                  Store Updates
                 </h3>
                 {storeUpdates.length === 0 ? null : (
                   <div className="space-y-3">
@@ -1165,7 +1164,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    👥 Friends Activity
+                    Friends Activity
                   </h3>
                   <button
                     onClick={() => router.push('/dashboard/community')}
@@ -1176,7 +1175,6 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 </div>
                 {friendActivity.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
-                    <div className="text-3xl">👥</div>
                     <div className="text-sm font-medium text-secondary">No friend activity yet</div>
                     <div className="text-xs text-tertiary">Add friends to see what they&apos;re up to</div>
                     <button
@@ -1209,7 +1207,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 mt-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
                   <h3 className="text-[15px] font-semibold flex items-center gap-2">
-                    🏆 Prize Wall
+                    Prize Wall
                   </h3>
                   <button
                     onClick={() => router.push('/dashboard/prize-wall')}

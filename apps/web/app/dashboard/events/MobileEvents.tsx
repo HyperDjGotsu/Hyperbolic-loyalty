@@ -4,6 +4,8 @@ import SpecialEvents from '@/components/SpecialEvents';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader } from '@/components/Loader';
+import { EmptyState } from '@/components/EmptyState';
+import { RefreshCw, CalendarDays, CalendarX, Star, Gift, Trophy, Sparkles, Share, AlertCircle, Users, type LucideIcon } from 'lucide-react';
 
 interface GameInfo {
   id: string;
@@ -297,11 +299,7 @@ const ShareModal = ({
               {loading ? (
                 <div className="text-center py-8 text-secondary">Loading friends...</div>
               ) : friends.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-3xl mb-2">👥</div>
-                  <div className="text-secondary">No friends yet</div>
-                  <div className="text-secondary text-sm">Add friends in the Community tab</div>
-                </div>
+                <EmptyState icon={Users} title="No friends yet" hint="Add friends in the Community tab" />
               ) : (
                 <div className="space-y-2">
                   <div className="text-secondary text-xs mb-3">Select friends to notify:</div>
@@ -526,7 +524,7 @@ function EventsPageContent() {
             className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-primary rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            ▶️ YouTube
+            YouTube
           </a>
         )}
         {!event.twitchUrl && !event.youtubeUrl && (
@@ -541,17 +539,14 @@ function EventsPageContent() {
   const EventCard = ({ event }: { event: CalendarEvent }) => (
     <div 
       onClick={() => setSelectedEvent(event)}
-      className={`bg-elevated/50 rounded-xl overflow-hidden border cursor-pointer hover:border-border-token transition-all ${
+      className={`bg-surface rounded-[26px] overflow-hidden border cursor-pointer active:scale-[0.99] transition-all ${
         event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-border-token'
       }`}
     >
-      <div 
-        className="p-4 border-l-4" 
-        style={{ borderLeftColor: event.game?.color || '#64748b' }}
-      >
+      <div className="p-4">
         <div className="flex items-center gap-3">
           <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+            className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-2xl flex-none"
             style={{ backgroundColor: `${event.game?.color || '#64748b'}20` }}
           >
             {event.game?.icon || '🎮'}
@@ -560,7 +555,7 @@ function EventsPageContent() {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-primary font-bold truncate">{event.name}</span>
               {event.isNetworkEvent && (
-                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30 whitespace-nowrap">🌐 GGC Network</span>
+                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30 whitespace-nowrap">GGC Network</span>
               )}
               {event.isLive && (
                 <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
@@ -591,7 +586,7 @@ function EventsPageContent() {
               toggleInterest(event.id);
             }}
             disabled={togglingInterest === event.id}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               event.isInterested
                 ? 'bg-accent/10 text-accent border border-accent/50'
                 : 'bg-elevated text-primary hover:bg-elevated'
@@ -604,7 +599,7 @@ function EventsPageContent() {
               e.stopPropagation();
               setShareEvent(event);
             }}
-            className="px-4 py-2 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated"
+            className="px-5 py-2.5 bg-elevated text-primary rounded-xl text-sm font-semibold"
           >
             Share
           </button>
@@ -616,7 +611,7 @@ function EventsPageContent() {
   const EventDetailModal = ({ event, onClose }: { event: CalendarEvent; onClose: () => void }) => (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-surface rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
+      <div className="relative bg-surface rounded-t-[32px] sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
         {/* Header */}
         <div className="relative p-6 pb-4">
           <button 
@@ -650,7 +645,7 @@ function EventsPageContent() {
           {/* Date & Time */}
           <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-2xl">📅</div>
+              <div className="w-12 h-12 bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent rounded-2xl flex items-center justify-center"><CalendarDays size={22} /></div>
               <div>
                 <div className="text-primary font-bold">{event.date}</div>
                 <div className="text-secondary">{event.time}</div>
@@ -661,7 +656,6 @@ function EventsPageContent() {
           {/* Entry & Spots */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
-              <div className="text-2xl mb-1">💰</div>
               <div className="text-secondary text-xs">Entry Fee</div>
               <div className="text-primary font-bold text-lg">{event.entryFee}</div>
               {event.passFreeEntry && (
@@ -669,7 +663,6 @@ function EventsPageContent() {
               )}
             </div>
             <div className="bg-elevated/50 rounded-xl p-4 border border-border-token text-center">
-              <div className="text-2xl mb-1">👥</div>
               <div className="text-secondary text-xs">Capacity</div>
               <div className="text-primary font-bold text-lg">{event.maxSpots || 'Open'}</div>
             </div>
@@ -679,7 +672,7 @@ function EventsPageContent() {
           {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
             <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">⭐</span>
+                <Star size={22} className="text-accent flex-none" />
                 <div className="flex-1">
                   <div className="text-purple-400 font-bold">{event.interestedCount} Interested</div>
                   {event.interestedFriends?.length > 0 && (
@@ -720,16 +713,16 @@ function EventsPageContent() {
               <div className="text-secondary text-xs mb-2">PRIZES</div>
               <div className="space-y-2">
                 {event.prizing.map((prize, index) => {
-                  const prizeInfo: Record<string, { icon: string; title: string; desc: string }> = {
-                    'pack-per-win': { icon: '🎁', title: 'Pack Per Win', desc: 'Win a booster pack for each match victory' },
-                    'packperwin': { icon: '🎁', title: 'Pack Per Win', desc: 'Win a booster pack for each match victory' },
-                    '1-3-5': { icon: '🏆', title: '1-3-5 Packs', desc: '1 win = 1 pack • 2 wins = 3 packs • 3 wins = 5 packs' },
-                    'promo': { icon: '🌟', title: 'Promo Card', desc: 'All participants receive a promo card' },
+                  const prizeInfo: Record<string, { icon: LucideIcon; title: string; desc: string }> = {
+                    'pack-per-win': { icon: Gift, title: 'Pack Per Win', desc: 'Win a booster pack for each match victory' },
+                    'packperwin': { icon: Gift, title: 'Pack Per Win', desc: 'Win a booster pack for each match victory' },
+                    '1-3-5': { icon: Trophy, title: '1-3-5 Packs', desc: '1 win = 1 pack • 2 wins = 3 packs • 3 wins = 5 packs' },
+                    'promo': { icon: Sparkles, title: 'Promo Card', desc: 'All participants receive a promo card' },
                   };
-                  const info = prizeInfo[prize.toLowerCase()] || { icon: '🎁', title: prize, desc: '' };
+                  const info = prizeInfo[prize.toLowerCase()] || { icon: Gift, title: prize, desc: '' };
                   return (
                     <div key={index} className="flex items-center gap-3">
-                      <span className="text-xl">{info.icon}</span>
+                      <info.icon size={20} className="text-accent flex-none" />
                       <div>
                         <div className="text-primary font-medium text-sm">{info.title}</div>
                         {info.desc && <div className="text-secondary text-xs">{info.desc}</div>}
@@ -781,7 +774,7 @@ function EventsPageContent() {
               onClick={() => setShareEvent(event)}
               className="px-6 py-4 bg-elevated text-primary rounded-xl font-bold hover:bg-elevated"
             >
-              📤
+              <Share size={20} />
             </button>
           </div>
           <p className="text-secondary text-xs text-center">Registration handled in-store</p>
@@ -793,19 +786,17 @@ function EventsPageContent() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur-sm border-b border-border-token">
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-primary">Events</h1>
-              <p className="text-secondary text-sm">Tap to see details</p>
-            </div>
+      <div className="sticky top-0 z-10 bg-base/90 backdrop-blur-xl">
+        <div className="px-4 pt-5 pb-1">
+          <div className="flex items-end justify-between">
+            <h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Events</h1>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="px-3 py-1.5 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated disabled:opacity-50"
+              aria-label="Sync events"
+              className="mb-1 grid h-10 w-10 place-items-center rounded-full bg-elevated text-primary disabled:opacity-50"
             >
-              {syncing ? 'Syncing...' : 'Sync'}
+              <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />
             </button>
           </div>
           
@@ -818,10 +809,10 @@ function EventsPageContent() {
           )}
 
           {/* Store / Network tabs */}
-          <div className="flex gap-1 mt-3 bg-elevated rounded-lg p-1">
+          <div className="flex gap-1 mt-4 bg-elevated rounded-2xl p-1">
             <button
               onClick={() => setCalendarScope('store')}
-              className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 calendarScope === 'store' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
               }`}
             >
@@ -829,7 +820,7 @@ function EventsPageContent() {
             </button>
             <button
               onClick={() => setCalendarScope('network')}
-              className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-colors ${
                 calendarScope === 'network' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
               }`}
             >
@@ -839,12 +830,12 @@ function EventsPageContent() {
         </div>
 
         {/* Game Filter */}
-        <div className="px-4 pb-3 flex gap-2 overflow-x-auto">
+        <div className="px-4 pt-3 pb-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {GAME_FILTERS.map(game => (
             <button
               key={game.id}
               onClick={() => setSelectedGame(game.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 selectedGame === game.id
                   ? 'bg-accent text-accent-fg'
                   : 'bg-elevated text-secondary hover:bg-elevated'
@@ -867,37 +858,30 @@ function EventsPageContent() {
         {loading ? (
           <div className="py-16"><Loader label="Loading events" /></div>
         ) : error ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">❌</div>
-            <div className="text-primary font-bold">Failed to load events</div>
-            <div className="text-secondary text-sm mt-2">{error}</div>
-            <button onClick={() => loadEvents()} className="mt-4 px-4 py-2 bg-accent text-primary rounded-lg">
-              Retry
-            </button>
+          <div>
+            <EmptyState icon={AlertCircle} title="Couldn't load events" hint={error} />
+            <div className="flex justify-center">
+              <button onClick={() => loadEvents()} className="px-6 py-2.5 bg-accent text-accent-fg rounded-xl font-semibold">Retry</button>
+            </div>
           </div>
         ) : events.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">📭</div>
-            <div className="text-primary font-bold">No upcoming events</div>
-            <div className="text-secondary text-sm mt-2">
-              {selectedGame !== 'all' ? 'Try selecting "All Games" to see more events' : calendarScope === 'network' ? 'No company events scheduled yet' : 'Tap Sync to pull from Google Calendar'}
+          <div>
+            <EmptyState
+              icon={CalendarX}
+              title="No upcoming events"
+              hint={selectedGame !== 'all' ? 'Try selecting "All Games" to see more events' : calendarScope === 'network' ? 'No company events scheduled yet' : 'Tap sync to pull from Google Calendar'}
+            />
+            <div className="flex justify-center">
+              <button onClick={handleSync} disabled={syncing} className="px-6 py-2.5 bg-accent text-accent-fg rounded-xl font-semibold disabled:opacity-50">
+                {syncing ? 'Syncing...' : 'Sync from Calendar'}
+              </button>
             </div>
-            <button
-              onClick={handleSync}
-              disabled={syncing}
-              className="mt-4 px-4 py-2 bg-accent text-primary rounded-lg disabled:opacity-50"
-            >
-              {syncing ? 'Syncing...' : 'Sync from Calendar'}
-            </button>
           </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(groupedEvents).map(([date, dateEvents]) => (
               <div key={date}>
-                <h2 className="text-secondary text-sm font-medium mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-accent rounded-full"></span>
-                  {date}
-                </h2>
+                <h2 className="font-display text-xl font-bold text-primary mb-3">{date}</h2>
                 <div className="space-y-3">
                   {dateEvents.map(event => (
                     <EventCard key={event.id} event={event} />

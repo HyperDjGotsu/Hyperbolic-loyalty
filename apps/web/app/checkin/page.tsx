@@ -105,7 +105,6 @@ function CheckInContent() {
 
   if (state === 'no-event') return (
     <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
-      <div className="text-6xl">🎮</div>
       <h1 className="text-2xl font-bold text-primary">No Active Event</h1>
       <p className="text-secondary">This event has ended or hasn't started yet</p>
       <Link href="/dashboard" className="text-accent hover:opacity-80 transition-opacity">Go to Dashboard →</Link>
@@ -157,7 +156,6 @@ function CheckInContent() {
 
   if (state === 'error') return (
     <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
-      <div className="text-6xl">❌</div>
       <h1 className="text-2xl font-bold text-danger">Check-in Failed</h1>
       <p className="text-secondary">{errorMsg}</p>
       <button onClick={() => setState('ready')} className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">

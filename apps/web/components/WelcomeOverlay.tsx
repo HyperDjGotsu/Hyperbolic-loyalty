@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Hand, Zap, RotateCw, ShoppingBag, CreditCard, type LucideIcon } from 'lucide-react';
 
 const STORAGE_KEY = 'hxp_welcome_seen';
 
@@ -23,32 +24,32 @@ const DEFAULT_CONFIG: StoreConfig = {
 function buildSlides(cfg: StoreConfig) {
   return [
     {
-      emoji: '👋',
+      icon: Hand,
       title: `Welcome to ${cfg.store_name}`,
       body: "You just joined your store's loyalty system. Every time you show up, play, and compete — you earn XP and climb the leaderboard.",
     },
     {
-      emoji: '⚡',
+      icon: Zap,
       title: 'Earn XP Every Visit',
       body: 'Check in at events to earn XP. Win matches for bonus XP. The more you play, the higher you rank.',
     },
     {
-      emoji: '🎰',
+      icon: RotateCw,
       title: 'Free Daily Spin',
       body: `Every day you get a free spin on the prize wheel. Prizes reset at midnight — don't leave ${cfg.currency_name} on the table.`,
     },
     {
-      emoji: '🛍️',
+      icon: ShoppingBag,
       title: cfg.shop_title,
       body: `Spend your ${cfg.currency_name} on ${cfg.shop_description}. Your profile, your style.`,
     },
     {
-      emoji: '🪪',
+      icon: CreditCard,
       title: 'Your Player Profile',
       body: 'Your Player Pass profile travels with you across the network. Your progress, Guild Points, and rewards are always there. Staff and check-in kiosks can identify you through your profile QR — no code to remember.',
       cta: "Let's go",
     },
-  ] as Array<{ emoji: string; title: string; body: string; cta?: string }>;
+  ] as Array<{ icon: LucideIcon; title: string; body: string; cta?: string }>;
 }
 
 export function WelcomeOverlay() {
@@ -103,7 +104,7 @@ export function WelcomeOverlay() {
 
       {/* Slide content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-        <div className="text-7xl mb-8">{current.emoji}</div>
+        <div className="mx-auto mb-8 grid h-24 w-24 place-items-center rounded-[30px] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent"><current.icon size={44} strokeWidth={1.75} /></div>
         <h2 className="text-primary text-2xl font-bold mb-4 leading-snug">{current.title}</h2>
         <p className="text-secondary text-base leading-relaxed max-w-sm">{current.body}</p>
       </div>

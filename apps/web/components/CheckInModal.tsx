@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { GlowButton } from '@/components/ui';
+import { MapPin, Radio, Sparkles, Clock, XCircle, CheckCircle2 } from 'lucide-react';
 
 interface CheckInModalProps {
   hasCheckedIn: boolean;
@@ -89,7 +90,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
           {nfcStatus === 'idle' && (
             <>
               <div className="w-32 h-32 mx-auto mb-6 bg-elevated rounded-full flex items-center justify-center border-2 border-accent/30 border-dashed">
-                <span className="text-5xl">📍</span>
+                <MapPin size={52} strokeWidth={1.5} />
               </div>
               <GlowButton color="cyan" onClick={performCheckIn} className="w-full py-4 text-lg">
                 Tap to Scan
@@ -100,7 +101,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
           {nfcStatus === 'scanning' && (
             <>
               <div className="w-32 h-32 mx-auto mb-6 bg-accent/20 rounded-full flex items-center justify-center animate-pulse">
-                <span className="text-5xl">📡</span>
+                <Radio size={52} strokeWidth={1.5} />
               </div>
               <p className="text-accent font-semibold">Scanning...</p>
             </>
@@ -109,7 +110,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
           {nfcStatus === 'found' && (
             <>
               <div className="w-32 h-32 mx-auto mb-6 bg-accent/30 rounded-full flex items-center justify-center">
-                <span className="text-5xl">✨</span>
+                <Sparkles size={52} strokeWidth={1.5} />
               </div>
               <p className="text-accent font-semibold">Card Found!</p>
             </>
@@ -118,7 +119,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
           {nfcStatus === 'already-checked' && (
             <>
               <div className="w-32 h-32 mx-auto mb-6 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                <span className="text-5xl">⏰</span>
+                <Clock size={52} strokeWidth={1.5} />
               </div>
               <h3 className="text-2xl font-bold text-yellow-400 mb-2">Already Checked In!</h3>
               <p className="text-secondary">Come back tomorrow</p>
@@ -128,7 +129,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
           {nfcStatus === 'error' && (
             <>
               <div className="w-32 h-32 mx-auto mb-6 bg-red-500/20 rounded-full flex items-center justify-center">
-                <span className="text-5xl">❌</span>
+                <XCircle size={52} strokeWidth={1.5} />
               </div>
               <h3 className="text-2xl font-bold text-red-400 mb-2">Check-in Failed</h3>
               <p className="text-secondary">{checkInResult?.message || 'Please try again'}</p>
@@ -138,7 +139,7 @@ export const CheckInModal = ({ hasCheckedIn, onComplete, onClose }: CheckInModal
           {nfcStatus === 'success' && checkInResult && (
             <>
               <div className="w-32 h-32 mx-auto mb-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                <span className="text-5xl">✅</span>
+                <CheckCircle2 size={52} strokeWidth={1.5} />
               </div>
               <h3 className="text-2xl font-bold text-emerald-400 mb-2">{checkInResult.message}</h3>
               <div className="bg-accent/20 rounded-xl p-4 inline-block border border-accent/30">

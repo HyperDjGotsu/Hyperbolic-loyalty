@@ -362,7 +362,7 @@ function OnboardingContent() {
                 </div>
               </div>
               {referralValid === true && (
-                <p className="text-success text-xs mt-1">✨ Valid code! You'll get +30 XP bonus</p>
+                <p className="text-success text-xs mt-1">Valid code! You'll get +30 XP bonus</p>
               )}
               {referralValid === false && referralCode && (
                 <p className="text-danger text-xs mt-1">Invalid referral code</p>

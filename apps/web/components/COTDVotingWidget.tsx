@@ -165,7 +165,7 @@ export default function COTDVotingWidget() {
                   <div className="text-xs text-secondary">
                     {card.game} • #{card.number}
                     {card.cardData.printing && card.cardData.printing !== 'Standard' && (
-                      <span className="text-purple-400 ml-1">✨ {card.cardData.printing}</span>
+                      <span className="text-purple-400 ml-1">{card.cardData.printing}</span>
                     )}
                   </div>
                 </div>

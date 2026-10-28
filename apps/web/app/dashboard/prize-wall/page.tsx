@@ -485,7 +485,7 @@ function ConfirmationModal({
         <p className="text-sm text-secondary mt-3">
           You&apos;ll have {(balance - item.xp_cost).toLocaleString()} pts left
         </p>
-        <p className="text-xs text-tertiary mt-2">🏪 Collect in person — show your claim code to staff at the store.</p>
+        <p className="text-xs text-tertiary mt-2">Collect in person — show your claim code to staff at the store.</p>
         {error && <p className="text-sm text-danger mt-3" role="alert">{error}</p>}
         <div className="flex gap-3 mt-6">
           <button

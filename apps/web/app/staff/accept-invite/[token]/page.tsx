@@ -88,7 +88,6 @@ export default function AcceptInviteTokenPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 p-6">
         <div className="max-w-md w-full bg-gray-900 rounded-2xl p-8 text-center border border-gray-800">
-          <div className="text-4xl mb-4">🎮</div>
           <h1 className="text-2xl font-bold text-white mb-2">Staff Invitation</h1>
           <p className="text-gray-400 mb-6">
             Sign in with the email address this invitation was sent to.
@@ -115,7 +114,6 @@ export default function AcceptInviteTokenPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 p-6">
         <div className="max-w-md w-full bg-gray-900 rounded-2xl p-8 text-center border border-purple-800/40">
-          <div className="text-5xl mb-4">✅</div>
           <h1 className="text-2xl font-bold text-white mb-2">Staff Access Active</h1>
           <p className="text-gray-300 mb-6">{message}</p>
           <button
@@ -133,7 +131,6 @@ export default function AcceptInviteTokenPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 p-6">
         <div className="max-w-md w-full bg-gray-900 rounded-2xl p-8 text-center border border-red-800/40">
-          <div className="text-4xl mb-4">❌</div>
           <h1 className="text-2xl font-bold text-white mb-2">Invitation Error</h1>
           <p className="text-gray-400 mb-6">{message}</p>
           <button
@@ -150,7 +147,6 @@ export default function AcceptInviteTokenPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 p-6">
       <div className="max-w-md w-full bg-gray-900 rounded-2xl p-8 text-center border border-purple-800/40">
-        <div className="text-5xl mb-4">✅</div>
         <h1 className="text-2xl font-bold text-white mb-2">Welcome to the Team</h1>
         <p className="text-gray-300 mb-6">{message}</p>
         <p className="text-gray-500 text-sm">Taking you to HQ...</p>

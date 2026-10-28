@@ -98,7 +98,6 @@ export default function PublicEventPage() {
     return (
       <div className="min-h-screen bg-base flex items-center justify-center">
         <div className="text-center">
-          <div className="text-5xl mb-4">📅</div>
           <div className="text-secondary">Loading event...</div>
         </div>
       </div>
@@ -165,7 +164,7 @@ export default function PublicEventPage() {
               )}
               {event.hasStream && (
                 <span className="px-2 py-0.5 bg-accent/10 text-accent text-xs rounded-full">
-                  📺 Streamed
+                  Streamed
                 </span>
               )}
             </div>
@@ -214,7 +213,7 @@ export default function PublicEventPage() {
 
         {/* XP Rewards */}
         <div className="card-elevated rounded-xl p-4 mb-6">
-          <div className="text-primary font-bold mb-3">🎁 XP Rewards</div>
+          <div className="text-primary font-bold mb-3">XP Rewards</div>
           <div className="flex gap-6">
             <div>
               <div className="xp-number text-xl">+{event.attendanceXp}</div>
@@ -230,7 +229,7 @@ export default function PublicEventPage() {
         {/* Prizing Structure */}
         {event.prizing && event.prizing.length > 0 && (
           <div className="card-elevated rounded-xl p-4 mb-6">
-            <div className="text-primary font-bold mb-3">🏆 Prizes</div>
+            <div className="text-primary font-bold mb-3">Prizes</div>
             <div className="space-y-3">
               {event.prizing.map((prize, index) => {
                 // Map prize codes to display info
@@ -290,7 +289,7 @@ export default function PublicEventPage() {
         {/* Stream Links */}
         {event.hasStream && (event.twitchUrl || event.youtubeUrl) && (
           <div className="card-elevated rounded-xl p-4 mb-6">
-            <div className="text-primary font-bold mb-3">📺 Watch Live</div>
+            <div className="text-primary font-bold mb-3">Watch Live</div>
             <div className="flex gap-3">
               {event.twitchUrl && (
                 <a
@@ -299,7 +298,7 @@ export default function PublicEventPage() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-fg rounded-lg hover:opacity-90 transition-opacity"
                 >
-                  📺 Twitch
+                  Twitch
                 </a>
               )}
               {event.youtubeUrl && (
@@ -309,7 +308,7 @@ export default function PublicEventPage() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-2 bg-danger text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
-                  ▶️ YouTube
+                  YouTube
                 </a>
               )}
             </div>
@@ -334,7 +333,6 @@ export default function PublicEventPage() {
 
         {/* CTA Section */}
         <div className="card p-6 text-center">
-          <div className="text-4xl mb-4">🎮</div>
           <h2 className="font-display text-xl font-bold text-primary mb-2">Join {event?.location ?? 'Player Pass'}</h2>
           <p className="text-secondary mb-4">
             Track your XP, compete on leaderboards, and never miss an event!

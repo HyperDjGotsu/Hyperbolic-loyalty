@@ -296,7 +296,6 @@ const ShareModal = ({
                 <div className="text-center py-8 text-secondary">Loading friends...</div>
               ) : friends.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-3xl mb-2">👥</div>
                   <div className="text-secondary">No friends yet</div>
                   <div className="text-secondary text-sm">Add friends in the Community tab</div>
                 </div>
@@ -496,7 +495,7 @@ const StreamButtons = ({ event }: { event: CalendarEvent }) => {
           className="flex items-center gap-1 px-2 py-1 text-xs bg-red-600 text-primary rounded-lg"
           onClick={(e) => e.stopPropagation()}
         >
-          ▶️ YouTube
+          YouTube
         </a>
       )}
       {!event.twitchUrl && !event.youtubeUrl && (
@@ -742,7 +741,7 @@ function EventsPageContent() {
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-primary font-bold text-lg">{event.name}</span>
               {event.isNetworkEvent && (
-                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30 whitespace-nowrap">🌐 GGC Network</span>
+                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30 whitespace-nowrap">GGC Network</span>
               )}
               {event.isLive && (
                 <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
@@ -1169,7 +1168,6 @@ function EventsPageContent() {
           <div className="py-16"><Loader label="Loading events" /></div>
         ) : error ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-4">❌</div>
             <div className="text-primary font-bold">Failed to load events</div>
             <div className="text-secondary text-sm mt-2">{error}</div>
             <button onClick={() => loadEvents()} className="mt-4 px-4 py-2 bg-accent text-primary rounded-lg">
@@ -1178,7 +1176,6 @@ function EventsPageContent() {
           </div>
         ) : events.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-4">📭</div>
             <div className="text-primary font-bold">No upcoming events</div>
             <div className="text-secondary text-sm mt-2">
               Tap Refresh to reload events
@@ -1225,7 +1222,6 @@ function EventsPageContent() {
             <div className="flex-1 space-y-6">
               {Object.entries(groupedEvents).length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-4xl mb-4">🔍</div>
                   <div className="text-primary font-bold">No events match your filters</div>
                   <div className="text-secondary text-sm mt-2">
                     Try selecting a different game or clearing the date filter

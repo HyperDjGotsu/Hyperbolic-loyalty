@@ -19,7 +19,7 @@ const StreamButtons = ({ twitchUrl, youtubeUrl, isLive }: { twitchUrl?: string; 
           rel="noopener noreferrer"
           className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors"
         >
-          📺 Twitch
+          Twitch
           {isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
         </a>
       )}

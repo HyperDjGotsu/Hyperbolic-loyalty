@@ -34,7 +34,6 @@ function NoTokenContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 p-6">
         <div className="max-w-md w-full bg-gray-900 rounded-2xl p-8 text-center border border-gray-800">
-          <div className="text-4xl mb-4">🔗</div>
           <h1 className="text-2xl font-bold text-white mb-2">Incomplete Invitation Link</h1>
           <p className="text-gray-400 mb-6">
             The invitation token is missing. Open the original invitation link or ask your manager for a new one.
@@ -53,7 +52,6 @@ function NoTokenContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 p-6">
         <div className="max-w-md w-full bg-gray-900 rounded-2xl p-8 text-center border border-purple-800/40">
-          <div className="text-5xl mb-4">✅</div>
           <h1 className="text-2xl font-bold text-white mb-2">Staff Access Active</h1>
           <p className="text-gray-300 mb-6">
             This invitation link is incomplete, but your staff access is already active.
@@ -72,7 +70,6 @@ function NoTokenContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 p-6">
       <div className="max-w-md w-full bg-gray-900 rounded-2xl p-8 text-center border border-yellow-800/40">
-        <div className="text-4xl mb-4">🔗</div>
         <h1 className="text-2xl font-bold text-white mb-2">Incomplete Invitation Link</h1>
         <p className="text-gray-400 mb-6">
           The invitation token is missing. Open the original invitation link or ask your manager for a new one.
