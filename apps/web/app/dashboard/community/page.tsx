@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Avatar, GlowButton } from '@/components/ui';
 import { SELECTABLE_GAMES } from '@/lib/games';
+import { Loader } from '@/components/Loader';
 
 // Types
 interface PlayerAvatar {
@@ -857,7 +858,7 @@ export default function CommunityPage() {
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">🔍</span>
             {isSearching && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary animate-spin">⏳</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2"><Loader size={18} /></span>
             )}
           </div>
         </div>
@@ -1029,10 +1030,7 @@ export default function CommunityPage() {
 
             {/* Leaderboard List */}
             {leaderboardLoading ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">🏆</div>
-                <div className="text-secondary">Loading rankings...</div>
-              </div>
+              <div className="py-12"><Loader label="Loading rankings" /></div>
             ) : leaderboard.length > 0 ? (
               leaderboard.map((entry) => (
                 <MemberCard key={entry.id} member={entry} />
@@ -1092,10 +1090,7 @@ export default function CommunityPage() {
 
             {/* Friends List */}
             {friendsLoading ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">👥</div>
-                <div className="text-secondary">Loading friends...</div>
-              </div>
+              <div className="py-12"><Loader label="Loading friends" /></div>
             ) : friends.length > 0 ? (
               <>
                 <h3 className="text-sm font-medium text-secondary mb-2">
@@ -1119,10 +1114,7 @@ export default function CommunityPage() {
         {activeTab === 'one_piece' && (
           <div className="space-y-4">
             {onePieceLoading ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">🏴‍☠️</div>
-                <div className="text-secondary">Loading...</div>
-              </div>
+              <div className="py-12"><Loader label="Loading" /></div>
             ) : (
               <>
                 {/* Emperor of the Month */}

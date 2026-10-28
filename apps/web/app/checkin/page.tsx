@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
+import { Loader } from '@/components/Loader';
 
 interface EventInfo {
   id: string;
@@ -78,7 +79,7 @@ function CheckInContent() {
 
   if (state === 'loading') return (
     <div className="min-h-screen bg-base flex items-center justify-center">
-      <div className="text-secondary text-lg">Loading...</div>
+      <Loader />
     </div>
   );
 
@@ -212,7 +213,7 @@ export default function CheckInPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-base flex items-center justify-center">
-        <div className="text-secondary">Loading...</div>
+        <Loader />
       </div>
     }>
       <CheckInContent />

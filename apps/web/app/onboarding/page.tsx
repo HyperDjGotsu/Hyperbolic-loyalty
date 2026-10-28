@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SELECTABLE_GAMES } from '@/lib/games';
+import { Loader } from '@/components/Loader';
 
 const GAME_OPTIONS = SELECTABLE_GAMES;
 
@@ -227,7 +228,7 @@ function OnboardingContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <Loader className="mb-2" />
           <p className="text-secondary">Loading...</p>
         </div>
       </div>
@@ -509,7 +510,7 @@ function OnboardingLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-base">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <Loader className="mb-2" />
         <p className="text-secondary">Loading...</p>
       </div>
     </div>

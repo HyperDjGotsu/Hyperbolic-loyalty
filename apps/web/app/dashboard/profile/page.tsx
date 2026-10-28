@@ -5,6 +5,7 @@ import { ProfileSkeleton } from '@/components/Skeleton';
 import { useUser, useClerk } from '@clerk/nextjs';
 import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
 import { SELECTABLE_GAMES } from '@/lib/games';
+import { Loader } from '@/components/Loader';
 
 interface ShopItem {
   id: string;
@@ -1072,7 +1073,7 @@ export default function ProfilePage() {
         {referralLoading ? (
           <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
             <div className="flex items-center justify-center py-4">
-              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              <Loader size={24} />
             </div>
           </div>
         ) : referralStats ? (

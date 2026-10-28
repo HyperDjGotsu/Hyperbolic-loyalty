@@ -3,6 +3,7 @@
 import SpecialEvents from '@/components/SpecialEvents';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Loader } from '@/components/Loader';
 
 interface GameInfo {
   id: string;
@@ -864,10 +865,7 @@ function EventsPageContent() {
           </div>
         )}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4 animate-bounce">📅</div>
-            <div className="text-secondary">Loading events...</div>
-          </div>
+          <div className="py-16"><Loader label="Loading events" /></div>
         ) : error ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">❌</div>

@@ -152,3 +152,15 @@ body {
     color: #4d8dff;
   }
 }
+
+/* Player Pass loader chevrons (components/Loader.tsx) */
+@keyframes pp-chevron {
+  0%, 100% { opacity: 0.25; transform: translateY(3px); }
+  40% { opacity: 1; transform: translateY(0); }
+}
+.pp-chevron { animation: pp-chevron 1.1s ease-in-out infinite; }
+.pp-chevron-a { animation-delay: 0s; }
+.pp-chevron-b { animation-delay: 0.18s; }
+@media (prefers-reduced-motion: reduce) {
+  .pp-chevron { animation: none; opacity: 1; }
+}

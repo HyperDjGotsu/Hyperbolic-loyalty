@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader } from '@/components/Loader';
 
 interface Notification {
   id: string;
@@ -125,7 +126,7 @@ export default function NotificationsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+          <Loader />
         </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
