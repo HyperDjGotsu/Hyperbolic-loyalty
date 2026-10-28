@@ -5,6 +5,8 @@ import { useUser } from '@clerk/nextjs';
 import { Avatar, GlowButton } from '@/components/ui';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { Loader } from '@/components/Loader';
+import { Trophy, Search, SearchX, Users, Shield, MessageCircle, Lock, Settings } from 'lucide-react';
+import { EmptyState } from '@/components/EmptyState';
 
 // Types
 interface PlayerAvatar {
@@ -99,9 +101,9 @@ interface BountyHunterStatus {
 // Privacy options configuration
 const privacyOptions = {
   profileVisibility: [
-    { id: 'public', label: 'Public', icon: '🌐', description: 'Anyone can see your profile' },
-    { id: 'friends', label: 'Friends Only', icon: '👥', description: 'Only friends can see your profile' },
-    { id: 'private', label: 'Private', icon: '🔒', description: 'Only you can see your profile' },
+    { id: 'public', label: 'Public', description: 'Anyone can see your profile' },
+    { id: 'friends', label: 'Friends Only', description: 'Only friends can see your profile' },
+    { id: 'private', label: 'Private', description: 'Only you can see your profile' },
   ],
 };
 
@@ -593,7 +595,7 @@ export default function CommunityPage() {
           canOptOut: true,
           hunterCount: (prev.hunterCount || 0) + 1,
         } : null);
-        alert(data.message || '🏹 You are now a Hunter!');
+        alert(data.message || 'You are now a Hunter!');
       } else {
         alert(data.error || 'Failed to opt in');
       }
@@ -709,7 +711,6 @@ export default function CommunityPage() {
         {/* Safety Banner */}
         <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <span className="text-2xl">🛡️</span>
             <div>
               <div className="font-bold text-primary">Your Safety Matters</div>
               <div className="text-primary text-sm mt-1">
@@ -721,7 +722,7 @@ export default function CommunityPage() {
 
         {/* Profile Visibility */}
         <div>
-          <h3 className="font-bold text-primary mb-3">👁️ Profile Visibility</h3>
+          <h3 className="font-bold text-primary mb-3">Profile Visibility</h3>
           <div className="space-y-2">
             {privacyOptions.profileVisibility.map((opt) => (
               <button
@@ -734,7 +735,6 @@ export default function CommunityPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{opt.icon}</span>
                   <div className="text-left">
                     <div className="text-primary font-medium">{opt.label}</div>
                     <div className="text-secondary text-sm">{opt.description}</div>
@@ -750,10 +750,9 @@ export default function CommunityPage() {
 
         {/* Leaderboard Settings */}
         <div>
-          <h3 className="font-bold text-primary mb-3">🏆 Leaderboard</h3>
+          <h3 className="font-bold text-primary mb-3">Leaderboard</h3>
           <div className="space-y-2">
             <ToggleSetting
-              icon="🎭"
               label="Show as Anonymous"
               description="Hide your name on leaderboard (rank still visible)"
               value={privacySettings.showAsAnonymous}
@@ -764,17 +763,15 @@ export default function CommunityPage() {
 
         {/* Discovery Settings */}
         <div>
-          <h3 className="font-bold text-primary mb-3">🔍 Discovery</h3>
+          <h3 className="font-bold text-primary mb-3">Discovery</h3>
           <div className="space-y-2">
             <ToggleSetting
-              icon="🚫"
               label="Hide from Search"
               description="Don't appear in player searches"
               value={privacySettings.hideFromSearch}
               onChange={(v) => setPrivacySettings((prev) => ({ ...prev, hideFromSearch: v }))}
             />
             <ToggleSetting
-              icon="👥"
               label="Allow Friend Requests"
               description="Let others send you friend requests"
               value={privacySettings.allowFriendRequests}
@@ -791,7 +788,7 @@ export default function CommunityPage() {
             disabled={saving}
             className="w-full py-4"
           >
-            {saving ? 'Saving...' : '💾 Save Privacy Settings'}
+            {saving ? 'Saving...' : 'Save Privacy Settings'}
           </GlowButton>
         </div>
       </div>
@@ -806,7 +803,7 @@ export default function CommunityPage() {
     value, 
     onChange 
   }: { 
-    icon: string; 
+    icon?: string; 
     label: string; 
     description: string; 
     value: boolean; 
@@ -814,7 +811,6 @@ export default function CommunityPage() {
   }) => (
     <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
       <div className="flex items-center gap-3">
-        <span className="text-xl">{icon}</span>
         <div>
           <span className="text-primary text-sm">{label}</span>
           <div className="text-secondary text-xs">{description}</div>
@@ -856,7 +852,7 @@ export default function CommunityPage() {
               autoFocus
               className="w-full bg-surface border border-border-strong rounded-xl py-3 px-4 pl-10 text-primary placeholder:text-tertiary focus:outline-none focus:border-accent"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">🔍</span>
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary" />
             {isSearching && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2"><Loader size={18} /></span>
             )}
@@ -875,18 +871,10 @@ export default function CommunityPage() {
               ))}
             </div>
           ) : !isSearching ? (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">🔍</div>
-              <div className="text-primary font-bold">No players found</div>
-              <div className="text-secondary text-sm">Try a different search term</div>
-            </div>
+            <EmptyState icon={SearchX} title="No players found" hint="Try a different search term" />
           ) : null
         ) : (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">🔍</div>
-            <div className="text-primary font-bold">Find Players</div>
-            <div className="text-secondary text-sm">Search by name or player ID</div>
-          </div>
+          <EmptyState icon={Search} title="Find players" hint="Search by name or player ID" />
         )}
       </div>
     </div>
@@ -898,9 +886,7 @@ export default function CommunityPage() {
       <div className="relative bg-surface p-4 border-b border-border-token">
         <div className="relative flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-primary flex items-center gap-2 font-display">
-              <span>👥</span> Community
-            </h1>
+            <h1 className="text-xl font-bold text-primary font-display">Community</h1>
             <p className="text-secondary text-sm">{leaderboard.length} players ranked</p>
           </div>
           {/* Header buttons: Search + Privacy */}
@@ -909,13 +895,13 @@ export default function CommunityPage() {
               onClick={() => setShowSearchModal(true)}
               className="bg-elevated/80 p-2 rounded-xl border border-border-token hover:border-accent/50 transition-colors"
             >
-              <span className="text-xl">🔍</span>
+              <Search size={20} className="text-primary" />
             </button>
             <button 
               onClick={() => setShowPrivacySettings(true)}
               className="bg-elevated/80 p-2 rounded-xl border border-border-token hover:border-accent/50 transition-colors"
             >
-              <span className="text-xl">🛡️</span>
+              <Shield size={20} className="text-primary" />
             </button>
           </div>
         </div>
@@ -924,8 +910,8 @@ export default function CommunityPage() {
       {/* Tabs — One Piece tab is preserved in code but hidden until revived */}
       <div className="flex border-b border-border-token">
         {[
-          { id: 'leaderboard' as const, label: '🏆 Ranks', icon: '🏆' },
-          { id: 'friends' as const, label: '👥 Friends', count: friends.length, requestCount: friendRequests.length },
+          { id: 'leaderboard' as const, label: 'Ranks' },
+          { id: 'friends' as const, label: 'Friends', count: friends.length, requestCount: friendRequests.length },
           // { id: 'one_piece' as const, label: '🏴‍☠️ One Piece', icon: '🏴‍☠️' },
         ].map((tab) => (
           <button
@@ -969,7 +955,7 @@ export default function CommunityPage() {
                     : 'text-secondary hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed'
                 }`}
               >
-                🏪 {selectedStoreName || 'My Store'}
+                {selectedStoreName || 'My Store'}
               </button>
               <button
                 onClick={() => handleScopeChange('network')}
@@ -979,7 +965,7 @@ export default function CommunityPage() {
                     : 'text-secondary hover:text-primary'
                 }`}
               >
-                🌐 Network
+                Network
               </button>
             </div>
 
@@ -1003,7 +989,7 @@ export default function CommunityPage() {
                 onClick={() => setShowFavoritesPicker(true)}
                 className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-elevated/50 text-secondary hover:bg-elevated hover:text-primary transition-all border border-dashed border-border-token"
               >
-                <span>⚙️</span>
+                <Settings size={14} />
                 <span className="text-sm">Edit</span>
               </button>
             </div>
@@ -1021,7 +1007,7 @@ export default function CommunityPage() {
                   </div>
                   {leaderboardGame === 'one_piece' && (
                     <div className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30">
-                      🎯 Top 5 = WANTED
+                      Top 5 = WANTED
                     </div>
                   )}
                 </div>
@@ -1036,11 +1022,7 @@ export default function CommunityPage() {
                 <MemberCard key={entry.id} member={entry} />
               ))
             ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">🏆</div>
-                <div className="text-primary font-bold">No rankings yet</div>
-                <div className="text-secondary text-sm">Be the first to earn {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}!</div>
-              </div>
+              <EmptyState icon={Trophy} title="No rankings yet" hint={`Be the first to earn ${ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}`} />
             )}
           </div>
         )}
@@ -1053,7 +1035,7 @@ export default function CommunityPage() {
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-medium text-orange-400">
-                    ⚠️ Pending Requests ({friendRequests.length})
+                    Pending Requests ({friendRequests.length})
                   </h3>
                 </div>
                 <div className="space-y-2">
@@ -1101,11 +1083,7 @@ export default function CommunityPage() {
                 ))}
               </>
             ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">👥</div>
-                <div className="text-primary font-bold">No friends yet</div>
-                <div className="text-secondary text-sm">Use the 🔍 search to find players!</div>
-              </div>
+              <EmptyState icon={Users} title="No friends yet" hint="Use the search button to find players" />
             )}
           </div>
         )}
@@ -1120,7 +1098,7 @@ export default function CommunityPage() {
                 {/* Emperor of the Month */}
                 <div className="bg-elevated/50 border border-yellow-500/30 rounded-xl p-4">
                   <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wider mb-3">
-                    👑 Emperor of the Month
+                    Emperor of the Month
                   </h3>
                   {currentEmperor ? (
                     <div className="flex items-center gap-4">
@@ -1142,7 +1120,7 @@ export default function CommunityPage() {
                 {hallOfFame.length > 0 && (
                   <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
                     <h3 className="text-sm font-bold text-purple-400 uppercase tracking-wider mb-3">
-                      🏆 Hall of Fame
+                      Hall of Fame
                     </h3>
                     <div className="space-y-2">
                       {hallOfFame.slice(0, 5).map((emperor, i) => (
@@ -1163,7 +1141,7 @@ export default function CommunityPage() {
                 <div className="bg-elevated/50 border border-red-500/30 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider">
-                      🎯 Bounty Hunter Night
+                      Bounty Hunter Night
                     </h3>
                     {bountyHunterStatus?.nextEventDate && (
                       <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full">
@@ -1178,7 +1156,7 @@ export default function CommunityPage() {
 
                   {/* WANTED List (Top 5) */}
                   <div className="mb-4">
-                    <h4 className="text-xs font-medium text-red-400 mb-2">🏴‍☠️ WANTED (Top 5)</h4>
+                    <h4 className="text-xs font-medium text-red-400 mb-2">WANTED (Top 5)</h4>
                     <div className="space-y-1">
                       {onePieceLeaderboard.slice(0, 5).map((entry, i) => (
                         <div key={entry.id} className="flex items-center gap-2 p-2 bg-red-500/10 rounded-lg border border-red-500/20">
@@ -1208,15 +1186,15 @@ export default function CommunityPage() {
                         <div className="flex items-center gap-2">
                           {bountyHunterStatus.isWanted ? (
                             <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium border border-red-500/30">
-                              🎯 WANTED (Rank #{bountyHunterStatus.rank})
+                              WANTED (Rank #{bountyHunterStatus.rank})
                             </span>
                           ) : bountyHunterStatus.isHunter ? (
                             <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium border border-green-500/30">
-                              🏹 Hunter
+                              Hunter
                             </span>
                           ) : (
                             <span className="px-3 py-1 bg-elevated text-secondary rounded-full text-sm">
-                              😐 Civilian
+                              Civilian
                             </span>
                           )}
                         </div>
@@ -1234,7 +1212,7 @@ export default function CommunityPage() {
                       {/* Hunter count */}
                       {bountyHunterStatus.hunterCount !== undefined && bountyHunterStatus.hunterCount > 0 && (
                         <div className="mt-2 text-xs text-secondary">
-                          🏹 {bountyHunterStatus.hunterCount} hunter{bountyHunterStatus.hunterCount !== 1 ? 's' : ''} registered
+                          {bountyHunterStatus.hunterCount} hunter{bountyHunterStatus.hunterCount !== 1 ? 's' : ''} registered
                         </div>
                       )}
                     </div>
@@ -1248,7 +1226,7 @@ export default function CommunityPage() {
                       disabled={optingIn}
                       className="w-full py-3"
                     >
-                      {optingIn ? 'Opting in...' : '🏹 Become a Hunter'}
+                      {optingIn ? 'Opting in...' : 'Become a Hunter'}
                     </GlowButton>
                   )}
 
@@ -1334,7 +1312,7 @@ export default function CommunityPage() {
                   disabled={unfriending === selectedMember.id}
                   className="flex-1 py-3 bg-elevated text-red-400 rounded-xl font-bold border border-red-500/30 hover:bg-red-500/10"
                 >
-                  {unfriending === selectedMember.id ? 'Removing...' : '✓ Friends (tap to unfriend)'}
+                  {unfriending === selectedMember.id ? 'Removing...' : 'Friends (tap to unfriend)'}
                 </button>
               ) : requestSent.has(selectedMember.id) ? (
                 <button
@@ -1345,11 +1323,11 @@ export default function CommunityPage() {
                     }
                   }}
                 >
-                  ✕ Cancel Request
+                  Cancel request
                 </button>
               ) : ('isFriend' in selectedMember && selectedMember.isFriend) ? (
                 <button className="flex-1 py-3 bg-elevated text-green-400 rounded-xl font-bold border border-green-500/30">
-                  📨 Request Sent
+                  Request sent
                 </button>
               ) : (
                 <GlowButton 
@@ -1363,13 +1341,12 @@ export default function CommunityPage() {
                   disabled={sendingRequest !== null}
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <span>👥</span>
                     <span>{sendingRequest ? 'Sending...' : 'Send Friend Request'}</span>
                   </div>
                 </GlowButton>
               )}
-              <button className="px-4 py-3 bg-elevated text-primary rounded-xl border border-border-token">
-                💬
+              <button className="px-4 py-3 bg-elevated text-primary rounded-xl border border-border-token" aria-label="Message">
+                <MessageCircle size={20} />
               </button>
             </div>
           </div>
@@ -1435,7 +1412,7 @@ export default function CommunityPage() {
                     </div>
                     {isSelected && (
                       <span className="text-accent">
-                        {isOverall ? '🔒' : '✓'}
+                        {isOverall ? <Lock size={14} /> : '✓'}
                       </span>
                     )}
                   </button>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Bell, CalendarDays, Megaphone, Clock, CheckCircle2, UserPlus, Sparkles, RotateCw, Trophy, BarChart3, Gift, ShoppingBag, Hourglass, type LucideIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Loader } from '@/components/Loader';
 
@@ -14,20 +15,20 @@ interface Notification {
   created_at: string;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  event_share: '📅',
-  event_announced: '📣',
-  event_reminder: '⏰',
-  event_recap: '✅',
-  friend_request: '👋',
-  xp_earned: '⭐',
-  spin_ready: '🎰',
-  achievement: '🏆',
-  leaderboard: '📊',
-  referral: '🎁',
-  store: '🛍️',
-  pass_expiring: '⏳',
-  weekly_summary: '📊',
+const TYPE_ICONS: Record<string, LucideIcon> = {
+  event_share: CalendarDays,
+  event_announced: Megaphone,
+  event_reminder: Clock,
+  event_recap: CheckCircle2,
+  friend_request: UserPlus,
+  xp_earned: Sparkles,
+  spin_ready: RotateCw,
+  achievement: Trophy,
+  leaderboard: BarChart3,
+  referral: Gift,
+  store: ShoppingBag,
+  pass_expiring: Hourglass,
+  weekly_summary: BarChart3,
 };
 
 function timeAgo(date: string): string {
@@ -130,7 +131,7 @@ export default function NotificationsPage() {
         </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-          <div className="text-5xl mb-4">🔔</div>
+          <div className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-elevated text-secondary"><Bell size={26} strokeWidth={1.75} /></div>
           <div className="text-primary font-bold text-lg mb-2">All caught up!</div>
           <div className="text-secondary text-sm">New notifications will appear here as you earn XP, attend events, and connect with players.</div>
         </div>
@@ -145,8 +146,8 @@ export default function NotificationsPage() {
                 notif.is_read ? 'opacity-60' : ''
               }`}
             >
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-elevated flex items-center justify-center text-xl mt-0.5">
-                {TYPE_ICONS[notif.type] ?? '🔔'}
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-elevated flex items-center justify-center text-secondary mt-0.5">
+                {React.createElement(TYPE_ICONS[notif.type] ?? Bell, { size: 20, strokeWidth: 1.75 })}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">

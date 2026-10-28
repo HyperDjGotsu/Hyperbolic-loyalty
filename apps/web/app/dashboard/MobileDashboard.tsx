@@ -12,6 +12,7 @@ import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import { HomeSkeleton } from '@/components/Skeleton';
 import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
+import { Gift } from 'lucide-react';
 
 // Type for displayed game data
 interface GameDisplay {
@@ -419,7 +420,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="w-full h-[104px] grid place-items-center text-3xl bg-elevated">🎁</div>
+                    <div className="w-full h-[104px] grid place-items-center text-secondary bg-elevated"><Gift size={30} strokeWidth={1.5} /></div>
                   )}
                   <div className="px-3.5 pt-3 pb-3.5">
                     <div className="text-sm font-bold truncate text-primary">{item.name}</div>

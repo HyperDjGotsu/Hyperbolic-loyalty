@@ -6,6 +6,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { Loader } from '@/components/Loader';
+import { Pencil } from 'lucide-react';
 
 interface ShopItem {
   id: string;
@@ -40,9 +41,9 @@ interface PrivacySettings {
 
 const privacyOptions = {
   profileVisibility: [
-    { id: 'public', label: 'Public', icon: '🌐', description: 'Anyone can see your profile' },
-    { id: 'friends', label: 'Friends Only', icon: '👥', description: 'Only friends can see your profile' },
-    { id: 'private', label: 'Private', icon: '🔒', description: 'Only you can see your profile' },
+    { id: 'public', label: 'Public', description: 'Anyone can see your profile' },
+    { id: 'friends', label: 'Friends Only', description: 'Only friends can see your profile' },
+    { id: 'private', label: 'Private', description: 'Only you can see your profile' },
   ],
 };
 
@@ -420,7 +421,7 @@ export default function ProfilePage() {
         setPlayerData(prev => prev ? { ...prev, avatarConfig: saved } : null);
         setTempAvatar(saved);
         setEditingAvatar(false);
-        alert('✅ Avatar saved!');
+        alert('Avatar saved');
       } else {
         alert('Failed to save avatar: ' + (data.error || 'Unknown error'));
       }
@@ -517,7 +518,7 @@ export default function ProfilePage() {
         setFavoriteGames(data.favorites);
         setEditingFavorites(false);
         if (typeof window !== 'undefined') localStorage.setItem('hxp_done_games', 'true');
-        alert('✅ Favorite games saved!');
+        alert('Favorite games saved');
       } else {
         alert('Failed to save favorites');
       }
@@ -594,7 +595,7 @@ export default function ProfilePage() {
         )}
         {onClick && (
           <div className="absolute bottom-0 right-0 bg-accent w-7 h-7 rounded-full flex items-center justify-center border-2 border-surface">
-            <span className="text-xs">✏️</span>
+            <Pencil size={14} strokeWidth={2.5} className="text-[color:var(--accent-fg)]" />
           </div>
         )}
       </div>
@@ -653,11 +654,10 @@ export default function ProfilePage() {
   };
 
   const NotifToggle = ({ icon, label, description, value, onChange }: {
-    icon: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
+    icon?: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
   }) => (
     <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
       <div className="flex items-center gap-3">
-        <span className="text-xl">{icon}</span>
         <div>
           <span className="text-primary text-sm font-medium">{label}</span>
           <div className="text-secondary text-xs">{description}</div>
@@ -686,35 +686,30 @@ export default function ProfilePage() {
         <p className="text-secondary text-sm pb-1">Choose what you want to hear about. You can change these any time.</p>
 
         <NotifToggle
-          icon="🎰"
           label="Daily & Rewards"
           description="Daily spin ready, XP earned, achievements unlocked"
           value={notifPrefs.daily_rewards}
           onChange={(v) => setNotifPrefs((p) => ({ ...p, daily_rewards: v }))}
         />
         <NotifToggle
-          icon="📅"
           label="Events"
           description="New events announced, reminders 2h before, post-event recap"
           value={notifPrefs.events}
           onChange={(v) => setNotifPrefs((p) => ({ ...p, events: v }))}
         />
         <NotifToggle
-          icon="🏆"
           label="Leaderboard"
           description="Rank changes, Emperor dethroned, Bounty Hunter Night alerts"
           value={notifPrefs.leaderboard}
           onChange={(v) => setNotifPrefs((p) => ({ ...p, leaderboard: v }))}
         />
         <NotifToggle
-          icon="👥"
           label="Social"
           description="Friend requests, referral bonuses when friends attend events"
           value={notifPrefs.social}
           onChange={(v) => setNotifPrefs((p) => ({ ...p, social: v }))}
         />
         <NotifToggle
-          icon="🛍️"
           label="Store"
           description="New Prize Wall items, pass expiring soon"
           value={notifPrefs.store}
@@ -736,11 +731,10 @@ export default function ProfilePage() {
   );
 
   const ToggleSetting = ({ icon, label, description, value, onChange }: {
-    icon: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
+    icon?: string; label: string; description: string; value: boolean; onChange: (v: boolean) => void;
   }) => (
     <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
       <div className="flex items-center gap-3">
-        <span className="text-xl">{icon}</span>
         <div>
           <span className="text-primary text-sm">{label}</span>
           <div className="text-secondary text-xs">{description}</div>
@@ -768,7 +762,6 @@ export default function ProfilePage() {
       <div className="flex-1 overflow-auto p-4 space-y-6 bg-base">
         <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <span className="text-2xl">🛡️</span>
             <div>
               <div className="font-bold text-primary">Your Safety Matters</div>
               <div className="text-secondary text-sm mt-1">Control who can see your profile, find you in search, and contact you.</div>
@@ -777,7 +770,7 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <h3 className="font-bold text-primary mb-3">👁️ Profile Visibility</h3>
+          <h3 className="font-bold text-primary mb-3">Profile Visibility</h3>
           <div className="space-y-2">
             {privacyOptions.profileVisibility.map((opt) => (
               <button
@@ -791,7 +784,6 @@ export default function ProfilePage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{opt.icon}</span>
                   <div className="text-left">
                     <div className="text-primary font-medium">{opt.label}</div>
                     <div className="text-secondary text-sm">{opt.description}</div>
@@ -804,9 +796,8 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <h3 className="font-bold text-primary mb-3">🏆 Leaderboard</h3>
+          <h3 className="font-bold text-primary mb-3">Leaderboard</h3>
           <ToggleSetting
-            icon="🎭"
             label="Show as Anonymous"
             description="Hide your name on leaderboard (rank still visible)"
             value={privacySettings.showAsAnonymous}
@@ -815,17 +806,15 @@ export default function ProfilePage() {
         </div>
 
         <div>
-          <h3 className="font-bold text-primary mb-3">🔍 Discovery</h3>
+          <h3 className="font-bold text-primary mb-3">Discovery</h3>
           <div className="space-y-2">
             <ToggleSetting
-              icon="🚫"
               label="Hide from Search"
               description="Don't appear in player searches"
               value={privacySettings.hideFromSearch}
               onChange={(v) => setPrivacySettings((prev) => ({ ...prev, hideFromSearch: v }))}
             />
             <ToggleSetting
-              icon="👥"
               label="Allow Friend Requests"
               description="Let others send you friend requests"
               value={privacySettings.allowFriendRequests}
@@ -841,7 +830,7 @@ export default function ProfilePage() {
             disabled={savingPrivacy}
             className="w-full py-4 rounded-xl bg-accent text-white font-bold text-base disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
-            {savingPrivacy ? 'Saving...' : '💾 Save Privacy Settings'}
+            {savingPrivacy ? 'Saving...' : 'Save Privacy Settings'}
           </button>
         </div>
       </div>
@@ -882,11 +871,11 @@ export default function ProfilePage() {
       {/* Tabs */}
       <div className="flex border-b border-border-token bg-surface">
         {[
-          { id: 'photo', label: '📷', name: 'Photo' },
-          { id: 'base', label: '😎', name: 'Base' },
-          { id: 'background', label: '🎨', name: 'BG' },
-          { id: 'frame', label: '✨', name: 'Frame' },
-          { id: 'badge', label: '🏷️', name: 'Badge' },
+          { id: 'photo', label: '', name: 'Photo' },
+          { id: 'base', label: '', name: 'Base' },
+          { id: 'background', label: '', name: 'BG' },
+          { id: 'frame', label: '', name: 'Frame' },
+          { id: 'badge', label: '', name: 'Badge' },
         ].map(tab => (
           <button
             type="button"
@@ -898,7 +887,6 @@ export default function ProfilePage() {
                 : 'text-secondary hover:text-primary'
             }`}
           >
-            <span className="text-lg">{tab.label}</span>
             <span>{tab.name}</span>
           </button>
         ))}
@@ -921,7 +909,6 @@ export default function ProfilePage() {
               disabled={photoUploading}
               className="w-full p-6 border-2 border-dashed border-border-token rounded-xl text-center hover:border-accent transition-colors bg-elevated/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="text-4xl mb-2">{photoUploading ? '⏳' : '📷'}</div>
               <div className="text-primary font-medium">{photoUploading ? 'Uploading…' : 'Upload Photo'}</div>
               <div className="text-secondary text-sm">Tap to select an image (max 2 MB)</div>
             </button>
@@ -994,7 +981,6 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base p-4">
         <div className="text-center">
-          <div className="text-4xl mb-4">😕</div>
           <h2 className="text-primary text-xl font-bold mb-2">Profile Not Found</h2>
           <p className="text-secondary">Please make sure you're logged in.</p>
         </div>
@@ -1043,21 +1029,17 @@ export default function ProfilePage() {
       <div className="px-4 -mt-2">
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            <div className="text-2xl mb-1">🏆</div>
             <div className="text-primary font-bold text-lg">{playerData.level}</div>
             <div className="text-secondary text-xs">Level</div>
           </div>
           <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            <div className="text-2xl mb-1">⚡</div>
             <div className="text-accent font-bold">{playerData.totalXp.toLocaleString()}</div>
             <div className="text-secondary text-xs">Total XP</div>
           </div>
           <div className="bg-elevated/50 rounded-xl p-3 border border-border-token text-center">
-            <div className="text-2xl mb-1">
-              {storeConfig.currency_icon.startsWith('http')
-                ? <img src={storeConfig.currency_icon} alt="" className="w-7 h-7 object-contain mx-auto" />
-                : storeConfig.currency_icon}
-            </div>
+            {storeConfig.currency_icon.startsWith('http') && (
+              <div className="mb-1"><img src={storeConfig.currency_icon} alt="" className="w-7 h-7 object-contain mx-auto" /></div>
+            )}
             <div className="text-purple-400 font-bold">{playerData.gems.toLocaleString()}</div>
             <div className="text-secondary text-xs">{storeConfig.currency_name}</div>
           </div>
@@ -1067,7 +1049,7 @@ export default function ProfilePage() {
       {/* Referral Section */}
       <div className="px-4 mt-6">
         <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
-          <span className="text-xl">🎁</span> Invite Friends
+          Invite Friends
         </h2>
         
         {referralLoading ? (
@@ -1094,7 +1076,7 @@ export default function ProfilePage() {
                       : 'bg-purple-500 hover:bg-purple-400 text-primary'
                   }`}
                 >
-                  {copiedCode ? '✓' : '📋'}
+                  {copiedCode ? 'Copied' : 'Copy'}
                 </button>
               </div>
             </div>
@@ -1115,7 +1097,7 @@ export default function ProfilePage() {
                       : 'bg-accent hover:opacity-90 text-primary'
                   }`}
                 >
-                  {copiedLink ? '✓' : '🔗'}
+                  {copiedLink ? 'Copied' : 'Link'}
                 </button>
               </div>
             </div>
@@ -1178,7 +1160,7 @@ export default function ProfilePage() {
                             ? 'bg-green-500/20 text-green-400'
                             : 'bg-orange-500/20 text-orange-400'
                         }`}>
-                          {referral.hasAttended ? '✓ Attended' : '⏳ Pending'}
+                          {referral.hasAttended ? 'Attended' : 'Pending'}
                         </div>
                       </div>
                     ))}
@@ -1198,7 +1180,7 @@ export default function ProfilePage() {
       <div className="px-4 mt-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-primary flex items-center gap-2">
-            <span className="text-xl">⭐</span> Favorite Games
+            Favorite Games
           </h2>
           <button
             type="button"
@@ -1247,7 +1229,7 @@ export default function ProfilePage() {
       {/* Membership */}
       <div className="px-4 mt-6">
         <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
-          <span className="text-xl">🎫</span> Membership
+          Membership
         </h2>
         <div className={`rounded-xl p-4 border ${
           playerData.passStatus === 'active'
@@ -1328,13 +1310,12 @@ export default function ProfilePage() {
       {/* Settings */}
       <div className="px-4 mt-6 mb-6">
         <h2 className="font-bold text-primary flex items-center gap-2 mb-3">
-          <span className="text-xl">⚙️</span> Settings
+          Settings
         </h2>
         <div className="space-y-2">
           {/* Theme */}
           <div className="bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token">
             <div className="flex items-center gap-3">
-              <span className="text-xl">🎨</span>
               <div>
                 <div className="text-primary text-sm font-medium">Theme</div>
                 <div className="text-tertiary text-xs">{isDarkMode ? 'Dark mode' : 'Light mode'}</div>
@@ -1365,7 +1346,6 @@ export default function ProfilePage() {
             className="w-full bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
           >
             <div className="flex items-center gap-3">
-              <span className="text-xl">🔔</span>
               <div className="text-left">
                 <div className="text-primary text-sm font-medium">Notifications</div>
                 <div className="text-tertiary text-xs">Event reminders & XP alerts</div>
@@ -1381,7 +1361,6 @@ export default function ProfilePage() {
             className="w-full bg-elevated/50 rounded-xl p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
           >
             <div className="flex items-center gap-3">
-              <span className="text-xl">🛡️</span>
               <div className="text-left">
                 <div className="text-primary text-sm font-medium">Privacy</div>
                 <div className="text-tertiary text-xs">Leaderboard & profile visibility</div>
@@ -1397,7 +1376,6 @@ export default function ProfilePage() {
               className="w-full bg-accent/10 rounded-xl p-4 flex items-center justify-between border border-accent/30 hover:bg-accent/20 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl">⚔️</span>
                 <div className="text-left">
                   <div className="text-accent text-sm font-medium">Staff HQ</div>
                   <div className="text-tertiary text-xs">Player management & admin</div>

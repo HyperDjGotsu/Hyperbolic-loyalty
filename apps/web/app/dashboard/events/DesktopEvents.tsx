@@ -242,7 +242,7 @@ const ShareModal = ({
                 : 'text-secondary hover:text-primary'
             }`}
           >
-            🔗 Share Link
+            Share Link
           </button>
           <button
             onClick={() => setActiveTab('friends')}
@@ -252,7 +252,7 @@ const ShareModal = ({
                 : 'text-secondary hover:text-primary'
             }`}
           >
-            👥 Share with Friends
+            Share with Friends
           </button>
         </div>
 
@@ -273,13 +273,13 @@ const ShareModal = ({
                 onClick={handleCopyLink}
                 className="flex items-center justify-center gap-2 py-3 bg-elevated text-primary font-medium rounded-xl hover:bg-elevated transition-colors"
               >
-                {copied ? '✅ Copied!' : '📋 Copy Link'}
+                {copied ? '✅ Copied!' : 'Copy Link'}
               </button>
               <button
                 onClick={handleNativeShare}
                 className="flex items-center justify-center gap-2 py-3 bg-accent text-accent-fg font-medium rounded-xl hover:opacity-90 transition-opacity"
               >
-                📤 Share
+                Share
               </button>
             </div>
 
@@ -484,7 +484,7 @@ const StreamButtons = ({ event }: { event: CalendarEvent }) => {
           className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-primary rounded-lg"
           onClick={(e) => e.stopPropagation()}
         >
-          📺 Twitch
+          Twitch
           {event.isLive && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
         </a>
       )}
@@ -501,7 +501,7 @@ const StreamButtons = ({ event }: { event: CalendarEvent }) => {
       )}
       {!event.twitchUrl && !event.youtubeUrl && (
         <span className="flex items-center gap-1 px-2 py-1 text-xs bg-elevated text-primary rounded-lg">
-          📺 Stream
+          Stream
         </span>
       )}
     </div>
@@ -771,7 +771,7 @@ function EventsPageContent() {
               <div className={`font-bold text-lg ${event.isFree ? 'text-green-400' : 'text-accent'}`}>
                 {event.entryFee}
               </div>
-              {event.hasStream && <div className="text-purple-400 text-xs">📺 Streamed</div>}
+              {event.hasStream && <div className="text-purple-400 text-xs">Streamed</div>}
             </div>
             
             <div className="flex items-center gap-2">
@@ -787,7 +787,7 @@ function EventsPageContent() {
                     : 'bg-elevated text-primary hover:bg-elevated'
                 }`}
               >
-                {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : '⭐ Interested?'}
+                {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : 'Interested?'}
               </button>
               <button
                 onClick={(e) => {
@@ -796,7 +796,7 @@ function EventsPageContent() {
                 }}
                 className="px-3 py-2 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated"
               >
-                📤 Share
+                Share
               </button>
             </div>
           </div>
@@ -843,7 +843,7 @@ function EventsPageContent() {
           </div>
           <div className="text-right">
             <div className="text-accent font-bold">{event.entryFee}</div>
-            {event.hasStream && <div className="text-purple-400 text-xs mt-1">📺 Stream</div>}
+            {event.hasStream && <div className="text-purple-400 text-xs mt-1">Stream</div>}
           </div>
         </div>
         
@@ -860,7 +860,7 @@ function EventsPageContent() {
                 : 'bg-elevated text-primary hover:bg-elevated'
             }`}
           >
-            {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : '⭐ Interested?'}
+            {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : 'Interested?'}
           </button>
           <button
             onClick={(e) => {
@@ -869,7 +869,7 @@ function EventsPageContent() {
             }}
             className="px-4 py-2 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated"
           >
-            📤 Share
+            Share
           </button>
         </div>
       </div>
@@ -977,7 +977,7 @@ function EventsPageContent() {
           {/* Friends interested */}
           {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
             <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
-              <div className="text-purple-400 font-bold mb-2">⭐ {event.interestedCount} Interested</div>
+              <div className="text-purple-400 font-bold mb-2">{event.interestedCount} Interested</div>
               {event.interestedFriends?.length > 0 && (
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
@@ -1027,7 +1027,7 @@ function EventsPageContent() {
                   : 'bg-accent text-accent-fg'
               }`}
             >
-              {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : '⭐ I\'m Interested'}
+              {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : 'I\'m Interested'}
             </button>
             <button
               onClick={() => setShareEvent(event)}
@@ -1072,7 +1072,7 @@ function EventsPageContent() {
               disabled={syncing}
               className="px-3 py-1.5 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated disabled:opacity-50 flex items-center gap-2"
             >
-              {syncing ? '🔄 Syncing...' : '🔄 Sync'}
+              {syncing ? 'Syncing...' : 'Sync'}
             </button>
           </div>
           
@@ -1188,7 +1188,7 @@ function EventsPageContent() {
               disabled={syncing}
               className="mt-4 px-4 py-2 bg-accent text-primary rounded-lg disabled:opacity-50"
             >
-              {syncing ? 'Syncing...' : '🔄 Refresh'}
+              {syncing ? 'Syncing...' : 'Refresh'}
             </button>
           </div>
         ) : (
