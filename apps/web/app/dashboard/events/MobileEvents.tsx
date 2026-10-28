@@ -7,7 +7,7 @@ import { Loader } from '@/components/Loader';
 import { EmptyState } from '@/components/EmptyState';
 import { CoverImage } from '@/components/CoverImage';
 import { RefreshCw, CalendarDays, CalendarX, Star, Gift, Trophy, Sparkles, Share, AlertCircle, Users, type LucideIcon } from 'lucide-react';
-import { BrandMark } from '@/components/BrandMark';
+import { PageTitle } from '@/components/PageTitle';
 
 interface GameInfo {
   id: string;
@@ -753,7 +753,7 @@ function EventsPageContent() {
       <div className="sticky top-0 z-10 bg-base/90 backdrop-blur-xl">
         <div className="px-4 pt-5 pb-1">
           <div className="flex items-end justify-between">
-            <div className="flex items-center gap-3"><BrandMark /><h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Events</h1></div>
+            <PageTitle logo="pp">Events</PageTitle>
             <button
               onClick={handleSync}
               disabled={syncing}

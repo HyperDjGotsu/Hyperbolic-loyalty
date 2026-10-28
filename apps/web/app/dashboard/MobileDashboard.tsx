@@ -15,7 +15,7 @@ import type { DashboardData } from './useDashboardData';
 import { Gift } from 'lucide-react';
 import { CoverImage, HeroBackdrop, pickBackdropGame } from '@/components/CoverImage';
 import { parseBackdrop } from '@/lib/games';
-import { BrandMark } from '@/components/BrandMark';
+import { PageTitle } from '@/components/PageTitle';
 
 // Type for displayed game data
 interface GameDisplay {
@@ -225,8 +225,9 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* Title row */}
       <header className="flex items-start justify-between gap-3 pt-2">
         <div>
-          <div className="flex items-center gap-3"><BrandMark /><h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Home</h1></div>
+          <PageTitle logo="none">Home</PageTitle>
           <div className="mt-2 flex items-center gap-2.5">
+            <img src="/brand/pp-mark.png" alt="Player Pass" className="h-8 w-auto" />
           {storeForPill && (
             <button
               onClick={() => setShowStoreSwitcher(true)}
