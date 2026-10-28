@@ -225,16 +225,19 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       <header className="flex items-start justify-between gap-3 pt-2">
         <div>
           <h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Home</h1>
+          <div className="mt-2 flex items-center gap-2.5">
+            <img src="/brand/pp-mark.png" alt="Player Pass" className="h-8 w-auto" />
           {storeForPill && (
             <button
               onClick={() => setShowStoreSwitcher(true)}
-              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-token pl-2.5 pr-3 py-1.5 text-[13px] font-semibold text-secondary"
+              className="inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-token pl-2.5 pr-3 py-1.5 text-[13px] font-semibold text-secondary"
             >
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: storeForPill.color ?? '#3ddc6a' }} />
               {storeForPill.name}
               {storeForPill.is_flagship && <span className="text-[10px] uppercase tracking-wide text-xp">Flagship</span>}
             </button>
           )}
+          </div>
         </div>
         <a
           href="/dashboard/notifications"

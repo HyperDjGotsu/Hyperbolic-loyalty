@@ -104,7 +104,11 @@ export function WelcomeOverlay() {
 
       {/* Slide content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-        <div className="mx-auto mb-8 grid h-24 w-24 place-items-center rounded-[30px] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent"><current.icon size={44} strokeWidth={1.75} /></div>
+        {slide === 0 ? (
+          <img src="/brand/pp-lockup.png" alt="Player Pass" className="mx-auto mb-8 h-44 w-auto" />
+        ) : (
+          <div className="mx-auto mb-8 grid h-24 w-24 place-items-center rounded-[30px] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent"><current.icon size={44} strokeWidth={1.75} /></div>
+        )}
         <h2 className="text-primary text-2xl font-bold mb-4 leading-snug">{current.title}</h2>
         <p className="text-secondary text-base leading-relaxed max-w-sm">{current.body}</p>
       </div>
