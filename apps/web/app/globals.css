@@ -13,10 +13,10 @@
 /* ── Dark / Warm (default) ──────────────────────────────── */
 :root,
 [data-theme="dark"][data-tone="warm"] {
-  --bg-base:        #111009;
-  --bg-surface:     #1a1810;
-  --bg-elevated:    #222018;
-  --bg-input:       #1e1c14;
+  --bg-base:        #1f1e1b;
+  --bg-surface:     #292824;
+  --bg-elevated:    #34322d;
+  --bg-input:       #2b2a26;
   --text-primary:   #f2efe8;
   --text-secondary: #a89f90;
   --text-tertiary:  #7a7060;
