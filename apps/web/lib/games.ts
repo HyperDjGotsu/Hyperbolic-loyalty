@@ -55,3 +55,9 @@ export function resolveGameId(id: string): string {
 export function getGame(id: string): GameDefinition | undefined {
   return SELECTABLE_GAMES.find(g => g.id === resolveGameId(id));
 }
+
+// Default cover art for a game: /public/games/<canonical id>.jpg (see public/games/README.md).
+// 'general' is the fallback for network or untagged events.
+export function gameArtUrl(id?: string | null): string {
+  return `/games/${id ? resolveGameId(id) : 'general'}.jpg`;
+}

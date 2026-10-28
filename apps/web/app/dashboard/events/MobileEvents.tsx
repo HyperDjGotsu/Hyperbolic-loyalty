@@ -5,6 +5,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader } from '@/components/Loader';
 import { EmptyState } from '@/components/EmptyState';
+import { CoverImage } from '@/components/CoverImage';
 import { RefreshCw, CalendarDays, CalendarX, Star, Gift, Trophy, Sparkles, Share, AlertCircle, Users, type LucideIcon } from 'lucide-react';
 
 interface GameInfo {
@@ -29,6 +30,7 @@ interface CalendarEvent {
   scheduledAt: string;
   endsAt: string | null;
   game: GameInfo | null;
+  imageUrl?: string | null;
   spots: number | null;
   maxSpots: number | null;
   currentPlayers: number;
@@ -537,73 +539,44 @@ function EventsPageContent() {
   };
 
   const EventCard = ({ event }: { event: CalendarEvent }) => (
-    <div 
+    <div
       onClick={() => setSelectedEvent(event)}
       className={`bg-surface rounded-[26px] overflow-hidden border cursor-pointer active:scale-[0.99] transition-all ${
         event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-border-token'
       }`}
     >
-      <div className="p-4">
-        <div className="flex items-center gap-3">
-          <div 
-            className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-2xl flex-none"
-            style={{ backgroundColor: `${event.game?.color || '#64748b'}20` }}
-          >
-            {event.game?.icon || '🎮'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-primary font-bold truncate">{event.name}</span>
-              {event.isNetworkEvent && (
-                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30 whitespace-nowrap">GGC Network</span>
-              )}
-              {event.isLive && (
-                <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
-              )}
-              {event.isStartingSoon && !event.isLive && (
-                <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full">SOON</span>
-              )}
-            </div>
-            <div className="text-secondary text-sm">{event.time}</div>
-            
-            {/* Friends interested */}
-            <FriendsInterested 
-              friends={event.interestedFriends || []} 
-              totalCount={event.interestedCount} 
-            />
-          </div>
-          <div className="text-right">
-            <div className="text-accent font-bold">{event.entryFee}</div>
-            {event.hasStream && <div className="text-purple-400 text-xs mt-1">Stream</div>}
-          </div>
+      <CoverImage gameId={event.game?.id} color={event.game?.color || '#64748b'} src={event.imageUrl} className="h-[150px]">
+        <div className="absolute left-3 top-3 flex gap-1.5">
+          {event.isLive && <span className="px-2.5 py-1 bg-red-500 text-white text-[11px] font-bold rounded-full animate-pulse">LIVE</span>}
+          {event.isStartingSoon && !event.isLive && <span className="px-2.5 py-1 bg-yellow-400 text-black text-[11px] font-bold rounded-full">SOON</span>}
+          {event.isNetworkEvent && <span className="px-2.5 py-1 bg-black/50 backdrop-blur text-white text-[11px] font-bold rounded-full">Network</span>}
         </div>
-        
-        {/* Quick action buttons */}
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border-token">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleInterest(event.id);
-            }}
-            disabled={togglingInterest === event.id}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              event.isInterested
-                ? 'bg-accent/10 text-accent border border-accent/50'
-                : 'bg-elevated text-primary hover:bg-elevated'
-            }`}
-          >
-            {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : 'Interested?'}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShareEvent(event);
-            }}
-            className="px-5 py-2.5 bg-elevated text-primary rounded-xl text-sm font-semibold"
-          >
-            Share
-          </button>
+        <div className="absolute right-3 top-3 px-2.5 py-1 bg-black/50 backdrop-blur text-white text-[11px] font-bold rounded-full">{event.entryFee}</div>
+        <div className="absolute inset-x-4 bottom-3.5">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{event.time}{event.game?.name ? ` · ${event.game.name}` : ''}</div>
+          <div className="mt-0.5 text-lg font-extrabold leading-tight text-white line-clamp-2">{event.name}</div>
         </div>
+      </CoverImage>
+      <div className="p-3.5 flex items-center gap-2.5">
+        <div className="flex-1 min-w-0">
+          <FriendsInterested friends={event.interestedFriends || []} totalCount={event.interestedCount} />
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleInterest(event.id); }}
+          disabled={togglingInterest === event.id}
+          className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+            event.isInterested ? 'bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent' : 'bg-elevated text-primary'
+          }`}
+        >
+          {togglingInterest === event.id ? '...' : event.isInterested ? 'Interested' : 'Interested?'}
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); setShareEvent(event); }}
+          aria-label="Share"
+          className="grid h-9 w-9 place-items-center rounded-full bg-elevated text-primary"
+        >
+          <Share size={16} />
+        </button>
       </div>
     </div>
   );
@@ -613,33 +586,23 @@ function EventsPageContent() {
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <div className="relative bg-surface rounded-t-[32px] sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
         {/* Header */}
-        <div className="relative p-6 pb-4">
-          <button 
+        <CoverImage gameId={event.game?.id} color={event.game?.color || '#3b82f6'} src={event.imageUrl} className="h-[220px]">
+          <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 bg-elevated/80 rounded-full flex items-center justify-center text-secondary hover:text-primary"
+            aria-label="Close"
+            className="absolute top-4 right-4 w-9 h-9 bg-black/50 backdrop-blur rounded-full flex items-center justify-center text-white text-xl"
           >
             ×
           </button>
-          
-          <div className="flex items-center gap-4">
-            <div 
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-              style={{ backgroundColor: `${event.game?.color || '#3b82f6'}30` }}
-            >
-              {event.game?.icon || '🎮'}
-            </div>
-            <div>
-              <div className="text-primary font-bold text-xl">{event.name}</div>
-              <div className="text-secondary">{event.game?.name || 'General'}</div>
-              {event.isLive && (
-                <span className="inline-block mt-1 px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">
-                  LIVE NOW
-                </span>
-              )}
-            </div>
+          <div className="absolute inset-x-5 bottom-4">
+            {event.isLive && (
+              <span className="inline-block mb-1.5 px-2.5 py-1 bg-red-500 text-white text-[11px] font-bold rounded-full animate-pulse">LIVE NOW</span>
+            )}
+            <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{event.game?.name || 'General'}</div>
+            <div className="text-2xl font-extrabold leading-tight text-white">{event.name}</div>
           </div>
-        </div>
-        
+        </CoverImage>
+
         {/* Details */}
         <div className="p-4 space-y-4">
           {/* Date & Time */}

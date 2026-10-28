@@ -13,6 +13,7 @@ import { HomeSkeleton } from '@/components/Skeleton';
 import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
 import { Gift } from 'lucide-react';
+import { CoverImage } from '@/components/CoverImage';
 
 // Type for displayed game data
 interface GameDisplay {
@@ -339,22 +340,16 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         ) : (
           <div className={RAIL}>
             {upcomingEvents.map((event: any) => (
-              <a key={event.id} href="/dashboard/events" className={`${TILE} w-[250px] p-4 flex flex-col gap-3.5`}>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-[52px] h-[52px] rounded-2xl grid place-items-center text-2xl flex-none"
-                    style={{ backgroundColor: `${event.game?.color || '#3b82f6'}26` }}
-                  >
-                    {event.game?.icon || '🎮'}
+              <a key={event.id} href="/dashboard/events" className={`${TILE} w-[280px] overflow-hidden`}>
+                <CoverImage gameId={event.game?.id ?? event.game_id} color={event.game?.color || '#3b82f6'} className="h-[170px]">
+                  {event.isFree && (
+                    <span className="absolute left-3 top-3 text-xs font-bold text-white bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">Free</span>
+                  )}
+                  <div className="absolute inset-x-4 bottom-3.5">
+                    <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{event.date}, {event.time}</div>
+                    <div className="mt-0.5 text-lg font-extrabold leading-tight text-white line-clamp-2">{event.name}</div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-base font-bold leading-tight text-primary line-clamp-2">{event.name}</div>
-                    <div className="text-[13px] text-secondary mt-0.5">{event.date}, {event.time}</div>
-                  </div>
-                </div>
-                {event.isFree && (
-                  <span className="self-start text-xs font-bold text-green-400 bg-green-400/10 px-2.5 py-1 rounded-full">Free</span>
-                )}
+                </CoverImage>
               </a>
             ))}
           </div>
