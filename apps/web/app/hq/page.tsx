@@ -4812,7 +4812,7 @@ export default function HQPage() {
                         <div className="flex items-center gap-3 min-w-0">
                           <div
                             className="relative h-14 w-20 flex-none overflow-hidden rounded-lg bg-surface border border-border-token"
-                            style={event.imageUrl ? { backgroundImage: `url(${event.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                            style={event.imageUrl ? { backgroundImage: `url(${JSON.stringify(event.imageUrl)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                           />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1">

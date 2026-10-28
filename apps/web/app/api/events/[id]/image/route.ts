@@ -4,6 +4,23 @@ import { requireStoreAccess, requireNetworkAdmin } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
+function isOwnEventImage(value: unknown): boolean {
+  if (typeof value !== 'string' || value.length > 500) return false;
+  try {
+    const base = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!);
+    const u = new URL(value);
+    return (
+      u.protocol === 'https:' &&
+      u.hostname === base.hostname &&
+      u.pathname.startsWith('/storage/v1/object/public/store-assets/events/') &&
+      !u.pathname.includes('..') &&
+      !u.search && !u.hash && !u.username && !u.password
+    );
+  } catch {
+    return false;
+  }
+}
+
 // Set or clear an event's optional cover image. Clearing falls back to the game's default art.
 export async function POST(
   request: Request,
@@ -29,8 +46,8 @@ export async function POST(
 
     const { imageUrl } = (await request.json()) as { imageUrl: string | null };
 
-    // Only accept images we uploaded ourselves
-    if (imageUrl !== null && !(typeof imageUrl === 'string' && imageUrl.includes('/storage/v1/object/public/store-assets/events/'))) {
+    // Only accept images we uploaded ourselves: exact host and path prefix, no query/hash/credentials
+    if (imageUrl !== null && !isOwnEventImage(imageUrl)) {
       return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 });
     }
 
