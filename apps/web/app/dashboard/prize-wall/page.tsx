@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageTitle } from '@/components/PageTitle';
+import { PageTitle, SubText } from '@/components/PageTitle';
 
 const FREE_TIER_GATE = 720;
 
@@ -137,8 +137,8 @@ export default function PrizeWallPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 pt-5 pb-8 space-y-10">
       <div>
-        <PageTitle logo="none">Prize Wall</PageTitle>
-        <p className="text-secondary text-sm mt-2">
+        <PageTitle sub={<SubText>Real prizes, real rewards</SubText>}>Prize Wall</PageTitle>
+        <p className="text-secondary text-sm mt-3">
           Spend your Points on real prizes. Points never expire.
         </p>
       </div>
