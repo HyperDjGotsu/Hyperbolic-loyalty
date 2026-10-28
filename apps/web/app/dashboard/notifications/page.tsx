@@ -31,6 +31,20 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
   weekly_summary: BarChart3,
 };
 
+// Picture when the notification carries one (own uploads or /games art); icon tile otherwise or if it fails to load.
+function NotifThumb({ notif }: { notif: Notification }) {
+  const [failed, setFailed] = useState(false);
+  const url = notif.data?.image_url;
+  if (url && !failed && (url.startsWith('/games/') || /^https:\/\//.test(url))) {
+    return <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} className="flex-shrink-0 w-12 h-12 rounded-2xl object-cover mt-0.5 bg-elevated" />;
+  }
+  return (
+    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-elevated flex items-center justify-center text-secondary mt-0.5">
+      {React.createElement(TYPE_ICONS[notif.type] ?? Bell, { size: 22, strokeWidth: 1.75 })}
+    </div>
+  );
+}
+
 function timeAgo(date: string): string {
   const diff = Date.now() - new Date(date).getTime();
   const m = Math.floor(diff / 60000);
@@ -111,8 +125,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-base pb-24">
-      <div className="sticky top-0 bg-surface border-b border-border-token px-4 py-4 flex items-center justify-between z-10">
-        <h1 className="text-primary font-bold text-lg">Notifications</h1>
+      <div className="sticky top-0 bg-base/90 backdrop-blur-xl px-4 pt-5 pb-3 flex items-end justify-between z-10">
+        <h1 className="font-display text-[44px] leading-none font-extrabold tracking-tight text-primary">Alerts</h1>
         {unreadCount > 0 && (
           <button
             type="button"
@@ -136,7 +150,7 @@ export default function NotificationsPage() {
           <div className="text-secondary text-sm">New notifications will appear here as you earn XP, attend events, and connect with players.</div>
         </div>
       ) : (
-        <div className="divide-y divide-border-token">
+        <div className="mx-4 mt-2 rounded-[26px] bg-surface border border-border-token overflow-hidden divide-y divide-border-token">
           {notifications.map((notif) => (
             <button
               key={notif.id}
@@ -146,9 +160,7 @@ export default function NotificationsPage() {
                 notif.is_read ? 'opacity-60' : ''
               }`}
             >
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-elevated flex items-center justify-center text-secondary mt-0.5">
-                {React.createElement(TYPE_ICONS[notif.type] ?? Bell, { size: 20, strokeWidth: 1.75 })}
-              </div>
+              <NotifThumb notif={notif} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <span className={`text-sm font-semibold leading-snug ${notif.is_read ? 'text-secondary' : 'text-primary'}`}>

@@ -648,7 +648,7 @@ export default function CommunityPage() {
     return (
       <div
         onClick={() => !isAnonymous && setSelectedMember(member)}
-        className={`bg-elevated/50 rounded-xl p-3 flex items-center gap-3 border border-border-token ${
+        className={`bg-surface rounded-[22px] p-3.5 flex items-center gap-3 border border-border-token ${
           !isAnonymous ? 'cursor-pointer hover:border-accent/50' : ''
         }`}
       >
@@ -883,23 +883,23 @@ export default function CommunityPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="relative bg-surface p-4 border-b border-border-token">
+      <div className="relative bg-base px-4 pt-5 pb-3">
         <div className="relative flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-primary font-display">Community</h1>
-            <p className="text-secondary text-sm">{leaderboard.length} players ranked</p>
+            <h1 className="text-[44px] leading-none font-extrabold tracking-tight text-primary font-display">Community</h1>
+            <p className="text-secondary text-sm mt-1.5">{leaderboard.length} players ranked</p>
           </div>
           {/* Header buttons: Search + Privacy */}
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowSearchModal(true)}
-              className="bg-elevated/80 p-2 rounded-xl border border-border-token hover:border-accent/50 transition-colors"
+              className="bg-elevated h-10 w-10 grid place-items-center rounded-full"
             >
               <Search size={20} className="text-primary" />
             </button>
             <button 
               onClick={() => setShowPrivacySettings(true)}
-              className="bg-elevated/80 p-2 rounded-xl border border-border-token hover:border-accent/50 transition-colors"
+              className="bg-elevated h-10 w-10 grid place-items-center rounded-full"
             >
               <Shield size={20} className="text-primary" />
             </button>
@@ -1018,9 +1018,40 @@ export default function CommunityPage() {
             {leaderboardLoading ? (
               <div className="py-12"><Loader label="Loading rankings" /></div>
             ) : leaderboard.length > 0 ? (
-              leaderboard.map((entry) => (
-                <MemberCard key={entry.id} member={entry} />
-              ))
+              <>
+                {leaderboard.length >= 3 && (
+                  <div className="grid grid-cols-3 items-end gap-2.5 pb-2">
+                    {[leaderboard[1], leaderboard[0], leaderboard[2]].map((entry) => {
+                      const anon = !!entry.hidden;
+                      const first = entry.rank === 1;
+                      return (
+                        <div
+                          key={entry.id}
+                          onClick={() => !anon && setSelectedMember(entry)}
+                          className={`flex flex-col items-center rounded-[26px] border border-border-token px-2 pb-4 pt-5 text-center ${anon ? '' : 'cursor-pointer'} ${
+                            first ? 'bg-elevated pt-7 pb-5' : 'bg-surface'
+                          }`}
+                        >
+                          <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full text-sm font-extrabold ${
+                            first ? 'bg-yellow-400 text-black' : entry.rank === 2 ? 'bg-zinc-300 text-black' : 'bg-amber-600 text-white'
+                          }`}>
+                            {entry.rank}
+                          </div>
+                          <Avatar
+                            avatar={anon ? { type: 'emoji', base: '❓', photoUrl: null, background: 'var(--bg-elevated)', frame: 'none', badge: null } : entry.avatar}
+                            size={first ? 'lg' : 'md'}
+                          />
+                          <div className="mt-2 w-full truncate text-sm font-bold text-primary">{anon ? 'Anonymous' : entry.name}</div>
+                          <div className="text-xs font-semibold text-xp tabular-nums">{(entry.totalXp ?? entry.xp ?? 0).toLocaleString()}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {(leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard).map((entry) => (
+                  <MemberCard key={entry.id} member={entry} />
+                ))}
+              </>
             ) : (
               <EmptyState icon={Trophy} title="No rankings yet" hint={`Be the first to earn ${ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}`} />
             )}

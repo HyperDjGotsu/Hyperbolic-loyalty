@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendExpoPushToPlayers } from '@/lib/expo-push';
+import { gameArtUrl } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
 
     const { data: events } = await supabaseAdmin
       .from('events')
-      .select('id, name, scheduled_at, game_id, store_id')
+      .select('id, name, scheduled_at, game_id, store_id, image_url')
       .gte('scheduled_at', windowStart.toISOString())
       .lte('scheduled_at', windowEnd.toISOString());
 
@@ -54,9 +55,9 @@ export async function GET(request: Request) {
         player_id: p.id,
         store_id: event.store_id ?? null,
         type: 'event_reminder',
-        title: `⏰ ${event.name} starts in ${timeLabel}`,
+        title: `${event.name} starts in ${timeLabel}`,
         message: `Head to the store — doors open soon!`,
-        data: { event_id: event.id, event_name: event.name, scheduled_at: event.scheduled_at },
+        data: { event_id: event.id, event_name: event.name, scheduled_at: event.scheduled_at, image_url: event.image_url || gameArtUrl(event.game_id) },
         is_read: false,
       }));
 
@@ -84,7 +85,7 @@ export async function GET(request: Request) {
 
       try {
         const tokenCount = await sendExpoPushToPlayers(eligibleIds, {
-          title: `⏰ ${event.name} starts in ${timeLabel}`,
+          title: `${event.name} starts in ${timeLabel}`,
           body: 'Head to the store — doors open soon!',
           data: { event_id: event.id, event_name: event.name, scheduled_at: event.scheduled_at },
           category: 'events',

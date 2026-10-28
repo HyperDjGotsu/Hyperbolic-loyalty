@@ -4,6 +4,7 @@ import { requireNetworkAdmin } from '@/lib/auth-helpers';
 import { fetchICalSafe } from '@/lib/ical-fetch';
 import { parseIsSpecial, stripSpecialFlag } from '@/lib/event-flags';
 import { notifyStorePlayers } from '@/lib/notifications';
+import { gameArtUrl } from '@/lib/games';
 
 
 export const dynamic = 'force-dynamic';
@@ -726,9 +727,9 @@ export async function POST(request: Request) {
             notifyStorePlayers(
               storeId,
               'event_announced',
-              `📣 New event: ${event.name}`,
+              `New event: ${event.name}`,
               `${dateLabel} — check Events for details and mark yourself as interested.`,
-              { event_name: event.name, scheduled_at: event.scheduled_at, game_id: event.game_id ?? '' },
+              { event_name: event.name, scheduled_at: event.scheduled_at, game_id: event.game_id ?? '', image_url: gameArtUrl(event.game_id) },
               'events'
             ).catch(() => {});
           }
