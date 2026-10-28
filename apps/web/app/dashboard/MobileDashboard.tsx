@@ -13,7 +13,7 @@ import { HomeSkeleton } from '@/components/Skeleton';
 import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
 import { Gift } from 'lucide-react';
-import { CoverImage } from '@/components/CoverImage';
+import { CoverImage, HeroBackdrop, pickBackdropGame } from '@/components/CoverImage';
 
 // Type for displayed game data
 interface GameDisplay {
@@ -229,7 +229,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
               onClick={() => setShowStoreSwitcher(true)}
               className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface border border-border-token pl-2.5 pr-3 py-1.5 text-[13px] font-semibold text-secondary"
             >
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: storeForPill.color ?? '#7c3aed' }} />
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: storeForPill.color ?? '#3ddc6a' }} />
               {storeForPill.name}
               {storeForPill.is_flagship && <span className="text-[10px] uppercase tracking-wide text-xp">Flagship</span>}
             </button>
@@ -267,18 +267,19 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       )}
 
       {/* Hero: level, points, spin */}
-      <section className="mt-5 rounded-[30px] bg-elevated border border-border-token p-5 shadow-xl">
+      <section className="relative isolate overflow-hidden mt-5 rounded-[30px] bg-elevated border border-border-token p-5 shadow-xl">
+        <HeroBackdrop gameId={pickBackdropGame(favoriteGames)} />
         <div className="flex items-center gap-5">
           <Ring pct={levelProgress} size={112} stroke={9} color="var(--accent)">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-secondary">Level</span>
-            <span className="text-[40px] leading-none font-extrabold tabular-nums text-primary">{level}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">Level</span>
+            <span className="text-[40px] leading-none font-extrabold tabular-nums text-white">{level}</span>
           </Ring>
           <div className="min-w-0">
-            <div className="text-lg font-bold text-primary truncate">{playerData?.displayName || 'Player'}</div>
-            <div className="text-[13px] text-secondary tabular-nums">{levelProgress} of 100 XP to Level {level + 1}</div>
+            <div className="text-lg font-bold text-white truncate">{playerData?.displayName || 'Player'}</div>
+            <div className="text-[13px] text-white/70 tabular-nums">{levelProgress} of 100 XP to Level {level + 1}</div>
             <div className="mt-3 flex items-baseline gap-1.5">
               <span className="text-3xl leading-none font-extrabold tabular-nums text-xp">{spendable.toLocaleString()}</span>
-              <span className="text-[13px] font-semibold text-secondary">{passStatus ? 'Prize Points' : storeConfig.currency_name}</span>
+              <span className="text-[13px] font-semibold text-white/70">{passStatus ? 'Prize Points' : storeConfig.currency_name}</span>
             </div>
           </div>
         </div>
@@ -302,7 +303,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         {spinMessage && !hasSpunToday && <p className="text-center text-xs text-accent mt-2">{spinMessage}</p>}
 
         {passStatus && (
-          <div className="mt-4 pt-3 border-t border-border-token flex items-center justify-between text-[13px] text-secondary">
+          <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[13px] text-white/70">
             <span>
               {passStatus.tier === 'free'
                 ? `${passStatus.prizePoints.toLocaleString()} / 720 pts to unlock Prize Wall`

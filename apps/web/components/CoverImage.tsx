@@ -39,3 +39,32 @@ export function CoverImage({
     </div>
   );
 }
+
+// Full-bleed art behind a hero card. Put `isolate` on the parent; this sits at -z-10 under its content.
+// Dark scrim keeps white text readable on any image; gradient shows until the art exists.
+export function HeroBackdrop({ gameId, color }: { gameId?: string | null; color?: string }) {
+  const [failed, setFailed] = useState(false);
+  const base = color || 'var(--accent)';
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 -z-10"
+      style={{ backgroundImage: `linear-gradient(135deg, ${base}, color-mix(in srgb, ${base} 30%, #0b1220))` }}
+    >
+      {!failed && (
+        <img
+          src={gameArtUrl(gameId)}
+          alt=""
+          onError={() => setFailed(true)}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-black/80" />
+    </div>
+  );
+}
+
+// First real favorite game (the system 'overall' entry doesn't count).
+export function pickBackdropGame(favorites: string[] | undefined | null): string | undefined {
+  return (favorites || []).find(id => id && id !== 'overall');
+}

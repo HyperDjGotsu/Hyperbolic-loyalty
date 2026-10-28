@@ -107,7 +107,7 @@ export default function COTDVotingWidget() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-xl p-4 border border-purple-500/20">
+    <div className="bg-gradient-to-br from-[color-mix(in_srgb,var(--accent)_10%,transparent)] to-cyan-500/10 rounded-xl p-4 border border-[color-mix(in_srgb,var(--accent)_20%,transparent)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -146,14 +146,14 @@ export default function COTDVotingWidget() {
               disabled={voting}
               className={`w-full p-3 rounded-lg border transition-all text-left relative overflow-hidden ${
                 isVoted
-                  ? 'bg-purple-500/20 border-purple-500'
-                  : 'bg-elevated border-border-token hover:border-purple-500/50 hover:bg-elevated'
+                  ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] border-accent'
+                  : 'bg-elevated border-border-token hover:border-[color-mix(in_srgb,var(--accent)_50%,transparent)] hover:bg-elevated'
               } ${voting ? 'opacity-50 cursor-wait' : ''}`}
             >
               {/* Vote percentage bar */}
               {data.totalVotes > 0 && (
                 <div 
-                  className={`absolute left-0 top-0 bottom-0 ${isVoted ? 'bg-purple-500/20' : 'bg-cyan-500/10'}`}
+                  className={`absolute left-0 top-0 bottom-0 ${isVoted ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)]' : 'bg-cyan-500/10'}`}
                   style={{ width: `${card.percentage}%` }}
                 />
               )}
@@ -165,7 +165,7 @@ export default function COTDVotingWidget() {
                   <div className="text-xs text-secondary">
                     {card.game} • #{card.number}
                     {card.cardData.printing && card.cardData.printing !== 'Standard' && (
-                      <span className="text-purple-400 ml-1">{card.cardData.printing}</span>
+                      <span className="text-accent ml-1">{card.cardData.printing}</span>
                     )}
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function COTDVotingWidget() {
 
                 {/* Voted indicator */}
                 {isVoted && (
-                  <div className="text-purple-400">
+                  <div className="text-accent">
                     ✓
                   </div>
                 )}

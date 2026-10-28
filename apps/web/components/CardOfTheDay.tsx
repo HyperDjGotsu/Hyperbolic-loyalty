@@ -72,10 +72,10 @@ const GAME_THEMES: Record<string, GameTheme> = {
     border: 'border-yellow-500/30',
   },
   'Magic: The Gathering': {
-    gradient: 'from-purple-600/20 to-indigo-500/20',
-    accent: 'text-purple-400',
+    gradient: 'from-[color-mix(in_srgb,var(--accent)_20%,transparent)] to-indigo-500/20',
+    accent: 'text-accent',
     icon: '🔮',
-    border: 'border-purple-500/30',
+    border: 'border-[color-mix(in_srgb,var(--accent)_30%,transparent)]',
   },
   'Disney Lorcana': {
     gradient: 'from-blue-500/20 to-cyan-500/20',
@@ -108,7 +108,7 @@ const GAME_THEMES: Record<string, GameTheme> = {
     border: 'border-cyan-500/30',
   },
   'Yu-Gi-Oh!': {
-    gradient: 'from-indigo-600/20 to-purple-500/20',
+    gradient: 'from-indigo-600/20 to-[color-mix(in_srgb,var(--accent)_20%,transparent)]',
     accent: 'text-indigo-400',
     icon: '🃏',
     border: 'border-indigo-500/30',
@@ -303,7 +303,7 @@ export function CardOfTheDay() {
           {card.source && card.source !== 'auto' && (
             <span className={`text-[10px] px-2 py-0.5 rounded ${
               card.source === 'staff_pick'
-                ? 'bg-purple-500/20 text-purple-400'
+                ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] text-accent'
                 : 'bg-green-500/20 text-green-400'
             }`}>
               {card.source === 'staff_pick' ? '👤 Staff Pick' : '🗳️ Community'}
@@ -316,7 +316,7 @@ export function CardOfTheDay() {
               onClick={() => setShowVoting(!showVoting)}
               className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
                 showVoting
-                  ? 'bg-purple-500/20 text-purple-400'
+                  ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] text-accent'
                   : 'bg-elevated text-secondary hover:text-primary'
               }`}
             >
@@ -348,14 +348,14 @@ export function CardOfTheDay() {
                   disabled={castingVote}
                   className={`w-full p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
                     isVoted
-                      ? 'bg-purple-500/20 border-purple-500'
-                      : 'bg-base border-transparent hover:border-purple-500/50'
+                      ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] border-accent'
+                      : 'bg-base border-transparent hover:border-[color-mix(in_srgb,var(--accent)_50%,transparent)]'
                   } ${castingVote ? 'opacity-50' : ''}`}
                 >
                   {/* Vote percentage bar */}
                   {voting.totalVotes > 0 && (
                     <div
-                      className={`absolute left-0 top-0 bottom-0 ${isVoted ? 'bg-purple-500/20' : 'bg-cyan-500/10'}`}
+                      className={`absolute left-0 top-0 bottom-0 ${isVoted ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)]' : 'bg-cyan-500/10'}`}
                       style={{ width: `${poolCard.percentage}%` }}
                     />
                   )}
@@ -366,7 +366,7 @@ export function CardOfTheDay() {
                       <div className="text-xs text-tertiary">
                         {poolCard.game} • #{poolCard.number}
                         {poolCard.cardData?.printing && poolCard.cardData.printing !== 'Standard' && (
-                          <span className="text-purple-400 ml-1">✨</span>
+                          <span className="text-accent ml-1">✨</span>
                         )}
                       </div>
                     </div>
@@ -380,7 +380,7 @@ export function CardOfTheDay() {
                       </div>
                     </div>
 
-                    {isVoted && <span className="text-purple-400">✓</span>}
+                    {isVoted && <span className="text-accent">✓</span>}
                   </div>
                 </button>
               );
@@ -555,7 +555,7 @@ export function CardOfTheDayCompact() {
 
   if (showVotingUI) {
     return (
-      <div className="bg-elevated rounded-xl p-3 border border-purple-500/30">
+      <div className="bg-elevated rounded-xl p-3 border border-[color-mix(in_srgb,var(--accent)_30%,transparent)]">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">🗳️ Vote for Tomorrow</span>
           <span className="text-[10px] text-cyan-400">+10 XP if you win!</span>
@@ -571,14 +571,14 @@ export function CardOfTheDayCompact() {
                 disabled={castingVote}
                 className={`w-full p-2 rounded-lg text-left text-xs transition-all ${
                   isVoted
-                    ? 'bg-purple-500/20 border border-purple-500'
-                    : 'bg-elevated border border-transparent hover:border-purple-500/50'
+                    ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] border border-accent'
+                    : 'bg-elevated border border-transparent hover:border-[color-mix(in_srgb,var(--accent)_50%,transparent)]'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="truncate flex-1">{poolCard.name}</span>
                   <span className="text-secondary ml-2">{poolCard.percentage}%</span>
-                  {isVoted && <span className="text-purple-400 ml-1">✓</span>}
+                  {isVoted && <span className="text-accent ml-1">✓</span>}
                 </div>
               </button>
             );

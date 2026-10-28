@@ -637,7 +637,7 @@ function EventsPageContent() {
               <div className="flex items-center gap-3">
                 <Star size={22} className="text-accent flex-none" />
                 <div className="flex-1">
-                  <div className="text-purple-400 font-bold">{event.interestedCount} Interested</div>
+                  <div className="text-accent font-bold">{event.interestedCount} Interested</div>
                   {event.interestedFriends?.length > 0 && (
                     <div className="flex items-center gap-2 mt-2">
                       <div className="flex -space-x-2">
@@ -664,7 +664,7 @@ function EventsPageContent() {
                 <div className="text-secondary text-xs">Attendance</div>
               </div>
               <div className="text-center">
-                <div className="text-purple-400 font-bold text-xl">+{event.winXp}</div>
+                <div className="text-xp font-bold text-xl">+{event.winXp}</div>
                 <div className="text-secondary text-xs">Per Win</div>
               </div>
             </div>

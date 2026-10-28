@@ -709,7 +709,7 @@ export default function CommunityPage() {
       </div>
       <div className="flex-1 overflow-auto p-4 space-y-6">
         {/* Safety Banner */}
-        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-xl p-4">
+        <div className="bg-gradient-to-r from-[color-mix(in_srgb,var(--accent)_20%,transparent)] to-pink-600/20 border border-[color-mix(in_srgb,var(--accent)_30%,transparent)] rounded-xl p-4">
           <div className="flex items-start gap-3">
             <div>
               <div className="font-bold text-primary">Your Safety Matters</div>
@@ -1150,7 +1150,7 @@ export default function CommunityPage() {
                 {/* Hall of Fame */}
                 {hallOfFame.length > 0 && (
                   <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
-                    <h3 className="text-sm font-bold text-purple-400 uppercase tracking-wider mb-3">
+                    <h3 className="text-sm font-bold text-accent uppercase tracking-wider mb-3">
                       Hall of Fame
                     </h3>
                     <div className="space-y-2">

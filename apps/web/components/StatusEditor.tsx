@@ -153,7 +153,7 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
               onClick={handleCustomToggle}
               className={`w-full p-3 rounded-xl text-left transition-all flex items-center gap-3 mb-2 ${
                 isCustom
-                  ? 'bg-purple-500/20 border-2 border-purple-500'
+                  ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] border-2 border-accent'
                   : 'bg-elevated border-2 border-transparent hover:bg-input'
               }`}
             >
@@ -168,7 +168,7 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value.slice(0, 50))}
                   placeholder="What's on your mind?"
-                  className="w-full p-3 rounded-xl bg-input text-primary placeholder-tertiary border-2 border-purple-500/50 focus:border-purple-500 outline-none"
+                  className="w-full p-3 rounded-xl bg-input text-primary placeholder-tertiary border-2 border-[color-mix(in_srgb,var(--accent)_50%,transparent)] focus:border-accent outline-none"
                   autoFocus
                 />
                 <div className="text-right text-tertiary text-sm mt-1">
@@ -199,7 +199,7 @@ export default function StatusEditor({ currentStatus, onStatusChange, isOpen, on
           <button
             onClick={handleSave}
             disabled={saving || (!selectedPreset && !customText.trim())}
-            className="flex-1 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex-1 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-accent text-white font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save'}
           </button>

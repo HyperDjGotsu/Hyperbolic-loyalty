@@ -433,7 +433,7 @@ const MiniCalendar = ({
                 isSelected(day)
                   ? 'bg-accent text-primary'
                   : isToday(day)
-                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                  ? 'bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] text-accent border border-[color-mix(in_srgb,var(--accent)_50%,transparent)]'
                   : hasEvents
                   ? 'bg-elevated text-primary hover:bg-elevated'
                   : 'text-secondary hover:bg-elevated/50'
@@ -741,7 +741,7 @@ function EventsPageContent() {
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-primary font-bold text-lg">{event.name}</span>
               {event.isNetworkEvent && (
-                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30 whitespace-nowrap">GGC Network</span>
+                <span className="px-2 py-0.5 bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] text-accent text-xs rounded-full border border-[color-mix(in_srgb,var(--accent)_30%,transparent)] whitespace-nowrap">GGC Network</span>
               )}
               {event.isLive && (
                 <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
@@ -770,7 +770,7 @@ function EventsPageContent() {
               <div className={`font-bold text-lg ${event.isFree ? 'text-green-400' : 'text-accent'}`}>
                 {event.entryFee}
               </div>
-              {event.hasStream && <div className="text-purple-400 text-xs">Streamed</div>}
+              {event.hasStream && <div className="text-accent text-xs">Streamed</div>}
             </div>
             
             <div className="flex items-center gap-2">
@@ -842,7 +842,7 @@ function EventsPageContent() {
           </div>
           <div className="text-right">
             <div className="text-accent font-bold">{event.entryFee}</div>
-            {event.hasStream && <div className="text-purple-400 text-xs mt-1">Stream</div>}
+            {event.hasStream && <div className="text-accent text-xs mt-1">Stream</div>}
           </div>
         </div>
         
@@ -940,7 +940,7 @@ function EventsPageContent() {
                 <div className="text-secondary text-xs">Attendance</div>
               </div>
               <div className="text-center">
-                <div className="text-purple-400 font-bold text-xl">+{event.winXp}</div>
+                <div className="text-xp font-bold text-xl">+{event.winXp}</div>
                 <div className="text-secondary text-xs">Per Win</div>
               </div>
             </div>
@@ -976,7 +976,7 @@ function EventsPageContent() {
           {/* Friends interested */}
           {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
             <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
-              <div className="text-purple-400 font-bold mb-2">{event.interestedCount} Interested</div>
+              <div className="text-accent font-bold mb-2">{event.interestedCount} Interested</div>
               {event.interestedFriends?.length > 0 && (
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
@@ -1208,7 +1208,7 @@ function EventsPageContent() {
                       <div className="text-secondary text-xs">Events</div>
                     </div>
                     <div className="bg-elevated/50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-purple-400">
+                      <div className="text-2xl font-bold text-accent">
                         {events.filter(e => e.isInterested).length}
                       </div>
                       <div className="text-secondary text-xs">Interested</div>

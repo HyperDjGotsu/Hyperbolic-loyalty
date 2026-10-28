@@ -7,6 +7,7 @@ import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { Loader } from '@/components/Loader';
 import { Pencil } from 'lucide-react';
+import { HeroBackdrop, pickBackdropGame } from '@/components/CoverImage';
 
 interface ShopItem {
   id: string;
@@ -991,37 +992,29 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-base pb-20">
       {/* Hero: the player's picture, blurred, behind their avatar, name and numbers */}
-      <div className="relative overflow-hidden px-4 pt-10 pb-7">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 scale-125 bg-cover bg-center blur-2xl opacity-60"
-          style={
-            playerData.avatarConfig?.photo_url
-              ? { backgroundImage: `url(${JSON.stringify(playerData.avatarConfig.photo_url)})` }
-              : { backgroundImage: 'linear-gradient(135deg, var(--accent), #4d8dff)' }
-          }
-        />
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-transparent via-base/40 to-base" />
+      <div className="relative isolate overflow-hidden px-4 pt-10 pb-7">
+        <HeroBackdrop gameId={pickBackdropGame(favoriteGames)} />
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-base" />
         <div className="relative flex flex-col items-center">
           <AvatarPreview config={playerData.avatarConfig} size="xl" />
-          <h1 className="font-display text-primary text-[32px] leading-tight font-extrabold tracking-tight mt-4 text-center">{playerData.displayName}</h1>
-          <div className="text-secondary font-mono text-sm">{playerData.id}</div>
+          <h1 className="font-display text-white text-[32px] leading-tight font-extrabold tracking-tight mt-4 text-center">{playerData.displayName}</h1>
+          <div className="text-white/70 font-mono text-sm">{playerData.id}</div>
 
           <div className="mt-5 grid w-full grid-cols-3 gap-2 text-center">
             <div>
-              <div className="text-primary text-3xl font-extrabold tabular-nums">{playerData.level}</div>
-              <div className="text-secondary text-xs uppercase tracking-wide font-semibold">Level</div>
+              <div className="text-white text-3xl font-extrabold tabular-nums">{playerData.level}</div>
+              <div className="text-white/70 text-xs uppercase tracking-wide font-semibold">Level</div>
             </div>
             <div>
               <div className="text-xp text-3xl font-extrabold tabular-nums">{playerData.totalXp.toLocaleString()}</div>
-              <div className="text-secondary text-xs uppercase tracking-wide font-semibold">Total XP</div>
+              <div className="text-white/70 text-xs uppercase tracking-wide font-semibold">Total XP</div>
             </div>
             <div>
               {storeConfig.currency_icon.startsWith('http') && (
                 <img src={storeConfig.currency_icon} alt="" className="mx-auto mb-0.5 h-7 w-7 object-contain" />
               )}
               <div className="text-accent text-3xl font-extrabold tabular-nums">{playerData.gems.toLocaleString()}</div>
-              <div className="text-secondary text-xs uppercase tracking-wide font-semibold">{storeConfig.currency_name}</div>
+              <div className="text-white/70 text-xs uppercase tracking-wide font-semibold">{storeConfig.currency_name}</div>
             </div>
           </div>
 

@@ -83,7 +83,7 @@ export function StoreSwitcherModal({
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <div className="space-y-2">
@@ -97,14 +97,14 @@ export function StoreSwitcherModal({
                   disabled={isCurrent || saving}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
                     isCurrent
-                      ? 'border-purple-500 bg-purple-500/10'
+                      ? 'border-accent bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]'
                       : 'border-gray-700 bg-gray-800/50 hover:border-gray-500'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: store.color ?? '#7c3aed' }}
+                      style={{ backgroundColor: store.color ?? '#3ddc6a' }}
                     />
                     <div>
                       <div className="text-white font-medium text-sm">{store.name}</div>
@@ -121,12 +121,12 @@ export function StoreSwitcherModal({
                       <span className="text-gray-500 text-xs">Home</span>
                     )}
                     {isCurrent && (
-                      <span className="text-purple-400 text-xs font-semibold">
+                      <span className="text-accent text-xs font-semibold">
                         {required ? 'Selected' : 'Viewing'}
                       </span>
                     )}
                     {saving && store.id === currentStoreId && (
-                      <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                     )}
                   </div>
                 </button>
