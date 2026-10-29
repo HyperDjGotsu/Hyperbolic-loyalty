@@ -1017,9 +1017,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-base pb-20">
+    <div className="min-h-screen bg-base pb-20 lg:max-w-3xl lg:mx-auto lg:pt-6">
       {/* Hero: the player's picture, blurred, behind their avatar, name and numbers */}
-      <div className="relative isolate overflow-hidden px-4 pt-10 pb-7">
+      <div className="relative isolate overflow-hidden px-4 pt-10 pb-7 lg:rounded-[30px]">
         <HeroBackdrop gameId={parseBackdrop(playerData.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)} />
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-base" />
         <BrandMark className="absolute left-4 top-4 h-9" />

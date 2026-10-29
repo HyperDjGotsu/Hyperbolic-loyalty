@@ -66,22 +66,29 @@ const navItems = [
   },
 ];
 
-// Desktop sidebar items (no Alerts tab — bell is already in DesktopDashboard header)
-const desktopNavItems = navItems.filter((i) => i.href !== '/dashboard/notifications');
+// Desktop sidebar shows every destination, Alerts included (with its unread badge)
+const desktopNavItems = navItems;
 
-function NavItem({ item, pathname }: { item: typeof navItems[0]; pathname: string }) {
+function NavItem({ item, pathname, unreadCount }: { item: typeof navItems[0]; pathname: string; unreadCount: number }) {
   const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+  const showBadge = item.href === '/dashboard/notifications' && unreadCount > 0;
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+      aria-current={isActive ? 'page' : undefined}
+      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-colors
         ${isActive
-          ? 'bg-elevated text-primary border-l-2 border-accent pl-[10px]'
-          : 'text-secondary hover:text-primary hover:bg-elevated/50'
+          ? 'bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent'
+          : 'text-secondary hover:text-primary hover:bg-elevated'
         }`}
     >
       {item.icon}
-      {item.label}
+      <span className="flex-1">{item.label}</span>
+      {showBadge && (
+        <span className="min-w-[20px] h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center px-1.5">
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
     </Link>
   );
 }
@@ -182,14 +189,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-base text-primary">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-56 bg-surface border-r border-border-token z-30">
-        <div className="px-4 py-5 border-b border-border-token flex items-center justify-between">
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 bg-surface border-r border-border-token z-30">
+        <div className="px-5 pt-6 pb-4">
+          <img src="/brand/pp-lockup.png" alt="Player Pass" className="h-14 w-auto" />
+        </div>
+        <div className="px-4 pb-4 flex items-center justify-between">
           <button
             onClick={() => setShowStoreSwitcher(true)}
-            className="flex items-center gap-1.5 min-w-0 group text-left"
+            className="flex items-center gap-2 min-w-0 group text-left rounded-full bg-elevated border border-border-token pl-3 pr-3 py-1.5"
             title="Switch store"
           >
-            <span className="font-display font-bold text-sm text-primary truncate leading-tight">
+            <span className="font-semibold text-[13px] text-secondary truncate leading-tight">
               {selectedStoreName ?? 'Player Pass'}
             </span>
             <svg
@@ -202,9 +212,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           <ThemeToggle />
         </div>
-        <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5">
+        <nav className="flex-1 px-3 py-2 flex flex-col gap-1">
           {desktopNavItems.map((item) => (
-            <NavItem key={item.href} item={item} pathname={pathname} />
+            <NavItem key={item.href} item={item} pathname={pathname} unreadCount={unreadCount} />
           ))}
         </nav>
         <div className="p-4 border-t border-border-token flex flex-col gap-2">
@@ -226,14 +236,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-56 pb-28 lg:pb-0">
-        {/* Desktop header */}
-        <div className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-border-token sticky top-0 bg-base/95 backdrop-blur-sm z-20">
-          <h1 className="text-base font-semibold text-primary capitalize">
-            {pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
-          </h1>
-        </div>
-        {children}
+      <main className="lg:ml-64 pb-28 lg:pb-0">
+        <div className="lg:max-w-[1280px] lg:mx-auto">{children}</div>
       </main>
 
       {/* Mobile bottom nav */}

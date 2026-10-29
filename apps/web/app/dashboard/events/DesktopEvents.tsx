@@ -4,6 +4,9 @@ import SpecialEvents from '@/components/SpecialEvents';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader } from '@/components/Loader';
+import { PageTitle, SubText } from '@/components/PageTitle';
+import { CoverImage } from '@/components/CoverImage';
+import { RefreshCw, Share2 } from 'lucide-react';
 
 interface GameInfo {
   id: string;
@@ -20,6 +23,7 @@ interface FriendInterest {
 
 interface CalendarEvent {
   id: string;
+  imageUrl?: string | null;
   name: string;
   description: string | null;
   date: string;
@@ -717,89 +721,55 @@ function EventsPageContent() {
 
   // Desktop Event Card (wider, more info)
   const DesktopEventCard = ({ event }: { event: CalendarEvent }) => (
-    <div 
+    <div
       onClick={() => setSelectedEvent(event)}
-      className={`bg-base rounded-xl overflow-hidden border cursor-pointer hover:border-border-token transition-all ${
-        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-border-token'
-      }`}
+      className="group bg-surface rounded-[26px] overflow-hidden border border-border-token cursor-pointer transition-transform hover:-translate-y-1"
     >
-      <div 
-        className="p-4 border-l-4" 
-        style={{ borderLeftColor: event.game?.color || '#64748b' }}
+      <CoverImage
+        gameId={event.game?.id}
+        color={event.game?.color || '#64748b'}
+        src={event.imageUrl}
+        className="h-[190px]"
       >
-        <div className="flex items-center gap-4">
-          {/* Game Icon */}
-          <div 
-            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0"
-            style={{ backgroundColor: `${event.game?.color || '#64748b'}20` }}
-          >
-            {event.game?.icon || '🎮'}
-          </div>
-          
-          {/* Event Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="text-primary font-bold text-lg">{event.name}</span>
-              {event.isNetworkEvent && (
-                <span className="px-2 py-0.5 bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] text-accent text-xs rounded-full border border-[color-mix(in_srgb,var(--accent)_30%,transparent)] whitespace-nowrap">GGC Network</span>
-              )}
-              {event.isLive && (
-                <span className="px-2 py-0.5 bg-red-500 text-primary text-xs rounded-full animate-pulse">LIVE</span>
-              )}
-              {event.isStartingSoon && !event.isLive && (
-                <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full">SOON</span>
-              )}
-              {event.hasStream && <StreamButtons event={event} />}
-            </div>
-            <div className="text-secondary text-sm">{event.time}</div>
-            
-            {/* Friends interested - inline on desktop */}
-            {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
-              <div className="mt-2">
-                <FriendsInterested 
-                  friends={event.interestedFriends || []} 
-                  totalCount={event.interestedCount} 
-                />
-              </div>
-            )}
-          </div>
-          
-          {/* Price & Actions */}
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className={`font-bold text-lg ${event.isFree ? 'text-green-400' : 'text-accent'}`}>
-                {event.entryFee}
-              </div>
-              {event.hasStream && <div className="text-accent text-xs">Streamed</div>}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleInterest(event.id);
-                }}
-                disabled={togglingInterest === event.id}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  event.isInterested
-                    ? 'bg-accent/10 text-accent border border-accent/50'
-                    : 'bg-elevated text-primary hover:bg-elevated'
-                }`}
-              >
-                {togglingInterest === event.id ? '...' : event.isInterested ? '✓ Interested' : 'Interested?'}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShareEvent(event);
-                }}
-                className="px-3 py-2 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated"
-              >
-                Share
-              </button>
-            </div>
-          </div>
+        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+          {event.isLive && <span className="px-2.5 py-1 bg-red-500 text-white text-[11px] font-bold rounded-full animate-pulse">LIVE</span>}
+          {event.isStartingSoon && !event.isLive && <span className="px-2.5 py-1 bg-yellow-500 text-black text-[11px] font-bold rounded-full">SOON</span>}
+          {event.isNetworkEvent && <span className="px-2.5 py-1 bg-black/50 backdrop-blur text-white text-[11px] font-bold rounded-full">Network</span>}
         </div>
+        <div className={`absolute right-3 top-3 px-2.5 py-1 rounded-full text-xs font-bold bg-black/50 backdrop-blur ${event.isFree ? 'text-green-300' : 'text-white'}`}>
+          {event.entryFee}
+        </div>
+        <div className="absolute inset-x-4 bottom-3.5">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{event.time}</div>
+          <div className="mt-0.5 text-xl font-extrabold leading-tight text-white line-clamp-2">{event.name}</div>
+        </div>
+      </CoverImage>
+      <div className="flex items-center gap-2 p-3.5">
+        <div className="flex-1 min-w-0">
+          {(event.interestedFriends?.length > 0 || event.interestedCount > 0) ? (
+            <FriendsInterested friends={event.interestedFriends || []} totalCount={event.interestedCount} />
+          ) : (
+            <span className="text-xs text-tertiary">{event.hasStream ? 'Streamed' : 'Be the first to join'}</span>
+          )}
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleInterest(event.id); }}
+          disabled={togglingInterest === event.id}
+          className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+            event.isInterested
+              ? 'bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] text-accent'
+              : 'bg-elevated text-primary hover:text-accent'
+          }`}
+        >
+          {togglingInterest === event.id ? '...' : event.isInterested ? 'Interested' : 'Interested?'}
+        </button>
+        <button
+          aria-label="Share event"
+          onClick={(e) => { e.stopPropagation(); setShareEvent(event); }}
+          className="grid h-9 w-9 place-items-center rounded-full bg-elevated text-primary hover:text-accent"
+        >
+          <Share2 size={16} />
+        </button>
       </div>
     </div>
   );
@@ -1044,14 +1014,17 @@ function EventsPageContent() {
   // Render
   return (
     <div className="flex-1 overflow-auto">
+      <div className="px-4 lg:px-8 pt-6 pb-2">
+        <PageTitle sub={<SubText>Games, tournaments &amp; meetups</SubText>}>Events</PageTitle>
+      </div>
       {/* Filter Bar */}
       <div className="border-b border-border-token bg-base/95 backdrop-blur-sm sticky top-0 z-10">
         <div className="px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex gap-1 bg-elevated rounded-lg p-1">
+            <div className="flex gap-1 bg-elevated rounded-full p-1">
               <button
                 onClick={() => setCalendarScope('store')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                   calendarScope === 'store' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
                 }`}
               >
@@ -1059,7 +1032,7 @@ function EventsPageContent() {
               </button>
               <button
                 onClick={() => setCalendarScope('network')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                   calendarScope === 'network' ? 'bg-surface text-primary shadow-sm' : 'text-tertiary hover:text-secondary'
                 }`}
               >
@@ -1069,9 +1042,10 @@ function EventsPageContent() {
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="px-3 py-1.5 bg-elevated text-primary rounded-lg text-sm hover:bg-elevated disabled:opacity-50 flex items-center gap-2"
+              aria-label="Sync events"
+              className="grid h-10 w-10 place-items-center bg-elevated text-primary rounded-full disabled:opacity-50"
             >
-              {syncing ? 'Syncing...' : 'Sync'}
+              <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />
             </button>
           </div>
           
@@ -1230,11 +1204,8 @@ function EventsPageContent() {
               ) : (
                 Object.entries(groupedEvents).map(([date, dateEvents]) => (
                   <div key={date}>
-                    <h2 className="text-secondary text-sm font-medium mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-accent rounded-full"></span>
-                      {date}
-                    </h2>
-                    <div className="space-y-3">
+                    <h2 className="font-display text-xl font-bold text-primary mb-3">{date}</h2>
+                    <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 2xl:grid-cols-3 lg:gap-5">
                       {dateEvents.map(event => (
                         <div key={event.id}>
                           {/* Mobile card - hidden on desktop */}

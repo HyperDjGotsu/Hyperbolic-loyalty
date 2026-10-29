@@ -882,7 +882,7 @@ export default function CommunityPage() {
   );
 
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 overflow-auto lg:max-w-4xl lg:mx-auto lg:px-4">
       {/* Header */}
       <div className="relative bg-base px-4 pt-5 pb-3">
         <div className="relative flex items-center justify-between">

@@ -8,6 +8,10 @@ import NotificationBell from '@/components/NotificationBell';
 import SpecialEvents from '@/components/SpecialEvents';
 import type { DashboardData } from './useDashboardData';
 import { Loader } from '@/components/Loader';
+import { PageTitle } from '@/components/PageTitle';
+import { CoverImage, HeroBackdrop, pickBackdropGame } from '@/components/CoverImage';
+import { parseBackdrop } from '@/lib/games';
+import { Settings, Sparkles, CalendarX, Gift } from 'lucide-react';
 
 // Scouter-style number counting component - only animates on hover trigger
 function ScouterNumber({ 
@@ -96,11 +100,11 @@ function HeroStatCard({
   icon?: string;
 }) {
   return (
-    <div className="bg-surface border border-border-token rounded-2xl px-6 py-4 text-center min-w-[100px] transition-all hover:border-accent/30 hover:-translate-y-1 hover:shadow-[0_4px_24px_rgba(0,200,234,0.12)]">
-      <div className="text-[28px] font-extrabold text-accent">
+    <div className="bg-black/35 backdrop-blur-md border border-white/15 rounded-[22px] px-6 py-4 text-center min-w-[110px] transition-all hover:-translate-y-1">
+      <div className="font-display text-[30px] font-extrabold text-white">
         {value.toLocaleString()}
       </div>
-      <div className="text-[11px] text-secondary uppercase tracking-wide mt-0.5 flex items-center justify-center gap-1">
+      <div className="text-[11px] text-white/70 uppercase tracking-wide mt-0.5 flex items-center justify-center gap-1">
         {icon && (
           icon.startsWith('http')
             ? <img src={icon} alt="" className="w-4 h-4 object-contain" />
@@ -577,6 +581,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
     storeUpdates,
     friendActivity,
     prizeHighlights,
+    favoriteGameIds: favoriteGames,
     spin,
     claimDailySpin,
   } = dashboard;
@@ -753,20 +758,25 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             className="px-10 pt-7 pb-10 relative"
           >
             {/* Header */}
-            <div className="flex justify-between items-center mb-8">
-              <h1 
-                className="text-[22px] font-extrabold font-display text-accent"
+            <div className="flex justify-between items-start mb-8">
+              <PageTitle
+                sub={
+                  <span className="inline-flex items-center rounded-full bg-surface border border-border-token px-3 py-1.5 text-[13px] font-semibold text-secondary">
+                    {storeConfig.store_name}
+                  </span>
+                }
               >
-                {storeConfig.store_name}
-              </h1>
+                Home
+              </PageTitle>
               <div className="flex gap-2.5 items-center">
                 <NotificationBell />
                 <button
                   type="button"
+                  aria-label="Profile settings"
                   onClick={() => router.push('/dashboard/profile')}
-                  className="w-[42px] h-[42px] bg-surface border border-border-token rounded-xl flex items-center justify-center text-lg transition-all hover:border-accent/30"
+                  className="grid h-[42px] w-[42px] place-items-center bg-elevated rounded-full text-primary transition-colors hover:text-accent"
                 >
-                  ⚙️
+                  <Settings size={18} />
                 </button>
               </div>
             </div>
@@ -774,11 +784,12 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             {/* Player Hero Card */}
             <div 
               ref={heroRef}
-              className="group flex items-center gap-7 bg-surface border border-border-token rounded-3xl p-7 relative overflow-hidden transition-all hover:border-accent/20 hover:shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
+              className="group relative isolate flex items-center gap-7 rounded-[30px] p-8 overflow-hidden border border-white/10 text-white min-h-[220px]"
             >
-              {/* Top gradient line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-accent/40" />
-              <div className="absolute top-0 right-0 w-[300px] h-full bg-[radial-gradient(ellipse_at_right,rgba(0,200,234,0.05)_0%,transparent_70%)] pointer-events-none" />
+              <HeroBackdrop
+                gameId={parseBackdrop(playerData?.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)}
+                src={parseBackdrop(playerData?.heroBackdrop).uploadUrl}
+              />
 
               {/* Avatar */}
               <div className="relative">
@@ -808,13 +819,13 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
 
               {/* Info */}
               <div className="flex-1 relative z-10">
-                <h2 className="text-[32px] font-extrabold mb-0.5">
+                <h2 className="font-display text-[38px] leading-tight font-extrabold mb-2 text-white">
                   {playerData?.displayName || 'Player'}
                 </h2>
 
                 {/* XP Bar */}
                 <div className="max-w-[380px]">
-                  <div className="h-2.5 bg-surface rounded overflow-hidden relative bar-shine-on-hover">
+                  <div className="h-2.5 bg-white/20 rounded-full overflow-hidden relative bar-shine-on-hover">
                     <div 
                       className="h-full rounded relative"
                       style={{
@@ -824,8 +835,8 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                     />
                   </div>
                   <div className="flex justify-between text-xs mt-1.5">
-                    <span className="text-secondary">XP to next level</span>
-                    <span className="text-accent font-semibold">
+                    <span className="text-white/70">XP to next level</span>
+                    <span className="text-white font-semibold">
                       {totalXp.toLocaleString()} / {nextLevelXp.toLocaleString()}
                     </span>
                   </div>
@@ -851,14 +862,13 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                   <button
                     onClick={handleSpin}
                     disabled={hasSpunToday || isSpinning}
-                    className="w-full bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.2)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(61,220,106,0.18)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(168,85,247,0.2)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(61,220,106,0.18)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] relative z-10"
-                      style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.1))' }}
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center relative z-10 bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] text-accent"
                     >
-                      🎰
+                      <Sparkles size={26} />
                     </div>
                     <div className="relative z-10 text-left">
                       <div className="text-base font-bold text-primary">
@@ -978,9 +988,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 )}
 
                 {/* My Games - Enhanced Tiles */}
-                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
-                    <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                    <h3 className="font-display text-xl font-bold flex items-center gap-2">
                       My Games
                     </h3>
                     <button 
@@ -1011,9 +1021,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 <CardOfTheDay />
 
                 {/* Recent Activity - Near other stats */}
-                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+                <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
-                    <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                    <h3 className="font-display text-xl font-bold flex items-center gap-2">
                       Recent Activity
                     </h3>
                     <button 
@@ -1059,8 +1069,8 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             {/* Bottom Sections - Full Width */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Overall Stats Summary */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
-                <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
+              <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
+                <h3 className="font-display text-xl font-bold flex items-center gap-2 mb-5">
                   Your Stats
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
@@ -1085,15 +1095,15 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
 
               {/* Special Events */}
               {specialEvents.length > 0 && (
-                <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 mb-6">
+                <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 mb-6">
                   <SpecialEvents events={specialEvents} />
                 </div>
               )}
 
               {/* Upcoming Events */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
-                  <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                  <h3 className="font-display text-xl font-bold flex items-center gap-2">
                     Upcoming Events
                   </h3>
                   <button
@@ -1103,39 +1113,48 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                     View Calendar →
                   </button>
                 </div>
-                <div className="space-y-3">
-                  {upcomingEvents.length === 0 ? (
-                    <div className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl opacity-60">
-                      <div className="w-10 h-10 bg-elevated/50 rounded-lg flex items-center justify-center text-lg">📅</div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-secondary">No upcoming events</div>
-                        <div className="text-xs text-tertiary">Check back soon</div>
-                      </div>
+                {upcomingEvents.length === 0 ? (
+                  <div className="flex items-center gap-3 p-4 bg-elevated rounded-[18px] text-secondary">
+                    <CalendarX size={20} />
+                    <div>
+                      <div className="text-sm font-medium">No upcoming events</div>
+                      <div className="text-xs text-tertiary">Check back soon</div>
                     </div>
-                  ) : upcomingEvents.map((event: any) => (
-                    <div key={event.id} className="flex items-center gap-3 p-3 bg-elevated border border-border-token rounded-xl">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-                        style={{ backgroundColor: `${event.game?.color || '#3b82f6'}20` }}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {upcomingEvents.slice(0, 4).map((event: any) => (
+                      <button
+                        key={event.id}
+                        onClick={() => router.push('/dashboard/events')}
+                        className="text-left overflow-hidden rounded-[22px] transition-transform hover:-translate-y-1"
                       >
-                        {event.game?.icon || '🎮'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{event.name}</div>
-                        <div className="text-xs text-secondary">{event.date}, {event.time}</div>
-                      </div>
-                      {event.isFree && <div className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded flex-shrink-0">Free</div>}
-                    </div>
-                  ))}
-                </div>
+                        <CoverImage
+                          gameId={event.game?.id ?? event.game_id}
+                          color={event.game?.color || '#3b82f6'}
+                          src={event.imageUrl}
+                          className="h-[170px]"
+                        >
+                          {event.isFree && (
+                            <span className="absolute left-3 top-3 text-xs font-bold text-white bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">Free</span>
+                          )}
+                          <div className="absolute inset-x-4 bottom-3.5">
+                            <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{event.date}, {event.time}</div>
+                            <div className="mt-0.5 text-lg font-extrabold leading-tight text-white line-clamp-2">{event.name}</div>
+                          </div>
+                        </CoverImage>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Second Row */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Updates */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
-                <h3 className="text-[15px] font-semibold flex items-center gap-2 mb-5">
+              <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
+                <h3 className="font-display text-xl font-bold flex items-center gap-2 mb-5">
                   Store Updates
                 </h3>
                 {storeUpdates.length === 0 ? null : (
@@ -1161,9 +1180,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               </div>
 
               {/* Friends Activity */}
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
-                  <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                  <h3 className="font-display text-xl font-bold flex items-center gap-2">
                     Friends Activity
                   </h3>
                   <button
@@ -1204,9 +1223,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
 
             {/* Prize Wall Footer */}
             {prizeHighlights.length > 0 && (
-              <div className="animate-card bg-surface border border-border-token rounded-2xl p-6 mt-6 transition-all hover:border-border-strong">
+              <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 mt-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
-                  <h3 className="text-[15px] font-semibold flex items-center gap-2">
+                  <h3 className="font-display text-xl font-bold flex items-center gap-2">
                     Prize Wall
                   </h3>
                   <button
@@ -1231,7 +1250,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       ) : (
-                        <div className="w-full h-24 flex items-center justify-center text-3xl bg-surface">🎁</div>
+                        <div className="w-full h-24 flex items-center justify-center bg-surface text-tertiary"><Gift size={28} /></div>
                       )}
                       <div className="p-2">
                         <div className="text-xs font-medium truncate">{item.name}</div>

@@ -135,7 +135,7 @@ export default function PrizeWallPage() {
   const unlocked = items.filter(i => i.unlock_threshold && i.is_unlocked);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-5 pb-8 space-y-10">
+    <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-5 lg:pt-8 pb-8 space-y-10">
       <div>
         <PageTitle sub={<SubText>Real prizes, real rewards</SubText>}>Prize Wall</PageTitle>
         <p className="text-secondary text-sm mt-3">
@@ -357,7 +357,7 @@ function ItemGrid({
   selectedStoreId: string | null | undefined;
 }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 lg:gap-5">
       {items.map(item => (
         <ItemCard
           key={item.id}
