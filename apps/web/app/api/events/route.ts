@@ -65,7 +65,12 @@ export async function GET(request: Request) {
     // Filter by status
     const now = new Date().toISOString();
     if (status === 'upcoming') {
-      query = query.gte('scheduled_at', now).in('status', ['scheduled', 'active']);
+      // Events staff have started (status 'active') stay listed after their start time, so they can show as live.
+      // The 12 hour cutoff keeps an event nobody ended from showing as live forever.
+      const liveCutoff = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+      query = query
+        .or(`scheduled_at.gte.${now},and(status.eq.active,scheduled_at.gte.${liveCutoff})`)
+        .in('status', ['scheduled', 'active']);
     } else if (status === 'past') {
       query = query.lt('scheduled_at', now);
     }

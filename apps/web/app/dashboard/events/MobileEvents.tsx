@@ -334,9 +334,9 @@ function EventsPageContent() {
     }
   }, [searchParams, events]);
 
-  const loadEvents = async () => {
-    setLoading(true);
-    setError(null);
+  const loadEvents = async (silent = false) => {
+    if (!silent) setLoading(true);
+    if (!silent) setError(null);
     
     try {
       const networkParam = calendarScope === 'network' ? '&network=true' : '';
@@ -374,6 +374,12 @@ function EventsPageContent() {
 
   useEffect(() => {
     loadEvents();
+  }, [selectedGame, calendarScope]);
+
+  // Quiet refresh so "Starting soon" cards move to "Live now" on their own
+  useEffect(() => {
+    const t = setInterval(() => { void loadEvents(true); }, 60000);
+    return () => clearInterval(t);
   }, [selectedGame, calendarScope]);
 
   // Sync from Google Calendar
@@ -466,8 +472,9 @@ function EventsPageContent() {
   };
 
   // Group events by date
-  const spotlightEvents = events.filter(e => e.isLive || e.isStartingSoon).slice(0, 2);
-  const spotlightIds = new Set(spotlightEvents.map(e => e.id));
+  const liveEvents = events.filter(e => e.isLive);
+  const soonEvents = events.filter(e => e.isStartingSoon && !e.isLive);
+  const spotlightIds = new Set([...liveEvents, ...soonEvents].map(e => e.id));
   const groupedEvents = events.filter(e => !spotlightIds.has(e.id)).reduce((groups, event) => {
     const date = event.date;
     if (!groups[date]) {
@@ -531,10 +538,10 @@ function EventsPageContent() {
   );
 
   // Big card: only for what is live or starting soon
-  const SpotlightCard = ({ event }: { event: CalendarEvent }) => (
+  const SpotlightCard = ({ event, className = '' }: { event: CalendarEvent; className?: string }) => (
     <div
       onClick={() => setSelectedEvent(event)}
-      className={`cursor-pointer overflow-hidden rounded-[26px] border active:scale-[0.99] transition-all ${
+      className={`cursor-pointer overflow-hidden rounded-[26px] border active:scale-[0.99] transition-all ${className} ${
         event.isLive ? 'border-red-500/50' : 'border-yellow-500/50'
       }`}
     >
@@ -840,11 +847,30 @@ function EventsPageContent() {
           </div>
         ) : (
           <div className="space-y-6">
-            {spotlightEvents.length > 0 && (
-              <div className="space-y-3">
-                {spotlightEvents.map(event => (
-                  <SpotlightCard key={event.id} event={event} />
-                ))}
+            {liveEvents.length > 0 && (
+              <div>
+                <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-bold text-primary">
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                  Live now
+                </h2>
+                <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {liveEvents.map(event => (
+                    <SpotlightCard key={event.id} event={event} className={`snap-center shrink-0 ${liveEvents.length > 1 ? 'w-[85%]' : 'w-full'}`} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {soonEvents.length > 0 && (
+              <div>
+                <h2 className="mb-3 font-display text-xl font-bold text-primary">
+                  Starting soon
+                  <span className="ml-2 text-sm font-medium text-secondary">next 2 hours</span>
+                </h2>
+                <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {soonEvents.map(event => (
+                    <SpotlightCard key={event.id} event={event} className={`snap-center shrink-0 ${soonEvents.length > 1 ? 'w-[85%]' : 'w-full'}`} />
+                  ))}
+                </div>
               </div>
             )}
             {Object.entries(groupedEvents).map(([date, dateEvents]) => (
