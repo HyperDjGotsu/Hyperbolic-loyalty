@@ -52,6 +52,7 @@ interface CalendarEvent {
   prizing: string[] | null;
   isNetworkEvent: boolean;
   storeName: string | null;
+  storeId?: string | null;
 }
 
 interface Friend {
@@ -545,7 +546,7 @@ function EventsPageContent() {
         event.isLive ? 'border-red-500/50' : 'border-yellow-500/50'
       }`}
     >
-      <CoverImage gameId={event.game?.id} color={event.game?.color || '#64748b'} src={event.imageUrl} className="h-[170px]">
+      <CoverImage gameId={event.game?.id} storeId={event.storeId} color={event.game?.color || '#64748b'} src={event.imageUrl} className="h-[170px]">
         <div className="absolute left-3 top-3 flex gap-1.5">
           {event.isLive && <span className="px-2.5 py-1 bg-red-500 text-white text-[11px] font-bold rounded-full animate-pulse">LIVE</span>}
           {event.isStartingSoon && !event.isLive && <span className="px-2.5 py-1 bg-yellow-400 text-black text-[11px] font-bold rounded-full">STARTING SOON</span>}
@@ -570,6 +571,7 @@ function EventsPageContent() {
     >
       <CoverImage
         gameId={event.game?.id}
+        storeId={event.storeId}
         color={event.game?.color || '#64748b'}
         src={event.imageUrl}
         className="h-[60px] w-[60px] shrink-0 rounded-[14px]"
@@ -591,7 +593,7 @@ function EventsPageContent() {
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <div className="relative bg-surface rounded-t-[32px] sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
         {/* Header */}
-        <CoverImage gameId={event.game?.id} color={event.game?.color || '#3b82f6'} src={event.imageUrl} className="h-[220px]">
+        <CoverImage gameId={event.game?.id} storeId={event.storeId} color={event.game?.color || '#3b82f6'} src={event.imageUrl} className="h-[220px]">
           <button
             onClick={onClose}
             aria-label="Close"

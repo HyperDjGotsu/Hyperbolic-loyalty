@@ -274,6 +274,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* Hero: level, points, spin */}
       <section className="relative isolate overflow-hidden mt-5 rounded-[30px] bg-elevated border border-border-token p-5 shadow-xl">
         <HeroBackdrop
+          storeId={(selectedStore ?? homeStore)?.id}
           gameId={parseBackdrop(playerData?.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)}
           src={parseBackdrop(playerData?.heroBackdrop).uploadUrl}
         />
@@ -350,7 +351,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
           <div className={RAIL}>
             {upcomingEvents.map((event: any) => (
               <a key={event.id} href="/dashboard/events" className={`${TILE} w-[280px] overflow-hidden`}>
-                <CoverImage gameId={event.game?.id ?? event.game_id} color={event.game?.color || '#3b82f6'} className="h-[170px]">
+                <CoverImage gameId={event.game?.id ?? event.game_id} storeId={event.storeId} color={event.game?.color || '#3b82f6'} className="h-[170px]">
                   {event.isFree && (
                     <span className="absolute left-3 top-3 text-xs font-bold text-white bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">Free</span>
                   )}

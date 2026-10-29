@@ -262,6 +262,7 @@ export async function GET(request: Request) {
         isLive: event.status === 'active',
         prizing: event.prizing || null,
         isSpecial: event.is_special === true,
+        storeId: event.store_id ?? null,
         isNetworkEvent: event.store_id === null,
         storeName: (event.stores as { name: string } | null)?.name ?? null,
       };
