@@ -1,7 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { gameArtUrl } from '@/lib/games';
+
+
+// An <img> that 404s before React hydrates never fires onError, which leaves a broken-image icon.
+// Check the already-finished load on mount so the gradient fallback always takes over.
+function useImageFallback() {
+  const ref = useRef<HTMLImageElement>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    const img = ref.current;
+    if (img && img.complete && img.naturalWidth === 0) setFailed(true);
+  }, []);
+  return { ref, failed, onError: () => setFailed(true) };
+}
 
 // Picture-led card top. Shows the game's cover art; until the art exists (or if it fails to
 // load) it falls back to a gradient in the game's color so cards never look empty.
@@ -19,7 +32,7 @@ export function CoverImage({
   children?: React.ReactNode;
 }) {
   const url = src || gameArtUrl(gameId);
-  const [failed, setFailed] = useState(false);
+  const { ref, failed, onError } = useImageFallback();
   return (
     <div
       className={`relative overflow-hidden ${className}`}
@@ -28,9 +41,10 @@ export function CoverImage({
       {!failed && (
         <img
           src={url}
+          ref={ref}
           alt=""
           loading="lazy"
-          onError={() => setFailed(true)}
+          onError={onError}
           className="absolute inset-0 h-full w-full object-cover"
         />
       )}
@@ -43,7 +57,7 @@ export function CoverImage({
 // Full-bleed art behind a hero card. Put `isolate` on the parent; this sits at -z-10 under its content.
 // Dark scrim keeps white text readable on any image; gradient shows until the art exists.
 export function HeroBackdrop({ gameId, src, color }: { gameId?: string | null; src?: string | null; color?: string }) {
-  const [failed, setFailed] = useState(false);
+  const { ref, failed, onError } = useImageFallback();
   const base = color || 'var(--accent)';
   return (
     <div
@@ -54,8 +68,9 @@ export function HeroBackdrop({ gameId, src, color }: { gameId?: string | null; s
       {!failed && (
         <img
           src={src || gameArtUrl(gameId)}
+          ref={ref}
           alt=""
-          onError={() => setFailed(true)}
+          onError={onError}
           className="absolute inset-0 h-full w-full object-cover"
         />
       )}
