@@ -116,6 +116,12 @@ describe('effectivePassTier — strict expiry validation', () => {
     expect(effectivePassTier('player', '2026-09-01', 'active')).toBe('none'));
   it('non-UTC offset rejected', () =>
     expect(effectivePassTier('player', '2026-09-01T00:00:00+05:00', 'active')).toBe('none'));
+  it('accepts the +00:00 form PostgREST returns for timestamptz', () =>
+    expect(effectivePassTier('access', FUTURE.replace('Z', '+00:00'), 'active')).toBe('access'));
+  it('accepts +00:00 with fractional seconds', () =>
+    expect(effectivePassTier('access', '2999-11-29T16:36:23.6+00:00', 'active')).toBe('access'));
+  it('still rejects a past +00:00 expiry', () =>
+    expect(effectivePassTier('access', PAST.replace('Z', '+00:00'), 'active')).toBe('none'));
   it('null expiry → none (no permanent grants)', () =>
     expect(effectivePassTier('player', null, 'active')).toBe('none'));
   it('future UTC ISO passes', () =>
