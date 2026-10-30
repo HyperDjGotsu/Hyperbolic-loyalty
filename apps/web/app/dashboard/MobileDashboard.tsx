@@ -389,7 +389,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                       <CoverImage gameId={game.id} storeId={(selectedStore ?? homeStore)?.id} color={game.color} className="h-[212px]">
                         <span className="absolute right-3 top-3 text-xs font-extrabold text-white bg-black/55 backdrop-blur px-2.5 py-1 rounded-full tabular-nums">Lv {game.level}</span>
                         <div className="absolute inset-x-3.5 bottom-3.5">
-                          <div className="drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
+                          <div className="w-fit max-w-full rounded-2xl bg-black/45 backdrop-blur-sm px-2.5 py-1.5">
                             <span className="flex gap-1" aria-label={`${visits} of ${goal} events this month`}>
                               {Array.from({ length: goal }).map((_, i) => (
                                 <span
