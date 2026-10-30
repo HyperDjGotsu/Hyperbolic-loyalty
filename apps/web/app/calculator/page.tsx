@@ -5,7 +5,8 @@ import { useState, useMemo } from "react";
 const TIERS = [
   { id: "bronze", name: "Bronze", color: "#CD7F32", bg: "#2A1F12", border: "#CD7F32", monthlyFee: 10, multiplier: 1.0, label: "1x XP" },
   { id: "silver", name: "Silver", color: "#C0C0C0", bg: "#1A1A1F", border: "#C0C0C0", monthlyFee: 15, multiplier: 1.5, label: "1.5x XP" },
-  { id: "gold",   name: "Gold",   color: "#FFD700", bg: "#1F1A00", border: "#FFD700", monthlyFee: 25, multiplier: 2.0, label: "2x XP" },
+  { id: "gold",   name: "Gold",   color: "#FFD700", bg: "#1F1A00", border: "#FFD700", monthlyFee: 20, multiplier: 2.0, label: "2x XP" },
+  { id: "diamond", name: "Diamond", color: "#22D3EE", bg: "#06222B", border: "#22D3EE", monthlyFee: 30, multiplier: 2.0, label: "2x XP + $15 credit" },
 ];
 
 const BASE_XP = {
