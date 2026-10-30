@@ -9,6 +9,7 @@ import { Loader } from '@/components/Loader';
 import { Pencil } from 'lucide-react';
 import { HeroBackdrop, CoverImage, pickBackdropGame } from '@/components/CoverImage';
 import { SELECTABLE_GAMES } from '@/lib/games';
+import { EventCreditCard } from '@/components/EventCreditCard';
 import { BrandMark } from '@/components/BrandMark';
 
 interface ShopItem {
@@ -1265,8 +1266,8 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between mb-1">
             <span className="text-primary font-semibold">
               {playerData.passTier === 'access' ? 'Bronze Pass' :
-               playerData.passTier === 'player' ? 'Player Pass' :
-               playerData.passTier === 'all_access' ? 'All Access Pass' :
+               playerData.passTier === 'player' ? 'Silver Pass' :
+               playerData.passTier === 'all_access' ? 'Gold Pass' :
                playerData.passTier === 'diamond' ? 'Diamond Pass' :
                playerData.passTier === 'shadow_vip' ? 'Shadow VIP' :
                'Free Member'}
@@ -1295,6 +1296,7 @@ export default function ProfilePage() {
               Ask staff in-store to upgrade your membership and unlock the Prize Wall.
             </p>
           ) : null}
+          {playerData.passTier === 'diamond' && playerData.passStatus === 'active' && <EventCreditCard />}
         </div>
       </div>
 
