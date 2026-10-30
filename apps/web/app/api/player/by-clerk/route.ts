@@ -352,6 +352,7 @@ export async function GET() {
       passStatus: player.pass_status,
       passExpiresAt: player.pass_expires_at,
       passStartedAt: player.pass_started_at,
+      isTrial: !!player.has_claimed_trial && player.pass_tier === 'access' && !player.stripe_subscription_id,
       xp: totalXp,
       gems: liveGems,
       gameXP,

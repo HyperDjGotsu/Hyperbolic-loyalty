@@ -96,13 +96,13 @@ export function isRenewalOpportunity(
 export const TIER_MULTIPLIERS: Record<string, number> = {
   // DB enum values (what callers read from players.pass_tier)
   none: 1.0,
-  access: 1.25,      // Bronze
+  access: 1.0,       // Bronze: 1x, the cheap entry that unlocks spending Prize Points
   player: 1.5,       // Silver
   all_access: 2.0,   // Gold
   diamond: 2.0,
   // Friendly-name aliases (fallback string 'free' and any direct usage)
   free: 1.0,
-  bronze: 1.25,
+  bronze: 1.0,
   silver: 1.5,
   gold: 2.0,
 };
