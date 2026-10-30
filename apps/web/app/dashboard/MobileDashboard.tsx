@@ -174,7 +174,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         rank: gxp.rank || 'Newcomer',
         // Pass monthly attendance data
         monthlyAttendance: gxp.monthlyAttendance || 0,
-        monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 6 : 3),
+        monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 5 : 3),
         monthlyBonus: gxp.monthlyBonus || 30,
         earnedMonthlyBonus: gxp.earnedMonthlyBonus || false,
         achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'The Regular'),
@@ -218,6 +218,8 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
 
   const storeForPill = selectedStore ?? homeStore;
   const spendable = passStatus?.prizePoints ?? playerData?.gems ?? 0;
+  const guildPoints = filteredGames.find((g) => g.id === 'general') ?? null;
+  const artGames = filteredGames.filter((g) => g.id !== 'general');
   const selectedGame = filteredGames.find((g) => g.id === expandedGame) ?? null;
 
   return (
@@ -371,24 +373,54 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         <SectionHeader title="Your games" />
         {filteredGames.length > 0 ? (
           <>
-            <div className={RAIL}>
-              {filteredGames.map((game) => (
-                <button
-                  key={game.id}
-                  onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
-                  aria-pressed={expandedGame === game.id}
-                  className={`${TILE} w-[132px] px-3.5 pt-4 pb-3.5 flex flex-col items-center gap-2.5 text-center ${expandedGame === game.id ? 'border-accent' : ''}`}
-                >
-                  <Ring pct={((game.xp % 50) / 50) * 100} size={64} stroke={5} color={game.color}>
-                    <span className="text-lg">{game.icon}</span>
-                  </Ring>
-                  <div>
-                    <div className="text-sm font-bold leading-tight text-primary">{game.name}</div>
-                    <div className="text-xs font-semibold text-secondary tabular-nums mt-0.5">Level {game.level}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {artGames.length > 0 && (
+              <div className={RAIL}>
+                {artGames.map((game) => {
+                  const toNext = 50 - (game.xp % 50);
+                  const goal = game.monthlyThreshold || (game.id === 'one_piece' ? 5 : 3);
+                  const visits = Math.min(game.monthlyAttendance || 0, goal);
+                  return (
+                    <button
+                      key={game.id}
+                      onClick={() => setExpandedGame(expandedGame === game.id ? null : game.id)}
+                      aria-pressed={expandedGame === game.id}
+                      className={`${TILE} w-[150px] overflow-hidden text-left ${expandedGame === game.id ? 'border-accent' : ''}`}
+                    >
+                      <CoverImage gameId={game.id} storeId={(selectedStore ?? homeStore)?.id} color={game.color} className="h-[212px]">
+                        <span className="absolute right-3 top-3 text-xs font-extrabold text-white bg-black/55 backdrop-blur px-2.5 py-1 rounded-full tabular-nums">Lv {game.level}</span>
+                        <div className="absolute inset-x-3.5 bottom-3.5">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-white/85">
+                            <span className="truncate">{game.earnedMonthlyBonus ? '✓ ' : ''}{game.achievementName}</span>
+                            <span className="flex gap-[3px] ml-auto" aria-label={`${visits} of ${goal} events this month`}>
+                              {Array.from({ length: goal }).map((_, i) => (
+                                <span key={i} className="h-[6px] w-[6px] rounded-full" style={{ background: game.earnedMonthlyBonus || i < visits ? game.color : 'rgba(255,255,255,0.28)' }} />
+                              ))}
+                            </span>
+                          </div>
+                          <div className="mt-1.5 text-base font-extrabold leading-tight text-white line-clamp-2">{game.name}</div>
+                          <div className="mt-0.5 flex justify-between text-xs font-semibold tabular-nums text-white/75">
+                            <span>{game.xp.toLocaleString()} XP</span>
+                            <span>{toNext} to Lv {game.level + 1}</span>
+                          </div>
+                          <div className="mt-2 h-[5px] rounded-full bg-white/25 overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${((game.xp % 50) / 50) * 100}%`, background: game.color }} />
+                          </div>
+                        </div>
+                      </CoverImage>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {guildPoints && (
+              <button
+                onClick={() => setExpandedGame(expandedGame === guildPoints.id ? null : guildPoints.id)}
+                aria-pressed={expandedGame === guildPoints.id}
+                className={`${artGames.length > 0 ? 'mt-3' : ''} inline-flex items-center gap-2 rounded-full bg-surface border px-3.5 py-2 text-xs font-bold text-secondary tabular-nums ${expandedGame === guildPoints.id ? 'border-accent' : 'border-border-token'}`}
+              >
+                <span>{guildPoints.icon}</span> Guild Points · Level {guildPoints.level}
+              </button>
+            )}
             {selectedGame && (
               <div className="mt-3">
                 <GameXpCard game={selectedGame} isExpanded onClick={() => setExpandedGame(null)} />

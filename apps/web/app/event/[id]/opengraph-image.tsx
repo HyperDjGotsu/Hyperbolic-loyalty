@@ -54,7 +54,7 @@ export default async function Image({ params }: { params: { id: string } }) {
           <div style={{ fontSize: 76, fontWeight: 800, color: '#fff', lineHeight: 1.05, marginTop: 6 }}>{ev?.name ?? 'Player Pass Event'}</div>
           {ev && (
             <div style={{ fontSize: 34, color: '#3ddc6a', fontWeight: 700, marginTop: 16 }}>
-              {formatEventWhen(ev.scheduledAt)}{ev.storeName ? `  ·  ${ev.storeName}` : ''}
+              {`${formatEventWhen(ev.scheduledAt)}${ev.storeName ? `  ·  ${ev.storeName}` : ''}`}
             </div>
           )}
         </div>
