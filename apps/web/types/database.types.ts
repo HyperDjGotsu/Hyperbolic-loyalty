@@ -753,6 +753,51 @@ export type Database = {
           },
         ]
       }
+      event_credit_redemptions: {
+        Row: {
+          amount_cents: number
+          id: string
+          month_key: string
+          pass_tier: string
+          player_id: string
+          redeemed_at: string
+          store_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          id?: string
+          month_key: string
+          pass_tier: string
+          player_id: string
+          redeemed_at?: string
+          store_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          id?: string
+          month_key?: string
+          pass_tier?: string
+          player_id?: string
+          redeemed_at?: string
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_credit_redemptions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_credit_redemptions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_interest: {
         Row: {
           created_at: string | null
