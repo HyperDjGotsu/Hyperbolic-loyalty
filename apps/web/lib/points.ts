@@ -54,7 +54,8 @@ const BENEFIT_BEARING_STATUSES = new Set(['active', 'cancel_scheduled']);
 // PostgreSQL timestamptz always produces valid UTC ISO strings, so DB-sourced values always pass.
 function strictParseExpiry(s: string | null | undefined): number {
   if (!s) return NaN;
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(s)) return NaN;
+  // Accept `Z` and `+00:00`: PostgREST returns timestamptz as `...+00:00`, which is the same UTC instant.
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|\+00:00)$/.test(s)) return NaN;
   const ms = Date.parse(s);
   if (!Number.isFinite(ms)) return NaN;
   if (new Date(ms).toISOString().substring(0, 10) !== s.substring(0, 10)) return NaN;
