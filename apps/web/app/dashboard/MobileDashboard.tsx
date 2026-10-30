@@ -389,16 +389,16 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                       <CoverImage gameId={game.id} storeId={(selectedStore ?? homeStore)?.id} color={game.color} className="h-[212px]">
                         <span className="absolute right-3 top-3 text-xs font-extrabold text-white bg-black/55 backdrop-blur px-2.5 py-1 rounded-full tabular-nums">Lv {game.level}</span>
                         <div className="absolute inset-x-3.5 bottom-3.5">
-                          <div className="flex w-full items-center gap-2 rounded-full bg-black/60 backdrop-blur px-2.5 py-1.5 text-[11px] font-bold text-white">
-                            <span className="truncate">{game.earnedMonthlyBonus ? '✓ ' : ''}{game.achievementName}</span>
-                            <span className="flex gap-1 ml-auto shrink-0" aria-label={`${visits} of ${goal} events this month`}>
+                          <div className="drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
+                            <span className="flex gap-1" aria-label={`${visits} of ${goal} events this month`}>
                               {Array.from({ length: goal }).map((_, i) => (
                                 <span
                                   key={i}
-                                  className={`h-2 w-2 rounded-full ${game.earnedMonthlyBonus || i < visits ? 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]' : 'border border-white/60'}`}
+                                  className={`h-2 w-2 rounded-full ${game.earnedMonthlyBonus || i < visits ? 'bg-white' : 'border border-white/70 bg-black/30'}`}
                                 />
                               ))}
                             </span>
+                            <div className="mt-1 text-[11px] font-bold text-white/90 truncate">{game.earnedMonthlyBonus ? '✓ ' : ''}{game.achievementName}</div>
                           </div>
                           <div className="mt-1.5 text-base font-extrabold leading-tight text-white line-clamp-2">{game.name}</div>
                           <div className="mt-0.5 flex justify-between text-xs font-semibold tabular-nums text-white/75">
