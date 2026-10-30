@@ -9,9 +9,13 @@ export const alt = 'Player Pass event';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+// rel is always '/games/...' or 'brand/...'; the leading '.' keeps both relative to /public.
 async function dataUri(rel: string, mime: string): Promise<string | null> {
   try {
-    const buf = await readFile(path.join(process.cwd(), 'public', rel));
+    const root = path.join(process.cwd(), 'public');
+    const file = path.resolve(root, '.' + rel);
+    if (!file.startsWith(root + path.sep)) return null; // never read outside /public
+    const buf = await readFile(file);
     return `data:${mime};base64,${buf.toString('base64')}`;
   } catch {
     return null;
@@ -21,11 +25,13 @@ async function dataUri(rel: string, mime: string): Promise<string | null> {
 export default async function Image({ params }: { params: { id: string } }) {
   const ev = await getPublicEventBasics(params.id).catch(() => null);
   let art: string | null = null;
-  for (const url of gameArtCandidates(ev?.gameId, ev?.storeId)) {
+  // Only known game ids reach the file system; anything else uses the 'general' art.
+  const gameId = ev?.gameId && getGame(ev.gameId) ? ev.gameId : null;
+  for (const url of gameArtCandidates(gameId, ev?.storeId)) {
     art = await dataUri(url, 'image/jpeg');
     if (art) break;
   }
-  const mark = await dataUri('brand/pp-mark.png', 'image/png');
+  const mark = await dataUri('/brand/pp-mark.png', 'image/png');
   const color = (ev?.gameId && getGame(ev.gameId)?.color) || '#3ddc6a';
   const game = ev?.gameId ? getGame(ev.gameId)?.name : null;
 
