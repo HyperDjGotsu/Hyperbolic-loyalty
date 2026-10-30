@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { PageTitle, SubText } from '@/components/PageTitle';
+import { PassesSheet } from '@/components/PassesSheet';
 
 const FREE_TIER_GATE = 720;
 
@@ -254,6 +255,7 @@ function BalanceBar({
 }) {
   const [claiming, setClaiming] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [showPasses, setShowPasses] = useState(false);
 
   if (error) {
     return (
@@ -339,6 +341,10 @@ function BalanceBar({
           </button>
         </div>
       )}
+      <button type="button" onClick={() => setShowPasses(true)} className="mt-4 text-sm font-semibold text-accent">
+        View passes
+      </button>
+      {showPasses && <PassesSheet currentTier={passStatus.tier} onClose={() => setShowPasses(false)} />}
     </div>
   );
 }
