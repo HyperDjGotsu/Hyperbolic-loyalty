@@ -377,6 +377,8 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
               <div className={RAIL}>
                 {artGames.map((game) => {
                   const toNext = 50 - (game.xp % 50);
+                  const goal = game.monthlyThreshold || (game.id === 'one_piece' ? 6 : 3);
+                  const visits = Math.min(game.monthlyAttendance || 0, goal);
                   return (
                     <button
                       key={game.id}
@@ -384,10 +386,18 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                       aria-pressed={expandedGame === game.id}
                       className={`${TILE} w-[150px] overflow-hidden text-left ${expandedGame === game.id ? 'border-accent' : ''}`}
                     >
-                      <CoverImage gameId={game.id} storeId={(selectedStore ?? homeStore)?.id} color={game.color} className="h-[196px]">
+                      <CoverImage gameId={game.id} storeId={(selectedStore ?? homeStore)?.id} color={game.color} className="h-[212px]">
                         <span className="absolute right-3 top-3 text-xs font-extrabold text-white bg-black/55 backdrop-blur px-2.5 py-1 rounded-full tabular-nums">Lv {game.level}</span>
                         <div className="absolute inset-x-3.5 bottom-3.5">
-                          <div className="text-base font-extrabold leading-tight text-white line-clamp-2">{game.name}</div>
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-white/85">
+                            <span className="truncate">{game.earnedMonthlyBonus ? '✓ ' : ''}{game.achievementName}</span>
+                            <span className="flex gap-[3px] ml-auto" aria-label={`${visits} of ${goal} events this month`}>
+                              {Array.from({ length: goal }).map((_, i) => (
+                                <span key={i} className="h-[6px] w-[6px] rounded-full" style={{ background: game.earnedMonthlyBonus || i < visits ? game.color : 'rgba(255,255,255,0.28)' }} />
+                              ))}
+                            </span>
+                          </div>
+                          <div className="mt-1.5 text-base font-extrabold leading-tight text-white line-clamp-2">{game.name}</div>
                           <div className="mt-0.5 flex justify-between text-xs font-semibold tabular-nums text-white/75">
                             <span>{game.xp.toLocaleString()} XP</span>
                             <span>{toNext} to Lv {game.level + 1}</span>
