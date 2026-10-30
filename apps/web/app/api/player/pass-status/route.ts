@@ -9,7 +9,7 @@ type PlayerPassTier = 'free' | 'bronze' | 'silver' | 'gold' | 'diamond';
 
 const MULTIPLIERS: Record<PlayerPassTier, number> = {
   free: 1,
-  bronze: 1.25,
+  bronze: 1,
   silver: 1.5,
   gold: 2,
   diamond: 2,

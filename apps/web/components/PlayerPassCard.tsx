@@ -11,7 +11,7 @@ interface PlayerPassCardProps {
 
 const TIER_CONFIG: Record<PlayerPassTier, { badge: string; multiplier: string }> = {
   free: { badge: 'border-gray-500/40 bg-gray-500/15 text-gray-300', multiplier: '1x' },
-  bronze: { badge: 'border-amber-700/50 bg-amber-700/15 text-amber-600', multiplier: '1.25x' },
+  bronze: { badge: 'border-amber-700/50 bg-amber-700/15 text-amber-600', multiplier: '1x' },
   silver: { badge: 'border-slate-400/50 bg-slate-400/15 text-slate-300', multiplier: '1.5x' },
   gold: { badge: 'border-yellow-500/50 bg-yellow-500/15 text-yellow-400', multiplier: '2x' },
   diamond: { badge: 'border-cyan-400/50 bg-cyan-400/15 text-cyan-300', multiplier: '2x★' },

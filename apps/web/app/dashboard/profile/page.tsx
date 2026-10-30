@@ -74,6 +74,7 @@ interface PlayerData {
   passTier: string | null;
   passStatus: string | null;
   passExpiresAt: string | null;
+  isTrial: boolean;
   isStaff: boolean;
   heroBackdrop: string | null;
 }
@@ -267,6 +268,7 @@ export default function ProfilePage() {
             passTier: data.passTier || null,
             passStatus: data.passStatus || null,
             passExpiresAt: data.passExpiresAt || null,
+            isTrial: data.isTrial === true,
             isStaff: data.isStaff || false,
             heroBackdrop: data.heroBackdrop ?? null,
           });
@@ -1288,7 +1290,7 @@ export default function ProfilePage() {
           </div>
           {playerData.passExpiresAt && playerData.passStatus === 'active' && (
             <p className="text-secondary text-xs mt-1">
-              Renews {new Date(playerData.passExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              {playerData.isTrial ? 'Trial ends' : 'Renews'} {new Date(playerData.passExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </p>
           )}
           {!playerData.passTier || playerData.passTier === 'none' ? (

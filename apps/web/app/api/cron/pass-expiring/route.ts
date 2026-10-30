@@ -29,9 +29,9 @@ export async function GET(request: Request) {
     let sent = 0;
     for (const player of players) {
       const tierLabel =
-        player.pass_tier === 'access' ? 'Access Pass' :
-        player.pass_tier === 'player' ? 'Player Pass' :
-        player.pass_tier === 'all_access' ? 'All Access Pass' :
+        player.pass_tier === 'access' ? 'Bronze Pass' :
+        player.pass_tier === 'player' ? 'Silver Pass' :
+        player.pass_tier === 'all_access' ? 'Gold Pass' :
         player.pass_tier === 'diamond' ? 'Diamond Pass' :
         'Pass';
 

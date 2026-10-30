@@ -61,7 +61,7 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   general: { icon: '🎮', color: '#64748b' },
 };
 
-const PASS_MULTIPLIER: Record<string, string> = { free: '1x', bronze: '1.25x', silver: '1.5x', gold: '2x', diamond: '2x★' };
+const PASS_MULTIPLIER: Record<string, string> = { free: '1x', bronze: '1x', silver: '1.5x', gold: '2x', diamond: '2x★' };
 
 // Circular progress ring. `pct` is 0-100; children render in the centre.
 function Ring({ pct, size, stroke, color, children }: { pct: number; size: number; stroke: number; color: string; children?: React.ReactNode }) {

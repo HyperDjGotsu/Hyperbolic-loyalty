@@ -26,7 +26,7 @@ function calcEventLifetimeXp(roundsWon: number): number {
 
 describe('TIER_MULTIPLIERS — DB enum value keys', () => {
   it('none → 1.0x', () => expect(TIER_MULTIPLIERS['none']).toBe(1.0));
-  it('access (Bronze) → 1.25x', () => expect(TIER_MULTIPLIERS['access']).toBe(1.25));
+  it('access (Bronze) → 1.0x', () => expect(TIER_MULTIPLIERS['access']).toBe(1.0));
   it('player (Silver) → 1.5x', () => expect(TIER_MULTIPLIERS['player']).toBe(1.5));
   it('all_access (Gold) → 2.0x', () => expect(TIER_MULTIPLIERS['all_access']).toBe(2.0));
   it('shadow_vip retired — not in multiplier table', () => expect(TIER_MULTIPLIERS['shadow_vip']).toBeUndefined());
@@ -37,7 +37,7 @@ describe('TIER_MULTIPLIERS — DB enum value keys', () => {
 
 describe('Event Prize Points — all five tiers (0 rounds won)', () => {
   it('Free (none) → 35 PP', () => expect(calcEventPrizePoints('none', 0)).toBe(35));
-  it('Bronze (access) → 44 PP (35 × 1.25)', () => expect(calcEventPrizePoints('access', 0)).toBe(44));
+  it('Bronze (access) → 35 PP (35 × 1.0)', () => expect(calcEventPrizePoints('access', 0)).toBe(35));
   it('Silver (player) → 53 PP (35 × 1.5)', () => expect(calcEventPrizePoints('player', 0)).toBe(53));
   it('Gold (all_access) → 70 PP (35 × 2)', () => expect(calcEventPrizePoints('all_access', 0)).toBe(70));
   it('Diamond → 70 PP (35 × 2)', () => expect(calcEventPrizePoints('diamond', 0)).toBe(70));
@@ -47,8 +47,8 @@ describe('Event Prize Points — all five tiers (0 rounds won)', () => {
 describe('Event Prize Points — 3-round win (max wins)', () => {
   it('Free (none), 3 wins → 50 PP ((35+15) × 1.0)', () =>
     expect(calcEventPrizePoints('none', 3)).toBe(50));
-  it('Bronze (access), 3 wins → 63 PP ((35+15) × 1.25)', () =>
-    expect(calcEventPrizePoints('access', 3)).toBe(63));
+  it('Bronze (access), 3 wins → 50 PP ((35+15) × 1.0)', () =>
+    expect(calcEventPrizePoints('access', 3)).toBe(50));
   it('Silver (player), 3 wins → 75 PP ((35+15) × 1.5)', () =>
     expect(calcEventPrizePoints('player', 3)).toBe(75));
   it('Gold (all_access), 3 wins → 100 PP ((35+15) × 2.0)', () =>
