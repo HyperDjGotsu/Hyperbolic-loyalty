@@ -34,7 +34,7 @@ const GAME_DISPLAY_NAMES: Record<string, string> = {
   'magic-the-gathering': 'Magic: The Gathering',
   'disney-lorcana': 'Disney Lorcana',
   'digimon-card-game': 'Digimon',
-  'dragon-ball-super-fusion-world': 'Dragon Ball Super',
+  'dragon-ball-super-fusion-world': 'Dragon Ball Fusion World',
   'union-arena': 'Union Arena',
   'hololive-official-card-game': 'Hololive',
   'yugioh': 'Yu-Gi-Oh!',

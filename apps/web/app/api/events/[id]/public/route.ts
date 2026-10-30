@@ -24,6 +24,8 @@ const GAME_CONFIG: Record<string, { name: string; icon: string; color: string }>
   sw_legion: { name: 'SW Legion', icon: '🎖️', color: '#65a30d' },
   legion: { name: 'SW Legion', icon: '🎖️', color: '#65a30d' },
   dragonball: { name: 'Dragon Ball', icon: '🐉', color: '#f97316' },
+  dbfw: { name: 'Dragon Ball Fusion World', icon: '💥', color: '#2563eb' },
+  dbs: { name: 'Dragon Ball Super Masters', icon: '🔥', color: '#f97316' },
   digimon: { name: 'Digimon', icon: '🦖', color: '#3b82f6' },
   yugioh: { name: 'Yu-Gi-Oh!', icon: '👁️', color: '#7c3aed' },
   general: { name: 'General', icon: '🎮', color: '#64748b' },

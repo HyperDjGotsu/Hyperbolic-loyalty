@@ -95,6 +95,18 @@ const GAME_THEMES: Record<string, GameTheme> = {
     icon: '🐉',
     border: 'border-orange-500/30',
   },
+  'Dragon Ball Fusion World': {
+    gradient: 'from-blue-600/20 to-orange-400/20',
+    accent: 'text-blue-400',
+    icon: '💥',
+    border: 'border-blue-500/30',
+  },
+  'Dragon Ball Super Masters': {
+    gradient: 'from-orange-600/20 to-yellow-400/20',
+    accent: 'text-orange-400',
+    icon: '🔥',
+    border: 'border-orange-500/30',
+  },
   'Gundam': {
     gradient: 'from-blue-600/20 to-red-500/20',
     accent: 'text-blue-400',
