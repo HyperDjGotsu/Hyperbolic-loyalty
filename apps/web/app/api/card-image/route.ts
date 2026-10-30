@@ -17,8 +17,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const game = searchParams.get('game');
   const cardNumber = searchParams.get('cardNumber');
+  // Digits only, so the value can't change where the request goes.
+  const tcgplayerId = /^\d{1,10}$/.test(searchParams.get('tcgplayerId') ?? '') ? searchParams.get('tcgplayerId') : null;
 
-  if (!game || !cardNumber) {
+  if (!game || (!cardNumber && !tcgplayerId)) {
     return new NextResponse(null, { status: 400 });
   }
 
@@ -26,11 +28,13 @@ export async function GET(request: Request) {
     game === 'One Piece' ||
     game.toLowerCase().includes('one piece');
 
-  if (!isOnePiece) {
-    return new NextResponse(null, { status: 404 });
-  }
+  // One Piece: official art first. Every game: TCGplayer's image for the product as the fallback.
+  const candidates = [
+    ...(isOnePiece && cardNumber ? ONE_PIECE_FORMATS(cardNumber) : []),
+    ...(tcgplayerId ? [`https://product-images.tcgplayer.com/fit-in/437x437/${tcgplayerId}.jpg`] : []),
+  ];
 
-  for (const url of ONE_PIECE_FORMATS(cardNumber)) {
+  for (const url of candidates) {
     try {
       const res = await fetch(url, {
         headers: { 'User-Agent': 'HyperbolicLoyalty/1.0' },
