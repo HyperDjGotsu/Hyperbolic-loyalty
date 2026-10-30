@@ -199,12 +199,12 @@ function useVoting() {
   return { voting, loading, refetch: fetchVoting };
 }
 
-function useCardImage(game: string | undefined, cardNumber: string | undefined, _cardName: string | undefined) {
+function useCardImage(game: string | undefined, cardNumber: string | undefined, _cardName: string | undefined, tcgplayerId?: string) {
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     setImageError(false);
-  }, [game, cardNumber]);
+  }, [game, cardNumber, tcgplayerId]);
 
   const isOnePiece = game && (
     game === 'one-piece-card-game' ||
@@ -212,8 +212,10 @@ function useCardImage(game: string | undefined, cardNumber: string | undefined, 
     game.toLowerCase().includes('one piece')
   );
 
-  const imageUrl = (isOnePiece && cardNumber && !imageError)
-    ? `/api/card-image?game=${encodeURIComponent(game!)}&cardNumber=${encodeURIComponent(cardNumber)}`
+  // The route tries One Piece's official art first, then TCGplayer's image, so any game with a product id gets a picture.
+  const hasSource = (isOnePiece && cardNumber) || tcgplayerId;
+  const imageUrl = (game && hasSource && !imageError)
+    ? `/api/card-image?game=${encodeURIComponent(game)}${cardNumber ? `&cardNumber=${encodeURIComponent(cardNumber)}` : ''}${tcgplayerId ? `&tcgplayerId=${encodeURIComponent(tcgplayerId)}` : ''}`
     : null;
 
   const handleImageError = () => setImageError(true);
@@ -245,7 +247,8 @@ export function CardOfTheDay() {
   const { imageUrl, handleImageError } = useCardImage(
     card?.gameDisplay,
     card?.number,
-    card?.name
+    card?.name,
+    card?.tcgplayerId
   );
   const [showVoting, setShowVoting] = useState(false);
   const [castingVote, setCastingVote] = useState(false);
@@ -500,7 +503,8 @@ export function CardOfTheDayCompact() {
   const { imageUrl, handleImageError } = useCardImage(
     card?.gameDisplay,
     card?.number,
-    card?.name
+    card?.name,
+    card?.tcgplayerId
   );
   const [castingVote, setCastingVote] = useState(false);
   const [expanded, setExpanded] = useState(false);
