@@ -279,7 +279,7 @@ interface GameXpCardProps {
 
 export const GameXpCard = ({ game, isExpanded, onClick }: GameXpCardProps) => {
   const attendance = game.monthlyAttendance || 0;
-  const threshold = game.monthlyThreshold || (game.id === 'one_piece' ? 6 : 3);
+  const threshold = game.monthlyThreshold || (game.id === 'one_piece' ? 5 : 3);
   const achievementName = game.achievementName || (game.id === 'one_piece' ? "Pirate's Life" : 'The Regular');
   const earned = game.earnedMonthlyBonus || false;
   const progress = Math.min(attendance, threshold);

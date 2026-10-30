@@ -174,7 +174,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         rank: gxp.rank || 'Newcomer',
         // Pass monthly attendance data
         monthlyAttendance: gxp.monthlyAttendance || 0,
-        monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 6 : 3),
+        monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 5 : 3),
         monthlyBonus: gxp.monthlyBonus || 30,
         earnedMonthlyBonus: gxp.earnedMonthlyBonus || false,
         achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'The Regular'),
@@ -377,7 +377,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
               <div className={RAIL}>
                 {artGames.map((game) => {
                   const toNext = 50 - (game.xp % 50);
-                  const goal = game.monthlyThreshold || (game.id === 'one_piece' ? 6 : 3);
+                  const goal = game.monthlyThreshold || (game.id === 'one_piece' ? 5 : 3);
                   const visits = Math.min(game.monthlyAttendance || 0, goal);
                   return (
                     <button

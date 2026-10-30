@@ -39,7 +39,7 @@ const GAME_CURRENCIES: Record<string, string> = {
 // One Piece: 6 events (2x/week = ~8 events/month)
 // All others: 3 events (1x/week = ~4 events/month)
 const MONTHLY_ATTENDANCE_THRESHOLD: Record<string, number> = {
-  one_piece: 6,
+  one_piece: 5,
 };
 const DEFAULT_ATTENDANCE_THRESHOLD = 3;
 

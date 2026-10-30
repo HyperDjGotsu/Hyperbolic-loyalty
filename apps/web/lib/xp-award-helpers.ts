@@ -4,7 +4,7 @@ import { createNotification } from '@/lib/notifications';
 
 // Pirate's Life / The Regular configuration
 export const MONTHLY_THRESHOLD: Record<string, number> = {
-  one_piece: 6,  // 2x/week = ~8 events/month, need 6
+  one_piece: 5,  // 2x/week = ~8 events/month, need 5
 };
 export const DEFAULT_THRESHOLD = 3;  // 1x/week = ~4 events/month, need 3
 export const MONTHLY_BONUS_XP = 30;
