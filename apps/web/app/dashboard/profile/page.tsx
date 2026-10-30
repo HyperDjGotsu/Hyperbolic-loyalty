@@ -1264,8 +1264,10 @@ export default function ProfilePage() {
         }`}>
           <div className="flex items-center justify-between mb-1">
             <span className="text-primary font-semibold">
-              {playerData.passTier === 'player' ? 'Player Pass' :
+              {playerData.passTier === 'access' ? 'Bronze Pass' :
+               playerData.passTier === 'player' ? 'Player Pass' :
                playerData.passTier === 'all_access' ? 'All Access Pass' :
+               playerData.passTier === 'diamond' ? 'Diamond Pass' :
                playerData.passTier === 'shadow_vip' ? 'Shadow VIP' :
                'Free Member'}
             </span>
