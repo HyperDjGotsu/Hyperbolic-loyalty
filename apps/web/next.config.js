@@ -32,6 +32,10 @@ const CSP = [
 
 const nextConfig = {
   serverExternalPackages: ['web-push'],
+  experimental: {
+    // The share-link preview image reads cover art from /public at request time.
+    outputFileTracingIncludes: { '/event/[id]/opengraph-image': ['./public/games/**/*', './public/brand/*'] },
+  },
   images: {
     domains: ['img.clerk.com', 'images.clerk.dev', 'en.onepiece-cardgame.com'],
   },

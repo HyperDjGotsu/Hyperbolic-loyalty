@@ -64,6 +64,8 @@ export async function GET(
         attendance_xp,
         win_xp,
         prizing,
+        store_id,
+        image_url,
         stores!events_store_id_fkey ( name, city, state, address )
       `)
       .eq('id', eventId)
@@ -111,6 +113,9 @@ export async function GET(
       time: formattedTime,
       scheduledAt: event.scheduled_at,
       endsAt: event.ends_at,
+      status: event.status,
+      storeId: event.store_id ?? null,
+      imageUrl: event.image_url ?? null,
       game: {
         id: event.game_id,
         name: gameConfig.name,

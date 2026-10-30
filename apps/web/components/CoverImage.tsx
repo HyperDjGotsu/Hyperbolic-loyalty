@@ -1,38 +1,42 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { gameArtUrl } from '@/lib/games';
+import { gameArtCandidates } from '@/lib/games';
 
 
-// An <img> that 404s before React hydrates never fires onError, which leaves a broken-image icon.
-// Check the already-finished load on mount so the gradient fallback always takes over.
-function useImageFallback() {
+// Tries each image in order and reports `failed` once all of them are exhausted.
+// An <img> that 404s before React hydrates never fires onError, which leaves a broken-image icon,
+// so the already-finished load is also checked whenever the current candidate changes.
+function useImageFallback(urls: string[]) {
   const ref = useRef<HTMLImageElement>(null);
-  const [failed, setFailed] = useState(false);
+  const key = urls.join('|');
+  const [idx, setIdx] = useState(0);
+  useEffect(() => { setIdx(0); }, [key]);
   useEffect(() => {
     const img = ref.current;
-    if (img && img.complete && img.naturalWidth === 0) setFailed(true);
-  }, []);
-  return { ref, failed, onError: () => setFailed(true) };
+    if (img && img.complete && img.naturalWidth === 0) setIdx(i => i + 1);
+  }, [idx, key]);
+  return { ref, url: urls[idx], failed: idx >= urls.length, onError: () => setIdx(i => i + 1) };
 }
 
 // Picture-led card top. Shows the game's cover art; until the art exists (or if it fails to
 // load) it falls back to a gradient in the game's color so cards never look empty.
 export function CoverImage({
   gameId,
+  storeId,
   color = '#3b82f6',
   src,
   className = '',
   children,
 }: {
   gameId?: string | null;
+  storeId?: string | null;
   color?: string;
   src?: string | null;
   className?: string;
   children?: React.ReactNode;
 }) {
-  const url = src || gameArtUrl(gameId);
-  const { ref, failed, onError } = useImageFallback();
+  const { ref, url, failed, onError } = useImageFallback([...(src ? [src] : []), ...gameArtCandidates(gameId, storeId)]);
   return (
     <div
       className={`relative overflow-hidden ${className}`}
@@ -40,6 +44,7 @@ export function CoverImage({
     >
       {!failed && (
         <img
+          key={url}
           src={url}
           ref={ref}
           alt=""
@@ -56,8 +61,8 @@ export function CoverImage({
 
 // Full-bleed art behind a hero card. Put `isolate` on the parent; this sits at -z-10 under its content.
 // Dark scrim keeps white text readable on any image; gradient shows until the art exists.
-export function HeroBackdrop({ gameId, src, color }: { gameId?: string | null; src?: string | null; color?: string }) {
-  const { ref, failed, onError } = useImageFallback();
+export function HeroBackdrop({ gameId, storeId, src, color }: { gameId?: string | null; storeId?: string | null; src?: string | null; color?: string }) {
+  const { ref, url, failed, onError } = useImageFallback([...(src ? [src] : []), ...gameArtCandidates(gameId, storeId)]);
   const base = color || 'var(--accent)';
   return (
     <div
@@ -67,7 +72,8 @@ export function HeroBackdrop({ gameId, src, color }: { gameId?: string | null; s
     >
       {!failed && (
         <img
-          src={src || gameArtUrl(gameId)}
+          key={url}
+          src={url}
           ref={ref}
           alt=""
           onError={onError}

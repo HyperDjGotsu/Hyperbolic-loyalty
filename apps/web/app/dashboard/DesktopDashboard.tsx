@@ -654,7 +654,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
         color: config.color,
         rank: gxp.rank || 'Newcomer',
         monthlyAttendance: gxp.monthlyAttendance || 0,
-        monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 6 : 3),
+        monthlyThreshold: gxp.monthlyThreshold || (slug === 'one_piece' ? 5 : 3),
         earnedMonthlyBonus: gxp.earnedMonthlyBonus || false,
         achievementName: gxp.achievementName || (slug === 'one_piece' ? "Pirate's Life" : 'The Regular'),
         // Include stats from API

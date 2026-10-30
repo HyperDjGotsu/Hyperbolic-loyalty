@@ -1,7 +1,7 @@
 'use client';
 
 import SpecialEvents from '@/components/SpecialEvents';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader } from '@/components/Loader';
 import { EmptyState } from '@/components/EmptyState';
@@ -52,6 +52,7 @@ interface CalendarEvent {
   prizing: string[] | null;
   isNetworkEvent: boolean;
   storeName: string | null;
+  storeId?: string | null;
 }
 
 interface Friend {
@@ -95,43 +96,6 @@ const MiniAvatar = ({ avatar, name }: { avatar: any; name: string }) => {
       ) : (
         emoji
       )}
-    </div>
-  );
-};
-
-// Friends interested display
-const FriendsInterested = ({ friends, totalCount }: { friends: FriendInterest[]; totalCount: number }) => {
-  if (friends.length === 0 && totalCount === 0) return null;
-  
-  const otherCount = totalCount - friends.length;
-  
-  // Build display text
-  let text = '';
-  if (friends.length === 1) {
-    text = friends[0].name;
-  } else if (friends.length === 2) {
-    text = `${friends[0].name} & ${friends[1].name}`;
-  } else if (friends.length > 2) {
-    text = `${friends[0].name}, ${friends[1].name}`;
-  }
-  
-  if (otherCount > 0 && friends.length > 0) {
-    text += ` + ${otherCount} other${otherCount > 1 ? 's' : ''}`;
-  } else if (otherCount > 0 && friends.length === 0) {
-    text = `${totalCount} interested`;
-  }
-  
-  return (
-    <div className="flex items-center gap-2 mt-2">
-      {/* Friend avatars (max 3) */}
-      {friends.length > 0 && (
-        <div className="flex -space-x-2">
-          {friends.slice(0, 3).map(friend => (
-            <MiniAvatar key={friend.id} avatar={friend.avatar} name={friend.name} />
-          ))}
-        </div>
-      )}
-      <span className="text-secondary text-xs">{text}</span>
     </div>
   );
 };
@@ -356,6 +320,8 @@ function EventsPageContent() {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [togglingInterest, setTogglingInterest] = useState<string | null>(null);
   const [shareEvent, setShareEvent] = useState<CalendarEvent | null>(null);
+  const [interestToast, setInterestToast] = useState<CalendarEvent | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchParams = useSearchParams();
 
   // Check for event ID in URL params (from notification click)
@@ -369,9 +335,9 @@ function EventsPageContent() {
     }
   }, [searchParams, events]);
 
-  const loadEvents = async () => {
-    setLoading(true);
-    setError(null);
+  const loadEvents = async (silent = false) => {
+    if (!silent) setLoading(true);
+    if (!silent) setError(null);
     
     try {
       const networkParam = calendarScope === 'network' ? '&network=true' : '';
@@ -411,6 +377,12 @@ function EventsPageContent() {
     loadEvents();
   }, [selectedGame, calendarScope]);
 
+  // Quiet refresh so "Starting soon" cards move to "Live now" on their own
+  useEffect(() => {
+    const t = setInterval(() => { void loadEvents(true); }, 60000);
+    return () => clearInterval(t);
+  }, [selectedGame, calendarScope]);
+
   // Sync from Google Calendar
   const handleSync = async () => {
     setSyncing(true);
@@ -438,6 +410,14 @@ function EventsPageContent() {
       });
       
       if (res.ok) {
+        const justStarred = events.find(e => e.id === eventId);
+        if (justStarred && !justStarred.isInterested) {
+          setInterestToast(justStarred);
+          if (toastTimer.current) clearTimeout(toastTimer.current);
+          toastTimer.current = setTimeout(() => setInterestToast(null), 4000);
+        } else {
+          setInterestToast(null);
+        }
         setEvents(prev => prev.map(e => {
           if (e.id === eventId) {
             return {
@@ -493,7 +473,10 @@ function EventsPageContent() {
   };
 
   // Group events by date
-  const groupedEvents = events.reduce((groups, event) => {
+  const liveEvents = events.filter(e => e.isLive);
+  const soonEvents = events.filter(e => e.isStartingSoon && !e.isLive);
+  const spotlightIds = new Set([...liveEvents, ...soonEvents].map(e => e.id));
+  const groupedEvents = events.filter(e => !spotlightIds.has(e.id)).reduce((groups, event) => {
     const date = event.date;
     if (!groups[date]) {
       groups[date] = [];
@@ -539,46 +522,69 @@ function EventsPageContent() {
     );
   };
 
-  const EventCard = ({ event }: { event: CalendarEvent }) => (
-    <div
-      onClick={() => setSelectedEvent(event)}
-      className={`bg-surface rounded-[26px] overflow-hidden border cursor-pointer active:scale-[0.99] transition-all ${
-        event.isLive ? 'border-red-500/50' : event.isStartingSoon ? 'border-yellow-500/50' : 'border-border-token'
+  const StarButton = ({ event, onDark = false }: { event: CalendarEvent; onDark?: boolean }) => (
+    <button
+      onClick={(e) => { e.stopPropagation(); toggleInterest(event.id); }}
+      disabled={togglingInterest === event.id}
+      aria-label={event.isInterested ? 'Remove interest' : 'Mark interested'}
+      aria-pressed={event.isInterested}
+      className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors disabled:opacity-60 ${
+        event.isInterested
+          ? 'bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] text-accent'
+          : onDark ? 'bg-black/50 backdrop-blur text-white' : 'bg-elevated text-secondary'
       }`}
     >
-      <CoverImage gameId={event.game?.id} color={event.game?.color || '#64748b'} src={event.imageUrl} className="h-[150px]">
+      <Star size={18} fill={event.isInterested ? 'currentColor' : 'none'} />
+    </button>
+  );
+
+  // Big card: only for what is live or starting soon
+  const SpotlightCard = ({ event, className = '' }: { event: CalendarEvent; className?: string }) => (
+    <div
+      onClick={() => setSelectedEvent(event)}
+      className={`cursor-pointer overflow-hidden rounded-[26px] border active:scale-[0.99] transition-all ${className} ${
+        event.isLive ? 'border-red-500/50' : 'border-yellow-500/50'
+      }`}
+    >
+      <CoverImage gameId={event.game?.id} storeId={event.storeId} color={event.game?.color || '#64748b'} src={event.imageUrl} className="h-[170px]">
         <div className="absolute left-3 top-3 flex gap-1.5">
           {event.isLive && <span className="px-2.5 py-1 bg-red-500 text-white text-[11px] font-bold rounded-full animate-pulse">LIVE</span>}
-          {event.isStartingSoon && !event.isLive && <span className="px-2.5 py-1 bg-yellow-400 text-black text-[11px] font-bold rounded-full">SOON</span>}
-          {event.isNetworkEvent && <span className="px-2.5 py-1 bg-black/50 backdrop-blur text-white text-[11px] font-bold rounded-full">Network</span>}
+          {event.isStartingSoon && !event.isLive && <span className="px-2.5 py-1 bg-yellow-400 text-black text-[11px] font-bold rounded-full">STARTING SOON</span>}
         </div>
-        <div className="absolute right-3 top-3 px-2.5 py-1 bg-black/50 backdrop-blur text-white text-[11px] font-bold rounded-full">{event.entryFee}</div>
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <span className="px-2.5 py-1 bg-black/50 backdrop-blur text-white text-[11px] font-bold rounded-full">{event.entryFee}</span>
+          <StarButton event={event} onDark />
+        </div>
         <div className="absolute inset-x-4 bottom-3.5">
           <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{event.time}{event.game?.name ? ` · ${event.game.name}` : ''}</div>
-          <div className="mt-0.5 text-lg font-extrabold leading-tight text-white line-clamp-2">{event.name}</div>
+          <div className="mt-0.5 text-xl font-extrabold leading-tight text-white line-clamp-2">{event.name}</div>
         </div>
       </CoverImage>
-      <div className="p-3.5 flex items-center gap-2.5">
-        <div className="flex-1 min-w-0">
-          <FriendsInterested friends={event.interestedFriends || []} totalCount={event.interestedCount} />
+    </div>
+  );
+
+  // Everything else: a short row (tap for details and sharing)
+  const EventRow = ({ event }: { event: CalendarEvent }) => (
+    <div
+      onClick={() => setSelectedEvent(event)}
+      className="flex cursor-pointer items-center gap-3 rounded-[20px] border border-border-token bg-surface p-2 active:scale-[0.99] transition-all"
+    >
+      <CoverImage
+        gameId={event.game?.id}
+        storeId={event.storeId}
+        color={event.game?.color || '#64748b'}
+        src={event.imageUrl}
+        className="h-[60px] w-[60px] shrink-0 rounded-[14px]"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[15px] font-bold text-primary">{event.name}</div>
+        <div className="mt-0.5 truncate text-xs text-secondary">
+          {event.time}{event.game?.name ? ` · ${event.game.name}` : ''}
+          {event.interestedCount > 0 ? ` · ${event.interestedCount} interested` : ''}
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); toggleInterest(event.id); }}
-          disabled={togglingInterest === event.id}
-          className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-            event.isInterested ? 'bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent' : 'bg-elevated text-primary'
-          }`}
-        >
-          {togglingInterest === event.id ? '...' : event.isInterested ? 'Interested' : 'Interested?'}
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); setShareEvent(event); }}
-          aria-label="Share"
-          className="grid h-9 w-9 place-items-center rounded-full bg-elevated text-primary"
-        >
-          <Share size={16} />
-        </button>
       </div>
+      <span className={`shrink-0 text-xs font-bold ${event.isFree ? 'text-accent' : 'text-primary'}`}>{event.entryFee}</span>
+      <StarButton event={event} />
     </div>
   );
 
@@ -587,7 +593,7 @@ function EventsPageContent() {
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <div className="relative bg-surface rounded-t-[32px] sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
         {/* Header */}
-        <CoverImage gameId={event.game?.id} color={event.game?.color || '#3b82f6'} src={event.imageUrl} className="h-[220px]">
+        <CoverImage gameId={event.game?.id} storeId={event.storeId} color={event.game?.color || '#3b82f6'} src={event.imageUrl} className="h-[220px]">
           <button
             onClick={onClose}
             aria-label="Close"
@@ -843,12 +849,38 @@ function EventsPageContent() {
           </div>
         ) : (
           <div className="space-y-6">
+            {liveEvents.length > 0 && (
+              <div>
+                <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-bold text-primary">
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                  Live now
+                </h2>
+                <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {liveEvents.map(event => (
+                    <SpotlightCard key={event.id} event={event} className={`snap-center shrink-0 ${liveEvents.length > 1 ? 'w-[85%]' : 'w-full'}`} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {soonEvents.length > 0 && (
+              <div>
+                <h2 className="mb-3 font-display text-xl font-bold text-primary">
+                  Starting soon
+                  <span className="ml-2 text-sm font-medium text-secondary">next 2 hours</span>
+                </h2>
+                <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {soonEvents.map(event => (
+                    <SpotlightCard key={event.id} event={event} className={`snap-center shrink-0 ${soonEvents.length > 1 ? 'w-[85%]' : 'w-full'}`} />
+                  ))}
+                </div>
+              </div>
+            )}
             {Object.entries(groupedEvents).map(([date, dateEvents]) => (
               <div key={date}>
                 <h2 className="font-display text-xl font-bold text-primary mb-3">{date}</h2>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {dateEvents.map(event => (
-                    <EventCard key={event.id} event={event} />
+                    <EventRow key={event.id} event={event} />
                   ))}
                 </div>
               </div>
@@ -856,6 +888,21 @@ function EventsPageContent() {
           </div>
         )}
       </div>
+
+      {/* Quiet nudge after starring: never blocks, disappears on its own */}
+      {interestToast && !selectedEvent && !shareEvent && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-[96px] z-40 flex justify-center px-4">
+          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-border-token bg-surface/95 py-2 pl-4 pr-2 text-sm shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur">
+            <span className="text-secondary">Marked interested</span>
+            <button
+              onClick={() => { setShareEvent(interestToast); setInterestToast(null); }}
+              className="rounded-full bg-elevated px-3.5 py-1.5 font-semibold text-accent"
+            >
+              Share
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {selectedEvent && <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}

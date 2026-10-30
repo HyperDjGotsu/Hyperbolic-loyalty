@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { CoverImage } from '@/components/CoverImage';
 
 interface GameInfo {
   id: string;
@@ -19,6 +20,9 @@ interface PublicEvent {
   time: string;
   scheduledAt: string;
   endsAt: string | null;
+  status: string;
+  storeId: string | null;
+  imageUrl: string | null;
   game: GameInfo;
   entryFee: string;
   isFree: boolean;
@@ -122,97 +126,85 @@ export default function PublicEventPage() {
     );
   }
 
-  const isUpcoming = new Date(event.scheduledAt) > new Date();
+  const now = Date.now();
+  const startsAt = new Date(event.scheduledAt).getTime();
+  const endedByTime = now > (event.endsAt ? new Date(event.endsAt).getTime() : startsAt + 4 * 60 * 60 * 1000);
+  const isLive = event.status === 'active';
+  const isEnded = event.status === 'completed' || event.status === 'cancelled' || (!isLive && endedByTime);
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="min-h-screen bg-base pb-28">
       {/* Header */}
-      <header className="bg-surface border-b border-border-token sticky top-0 z-50">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">🎮</span>
-            <span className="font-display font-bold text-primary">
-              Player Pass
-            </span>
+      <header className="bg-base/90 backdrop-blur border-b border-border-token sticky top-0 z-50">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <img src="/brand/pp-mark.png" alt="Player Pass" className="h-8 w-auto flex-none" />
+            <span className="font-display font-extrabold text-primary">Player Pass</span>
           </Link>
           <Link
             href="/onboarding"
-            className="px-4 py-2 bg-accent text-accent-fg text-sm font-bold rounded-lg hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-accent text-accent-fg text-sm font-bold rounded-full hover:opacity-90 transition-opacity"
           >
             Join Free
           </Link>
         </div>
       </header>
 
-      {/* Event Content */}
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        {/* Game Badge */}
-        <div className="flex items-center gap-2 mb-4">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-            style={{ backgroundColor: `${event.game.color}20` }}
-          >
-            {event.game.icon}
+      <main className="max-w-2xl mx-auto px-4 pt-4">
+        {/* Cover */}
+        <CoverImage
+          gameId={event.game.id}
+          storeId={event.storeId}
+          src={event.imageUrl}
+          color={event.game.color}
+          className="h-60 rounded-[28px]"
+        >
+          <div className="absolute left-4 top-4 flex items-center gap-2">
+            {isLive ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-xs font-extrabold tracking-wide text-white">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> LIVE NOW
+              </span>
+            ) : isEnded ? (
+              <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-bold text-white/80 backdrop-blur">ENDED</span>
+            ) : (
+              <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-bold text-white backdrop-blur">UPCOMING</span>
+            )}
+            {event.hasStream && (
+              <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-bold text-white backdrop-blur">STREAMED</span>
+            )}
           </div>
+          <div className="absolute inset-x-5 bottom-4">
+            <div className="text-sm font-semibold text-white/80">{event.game.name}</div>
+            <h1 className="font-display text-[32px] leading-[1.05] font-extrabold tracking-tight text-white">{event.name}</h1>
+          </div>
+        </CoverImage>
+
+        {/* When + price */}
+        <div className="mt-4 flex items-center justify-between gap-3 px-1">
           <div>
-            <div className="text-secondary text-sm">{event.game.name}</div>
-            <div className="flex items-center gap-2">
-              {event.isFree ? (
-                <span className="text-success text-sm font-bold">FREE</span>
-              ) : (
-                <span className="text-accent text-sm font-bold">{event.entryFee}</span>
-              )}
-              {event.hasStream && (
-                <span className="px-2 py-0.5 bg-accent/10 text-accent text-xs rounded-full">
-                  Streamed
-                </span>
-              )}
-            </div>
+            <div className="font-bold text-primary">{event.date}</div>
+            <div className="text-secondary">{event.time}</div>
+          </div>
+          <div className={`rounded-full px-4 py-1.5 text-sm font-extrabold ${event.isFree ? 'bg-success/15 text-success' : 'bg-accent/15 text-accent'}`}>
+            {event.isFree ? 'FREE' : event.entryFee}
           </div>
         </div>
-
-        {/* Event Title */}
-        <h1 className="font-display text-3xl font-bold text-primary mb-2">{event.name}</h1>
-
-        {/* Date & Time */}
-        <div className="flex items-center gap-4 text-secondary mb-6">
-          <div className="flex items-center gap-2">
-            <span>📅</span>
-            <span>{event.date}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>🕐</span>
-            <span>{event.time}</span>
-          </div>
-        </div>
-
-        {/* Status Badge */}
-        {isUpcoming ? (
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-success/10 text-success rounded-full mb-6">
-            <span className="w-2 h-2 bg-success rounded-full"></span>
-            <span className="font-medium">Upcoming Event</span>
-          </div>
-        ) : (
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface text-secondary rounded-full mb-6">
-            <span>This event has ended</span>
-          </div>
-        )}
 
         {/* Info Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="card p-4">
+        <div className="grid grid-cols-2 gap-3 my-4">
+          <div className="card !rounded-[22px] p-4">
             <div className="text-secondary text-sm mb-1">Location</div>
-            <div className="text-primary font-medium">{event.location}</div>
+            <div className="text-primary font-semibold">{event.location}</div>
             <div className="text-secondary text-sm">{event.address}</div>
           </div>
-          <div className="card p-4">
+          <div className="card !rounded-[22px] p-4">
             <div className="text-secondary text-sm mb-1">Interested</div>
-            <div className="text-primary font-bold text-4xl">{event.interestedCount}</div>
+            <div className="xp-number text-primary text-4xl">{event.interestedCount}</div>
           </div>
         </div>
 
         {/* XP Rewards */}
-        <div className="card-elevated rounded-xl p-4 mb-6">
+        <div className="card-elevated !rounded-[22px] p-4 mb-6">
           <div className="text-primary font-bold mb-3">XP Rewards</div>
           <div className="flex gap-6">
             <div>
@@ -228,7 +220,7 @@ export default function PublicEventPage() {
 
         {/* Prizing Structure */}
         {event.prizing && event.prizing.length > 0 && (
-          <div className="card-elevated rounded-xl p-4 mb-6">
+          <div className="card-elevated !rounded-[22px] p-4 mb-6">
             <div className="text-primary font-bold mb-3">Prizes</div>
             <div className="space-y-3">
               {event.prizing.map((prize, index) => {
@@ -288,7 +280,7 @@ export default function PublicEventPage() {
 
         {/* Stream Links */}
         {event.hasStream && (event.twitchUrl || event.youtubeUrl) && (
-          <div className="card-elevated rounded-xl p-4 mb-6">
+          <div className="card-elevated !rounded-[22px] p-4 mb-6">
             <div className="text-primary font-bold mb-3">Watch Live</div>
             <div className="flex gap-3">
               {event.twitchUrl && (
@@ -315,39 +307,41 @@ export default function PublicEventPage() {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 mb-8">
-          <button
-            onClick={handleShare}
-            className="flex-1 py-4 bg-surface text-primary font-bold rounded-xl hover:bg-elevated transition-colors flex items-center justify-center gap-2 border border-border-token"
-          >
-            {copied ? '✅ Copied!' : '📤 Share Event'}
-          </button>
-          <Link
-            href="/onboarding"
-            className="flex-1 py-4 bg-accent text-accent-fg font-bold rounded-xl hover:opacity-90 transition-opacity text-center"
-          >
-            Join to Track
-          </Link>
-        </div>
-
         {/* CTA Section */}
-        <div className="card p-6 text-center">
-          <h2 className="font-display text-xl font-bold text-primary mb-2">Join {event?.location ?? 'Player Pass'}</h2>
+        <div className="card !rounded-[22px] p-6 text-center mb-4">
+          <h2 className="font-display text-xl font-extrabold text-primary mb-2">Join {event?.location ?? 'Player Pass'}</h2>
           <p className="text-secondary mb-4">
             Track your XP, compete on leaderboards, and never miss an event!
           </p>
           <Link
             href="/onboarding"
-            className="inline-block px-8 py-3 bg-accent text-accent-fg font-bold rounded-xl hover:opacity-90 transition-opacity"
+            className="inline-block px-8 py-3 bg-accent text-accent-fg font-bold rounded-full hover:opacity-90 transition-opacity"
           >
             Create Free Account
           </Link>
         </div>
       </main>
 
+      {/* Sticky actions */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border-token bg-base/90 backdrop-blur">
+        <div className="max-w-2xl mx-auto flex gap-3 px-4 py-3">
+          <button
+            onClick={handleShare}
+            className="flex-1 py-3.5 bg-surface text-primary font-bold rounded-full hover:bg-elevated transition-colors border border-border-token"
+          >
+            {copied ? '✅ Copied!' : 'Share'}
+          </button>
+          <Link
+            href="/onboarding"
+            className="flex-[2] py-3.5 bg-accent text-accent-fg font-bold rounded-full hover:opacity-90 transition-opacity text-center"
+          >
+            Join to Track
+          </Link>
+        </div>
+      </div>
+
       {/* Footer */}
-      <footer className="bg-surface border-t border-border-token mt-12">
+      <footer className="mt-6">
         <div className="max-w-2xl mx-auto px-4 py-8 text-center">
           <div className="text-secondary text-sm mb-2">
             {event.location}{event.address ? ` • ${event.address}` : ''}

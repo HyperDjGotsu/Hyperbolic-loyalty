@@ -62,6 +62,19 @@ export function gameArtUrl(id?: string | null): string {
   return `/games/${id ? resolveGameId(id) : 'general'}.jpg`;
 }
 
+// Stores with their own cover art keep it in /public/games/<folder>/<game id>.jpg.
+// A store not listed here, or a game it has no version of, uses the default art above.
+const STORE_ART_FOLDERS: Record<string, string> = {
+  '70f71af5-26f1-46ec-b97a-8c8776318d3d': 'ggob', // Gamer's Guild of Benicia
+};
+
+// Art to try, best first: the store's own version, then the default. Callers fall back to a gradient after the last.
+export function gameArtCandidates(id?: string | null, storeId?: string | null): string[] {
+  const game = id ? resolveGameId(id) : 'general';
+  const folder = storeId ? STORE_ART_FOLDERS[storeId] : undefined;
+  return folder ? [`/games/${folder}/${game}.jpg`, `/games/${game}.jpg`] : [`/games/${game}.jpg`];
+}
+
 // players.hero_backdrop: 'game:<id>' or 'upload:<https url>'. Uploads only render on the (private) Home hero.
 export function parseBackdrop(value: string | null | undefined): { gameId?: string; uploadUrl?: string } {
   if (!value) return {};
