@@ -96,6 +96,8 @@ const GAME_RANKS: Record<string, string[]> = {
   union_arena: ['Fodder', 'Side Character', 'Supporting Cast', 'Main Character', 'Rival', 'Protagonist', 'Shonen Legend'],
   warhammer: ['Conscript', 'Guardsman', 'Veteran', 'Sergeant', 'Captain', 'Chapter Master', 'Warmaster'],
   digimon: ['Baby', 'Rookie', 'Champion', 'Ultimate', 'Mega', 'Ultra', 'DigiDestined'],
+  dbs: ['Saibaman', 'Earthling Warrior', 'Elite Saiyan', 'Super Saiyan', 'Super Saiyan God', 'Super Saiyan Blue', 'Ultra Instinct'],
+  dbfw: ['Rookie Fighter', 'Z Fighter', 'Fusion Dancer', 'Potara Pair', 'Gogeta', 'Vegito', 'Fusion Legend'],
   yugioh: ['Amateur Duelist', 'Duelist', 'Battle City Qualifier', 'Regional Champion', 'National Champion', 'World Finalist', 'King of Games'],
   azuki: ['Ikuzo!', 'Dawnling', 'Beanz', 'Black Jade Recruit', 'Black Jade Brawler', 'Black Jade Crewleader', 'Black Jade Warlord'],
   blood_bowl: ['Benchwarmer', 'Lineman', 'Blitzer', 'Star Player', 'Team Captain', 'All-Star', 'Blood Bowl Legend'],
