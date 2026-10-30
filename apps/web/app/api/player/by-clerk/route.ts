@@ -29,6 +29,8 @@ const GAME_CURRENCIES: Record<string, string> = {
   union_arena: 'Plot Armor',
   warhammer: 'War Honors',
   digimon: 'Digi-Points',
+  dbfw: 'Zeni',
+  dbs: 'Power Levels',
   yugioh: 'Star Chips',
   azuki: 'Azuki Points',
   blood_bowl: 'TD Points',

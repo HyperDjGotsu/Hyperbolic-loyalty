@@ -4366,7 +4366,7 @@ export default function HQPage() {
                     <option value="magic-the-gathering">Magic: The Gathering</option>
                     <option value="disney-lorcana">Disney Lorcana</option>
                     <option value="digimon-card-game">Digimon</option>
-                    <option value="dragon-ball-super-fusion-world">Dragon Ball Super</option>
+                    <option value="dragon-ball-super-fusion-world">Dragon Ball Fusion World</option>
                     <option value="yugioh">Yu-Gi-Oh!</option>
                     <option value="star-wars-unlimited">Star Wars Unlimited</option>
                   </select>

@@ -19,6 +19,8 @@ export const SELECTABLE_GAMES: GameDefinition[] = [
   { id: 'lorcana',             name: 'Lorcana',             icon: '🪄',   currency: 'Lorepoints',     color: '#EC4899' },
   { id: 'uvs',                 name: 'UVS',                 icon: '👊',   currency: 'Versus Tokens',  color: '#f97316' },
   { id: 'digimon',             name: 'Digimon',             icon: '🦖',   currency: 'Digi-Points',    color: '#f59e0b' },
+  { id: 'dbfw',                name: 'Dragon Ball Fusion World', icon: '💥', currency: 'Zeni',        color: '#2563EB' },
+  { id: 'dbs',                 name: 'Dragon Ball Super Masters', icon: '🔥', currency: 'Power Levels', color: '#F97316' },
   { id: 'yugioh',              name: 'Yu-Gi-Oh!',           icon: '⭐',   currency: 'Star Chips',     color: '#9333ea' },
   { id: 'riftbound',           name: 'Riftbound',           icon: '🌀',   currency: 'Essence',        color: '#22c55e' },
   { id: 'hololive',            name: 'Hololive',            icon: '🎤',   currency: 'Fan Subs',       color: '#ff69b4' },
