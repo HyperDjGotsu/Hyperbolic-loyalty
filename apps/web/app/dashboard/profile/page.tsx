@@ -1041,10 +1041,12 @@ export default function ProfilePage() {
               <div className="text-white/70 text-xs uppercase tracking-wide font-semibold">Total XP</div>
             </div>
             <div>
-              {storeConfig.currency_icon.startsWith('http') && (
-                <img src={storeConfig.currency_icon} alt="" className="mx-auto mb-0.5 h-7 w-7 object-contain" />
-              )}
-              <div className="text-accent text-3xl font-extrabold tabular-nums">{playerData.gems.toLocaleString()}</div>
+              <div className="flex items-center justify-center gap-1.5 text-accent text-3xl font-extrabold tabular-nums">
+                {storeConfig.currency_icon.startsWith('http') && (
+                  <img src={storeConfig.currency_icon} alt="" className="h-7 w-7 object-contain" />
+                )}
+                {playerData.gems.toLocaleString()}
+              </div>
               <div className="text-white/70 text-xs uppercase tracking-wide font-semibold">{storeConfig.currency_name}</div>
             </div>
           </div>
