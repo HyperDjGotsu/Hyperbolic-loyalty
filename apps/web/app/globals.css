@@ -197,3 +197,6 @@ body {
   .pp-sheet { animation-name: pp-pop-in; animation-duration: 200ms; animation-timing-function: var(--ease-out); }
   .pp-sheet-out { animation-name: pp-fade-out; animation-duration: 150ms; }
 }
+
+/* The Player Pass mark has white letterforms: turn them dark on light themes (hue stays green and blue) */
+[data-theme="light"] .pp-mark-adaptive { filter: invert(1) hue-rotate(180deg); }

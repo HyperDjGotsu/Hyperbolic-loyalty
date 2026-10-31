@@ -8,7 +8,7 @@ export function PageTitle({ children, sub }: { children: React.ReactNode; sub?: 
     <div>
       <h1 className="font-display text-[36px] leading-none font-extrabold tracking-tight text-primary">{children}</h1>
       <div className="mt-2 flex items-center gap-2.5 min-h-8">
-        <img src="/brand/pp-mark.png" alt="Player Pass" className="h-8 w-auto flex-none" />
+        <img src="/brand/pp-mark.png" alt="Player Pass" className="pp-mark-adaptive h-8 w-auto flex-none" />
         {sub}
       </div>
     </div>

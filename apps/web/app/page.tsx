@@ -13,7 +13,7 @@ const STORE_TILES = [
 
 function PlayerDoor() {
   return (
-    <section className={`relative min-h-[400px] md:min-h-[430px] overflow-hidden rounded-[28px] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] `}>
+    <section className={`relative min-h-[400px] md:min-h-[430px] overflow-hidden rounded-[28px] text-white ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] `}>
       <div className="absolute inset-0 grid grid-cols-3">
         {PLAYER_ART.map((g) => (
           <div key={g} className="relative">
@@ -23,7 +23,7 @@ function PlayerDoor() {
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-[#141311]/25 via-[#141311]/85 to-[#141311]/95" />
       <div className="absolute inset-x-6 bottom-6 sm:inset-x-9 sm:bottom-9">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">For players</p>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#3ddc6a]">For players</p>
         <h2 className="font-display mt-2.5 text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-[40px]">
           Show up. Climb.<br />Cash in.
         </h2>
@@ -41,12 +41,12 @@ function PlayerDoor() {
 
 function StoreDoor() {
   return (
-    <section className="relative flex min-h-[400px] md:min-h-[430px] flex-col justify-between gap-8 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] p-6 ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-9">
+    <section className="relative flex min-h-[400px] md:min-h-[430px] flex-col justify-between gap-8 overflow-hidden rounded-[28px] text-white bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] p-6 ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-9">
       <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_80%_0%,rgba(77,141,255,0.18),transparent_70%)]" />
       <div className="relative grid grid-cols-3 gap-2.5">
         {STORE_TILES.map((t) => (
-          <div key={t.label} className="rounded-[18px] border border-white/10 bg-[color-mix(in_srgb,var(--bg-surface)_55%,transparent)] p-3.5 backdrop-blur-xl sm:p-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-secondary">{t.label}</p>
+          <div key={t.label} className="rounded-[18px] border border-white/10 bg-white/10 p-3.5 backdrop-blur-xl sm:p-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/60">{t.label}</p>
             <p className="mt-1.5 text-[15px] font-bold">{t.value}</p>
           </div>
         ))}
@@ -77,7 +77,7 @@ export default function LandingPage() {
 
       <header className="relative z-10 flex items-center justify-between border-b border-white/[0.08] bg-[color-mix(in_srgb,var(--bg-surface)_55%,transparent)] px-5 py-3.5 backdrop-blur-xl sm:px-10">
         <Link href="/" className="flex items-center gap-2.5">
-          <Image src="/brand/pp-mark.png" alt="" width={30} height={30} priority />
+          <Image src="/brand/pp-mark.png" alt="" width={30} height={30} priority className="pp-mark-adaptive" />
           <span className="font-display text-xl font-extrabold tracking-[-0.02em]">Player Pass</span>
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-semibold text-secondary md:flex">

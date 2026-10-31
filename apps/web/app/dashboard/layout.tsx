@@ -163,7 +163,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Desktop top bar */}
       <header className="hidden lg:flex sticky top-0 z-30 h-16 items-center justify-between border-b border-white/[0.08] bg-[color-mix(in_srgb,var(--bg-surface)_70%,transparent)] px-8 backdrop-blur-xl">
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <img src="/brand/pp-mark.png" alt="" className="h-8 w-8" />
+          <img src="/brand/pp-mark.png" alt="" className="pp-mark-adaptive h-8 w-8" />
           <span className="font-display text-lg font-extrabold tracking-[-0.02em]">Player Pass</span>
         </Link>
         <nav className="flex items-center gap-1 rounded-full bg-elevated p-1" aria-label="Main">
