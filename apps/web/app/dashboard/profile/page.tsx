@@ -10,6 +10,7 @@ import { Pencil } from 'lucide-react';
 import { HeroBackdrop, CoverImage, pickBackdropGame } from '@/components/CoverImage';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { EventCreditCard } from '@/components/EventCreditCard';
+import { PASS_MEDALS } from '@/lib/pass-tiers';
 import { BrandMark } from '@/components/BrandMark';
 
 interface ShopItem {
@@ -77,6 +78,10 @@ interface PlayerData {
   isTrial: boolean;
   isStaff: boolean;
   heroBackdrop: string | null;
+  gamesPlayed: number;
+  eventsAttended: number;
+  eventsThisMonth: number;
+  recentActivity: { id: string; text: string; xp: number; date: string }[];
 }
 
 interface ReferralStats {
@@ -271,6 +276,15 @@ export default function ProfilePage() {
             isTrial: data.isTrial === true,
             isStaff: data.isStaff || false,
             heroBackdrop: data.heroBackdrop ?? null,
+            gamesPlayed: Array.isArray(data.gameXP) ? data.gameXP.length : 0,
+            eventsAttended: data.eventsAttended ?? 0,
+            eventsThisMonth: data.eventsThisMonth ?? 0,
+            recentActivity: (data.recentActivity ?? []).slice(0, 5).map((a: any) => ({
+              id: a.id,
+              text: a.description || (a.source ? String(a.source).replace(/_/g, ' ') : 'XP earned'),
+              xp: a.final_xp ?? a.base_xp ?? 0,
+              date: new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            })),
           });
           setTempAvatar(invData.avatarConfig || defaultAvatarConfig);
           setOwnedItems(invData.grouped || {});
@@ -1077,6 +1091,21 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Stats strip */}
+      <div className="px-4 lg:px-0 mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          { value: playerData.gamesPlayed, label: 'Games played', color: 'text-accent' },
+          { value: playerData.eventsAttended, label: 'Events attended', color: 'text-green-400' },
+          { value: playerData.eventsThisMonth, label: 'This month', color: 'text-yellow-400' },
+          { value: playerData.totalXp, label: 'Total XP', color: 'text-xp' },
+        ].map((t) => (
+          <div key={t.label} className="rounded-[20px] border border-border-token bg-surface p-4 text-center">
+            <div className={`font-display text-3xl font-extrabold tabular-nums ${t.color}`}>{t.value.toLocaleString()}</div>
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-secondary">{t.label}</div>
+          </div>
+        ))}
+      </div>
+
       {/* Sections: one column on phones (original order); desktop is two independent columns */}
       <div className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
         <div className="contents lg:flex lg:flex-col">
@@ -1091,13 +1120,31 @@ export default function ProfilePage() {
             : 'bg-elevated/50 border-border-token'
         }`}>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-primary font-semibold">
+            <span className="flex items-center gap-3 text-primary font-semibold">
+              {(() => {
+                const medalKey = ({ access: 'bronze', player: 'silver', all_access: 'gold', diamond: 'diamond' } as const)[playerData.passTier as 'access' | 'player' | 'all_access' | 'diamond'];
+                if (!medalKey) return null;
+                const m = PASS_MEDALS[medalKey];
+                return (
+                  <span
+                    aria-hidden="true"
+                    className={`inline-block h-9 w-9 shrink-0 shadow-lg ${medalKey === 'diamond' ? '' : 'rounded-full'}`}
+                    style={{
+                      background: m.face,
+                      border: medalKey === 'diamond' ? undefined : `3px solid ${m.ring}`,
+                      clipPath: medalKey === 'diamond' ? 'polygon(50% 0,100% 38%,50% 100%,0 38%)' : undefined,
+                    }}
+                  />
+                );
+              })()}
+              <span>
               {playerData.passTier === 'access' ? 'Bronze Pass' :
                playerData.passTier === 'player' ? 'Silver Pass' :
                playerData.passTier === 'all_access' ? 'Gold Pass' :
                playerData.passTier === 'diamond' ? 'Diamond Pass' :
                playerData.passTier === 'shadow_vip' ? 'Shadow VIP' :
                'Free Member'}
+              </span>
             </span>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               playerData.passStatus === 'active'
@@ -1116,6 +1163,11 @@ export default function ProfilePage() {
           {playerData.passExpiresAt && playerData.passStatus === 'active' && (
             <p className="text-secondary text-xs mt-1">
               {playerData.isTrial ? 'Trial ends' : 'Renews'} {new Date(playerData.passExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
+          {playerData.passStatus === 'active' && ({ access: '1x', player: '1.5x', all_access: '2x', diamond: '2x' } as Record<string, string>)[playerData.passTier ?? ''] && (
+            <p className="text-accent text-xs font-semibold mt-1">
+              {({ access: '1x', player: '1.5x', all_access: '2x', diamond: '2x' } as Record<string, string>)[playerData.passTier ?? '']} Prize Points at events
             </p>
           )}
           {!playerData.passTier || playerData.passTier === 'none' ? (
@@ -1306,6 +1358,22 @@ export default function ProfilePage() {
       </div>
         </div>
         <div className="contents lg:flex lg:flex-col">
+      {/* Recent activity */}
+      <div className="px-4 lg:px-0 mt-6 order-4 lg:order-none">
+        <h2 className="font-display text-xl font-bold text-primary mb-3">Recent Activity</h2>
+        {playerData.recentActivity.length === 0 ? (
+          <div className="rounded-[22px] border border-border-token bg-surface p-4 text-sm text-secondary">No activity yet. Check in to an event to start earning XP.</div>
+        ) : (
+          <ul className="divide-y divide-border-token rounded-[22px] border border-border-token bg-surface px-4">
+            {playerData.recentActivity.map((a) => (
+              <li key={a.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0"><div className="truncate text-sm font-medium text-primary">{a.text}</div><div className="text-xs text-tertiary">{a.date}</div></div>
+                <span className={`shrink-0 text-sm font-bold ${a.xp >= 0 ? 'text-accent' : 'text-red-400'}`}>{a.xp >= 0 ? '+' : ''}{a.xp}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       {/* Settings */}
       <div className="px-4 lg:px-0 mt-6 mb-6 order-6 lg:order-none">
         <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getStaffContext } from '@/lib/auth-helpers';
+import { pacificMonthKey } from '@/lib/event-credit';
 
 export const dynamic = 'force-dynamic';
 
@@ -324,6 +325,12 @@ export async function GET() {
       .rpc('get_user_point_balance', { p_player_id: player.id, p_store_id: null as unknown as string });
     const liveGems = typeof balanceData === 'number' ? balanceData : (player.gems || 0);
 
+    // Attendance counts for the Profile stats strip (all-time, and since the start of the Pacific month)
+    const [{ count: eventsAttended }, { count: eventsThisMonth }] = await Promise.all([
+      supabaseAdmin.from('event_attendances').select('id', { count: 'exact', head: true }).eq('player_id', player.id),
+      supabaseAdmin.from('event_attendances').select('id', { count: 'exact', head: true }).eq('player_id', player.id).gte('checked_in_at', `${pacificMonthKey()}T08:00:00Z`),
+    ]);
+
     // Parse avatar
     const avatarConfig = parseAvatarConfig(player.avatar_config);
     
@@ -358,6 +365,8 @@ export async function GET() {
       gems: liveGems,
       gameXP,
       recentActivity: activityWithStore,
+      eventsAttended: eventsAttended ?? 0,
+      eventsThisMonth: eventsThisMonth ?? 0,
       primaryGameId: player.primary_game_id,
       isStaff: !!(await getStaffContext()),
       isFoundingMember: player.is_founding_member,
