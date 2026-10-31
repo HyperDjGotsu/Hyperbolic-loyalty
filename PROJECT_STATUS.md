@@ -304,3 +304,12 @@ git add -A && git commit -m "message" && git push
 ---
 
 This document should be updated whenever major decisions are made or features are completed.
+
+## Session Oct 30, 2026 (branches redesign-home / redesign-desktop; main untouched)
+- Pass tiers: Bronze $10 (1x), Silver $15 (1.5x), Gold $20 (2x), Diamond $30 (2x + $15 monthly Event Credit). All passes 5% off singles (staff-applied). Free earns Prize Points; a pass is needed to spend them.
+- Event Credit built (table event_credit_redemptions, /api/player/event-credit, Profile card). Staff HQ view of redemptions NOT built yet.
+- Prize Wall "View passes" sheet; welcome screens redone (real imagery, new Passes slide, no icon tiles).
+- Dragon Ball split into dbs / dbfw with themed ranks; Card of the Day TCGplayer image fallback; Desktop Events rows use game art; Profile stats aligned.
+- Bug fixed on redesign-home only: effectivePassTier rejected '+00:00' timestamps (every DB pass read as none). FIX MAIN at next push to main.
+- Before merging to main: delete [TEST] events and '[TEST seed]' xp_ledger rows; Dj test account is set to diamond.
+- Open: dbs.jpg/dbfw.jpg cover art, calculator doesn't model the Diamond credit cost.
