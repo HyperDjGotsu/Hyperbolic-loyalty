@@ -123,7 +123,11 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
     })
     .sort((a: { xp: number }, b: { xp: number }) => b.xp - a.xp);
   const displayedGames = games.slice(0, 6);
-  const topGame = games[0];
+  // The monthly achievement follows the player's favorite game (primary game, then first favorite), falling back to their top game
+  const featuredGame =
+    games.find((g: { id: string }) => g.id === playerData?.primaryGameId) ??
+    games.find((g: { id: string }) => favoriteGames.includes(g.id)) ??
+    games[0];
 
   const activity = (playerData?.recentActivity || []).slice(0, 4).map((a: any) => ({
     id: a.id,
@@ -225,18 +229,18 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
 
         {/* Monthly achievement */}
         <section className={`col-span-2 flex flex-col justify-center p-4 ${PANEL}`}>
-          {topGame ? (
+          {featuredGame ? (
             <>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="truncate text-[11px] font-bold uppercase tracking-wide text-secondary">{monthName} · {topGame.name}</div>
-                  <div className="font-display text-lg font-bold leading-tight tracking-[-0.02em]">{topGame.achievementName}</div>
+                  <div className="truncate text-[11px] font-bold uppercase tracking-wide text-secondary">{monthName} · {featuredGame.name}</div>
+                  <div className="font-display text-lg font-bold leading-tight tracking-[-0.02em]">{featuredGame.achievementName}</div>
                 </div>
-                <span className="shrink-0 text-sm font-bold tabular-nums">{topGame.earnedMonthlyBonus ? '✓' : `${Math.min(topGame.monthlyAttendance, topGame.monthlyThreshold)}/${topGame.monthlyThreshold}`}</span>
+                <span className="shrink-0 text-sm font-bold tabular-nums">{featuredGame.earnedMonthlyBonus ? '✓' : `${Math.min(featuredGame.monthlyAttendance, featuredGame.monthlyThreshold)}/${featuredGame.monthlyThreshold}`}</span>
               </div>
               <div className="mt-3 flex gap-1.5">
-                {Array.from({ length: topGame.monthlyThreshold }).map((_, i) => (
-                  <span key={i} className={`h-2 flex-1 rounded-full ${topGame.earnedMonthlyBonus || i < topGame.monthlyAttendance ? 'bg-accent' : 'bg-elevated'}`} />
+                {Array.from({ length: featuredGame.monthlyThreshold }).map((_, i) => (
+                  <span key={i} className={`h-2 flex-1 rounded-full ${featuredGame.earnedMonthlyBonus || i < featuredGame.monthlyAttendance ? 'bg-accent' : 'bg-elevated'}`} />
                 ))}
               </div>
             </>
