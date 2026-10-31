@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Hand, Zap, Gift, ShoppingBag, CreditCard, Crown, QrCode, Lock, type LucideIcon } from 'lucide-react';
+import { Gift, Crown, QrCode, Lock } from 'lucide-react';
 import { PASS_TIERS } from '@/lib/pass-tiers';
 
 const STORAGE_KEY = 'hxp_welcome_seen';
@@ -25,37 +25,31 @@ const DEFAULT_CONFIG: StoreConfig = {
 function buildSlides(cfg: StoreConfig) {
   return [
     {
-      icon: Hand,
       title: `Welcome to ${cfg.store_name}`,
       body: "You just joined your store's loyalty system. Every time you show up, play, and compete — you earn XP and climb the leaderboard.",
     },
     {
-      icon: Zap,
       title: 'Earn XP Every Visit',
       body: 'Check in at events to earn XP. Win matches for bonus XP. The more you play, the higher you rank.',
     },
     {
-      icon: Gift,
       title: 'Daily Bonus',
       body: `Open the app every day for a free bonus. It resets at midnight — don't leave ${cfg.currency_name} on the table.`,
     },
     {
-      icon: ShoppingBag,
       title: cfg.shop_title,
       body: `Everyone earns ${cfg.currency_name} at events. Spend them on prizes from the store — a pass unlocks spending.`,
     },
     {
-      icon: Crown,
       title: 'Passes',
       body: 'Bronze, Silver, Gold and Diamond passes let you spend your points and earn them faster. Staff can start one for you in the store.',
     },
     {
-      icon: CreditCard,
       title: 'Your Player Profile',
       body: 'Your Player Pass profile travels with you across the network. Your progress, Guild Points, and rewards are always there. Staff and check-in kiosks can identify you through your profile QR — no code to remember.',
       cta: "Let's go",
     },
-  ] as Array<{ icon: LucideIcon; title: string; body: string; cta?: string }>;
+  ] as Array<{ title: string; body: string; cta?: string }>;
 }
 
 
@@ -184,11 +178,7 @@ export function WelcomeOverlay() {
 
       {/* Slide content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-        {slide === 0 ? (
-          <img src="/brand/pp-lockup.png" alt="Player Pass" className="mx-auto mb-8 h-44 w-auto" />
-        ) : (
-          <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-[22px] bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent"><current.icon size={30} strokeWidth={1.75} /></div>
-        )}
+        {slide === 0 && <img src="/brand/pp-lockup.png" alt="Player Pass" className="mx-auto mb-8 h-44 w-auto" />}
         <SlideArt slide={slide} />
         <h2 className="text-primary text-2xl font-bold mb-4 leading-snug">{current.title}</h2>
         <p className="text-secondary text-base leading-relaxed max-w-sm">{current.body}</p>
