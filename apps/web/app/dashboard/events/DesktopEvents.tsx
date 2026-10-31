@@ -1029,7 +1029,7 @@ function EventsPageContent() {
         <PageTitle sub={<SubText>Games, tournaments &amp; meetups</SubText>}>Events</PageTitle>
       </div>
       {/* Filter Bar */}
-      <div className="border-b border-border-token bg-base/95 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-border-token bg-base/95 backdrop-blur-sm sticky top-0 lg:top-16 z-10">
         <div className="px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex gap-1 bg-elevated rounded-full p-1">
@@ -1174,7 +1174,7 @@ function EventsPageContent() {
           <div className="lg:flex lg:gap-6">
             {/* Calendar sidebar - desktop only (hidden on mobile via CSS) */}
             <div className="hidden lg:block w-80 shrink-0">
-              <div className="sticky top-32">
+              <div className="sticky top-32 lg:top-48">
                 <MiniCalendar 
                   events={events} 
                   selectedDate={selectedDate}

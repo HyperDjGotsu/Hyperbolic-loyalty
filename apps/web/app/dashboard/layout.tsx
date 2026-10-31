@@ -66,33 +66,6 @@ const navItems = [
   },
 ];
 
-// Desktop sidebar shows every destination, Alerts included (with its unread badge)
-const desktopNavItems = navItems;
-
-function NavItem({ item, pathname, unreadCount }: { item: typeof navItems[0]; pathname: string; unreadCount: number }) {
-  const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-  const showBadge = item.href === '/dashboard/notifications' && unreadCount > 0;
-  return (
-    <Link
-      href={item.href}
-      aria-current={isActive ? 'page' : undefined}
-      className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-[15px] font-semibold transition-colors
-        ${isActive
-          ? 'bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-accent'
-          : 'text-secondary hover:text-primary hover:bg-elevated'
-        }`}
-    >
-      {item.icon}
-      <span className="flex-1">{item.label}</span>
-      {showBadge && (
-        <span className="min-w-[20px] h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center px-1.5">
-          {unreadCount > 9 ? '9+' : unreadCount}
-        </span>
-      )}
-    </Link>
-  );
-}
-
 function MobileNavItem({
   item,
   pathname,
@@ -129,6 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { signOut } = useClerk();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [selectedStoreName, setSelectedStoreName] = useState<string | null>(null);
   const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
@@ -186,48 +160,63 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-base text-primary">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 bg-surface border-r border-border-token z-30">
-        <div className="px-5 pt-6 pb-4">
-          <img src="/brand/pp-lockup.png" alt="Player Pass" className="h-14 w-auto" />
-        </div>
-        <div className="px-4 pb-4 flex items-center justify-between">
+      {/* Desktop top bar */}
+      <header className="hidden lg:flex sticky top-0 z-30 h-16 items-center justify-between border-b border-white/[0.08] bg-[color-mix(in_srgb,var(--bg-surface)_70%,transparent)] px-8 backdrop-blur-xl">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <img src="/brand/pp-mark.png" alt="" className="h-8 w-8" />
+          <span className="font-display text-lg font-extrabold tracking-[-0.02em]">Player Pass</span>
+        </Link>
+        <nav className="flex items-center gap-1 rounded-full bg-elevated p-1" aria-label="Main">
+          {navItems.filter((i) => i.href !== '/dashboard/notifications').map((item) => {
+            const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'page' : undefined}
+                className={`pp-press rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${isActive ? 'bg-accent text-accent-fg' : 'text-secondary hover:text-primary'}`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setShowStoreSwitcher(true)}
-            className="flex items-center gap-2 min-w-0 group text-left rounded-full bg-elevated border border-border-token pl-3 pr-3 py-1.5"
+            className="group flex items-center gap-2 rounded-full border border-border-token bg-elevated py-1.5 pl-3 pr-3 text-left"
             title="Switch store"
           >
-            <span className="font-semibold text-[13px] text-secondary truncate leading-tight">
-              {selectedStoreName ?? 'Player Pass'}
-            </span>
-            <svg
-              width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              className="flex-shrink-0 text-tertiary group-hover:text-secondary transition-colors"
-            >
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
+            <span className="max-w-[180px] truncate text-[13px] font-semibold leading-tight text-secondary">{selectedStoreName ?? 'Player Pass'}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 text-tertiary transition-colors group-hover:text-secondary"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <ThemeToggle />
+          <Link href="/dashboard/notifications" aria-label="Alerts" className="pp-press relative grid h-9 w-9 place-items-center rounded-full bg-elevated text-secondary transition-colors hover:text-primary">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>
+            )}
+          </Link>
+          <div className="relative">
+            <button onClick={() => setShowAccountMenu(v => !v)} aria-label="Account menu" aria-expanded={showAccountMenu} className="pp-press grid h-9 w-9 place-items-center rounded-full bg-elevated text-secondary transition-colors hover:text-primary">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>
+            {showAccountMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowAccountMenu(false)} />
+                <div className="pp-pop absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-2xl border border-border-token bg-surface p-1.5 shadow-2xl">
+                  <Link href="/dashboard/profile" onClick={() => setShowAccountMenu(false)} className="block rounded-xl px-3 py-2 text-sm font-semibold hover:bg-elevated">Profile</Link>
+                  <button onClick={() => signOut({ redirectUrl: '/' })} className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-secondary hover:bg-elevated hover:text-red-400">Sign out</button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-        <nav className="flex-1 px-3 py-2 flex flex-col gap-1">
-          {desktopNavItems.map((item) => (
-            <NavItem key={item.href} item={item} pathname={pathname} unreadCount={unreadCount} />
-          ))}
-        </nav>
-        <div className="p-4 border-t border-border-token flex flex-col gap-2">
-          <button
-            onClick={() => signOut({ redirectUrl: '/' })}
-            className="text-xs text-tertiary hover:text-red-400 transition-colors text-left"
-          >
-            Sign out
-          </button>
-        </div>
-      </aside>
+      </header>
 
       {/* Main content */}
-      <main className="lg:ml-64 pb-28 lg:pb-0">
-        <div className="lg:max-w-[1280px] lg:mx-auto">{children}</div>
+      <main className="pb-28 lg:pb-0">
+        <div className={pathname === '/dashboard' ? '' : 'lg:max-w-[1280px] lg:mx-auto'}>{children}</div>
       </main>
 
       {/* Mobile bottom nav */}
