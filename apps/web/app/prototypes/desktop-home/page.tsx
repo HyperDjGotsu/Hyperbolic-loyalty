@@ -1,14 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import Variant1Sidebar from './Variant1Sidebar';
+import RiffNextUp from './RiffNextUp';
+import RiffPassLed from './RiffPassLed';
+import RiffStoreLive from './RiffStoreLive';
+import RiffDense from './RiffDense';
 import Variant2TopBar from './Variant2TopBar';
-import Variant3Column from './Variant3Column';
 
 const VARIANTS = [
-  { name: 'Sidebar', render: () => <Variant1Sidebar /> },
-  { name: 'Top bar', render: () => <Variant2TopBar /> },
-  { name: 'Phone column', render: () => <Variant3Column /> },
+  { name: 'Next up', render: () => <RiffNextUp /> },
+  { name: 'Pass-led', render: () => <RiffPassLed /> },
+  { name: 'Store live', render: () => <RiffStoreLive /> },
+  { name: 'Dense', render: () => <RiffDense /> },
+  { name: 'Original', render: () => <Variant2TopBar /> },
 ];
 
 const PICKER_CSS = `

@@ -29,3 +29,19 @@ export const CARD = { name: 'Trafalgar Law', set: 'Kingdoms of Intrigue', rarity
 export const NAV = ['Home', 'Events', 'Community', 'Prize Wall', 'Profile'];
 
 export const art = (id: string) => `/games/ggob/${id}.jpg`;
+
+// ── Riff round: extra modules so the one-screen Home can feel complete ──
+export const BONUS = { points: 5, ready: true };
+export const LIVE_EVENT = { name: 'Riftbound Weekly', game: 'riftbound', when: 'Live now · started 6:30 PM', checkedIn: 14, spots: 24, xp: 35 };
+export const STORE_UPDATES = [
+  { id: 1, title: 'Riftbound Origins boxes are back in stock', when: '2h ago' },
+  { id: 2, title: 'Gundam Draft moves to 7:00 PM this Thursday', when: 'Yesterday' },
+  { id: 3, title: 'Store closes early Saturday for inventory', when: '2d ago' },
+];
+export const PASS = { tier: 'Diamond', multiplier: '2x', credit: '$15 Event Credit', creditReady: true, renews: 'Nov 29' };
+export const MONTHLY = { name: 'The Regular', done: 1, goal: 3, month: 'Nov' };
+export const FRIENDS = [
+  { id: 1, who: 'Maya', what: 'reached level 12', when: '1h' },
+  { id: 2, who: 'Noor', what: 'checked in · Riftbound', when: '3h' },
+  { id: 3, who: 'Sam', what: 'won Gundam Draft', when: 'Thu' },
+];
