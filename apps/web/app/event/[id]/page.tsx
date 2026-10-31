@@ -138,7 +138,7 @@ export default function PublicEventPage() {
       <header className="bg-base/90 backdrop-blur border-b border-border-token sticky top-0 z-50">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <img src="/brand/pp-mark.png" alt="Player Pass" className="h-8 w-auto flex-none" />
+            <img src="/brand/pp-mark.png" alt="Player Pass" className="pp-mark-adaptive h-8 w-auto flex-none" />
             <span className="font-display font-extrabold text-primary">Player Pass</span>
           </Link>
           <Link
