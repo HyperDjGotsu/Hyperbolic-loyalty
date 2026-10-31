@@ -26,7 +26,7 @@ function PlayerDoor() {
         <h2 className="font-display mt-2.5 text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-[40px]">
           Show up. Climb.<br />Cash in.
         </h2>
-        <p className="mt-3 mb-5 max-w-[26rem] text-base leading-relaxed text-[#cfc8ba]">
+        <p className="mt-3 mb-5 max-w-[26rem] text-[16px] leading-relaxed text-[#cfc8ba]">
           Earn XP at every event, rank up on every game&apos;s leaderboard, and redeem Prize Points at your store.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -40,9 +40,9 @@ function PlayerDoor() {
 
 function StoreDoor() {
   return (
-    <section className={`relative min-h-[430px] overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] `}>
+    <section className="relative flex min-h-[430px] flex-col justify-between gap-8 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] p-6 ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-9">
       <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_80%_0%,rgba(77,141,255,0.18),transparent_70%)]" />
-      <div className="absolute inset-x-6 top-6 grid grid-cols-3 gap-2.5 sm:inset-x-9 sm:top-9">
+      <div className="relative grid grid-cols-3 gap-2.5">
         {STORE_TILES.map((t) => (
           <div key={t.label} className="rounded-[18px] border border-white/10 bg-[color-mix(in_srgb,var(--bg-surface)_55%,transparent)] p-3.5 backdrop-blur-xl sm:p-4">
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-secondary">{t.label}</p>
@@ -50,12 +50,12 @@ function StoreDoor() {
           </div>
         ))}
       </div>
-      <div className="absolute inset-x-6 bottom-6 sm:inset-x-9 sm:bottom-9">
+      <div className="relative">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7fb0ff]">For stores</p>
         <h2 className="font-display mt-2.5 text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-[40px]">
           Loyalty that runs<br />itself.
         </h2>
-        <p className="mt-3 mb-5 max-w-[27rem] text-base leading-relaxed text-[#cfc8ba]">
+        <p className="mt-3 mb-5 max-w-[27rem] text-[16px] leading-relaxed text-[#cfc8ba]">
           Players check in, earn and come back. Your staff only run the events. No setup, no training.
         </p>
         <div className="flex flex-wrap gap-3">
