@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getStaffContext } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -358,7 +359,7 @@ export async function GET() {
       gameXP,
       recentActivity: activityWithStore,
       primaryGameId: player.primary_game_id,
-      isStaff: player.is_staff,
+      isStaff: !!(await getStaffContext()),
       isFoundingMember: player.is_founding_member,
       createdAt: player.created_at,
       homeStoreId: player.home_store_id,

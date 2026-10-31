@@ -107,7 +107,7 @@ export default function LandingPage() {
         </DoorsSwitch>
 
         <p className="mt-6 text-center text-[13px] text-tertiary">
-          Staff? Sign in, then open Staff HQ from the menu. · <Link href="/calculator" className="hover:text-primary">Pricing calculator</Link> · <Link href="/privacy" className="hover:text-primary">Privacy</Link>
+          <Link href="/calculator" className="hover:text-primary">Pricing calculator</Link> · <Link href="/privacy" className="hover:text-primary">Privacy</Link>
         </p>
       </main>
     </div>

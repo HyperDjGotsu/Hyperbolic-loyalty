@@ -129,7 +129,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { signOut } = useClerk();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isStaff, setIsStaff] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
   const [selectedStoreName, setSelectedStoreName] = useState<string | null>(null);
   const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
@@ -162,7 +161,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           return;
         }
         if (!d) return;
-        if (d.isStaff) setIsStaff(true);
         if (d.homeStore?.id) setHomeStoreId(d.homeStore.id);
 
         // Seed store from localStorage; fall back to homeStore
@@ -218,14 +216,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
         <div className="p-4 border-t border-border-token flex flex-col gap-2">
-          {isStaff && (
-            <Link
-              href="/hq"
-              className="pp-press flex items-center justify-between rounded-xl border border-accent/40 bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] px-3 py-2.5 text-sm font-semibold text-accent"
-            >
-              Staff HQ <span aria-hidden="true">→</span>
-            </Link>
-          )}
           <button
             onClick={() => signOut({ redirectUrl: '/' })}
             className="text-xs text-tertiary hover:text-red-400 transition-colors text-left"
@@ -239,17 +229,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="lg:ml-64 pb-28 lg:pb-0">
         <div className="lg:max-w-[1280px] lg:mx-auto">{children}</div>
       </main>
-
-      {/* Staff shortcut on phones: sits just above the bottom nav so HQ is always one tap away */}
-      {isStaff && (
-        <Link
-          href="/hq"
-          className="pp-press lg:hidden fixed right-4 z-30 rounded-full border border-accent/40 bg-[color-mix(in_srgb,var(--bg-surface)_80%,transparent)] px-3.5 py-2 text-xs font-bold text-accent shadow-lg backdrop-blur-xl"
-          style={{ bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))' }}
-        >
-          Staff HQ
-        </Link>
-      )}
 
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-3 pointer-events-none" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>
