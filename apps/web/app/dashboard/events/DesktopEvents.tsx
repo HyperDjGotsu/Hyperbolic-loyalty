@@ -525,6 +525,7 @@ function EventsPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [calendarScope, setCalendarScope] = useState<'store' | 'network'>('store');
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set(['all']));
+  const [showAllGames, setShowAllGames] = useState(false);
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -699,6 +700,16 @@ function EventsPageContent() {
   };
 
   // Filter events
+  // Filter chips: favorites and any selected game stay visible, the rest sit behind "More".
+  // Without favorites, the first few games show so the row never starts empty.
+  const allGameFilters = GAME_FILTERS.filter(g => g.id !== 'all');
+  const pinnedGameIds = new Set<string>([...favoriteGames, ...Array.from(selectedGames).filter(id => id !== 'all')]);
+  if (favoriteGames.length === 0) allGameFilters.slice(0, 6).forEach(g => pinnedGameIds.add(g.id));
+  const visibleGameFilters = showAllGames
+    ? allGameFilters
+    : [...allGameFilters.filter(g => favoriteGames.includes(g.id)), ...allGameFilters.filter(g => !favoriteGames.includes(g.id) && pinnedGameIds.has(g.id))];
+  const hiddenGameCount = allGameFilters.length - visibleGameFilters.length;
+
   const filteredEvents = events.filter(event => {
     // Game filter - if 'all' is selected or the set is empty, show all
     if (!selectedGames.has('all') && selectedGames.size > 0) {
@@ -1096,8 +1107,8 @@ function EventsPageContent() {
               </button>
             )}
 
-            {/* Individual game buttons */}
-            {GAME_FILTERS.filter(g => g.id !== 'all').map(game => {
+            {/* Individual game buttons: favorites and anything selected first, the rest behind "More" */}
+            {visibleGameFilters.map(game => {
               const isSelected = selectedGames.has(game.id);
               const isFavorite = favoriteGames.includes(game.id);
               
@@ -1135,6 +1146,16 @@ function EventsPageContent() {
                 </button>
               );
             })}
+            {hiddenGameCount > 0 || showAllGames ? (
+              <button
+                type="button"
+                onClick={() => setShowAllGames(v => !v)}
+                aria-expanded={showAllGames}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap border border-dashed border-border-token text-secondary hover:text-primary transition-colors"
+              >
+                {showAllGames ? 'Fewer' : `More (${hiddenGameCount})`}
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
