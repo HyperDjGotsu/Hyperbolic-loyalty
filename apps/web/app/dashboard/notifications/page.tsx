@@ -125,8 +125,8 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <div className="min-h-screen bg-base pb-24 lg:max-w-3xl lg:mx-auto">
-      <div className="sticky top-0 lg:top-16 bg-base/90 backdrop-blur-xl px-4 pt-5 pb-3 flex items-end justify-between z-10">
+    <div className="min-h-screen bg-base pb-24">
+      <div className="sticky top-0 lg:top-16 bg-base/90 backdrop-blur-xl px-4 pt-5 pb-3 lg:px-0 lg:pt-8 flex items-end justify-between z-10">
         <PageTitle sub={<SubText>{unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}</SubText>}>Alerts</PageTitle>
         {unreadCount > 0 && (
           <button

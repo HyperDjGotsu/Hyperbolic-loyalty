@@ -1036,12 +1036,12 @@ function EventsPageContent() {
   // Render
   return (
     <div className="flex-1 overflow-auto">
-      <div className="px-4 lg:px-8 pt-6 pb-2">
+      <div className="px-4 lg:px-0 pt-6 lg:pt-8 pb-2">
         <PageTitle sub={<SubText>Games, tournaments &amp; meetups</SubText>}>Events</PageTitle>
       </div>
       {/* Filter Bar */}
       <div className="border-b border-border-token bg-base/95 backdrop-blur-sm sticky top-0 lg:top-16 z-10">
-        <div className="px-4 lg:px-8 py-4">
+        <div className="px-4 lg:px-0 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex gap-1 bg-elevated rounded-full p-1">
               <button
@@ -1161,7 +1161,7 @@ function EventsPageContent() {
       </div>
 
       {/* Content */}
-      <div className="p-4 lg:px-8 lg:py-6">
+      <div className="p-4 lg:px-0 lg:py-6">
                 {!loading && !error && specialEvents.length > 0 && (
           <div className="mb-6">
             <SpecialEvents events={specialEvents} />

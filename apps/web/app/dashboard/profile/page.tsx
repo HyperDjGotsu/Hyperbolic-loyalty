@@ -1020,7 +1020,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-base pb-20 lg:max-w-6xl lg:mx-auto lg:px-4 lg:pt-6">
+    <div className="min-h-screen bg-base pb-20 lg:pt-8">
       {/* Hero: the player's picture, blurred, behind their avatar, name and numbers */}
       <div className="relative isolate overflow-hidden px-4 pt-10 pb-7 lg:rounded-[30px]">
         <HeroBackdrop gameId={parseBackdrop(playerData.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)} />
@@ -1080,7 +1080,7 @@ export default function ProfilePage() {
       {/* Sections: one column on phones, two on desktop */}
       <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
       {/* Referral Section */}
-      <div className="px-4 mt-6">
+      <div className="px-4 lg:px-0 mt-6">
         <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Invite Friends
         </h2>
@@ -1210,7 +1210,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Favorite Games */}
-      <div className="px-4 mt-6">
+      <div className="px-4 lg:px-0 mt-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
             Favorite Games
@@ -1260,7 +1260,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Membership */}
-      <div className="px-4 mt-6">
+      <div className="px-4 lg:px-0 mt-6">
         <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Membership
         </h2>
@@ -1307,7 +1307,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Sign Out */}
-      <div className="px-4 mt-8 lg:order-2 lg:mt-6">
+      <div className="px-4 lg:px-0 mt-8 lg:order-2 lg:mt-6">
         <button
           type="button"
           onClick={() => signOut({ redirectUrl: '/' })}
@@ -1318,7 +1318,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Danger Zone */}
-      <div className="px-4 mt-6 mb-6 lg:order-3">
+      <div className="px-4 lg:px-0 mt-6 mb-6 lg:order-3">
         <div className="border-t border-red-500/20 pt-6">
           <h2 className="text-xs font-bold text-secondary/60 uppercase tracking-widest mb-3">
             Danger Zone
@@ -1344,7 +1344,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Settings */}
-      <div className="px-4 mt-6 mb-6">
+      <div className="px-4 lg:px-0 mt-6 mb-6">
         <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Settings
         </h2>

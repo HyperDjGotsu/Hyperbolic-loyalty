@@ -161,7 +161,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
 
   return (
     <div className="h-[calc(100vh-64px)] min-h-[780px] bg-base text-primary">
-      <div className="grid h-full grid-cols-12 grid-rows-[auto_minmax(0,1fr)_minmax(0,1fr)] gap-4 p-5">
+      <div className="grid h-full grid-cols-12 grid-rows-[auto_minmax(0,1fr)_minmax(0,1fr)] gap-4 py-5">
         {/* Hero */}
         <section className="relative isolate col-span-6 flex items-center gap-5 overflow-hidden rounded-[28px] border border-white/10 p-4 text-white">
           <HeroBackdrop

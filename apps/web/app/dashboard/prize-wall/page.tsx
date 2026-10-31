@@ -136,7 +136,7 @@ export default function PrizeWallPage() {
   const unlocked = items.filter(i => i.unlock_threshold && i.is_unlocked);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-5 lg:pt-8 pb-8 space-y-10">
+    <div className="px-4 lg:px-0 pt-5 lg:pt-8 pb-8 space-y-10">
       <div>
         <PageTitle sub={<SubText>Real prizes, real rewards</SubText>}>Prize Wall</PageTitle>
         <p className="text-secondary text-sm mt-3">

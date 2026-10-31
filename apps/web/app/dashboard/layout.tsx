@@ -216,7 +216,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <main className="pb-28 lg:pb-0">
-        <div className={pathname === '/dashboard' ? '' : 'lg:max-w-[1280px] lg:mx-auto'}>{children}</div>
+        <div className="lg:mx-auto lg:max-w-[1320px] lg:px-6">{children}</div>
       </main>
 
       {/* Mobile bottom nav */}

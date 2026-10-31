@@ -884,9 +884,9 @@ export default function CommunityPage() {
   );
 
   return (
-    <div className="flex-1 overflow-auto lg:max-w-6xl lg:mx-auto lg:px-4">
+    <div className="flex-1 overflow-auto">
       {/* Header */}
-      <div className="relative bg-base px-4 pt-5 pb-3">
+      <div className="relative bg-base px-4 pt-5 pb-3 lg:px-0 lg:pt-8">
         <div className="relative flex items-center justify-between">
           <div>
             <PageTitle sub={<SubText>{leaderboard.length >= 10 ? 'Top 10' : `${leaderboard.length} players ranked`}</SubText>}>Community</PageTitle>
@@ -942,7 +942,7 @@ export default function CommunityPage() {
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-4 lg:px-0">
         {/* Leaderboard Tab */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-3">
@@ -972,7 +972,7 @@ export default function CommunityPage() {
             </div>
 
             {/* Game Selector */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide items-center">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide items-center">
               {visibleGames.map((game) => (
                 <button
                   key={game.id}
