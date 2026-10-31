@@ -313,3 +313,9 @@ This document should be updated whenever major decisions are made or features ar
 - Bug fixed on redesign-home only: effectivePassTier rejected '+00:00' timestamps (every DB pass read as none). FIX MAIN at next push to main.
 - Before merging to main: delete [TEST] events and '[TEST seed]' xp_ledger rows; Dj test account is set to diamond.
 - Open: dbs.jpg/dbfw.jpg cover art, calculator doesn't model the Diamond credit cost.
+
+## PRE-LAUNCH BLOCKER (added Oct 31, 2026): under-13 users / COPPA
+- Signup has no age check. Onboarding collects phone and real name; /privacy only says the app is "not directed to children under 13".
+- TCG stores have many kids, so that is a weak position. Talk to a lawyer before launch.
+- Design decision needed: birthdate field, "I'm 13 or older" confirmation, or parent-managed accounts. Then update /privacy to match.
+- Applies to all stores, so it also matters for the SaaS version.
