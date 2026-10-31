@@ -200,3 +200,13 @@ body {
 
 /* The Player Pass mark has white letterforms: turn them dark on light themes (hue stays green and blue) */
 [data-theme="light"] .pp-mark-adaptive { filter: invert(1) hue-rotate(180deg); }
+
+/* Light themes: tinted borders (accent/red/amber…) at 20-30% vanish on pale cards; strengthen them */
+[data-theme="light"] [class*="border-accent/20"],
+[data-theme="light"] [class*="border-accent/30"] { border-color: color-mix(in srgb, var(--accent) 75%, transparent); }
+[data-theme="light"] [class*="border-red-500/20"],
+[data-theme="light"] [class*="border-red-500/30"] { border-color: rgba(220,38,38,0.6); }
+[data-theme="light"] [class*="border-yellow-500/20"],
+[data-theme="light"] [class*="border-yellow-500/30"],
+[data-theme="light"] [class*="border-amber-500/30"],
+[data-theme="light"] [class*="border-orange-500/30"] { border-color: rgba(180,110,0,0.6); }
