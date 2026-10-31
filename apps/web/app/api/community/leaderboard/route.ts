@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { auth } from '@clerk/nextjs/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,7 @@ const ANONYMOUS_AVATAR = {
 //   store_id  — omit for network-wide; uuid for store-seasonal leaderboard
 //               (filters xp_ledger.store_id, NOT players.home_store_id)
 //   limit     — default 50
+//   me        — when signed in and ranked below the limit, the response also carries `me`: the caller's own row
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -81,14 +83,38 @@ export async function GET(request: NextRequest) {
       xpByPlayer[entry.player_id!] = (xpByPlayer[entry.player_id!] || 0) + (entry.final_xp || 0);
     }
 
-    const rankedPlayerIds = Object.entries(xpByPlayer)
+    const sortedPlayerIds = Object.entries(xpByPlayer)
       .filter(([, xp]) => xp > 0)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, limit)
       .map(([id]) => id);
+    const rankedPlayerIds = sortedPlayerIds.slice(0, limit);
+
+    // The caller's own standing, when they rank below the cut-off
+    let me: Record<string, unknown> | null = null;
+    const { userId: clerkUserId } = await auth();
+    if (clerkUserId) {
+      const { data: self } = await supabaseAdmin
+        .from('players')
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config')
+        .eq('clerk_user_id', clerkUserId)
+        .maybeSingle();
+      const selfIndex = self ? sortedPlayerIds.indexOf(self.id) : -1;
+      if (self && selfIndex >= limit) {
+        me = {
+          rank: selfIndex + 1,
+          id: self.player_id,
+          odid: self.id,
+          name: self.display_name || 'You',
+          totalXp: xpByPlayer[self.id] || 0,
+          level: Math.floor((xpByPlayer[self.id] || 0) / 100) + 1,
+          hidden: false,
+          avatar: buildAvatar(self),
+        };
+      }
+    }
 
     if (rankedPlayerIds.length === 0) {
-      return NextResponse.json({ leaderboard: [], period, storeId });
+      return NextResponse.json({ leaderboard: [], me: null, period, storeId });
     }
 
     // ── Fetch player display data for ranked players ──────────────────────────
@@ -123,7 +149,7 @@ export async function GET(request: NextRequest) {
       })
       .filter(Boolean);
 
-    return NextResponse.json({ leaderboard, period, storeId: storeId ?? null });
+    return NextResponse.json({ leaderboard, me, period, storeId: storeId ?? null });
   } catch (error) {
     console.error('Leaderboard error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

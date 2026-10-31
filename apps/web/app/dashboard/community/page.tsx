@@ -135,7 +135,7 @@ export default function CommunityPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false); // New search modal state
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [showFullLeaderboard, setShowFullLeaderboard] = useState(false);
+  const [myRank, setMyRank] = useState<LeaderboardEntry | null>(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardGame, setLeaderboardGame] = useState('overall');
   const [favoriteGames, setFavoriteGames] = useState<string[]>(['overall', 'one_piece']);
@@ -205,10 +205,11 @@ export default function CommunityPage() {
     try {
       const gameParam = game === 'overall' ? '' : `&game=${game}`;
       const storeParam = storeId ? `&store_id=${storeId}` : '';
-      const res = await fetch(`/api/community/leaderboard?limit=50${gameParam}${storeParam}`);
+      const res = await fetch(`/api/community/leaderboard?limit=10${gameParam}${storeParam}`);
       if (res.ok) {
         const data = await res.json();
         setLeaderboard(data.leaderboard || []);
+        setMyRank(data.me ?? null);
       }
     } catch (error) {
       console.error('Error loading leaderboard:', error);
@@ -288,14 +289,12 @@ export default function CommunityPage() {
 
   // Handle leaderboard game change
   const handleGameChange = (game: string) => {
-    setShowFullLeaderboard(false);
     setLeaderboardGame(game);
     loadLeaderboard(game, leaderboardScope === 'store' ? selectedStoreId : null);
   };
 
   // Handle scope toggle (Store vs Network)
   const handleScopeChange = (scope: 'store' | 'network') => {
-    setShowFullLeaderboard(false);
     setLeaderboardScope(scope);
     loadLeaderboard(leaderboardGame, scope === 'store' ? selectedStoreId : null);
   };
@@ -890,7 +889,7 @@ export default function CommunityPage() {
       <div className="relative bg-base px-4 pt-5 pb-3">
         <div className="relative flex items-center justify-between">
           <div>
-            <PageTitle sub={<SubText>{leaderboard.length} players ranked</SubText>}>Community</PageTitle>
+            <PageTitle sub={<SubText>{leaderboard.length >= 10 ? 'Top 10' : `${leaderboard.length} players ranked`}</SubText>}>Community</PageTitle>
           </div>
           {/* Header buttons: Search + Privacy */}
           <div className="flex items-center gap-2">
@@ -1051,49 +1050,17 @@ export default function CommunityPage() {
                     })}
                   </div>
                 )}
-                {(() => {
-                  // Top 10 (podium + #4 to #10), then "See more" for the rest
-                  const shown = showFullLeaderboard ? leaderboard : leaderboard.slice(0, 10);
-                  const rest = leaderboard.length - shown.length;
-                  const rows = leaderboard.length >= 3 ? shown.slice(3) : shown;
-                  return (
-                    <>
-                      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-                        {rows.map((entry) => (
-                          <MemberCard key={entry.id} member={entry} />
-                        ))}
-                      </div>
-                      {!showFullLeaderboard && currentPlayerId && (() => {
-                        // A player outside the top 10 still sees where they stand
-                        const me = leaderboard.find((e) => e.id === currentPlayerId && e.rank > 10);
-                        return me ? (
-                          <div>
-                            <div className="mb-1.5 text-center text-[11px] font-bold uppercase tracking-wide text-tertiary">Your rank</div>
-                            <MemberCard member={me} />
-                          </div>
-                        ) : null;
-                      })()}
-                      {rest > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowFullLeaderboard(true)}
-                          className="pp-press mx-auto block rounded-full border border-border-token bg-elevated px-5 py-2.5 text-sm font-semibold text-primary"
-                        >
-                          See more ({rest})
-                        </button>
-                      )}
-                      {showFullLeaderboard && leaderboard.length > 10 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowFullLeaderboard(false)}
-                          className="mx-auto block px-4 py-2 text-xs font-semibold text-tertiary transition-colors hover:text-secondary"
-                        >
-                          Show top 10 only
-                        </button>
-                      )}
-                    </>
-                  );
-                })()}
+                <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                  {(leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard).map((entry) => (
+                    <MemberCard key={entry.id} member={entry} />
+                  ))}
+                </div>
+                {myRank && (
+                  <div>
+                    <div className="mb-1.5 text-center text-[11px] font-bold uppercase tracking-wide text-tertiary">Your rank</div>
+                    <MemberCard member={myRank} />
+                  </div>
+                )}
               </>
             ) : (
               <EmptyState icon={Trophy} title="No rankings yet" hint={`Be the first to earn ${ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}`} />
