@@ -100,7 +100,7 @@ function HeroStatCard({
   icon?: string;
 }) {
   return (
-    <div className="bg-black/35 backdrop-blur-md border border-white/15 rounded-[22px] px-6 py-4 text-center min-w-[110px] transition-all hover:-translate-y-1">
+    <div className="bg-black/35 backdrop-blur-md border border-white/15 rounded-[22px] px-6 py-4 text-center min-w-[110px]">
       <div className="font-display text-[30px] font-extrabold text-white">
         {value.toLocaleString()}
       </div>
@@ -168,19 +168,20 @@ function GameCard({
 
   return (
     <div 
-      className={`relative transition-all duration-700 ease-in-out ${isExpanded && hasRichStats ? 'col-span-2 row-span-2' : ''}`}
+      className={`relative ${isExpanded && hasRichStats ? 'col-span-2 row-span-2' : ''}`}
       style={{ perspective: '1500px' }}
     >
       <div
-        className={`relative transition-all duration-700 ease-in-out h-full ${isFlipped ? 'z-20' : 'z-10'}`}
+        className={`relative transition-transform duration-500 h-full ${isFlipped ? 'z-20' : 'z-10'}`}
         style={{ 
           transformStyle: 'preserve-3d',
+          transitionTimingFunction: 'var(--ease-drawer)',
           transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
         }}
       >
         {/* Front of card */}
         <div
-          className="bg-surface border border-border-token rounded-2xl p-5 cursor-pointer transition-all hover:-translate-y-1 hover:border-border-strong hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden group h-full"
+          className="bg-surface border border-border-token rounded-2xl p-5 cursor-pointer transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-border-strong hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative overflow-hidden group h-full"
           style={{ backfaceVisibility: 'hidden' }}
           onClick={handleClick}
           onMouseEnter={() => setHoverCount(c => c + 1)}
@@ -437,7 +438,7 @@ function GameCard({
 
           {/* View Leaderboard button - pushed to bottom */}
           <button 
-            className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02] mt-auto"
+            className="w-full py-2.5 rounded-xl text-xs font-semibold pp-press hover:brightness-110 mt-auto"
             style={{ background: game.color }}
             onClick={(e) => {
               e.stopPropagation();
@@ -604,8 +605,8 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
       if (heroRef.current) {
         gsap.fromTo(
           heroRef.current,
-          { y: -30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }
+          { y: -8, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.3, ease: 'power3.out' }
         );
       }
 
@@ -614,14 +615,14 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
         const cards = cardsRef.current.querySelectorAll('.animate-card');
         gsap.fromTo(
           cards,
-          { y: 30, opacity: 0 },
+          { y: 12, opacity: 0 },
           {
             y: 0,
             opacity: 1,
-            duration: 0.5,
-            stagger: 0.1,
+            duration: 0.35,
+            stagger: 0.05,
             ease: 'power2.out',
-            delay: 0.3,
+            delay: 0.05,
           }
         );
       }
@@ -862,7 +863,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                   <button
                     onClick={handleSpin}
                     disabled={hasSpunToday || isSpinning}
-                    className="w-full bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-all hover:-translate-y-1 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(61,220,106,0.18)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-surface border border-border-token rounded-2xl p-6 flex items-center gap-4 transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_8px_30px_rgba(61,220,106,0.18)] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(61,220,106,0.18)_0%,transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div
@@ -908,7 +909,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                     />
                     
                     {/* Icon - Top Left */}
-                    <div className="absolute top-4 left-6 text-[48px] animate-bounce drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                    <div className="absolute top-4 left-6 text-[48px] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
                       {liveBanner.icon}
                     </div>
                     
@@ -967,7 +968,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                             href={liveBanner.twitchUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#9146ff] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
+                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#9146ff] text-white flex items-center gap-2 pp-press hover:brightness-110 shadow-xl"
                           >
                             Twitch
                           </a>
@@ -977,7 +978,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                             href={liveBanner.youtubeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#ff0000] text-white flex items-center gap-2 hover:scale-105 transition-transform shadow-xl"
+                            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#ff0000] text-white flex items-center gap-2 pp-press hover:brightness-110 shadow-xl"
                           >
                             YouTube
                           </a>
@@ -1127,7 +1128,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                       <button
                         key={event.id}
                         onClick={() => router.push('/dashboard/events')}
-                        className="text-left overflow-hidden rounded-[22px] transition-transform hover:-translate-y-1"
+                        className="text-left overflow-hidden rounded-[22px] transition-transform duration-200 ease-out hover:-translate-y-0.5"
                       >
                         <CoverImage
                           gameId={event.game?.id ?? event.game_id}
