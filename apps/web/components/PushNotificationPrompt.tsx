@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Bell } from 'lucide-react';
 
 export default function PushNotificationPrompt() {
   const [status, setStatus] = useState<'idle' | 'prompt' | 'subscribing' | 'subscribed' | 'denied' | 'unsupported'>('idle');
@@ -46,9 +47,9 @@ export default function PushNotificationPrompt() {
   }
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-40 md:left-auto md:right-6 md:w-80">
-      <div className="bg-surface border border-border-token rounded-2xl p-4 shadow-2xl flex items-start gap-3">
-        <div className="text-2xl flex-shrink-0">🔔</div>
+    <div className="fixed bottom-20 left-4 right-4 z-40 md:left-auto md:right-6 md:w-80 lg:bottom-6">
+      <div className="pp-pop bg-[color-mix(in_srgb,var(--bg-surface)_80%,transparent)] backdrop-blur-xl border border-border-token rounded-2xl p-4 shadow-2xl flex items-start gap-3">
+        <Bell size={22} className="mt-0.5 flex-shrink-0 text-accent" aria-hidden="true" />
         <div className="flex-1 min-w-0">
           <p className="text-primary font-semibold text-sm">Stay in the loop</p>
           <p className="text-secondary text-xs mt-0.5 leading-snug">

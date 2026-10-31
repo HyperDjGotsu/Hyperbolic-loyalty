@@ -100,7 +100,7 @@ function HeroStatCard({
   icon?: string;
 }) {
   return (
-    <div className="bg-black/35 backdrop-blur-md border border-white/15 rounded-[22px] px-6 py-4 text-center min-w-[110px]">
+    <div className="bg-black/30 backdrop-blur-xl backdrop-saturate-150 border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] rounded-[22px] px-6 py-4 text-center min-w-[110px]">
       <div className="font-display text-[30px] font-extrabold text-white">
         {value.toLocaleString()}
       </div>
@@ -820,7 +820,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
 
               {/* Info */}
               <div className="flex-1 relative z-10">
-                <h2 className="font-display text-[38px] leading-tight font-extrabold mb-2 text-white">
+                <h2 className="font-display text-[38px] leading-[1.05] tracking-[-0.03em] font-extrabold mb-2 text-white">
                   {playerData?.displayName || 'Player'}
                 </h2>
 
@@ -991,7 +991,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 {/* My Games - Enhanced Tiles */}
                 <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
-                    <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                    <h3 className="font-display text-xl font-bold tracking-[-0.02em] flex items-center gap-2">
                       My Games
                     </h3>
                     <button 
@@ -1024,7 +1024,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 {/* Recent Activity - Near other stats */}
                 <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                   <div className="flex justify-between items-center mb-5">
-                    <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                    <h3 className="font-display text-xl font-bold tracking-[-0.02em] flex items-center gap-2">
                       Recent Activity
                     </h3>
                     <button 
@@ -1071,7 +1071,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Overall Stats Summary */}
               <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
-                <h3 className="font-display text-xl font-bold flex items-center gap-2 mb-5">
+                <h3 className="font-display text-xl font-bold tracking-[-0.02em] flex items-center gap-2 mb-5">
                   Your Stats
                 </h3>
                 <div className="grid grid-cols-4 gap-4">
@@ -1104,7 +1104,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               {/* Upcoming Events */}
               <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
-                  <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                  <h3 className="font-display text-xl font-bold tracking-[-0.02em] flex items-center gap-2">
                     Upcoming Events
                   </h3>
                   <button
@@ -1155,7 +1155,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             <div className="grid grid-cols-2 gap-6 mt-6">
               {/* Store Updates */}
               <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
-                <h3 className="font-display text-xl font-bold flex items-center gap-2 mb-5">
+                <h3 className="font-display text-xl font-bold tracking-[-0.02em] flex items-center gap-2 mb-5">
                   Store Updates
                 </h3>
                 {storeUpdates.length === 0 ? null : (
@@ -1183,7 +1183,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               {/* Friends Activity */}
               <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
-                  <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                  <h3 className="font-display text-xl font-bold tracking-[-0.02em] flex items-center gap-2">
                     Friends Activity
                   </h3>
                   <button
@@ -1226,7 +1226,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             {prizeHighlights.length > 0 && (
               <div className="animate-card bg-surface border border-border-token rounded-[26px] p-7 mt-6 transition-all hover:border-border-strong">
                 <div className="flex justify-between items-center mb-5">
-                  <h3 className="font-display text-xl font-bold flex items-center gap-2">
+                  <h3 className="font-display text-xl font-bold tracking-[-0.02em] flex items-center gap-2">
                     Prize Wall
                   </h3>
                   <button
