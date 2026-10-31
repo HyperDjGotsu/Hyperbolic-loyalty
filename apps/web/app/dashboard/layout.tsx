@@ -221,9 +221,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {isStaff && (
             <Link
               href="/hq"
-              className="text-xs text-tertiary hover:text-secondary transition-colors"
+              className="pp-press flex items-center justify-between rounded-xl border border-accent/40 bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] px-3 py-2.5 text-sm font-semibold text-accent"
             >
-              Staff HQ →
+              Staff HQ <span aria-hidden="true">→</span>
             </Link>
           )}
           <button
@@ -239,6 +239,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="lg:ml-64 pb-28 lg:pb-0">
         <div className="lg:max-w-[1280px] lg:mx-auto">{children}</div>
       </main>
+
+      {/* Staff shortcut on phones: sits just above the bottom nav so HQ is always one tap away */}
+      {isStaff && (
+        <Link
+          href="/hq"
+          className="pp-press lg:hidden fixed right-4 z-30 rounded-full border border-accent/40 bg-[color-mix(in_srgb,var(--bg-surface)_80%,transparent)] px-3.5 py-2 text-xs font-bold text-accent shadow-lg backdrop-blur-xl"
+          style={{ bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))' }}
+        >
+          Staff HQ
+        </Link>
+      )}
 
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 px-3 pointer-events-none" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>

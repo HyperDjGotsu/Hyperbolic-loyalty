@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
 // Routes that require authentication
 const isProtectedRoute = createRouteMatcher([
@@ -34,6 +35,12 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     await auth.protect();
+  }
+
+  // Signed-in players skip the landing page and go straight home
+  if (req.nextUrl.pathname === '/') {
+    const { userId } = await auth();
+    if (userId) return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 });
 
