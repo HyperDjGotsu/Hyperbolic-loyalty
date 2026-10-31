@@ -135,6 +135,7 @@ export default function CommunityPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false); // New search modal state
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [showFullLeaderboard, setShowFullLeaderboard] = useState(false);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardGame, setLeaderboardGame] = useState('overall');
   const [favoriteGames, setFavoriteGames] = useState<string[]>(['overall', 'one_piece']);
@@ -287,12 +288,14 @@ export default function CommunityPage() {
 
   // Handle leaderboard game change
   const handleGameChange = (game: string) => {
+    setShowFullLeaderboard(false);
     setLeaderboardGame(game);
     loadLeaderboard(game, leaderboardScope === 'store' ? selectedStoreId : null);
   };
 
   // Handle scope toggle (Store vs Network)
   const handleScopeChange = (scope: 'store' | 'network') => {
+    setShowFullLeaderboard(false);
     setLeaderboardScope(scope);
     loadLeaderboard(leaderboardGame, scope === 'store' ? selectedStoreId : null);
   };
@@ -1048,11 +1051,39 @@ export default function CommunityPage() {
                     })}
                   </div>
                 )}
-                <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-                  {(leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard).map((entry) => (
-                    <MemberCard key={entry.id} member={entry} />
-                  ))}
-                </div>
+                {(() => {
+                  // Top 10 (podium + #4 to #10), then "See more" for the rest
+                  const shown = showFullLeaderboard ? leaderboard : leaderboard.slice(0, 10);
+                  const rest = leaderboard.length - shown.length;
+                  const rows = leaderboard.length >= 3 ? shown.slice(3) : shown;
+                  return (
+                    <>
+                      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                        {rows.map((entry) => (
+                          <MemberCard key={entry.id} member={entry} />
+                        ))}
+                      </div>
+                      {rest > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullLeaderboard(true)}
+                          className="pp-press mx-auto block rounded-full border border-border-token bg-elevated px-5 py-2.5 text-sm font-semibold text-primary"
+                        >
+                          See more ({rest})
+                        </button>
+                      )}
+                      {showFullLeaderboard && leaderboard.length > 10 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullLeaderboard(false)}
+                          className="mx-auto block px-4 py-2 text-xs font-semibold text-tertiary transition-colors hover:text-secondary"
+                        >
+                          Show top 10 only
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
               </>
             ) : (
               <EmptyState icon={Trophy} title="No rankings yet" hint={`Be the first to earn ${ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}`} />
