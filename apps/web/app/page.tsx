@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { LaneLink } from '@/components/LaneLink';
-import { DoorsCarousel } from '@/components/DoorsCarousel';
+import { DoorsSwitch } from '@/components/DoorsSwitch';
 
 const PLAYER_ART = ['pokemon', 'one_piece', 'riftbound'];
 
@@ -101,10 +101,10 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <DoorsCarousel labels={['For players', 'For stores']}>
+        <DoorsSwitch labels={['For players', 'For stores']}>
           <PlayerDoor />
           <StoreDoor />
-        </DoorsCarousel>
+        </DoorsSwitch>
 
         <p className="mt-6 text-center text-[13px] text-tertiary">
           Staff? Sign in, then open Staff HQ from the menu. · <Link href="/calculator" className="hover:text-primary">Pricing calculator</Link> · <Link href="/privacy" className="hover:text-primary">Privacy</Link>
