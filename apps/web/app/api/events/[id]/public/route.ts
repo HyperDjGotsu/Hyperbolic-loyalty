@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -130,6 +131,8 @@ export async function GET(
       twitchUrl: event.twitch_url,
       youtubeUrl: event.youtube_url,
       interestedCount: interestedCount || 0,
+      attendanceXp: ATTENDANCE_LIFETIME_XP,
+      winXp: WIN_LIFETIME_XP,
       prizing: event.prizing || [],
       location: (event.stores as unknown as { name: string } | null)?.name ?? 'Player Pass Event',
       address: (() => {

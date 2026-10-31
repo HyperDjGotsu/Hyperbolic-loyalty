@@ -69,12 +69,12 @@ function SlideArt({ slide, prizes, currency }: { slide: number; prizes: PrizePre
       <div className={`${CARD} mb-6`}>
         <div className="flex items-center justify-between text-xs font-semibold">
           <span className="text-secondary">Level 11</span>
-          <span className="text-xp">+XP</span>
+          <span className="text-xp">+30 XP</span>
         </div>
         <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-elevated"><div className="h-full w-2/3 rounded-full bg-xp" /></div>
         <div className="mt-3 flex gap-2 text-[11px] font-bold">
-          <span className="rounded-full bg-elevated px-2.5 py-1 text-primary">Check-in</span>
-          <span className="rounded-full bg-elevated px-2.5 py-1 text-primary">Match win</span>
+          <span className="rounded-full bg-elevated px-2.5 py-1 text-primary">Check-in +20</span>
+          <span className="rounded-full bg-elevated px-2.5 py-1 text-primary">Match win +10</span>
         </div>
       </div>
     );

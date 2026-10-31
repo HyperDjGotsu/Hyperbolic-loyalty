@@ -106,7 +106,7 @@ function PhoneScreen({ cfg }: { cfg: PitchConfig }) {
               <button className="w-full py-2.5 rounded-xl text-xs font-bold" style={{ background: hqColor, color: '#111009' }}>Spin Now →</button>
             </div>
             <div className="grid grid-cols-3 gap-1.5">
-              {[{ label: 'XP', color: '#60a5fa' }, { label: 'Big XP', color: hqColor }, { label: 'Badge!', color: '#f59e0b' }].map(p => (
+              {[{ label: '+50 XP', color: '#60a5fa' }, { label: '+150 XP', color: hqColor }, { label: 'Badge!', color: '#f59e0b' }].map(p => (
                 <div key={p.label} className="rounded-lg p-2 text-center" style={{ background: '#222018', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="text-xs font-bold" style={{ color: p.color }}>{p.label}</div>
                 </div>
@@ -204,10 +204,10 @@ function StaffCheckinWidget({ cfg }: { cfg: PitchConfig }) {
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'Event Check-in', xp: '+XP', color: cfg.hqColor },
-              { label: 'Match Win', xp: '+XP', color: '#34d399' },
-              { label: 'Tournament Win', xp: '+XP', color: '#FACC15' },
-              { label: 'Referral Bonus', xp: '+XP', color: '#f472b6' },
+              { label: 'Event Check-in', xp: '+50 XP', color: cfg.hqColor },
+              { label: 'Match Win', xp: '+25 XP', color: '#34d399' },
+              { label: 'Tournament Win', xp: '+100 XP', color: '#FACC15' },
+              { label: 'Referral Bonus', xp: '+75 XP', color: '#f472b6' },
             ].map(action => (
               <button
                 key={action.label}
@@ -586,7 +586,7 @@ function AppTourSection({ cfg }: { cfg: PitchConfig }) {
     {
       label: 'Check-in & XP',
       title: 'Staff awards XP. The player gets notified instantly.',
-      body: `Staff looks up the player by ID or QR scan, taps "Event Check-in." The player's phone lights up with a notification — they earned XP just for showing up.`,
+      body: `Staff looks up the player by ID or QR scan, taps "Event Check-in." The player's phone lights up with a notification — they earned 50 XP just for showing up.`,
       screen: (
         <div className="px-4 pb-4">
           {/* Staff check-in view compressed into phone */}
@@ -602,8 +602,8 @@ function AppTourSection({ cfg }: { cfg: PitchConfig }) {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Event Check-in', xp: '+XP', color },
-                { label: 'Match Win', xp: '+XP', color: '#34d399' },
+                { label: 'Event Check-in', xp: '+50 XP', color },
+                { label: 'Match Win', xp: '+25 XP', color: '#34d399' },
               ].map(a => (
                 <div key={a.label} className="rounded-xl p-2.5" style={{ background: '#111009', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="text-[10px] font-semibold text-white">{a.label}</div>
@@ -618,7 +618,7 @@ function AppTourSection({ cfg }: { cfg: PitchConfig }) {
             <div className="flex items-center gap-2">
               <div className="text-2xl">⚡</div>
               <div>
-                <div className="text-xs font-bold text-white">XP Earned!</div>
+                <div className="text-xs font-bold text-white">+50 XP Earned!</div>
                 <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>One Piece Weekly · you're now #3</div>
               </div>
             </div>
@@ -673,10 +673,10 @@ function AppTourSection({ cfg }: { cfg: PitchConfig }) {
           <div className="text-[10px] font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Possible prizes</div>
           <div className="grid grid-cols-3 gap-1.5">
             {[
-              { label: 'XP', rarity: 'Common', color: '#60a5fa' },
-              { label: 'Big XP', rarity: 'Rare', color },
+              { label: '+50 XP', rarity: 'Common', color: '#60a5fa' },
+              { label: '+150 XP', rarity: 'Rare', color },
               { label: 'Gold Frame', rarity: 'Epic', color: '#FACC15' },
-              { label: 'XP boost', rarity: 'Common', color: '#60a5fa' },
+              { label: '+25 XP', rarity: 'Common', color: '#60a5fa' },
               { label: 'Badge', rarity: 'Rare', color: '#f472b6' },
               { label: '👑 Title', rarity: 'Legendary', color: '#f59e0b' },
             ].map(p => (
@@ -768,7 +768,7 @@ function AppTourSection({ cfg }: { cfg: PitchConfig }) {
           {[
             { icon: '🎰', title: 'Daily spin ready!', body: "Don't leave Points on the table — spin now.", time: '2m ago', color },
             { icon: '📣', title: 'New event announced', body: 'One Piece Regional — Sat Jan 25 · 12 PM', time: '1h ago', color: '#E63946' },
-            { icon: '⚡', title: 'XP Earned', body: 'XP from Pokemon League check-in', time: '2d ago', color: '#FACC15' },
+            { icon: '⚡', title: 'XP Earned', body: '+50 XP from Pokemon League check-in', time: '2d ago', color: '#FACC15' },
             { icon: '🏆', title: 'Rank up!', body: "You've reached Planeswalker rank in MTG", time: '3d ago', color: '#8B5CF6' },
             { icon: '🛍️', title: 'New prize added', body: 'Holographic Frame now on the Prize Wall', time: '5d ago', color: '#34d399' },
           ].map(n => (
@@ -959,7 +959,7 @@ function WhyItMattersSection({ cfg }: { cfg: PitchConfig }) {
                 { label: 'Scans QR · creates account', sub: '30 seconds', icon: '📱', done: true },
                 { label: 'Sees the leaderboard', sub: 'Who\'s #1? Who should I beat?', icon: '🏆', done: true },
                 { label: 'Checks upcoming events', sub: 'One Piece Weekly — this Saturday', icon: '📅', done: true },
-                { label: 'Gets their first check-in XP', sub: 'XP earned — they\'re on the board', icon: '⚡', done: true },
+                { label: 'Gets their first check-in XP', sub: '+50 XP — they\'re on the board', icon: '⚡', done: true },
                 { label: 'Returns next week', sub: 'Because they\'re #47 and want to climb', icon: '🔄', done: false },
               ].map((step, i) => (
                 <div key={step.label} className="flex items-center gap-3 p-3 rounded-xl border border-border-token" style={{ background: 'var(--bg-base)' }}>

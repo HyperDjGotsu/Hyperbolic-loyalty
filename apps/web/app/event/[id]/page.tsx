@@ -31,6 +31,8 @@ interface PublicEvent {
   twitchUrl: string | null;
   youtubeUrl: string | null;
   interestedCount: number;
+  attendanceXp: number;
+  winXp: number;
   prizing: string[];
   location: string;
   address: string;
@@ -198,6 +200,21 @@ export default function PublicEventPage() {
           <div className="card !rounded-[22px] p-4">
             <div className="text-secondary text-sm mb-1">Interested</div>
             <div className="xp-number text-primary text-4xl">{event.interestedCount}</div>
+          </div>
+        </div>
+
+        {/* XP Rewards */}
+        <div className="card-elevated !rounded-[22px] p-4 mb-6">
+          <div className="text-primary font-bold mb-3">XP Rewards</div>
+          <div className="flex gap-6">
+            <div>
+              <div className="xp-number text-xl">+{event.attendanceXp}</div>
+              <div className="text-secondary text-sm">Attendance</div>
+            </div>
+            <div>
+              <div className="xp-number text-xl">+{event.winXp}</div>
+              <div className="text-secondary text-sm">Per Win</div>
+            </div>
           </div>
         </div>
 
