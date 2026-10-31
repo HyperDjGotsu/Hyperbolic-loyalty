@@ -1079,7 +1079,6 @@ function EventsPageContent() {
                   : 'bg-elevated text-secondary hover:bg-elevated'
               }`}
             >
-              <span>🎮</span>
               <span>All Games</span>
             </button>
 
@@ -1093,7 +1092,6 @@ function EventsPageContent() {
                     : 'bg-elevated text-secondary hover:bg-elevated border border-dashed border-border-token'
                 }`}
               >
-                <span>⭐</span>
                 <span>My Games</span>
               </button>
             )}
@@ -1132,7 +1130,6 @@ function EventsPageContent() {
                       : 'bg-elevated text-secondary hover:bg-elevated'
                   }`}
                 >
-                  <span>{game.icon}</span>
                   <span>{game.name}</span>
                   {isFavorite && !isSelected && <span className="text-yellow-400 text-xs">⭐</span>}
                 </button>
