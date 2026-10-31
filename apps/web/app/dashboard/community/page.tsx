@@ -882,7 +882,7 @@ export default function CommunityPage() {
   );
 
   return (
-    <div className="flex-1 overflow-auto lg:max-w-4xl lg:mx-auto lg:px-4">
+    <div className="flex-1 overflow-auto lg:max-w-6xl lg:mx-auto lg:px-4">
       {/* Header */}
       <div className="relative bg-base px-4 pt-5 pb-3">
         <div className="relative flex items-center justify-between">
@@ -1020,7 +1020,7 @@ export default function CommunityPage() {
             ) : leaderboard.length > 0 ? (
               <>
                 {leaderboard.length >= 3 && (
-                  <div className="grid grid-cols-3 items-end gap-2.5 pb-2">
+                  <div className="grid grid-cols-3 items-end gap-2.5 pb-2 lg:mx-auto lg:w-full lg:max-w-3xl">
                     {[leaderboard[1], leaderboard[0], leaderboard[2]].map((entry) => {
                       const anon = !!entry.hidden;
                       const first = entry.rank === 1;
@@ -1048,9 +1048,11 @@ export default function CommunityPage() {
                     })}
                   </div>
                 )}
-                {(leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard).map((entry) => (
-                  <MemberCard key={entry.id} member={entry} />
-                ))}
+                <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                  {(leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard).map((entry) => (
+                    <MemberCard key={entry.id} member={entry} />
+                  ))}
+                </div>
               </>
             ) : (
               <EmptyState icon={Trophy} title="No rankings yet" hint={`Be the first to earn ${ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}`} />
