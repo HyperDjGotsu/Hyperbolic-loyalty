@@ -41,9 +41,9 @@ export default clerkMiddleware(async (auth, req) => {
     const { userId } = await auth();
     // Signed-in players skip the landing page and go straight home
     if (userId) return NextResponse.redirect(new URL('/dashboard', req.url));
-    // Signed-out visitors remembered as players go to sign-in (the prompt there lets them switch to the store side)
+    // Signed-out visitors remembered as players go straight to sign-in (a quiet footer link there reaches the store side)
     if (req.cookies.get('pp_lane')?.value === 'player') {
-      return NextResponse.redirect(new URL('/sign-in?from=lane', req.url));
+      return NextResponse.redirect(new URL('/sign-in', req.url));
     }
   }
 });

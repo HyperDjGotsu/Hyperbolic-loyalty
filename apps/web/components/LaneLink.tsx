@@ -25,3 +25,12 @@ export function LaneLink({ href, lane, className, children }: { href: string; la
 export function clearLane() {
   document.cookie = `${LANE_COOKIE}=; path=/; max-age=0; samesite=lax`;
 }
+
+// Quiet footer link on sign-in for a remembered player who actually wanted the store side. Forgets the choice and goes to the pitch.
+export function StoreSideLink({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <Link href="/pitch" className={className} onClick={clearLane}>
+      {children}
+    </Link>
+  );
+}
