@@ -1418,6 +1418,17 @@ export default function ProfilePage() {
               <span className="text-accent text-sm">›</span>
             </a>
           )}
+
+          <button
+            type="button"
+            onClick={() => {
+              try { localStorage.removeItem('hxp_welcome_seen'); } catch { /* private mode: the tour just won't replay */ }
+              window.location.assign('/dashboard');
+            }}
+            className="mx-auto mt-1 text-xs text-tertiary underline-offset-2 transition-colors hover:text-secondary hover:underline"
+          >
+            Replay welcome tour
+          </button>
         </div>
       </div>
 
