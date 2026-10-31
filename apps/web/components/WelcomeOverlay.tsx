@@ -216,7 +216,7 @@ export function WelcomeOverlay() {
       </div>
 
       {/* Slide content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+      <div key={slide} className="pp-slide flex-1 flex flex-col items-center justify-center px-8 text-center">
         {slide === 0 && <img src="/brand/pp-lockup.png" alt="Player Pass" className="mx-auto mb-8 h-44 w-auto" />}
         <SlideArt slide={slide} prizes={prizes} currency={config.currency_name} />
         <h2 className="text-primary text-2xl font-bold mb-4 leading-snug">{current.title}</h2>
@@ -241,7 +241,7 @@ export function WelcomeOverlay() {
         <button
           type="button"
           onClick={next}
-          className="w-full max-w-sm py-4 rounded-xl bg-accent text-white font-bold text-base hover:opacity-90 transition-opacity"
+          className="pp-press w-full max-w-sm py-4 rounded-xl bg-accent text-white font-bold text-base hover:opacity-90"
         >
           {current.cta ?? 'Next →'}
         </button>

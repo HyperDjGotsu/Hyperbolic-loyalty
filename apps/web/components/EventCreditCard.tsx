@@ -78,11 +78,11 @@ export function EventCreditCard() {
           {error && <div className="text-danger text-xs mt-1">{error}</div>}
         </div>
         {used ? (
-          <button type="button" onClick={() => setStep('ticket')} className="shrink-0 px-3 py-2 rounded-lg border border-border-token text-secondary text-sm font-semibold">
+          <button type="button" onClick={() => setStep('ticket')} className="pp-press shrink-0 px-3 py-2 rounded-lg border border-border-token text-secondary text-sm font-semibold">
             View
           </button>
         ) : (
-          <button type="button" onClick={() => { setError(null); setStep('confirm'); }} className="shrink-0 px-4 py-2 rounded-lg bg-accent text-black text-sm font-bold">
+          <button type="button" onClick={() => { setError(null); setStep('confirm'); }} className="pp-press shrink-0 px-4 py-2 rounded-lg bg-accent text-black text-sm font-bold">
             Redeem
           </button>
         )}
@@ -120,13 +120,13 @@ function Popup({ title, body, confirmLabel, cancelLabel, busy, onConfirm, onCanc
   title: string; body: string; confirmLabel: string; cancelLabel: string; busy?: boolean; onConfirm: () => void; onCancel: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="w-full max-w-sm rounded-2xl bg-surface border border-border-token p-5 text-center">
+    <div className="pp-backdrop fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-6" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="pp-pop w-full max-w-sm rounded-2xl bg-surface border border-border-token p-5 text-center">
         <div className="text-primary text-lg font-bold">{title}</div>
         <p className="text-secondary text-sm mt-2 leading-relaxed">{body}</p>
         <div className="mt-5 flex flex-col gap-2">
-          <button type="button" disabled={busy} onClick={onConfirm} className="w-full py-3 rounded-xl bg-accent text-black font-bold disabled:opacity-60">{confirmLabel}</button>
-          <button type="button" disabled={busy} onClick={onCancel} className="w-full py-3 rounded-xl border border-border-token text-secondary font-semibold disabled:opacity-60">{cancelLabel}</button>
+          <button type="button" disabled={busy} onClick={onConfirm} className="pp-press w-full py-3 rounded-xl bg-accent text-black font-bold disabled:opacity-60">{confirmLabel}</button>
+          <button type="button" disabled={busy} onClick={onCancel} className="pp-press w-full py-3 rounded-xl border border-border-token text-secondary font-semibold disabled:opacity-60">{cancelLabel}</button>
         </div>
       </div>
     </div>
@@ -142,8 +142,8 @@ function Ticket({ credit, amount, month, onClose }: { credit: EventCreditState; 
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Event Credit ticket">
-      <div className="w-full max-w-sm">
+    <div className="pp-backdrop fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Event Credit ticket">
+      <div className="pp-pop-slow w-full max-w-sm">
         <div className="rounded-3xl border-2 border-dashed border-accent bg-surface p-6 text-center">
           <div className="text-secondary text-xs font-bold uppercase tracking-widest">Event Credit</div>
           <div className="text-accent font-extrabold text-6xl mt-2 tabular-nums">{amount}</div>
@@ -156,7 +156,7 @@ function Ticket({ credit, amount, month, onClose }: { credit: EventCreditState; 
           </div>
         </div>
         <p className="text-secondary text-xs text-center mt-3">Show this screen to staff.</p>
-        <button type="button" onClick={onClose} className="mt-4 w-full py-3 rounded-xl border border-border-token text-secondary font-semibold">Close</button>
+        <button type="button" onClick={onClose} className="pp-press mt-4 w-full py-3 rounded-xl border border-border-token text-secondary font-semibold">Close</button>
       </div>
     </div>
   );

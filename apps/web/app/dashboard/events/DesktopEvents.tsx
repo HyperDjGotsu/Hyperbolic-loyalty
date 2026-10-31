@@ -218,8 +218,8 @@ const ShareModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-surface rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-border-token">
+      <div className="pp-backdrop absolute inset-0 bg-black/80" onClick={onClose} />
+      <div className="pp-pop relative bg-surface rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden border border-border-token">
         {/* Header */}
         <div className="p-4 border-b border-border-token">
           <div className="flex items-center justify-between">
@@ -851,8 +851,8 @@ function EventsPageContent() {
   // Event Detail Modal (same for both)
   const EventDetailModal = ({ event, onClose }: { event: CalendarEvent; onClose: () => void }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-surface rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
+      <div className="pp-backdrop absolute inset-0 bg-black/80" onClick={onClose} />
+      <div className="pp-pop relative bg-surface rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
         {/* Header */}
         <div className="relative p-6 pb-4">
           <button 

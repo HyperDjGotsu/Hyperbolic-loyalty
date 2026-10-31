@@ -164,3 +164,30 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pp-chevron { animation: none; opacity: 1; }
 }
+
+/* ── Motion tokens and entrance helpers (overlays, sheets, press feedback) ── */
+:root {
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes pp-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pp-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes pp-pop-in   { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes pp-sheet-up   { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes pp-sheet-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@keyframes pp-slide-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+.pp-backdrop     { animation: pp-fade-in 200ms var(--ease-out) both; }
+.pp-backdrop-out { animation: pp-fade-out 250ms var(--ease-out) both; }
+.pp-pop          { animation: pp-pop-in 200ms var(--ease-out) both; }
+.pp-pop-slow     { animation: pp-pop-in 300ms var(--ease-out) both; }
+.pp-sheet        { animation: pp-sheet-up 400ms var(--ease-drawer) both; }
+.pp-sheet-out    { animation: pp-sheet-down 250ms var(--ease-drawer) both; }
+.pp-slide        { animation: pp-slide-in 200ms var(--ease-out) both; }
+.pp-press        { transition: transform 160ms var(--ease-out); }
+.pp-press:active:not(:disabled) { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+  .pp-pop, .pp-pop-slow, .pp-sheet, .pp-slide { animation-name: pp-fade-in; }
+  .pp-sheet-out { animation-name: pp-fade-out; }
+  .pp-press:active:not(:disabled) { transform: none; }
+}
