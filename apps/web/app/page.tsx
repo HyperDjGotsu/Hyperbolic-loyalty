@@ -83,7 +83,6 @@ export default function LandingPage() {
         <nav className="hidden items-center gap-7 text-sm font-semibold text-secondary md:flex">
           <Link href="/pitch" className="transition-colors hover:text-primary">For stores</Link>
           <Link href="/demo" className="transition-colors hover:text-primary">Demo</Link>
-          <Link href="/calculator" className="transition-colors hover:text-primary">Pricing</Link>
         </nav>
         <div className="flex items-center gap-3 text-sm font-semibold">
           <LaneLink lane="player" href="/sign-in" className="text-secondary transition-colors hover:text-primary">Sign in</LaneLink>
@@ -107,7 +106,7 @@ export default function LandingPage() {
         </DoorsSwitch>
 
         <p className="mt-6 text-center text-[13px] text-tertiary">
-          <Link href="/calculator" className="hover:text-primary">Pricing calculator</Link> · <Link href="/privacy" className="hover:text-primary">Privacy</Link>
+          <Link href="/privacy" className="hover:text-primary">Privacy</Link>
         </p>
       </main>
     </div>
