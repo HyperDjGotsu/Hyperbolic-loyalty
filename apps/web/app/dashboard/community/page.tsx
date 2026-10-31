@@ -1063,6 +1063,16 @@ export default function CommunityPage() {
                           <MemberCard key={entry.id} member={entry} />
                         ))}
                       </div>
+                      {!showFullLeaderboard && currentPlayerId && (() => {
+                        // A player outside the top 10 still sees where they stand
+                        const me = leaderboard.find((e) => e.id === currentPlayerId && e.rank > 10);
+                        return me ? (
+                          <div>
+                            <div className="mb-1.5 text-center text-[11px] font-bold uppercase tracking-wide text-tertiary">Your rank</div>
+                            <MemberCard member={me} />
+                          </div>
+                        ) : null;
+                      })()}
                       {rest > 0 && (
                         <button
                           type="button"
