@@ -253,8 +253,9 @@ export async function GET(request: Request) {
         hasStream: event.has_stream,
         twitchUrl: event.twitch_url,
         youtubeUrl: event.youtube_url,
-        attendanceXp: ATTENDANCE_LIFETIME_XP,
-        winXp: WIN_LIFETIME_XP,
+        // Reward amounts are only for signed-in players, never for anonymous callers
+        attendanceXp: userId ? ATTENDANCE_LIFETIME_XP : 0,
+        winXp: userId ? WIN_LIFETIME_XP : 0,
         interestedCount: interest.count,
         isInterested: interest.isInterested,
         interestedFriends: interest.friends,
