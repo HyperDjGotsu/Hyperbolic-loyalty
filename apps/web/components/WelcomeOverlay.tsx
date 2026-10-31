@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Gift, Crown, QrCode, Lock } from 'lucide-react';
-import { PASS_TIERS } from '@/lib/pass-tiers';
 
 const STORAGE_KEY = 'hxp_welcome_seen';
 
@@ -55,8 +53,17 @@ function buildSlides(cfg: StoreConfig) {
 
 const CARD = 'w-full max-w-xs rounded-2xl border border-border-token bg-surface p-4 text-left';
 
-// Small mock of the feature each slide describes. Slide 0 is the logo and slide 1.. follow buildSlides order.
-function SlideArt({ slide }: { slide: number }) {
+interface PrizePreview { id: string; name: string; image_url: string | null; xp_cost: number }
+
+const MEDALS: Array<{ name: string; price: number; face: string; ring: string }> = [
+  { name: 'Bronze', price: 10, face: 'linear-gradient(135deg,#e8a56a,#8c4f22)', ring: '#b8703a' },
+  { name: 'Silver', price: 15, face: 'linear-gradient(135deg,#f1f3f6,#8d96a3)', ring: '#c4cad3' },
+  { name: 'Gold', price: 20, face: 'linear-gradient(135deg,#ffe48a,#c58a12)', ring: '#e2b43c' },
+  { name: 'Diamond', price: 30, face: 'linear-gradient(135deg,#d9f6ff,#5cc8f0 55%,#8f7bff)', ring: '#8fdcf7' },
+];
+
+// Mock of the feature each slide describes. Slide 0 is the logo; 1.. follow buildSlides order.
+function SlideArt({ slide, prizes, currency }: { slide: number; prizes: PrizePreview[]; currency: string }) {
   if (slide === 1) {
     return (
       <div className={`${CARD} mb-6`}>
@@ -74,25 +81,31 @@ function SlideArt({ slide }: { slide: number }) {
   }
   if (slide === 2) {
     return (
-      <div className={`${CARD} mb-6 flex items-center gap-3`}>
-        <div className="grid h-12 w-12 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] text-accent"><Gift size={24} /></div>
-        <div className="flex-1">
-          <div className="text-sm font-bold text-primary">Daily bonus ready</div>
-          <div className="text-xs text-secondary">Resets at midnight</div>
-        </div>
-        <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-fg">Claim</span>
+      <div className="mb-6 text-center">
+        <div className="font-display text-7xl font-extrabold leading-none text-accent">+5</div>
+        <div className="mt-2 text-xs font-bold uppercase tracking-widest text-secondary">Daily bonus {currency}</div>
       </div>
     );
   }
   if (slide === 3) {
+    const shown = prizes.slice(0, 2);
+    if (shown.length === 0) {
+      return (
+        <div className="mb-6 grid w-full max-w-xs grid-cols-2 gap-3">
+          {['pokemon', 'one_piece'].map(g => (
+            <img key={g} src={`/games/ggob/${g}.jpg`} alt="" className="h-28 w-full rounded-2xl border border-border-token object-cover" />
+          ))}
+        </div>
+      );
+    }
     return (
-      <div className="mb-6 grid w-full max-w-xs grid-cols-2 gap-3">
-        {['Prize', 'Prize'].map((_, i) => (
-          <div key={i} className="rounded-2xl border border-border-token bg-surface p-3 text-left">
-            <div className="h-14 rounded-xl bg-elevated" />
-            <div className="mt-2 flex items-center justify-between text-xs font-bold text-primary">
-              <span>{i === 0 ? '250 pts' : '500 pts'}</span>
-              <Lock size={12} className="text-secondary" />
+      <div className={`mb-6 grid w-full max-w-xs gap-3 ${shown.length > 1 ? 'grid-cols-2' : 'grid-cols-1 max-w-[11rem]'}`}>
+        {shown.map(p => (
+          <div key={p.id} className="overflow-hidden rounded-2xl border border-border-token bg-surface text-left">
+            {p.image_url && <img src={p.image_url} alt="" className="h-28 w-full object-cover" />}
+            <div className="p-2.5">
+              <div className="truncate text-xs font-bold text-primary">{p.name}</div>
+              <div className="text-[11px] font-semibold text-accent">{p.xp_cost.toLocaleString()} {currency}</div>
             </div>
           </div>
         ))}
@@ -101,12 +114,19 @@ function SlideArt({ slide }: { slide: number }) {
   }
   if (slide === 4) {
     return (
-      <div className="mb-6 grid w-full max-w-xs grid-cols-4 gap-2">
-        {PASS_TIERS.filter(t => t.key !== 'free').map(t => (
-          <div key={t.key} className="rounded-xl border border-border-token bg-surface py-3 text-center">
-            <Crown size={18} className="mx-auto text-accent" />
-            <div className="mt-1 text-[11px] font-bold text-primary">{t.name}</div>
-            <div className="text-[11px] text-secondary">${t.priceMonthly}</div>
+      <div className="mb-6 flex w-full max-w-xs justify-between">
+        {MEDALS.map(m => (
+          <div key={m.name} className="text-center">
+            <div
+              className={`mx-auto h-14 w-14 shadow-lg ${m.name === 'Diamond' ? '' : 'rounded-full'}`}
+              style={{
+                background: m.face,
+                border: m.name === 'Diamond' ? undefined : `3px solid ${m.ring}`,
+                clipPath: m.name === 'Diamond' ? 'polygon(50% 0,100% 38%,50% 100%,0 38%)' : undefined,
+              }}
+            />
+            <div className="mt-2 text-[11px] font-bold text-primary">{m.name}</div>
+            <div className="text-[11px] text-secondary">${m.price}</div>
           </div>
         ))}
       </div>
@@ -114,11 +134,17 @@ function SlideArt({ slide }: { slide: number }) {
   }
   if (slide === 5) {
     return (
-      <div className={`${CARD} mb-6 flex items-center gap-3`}>
-        <div className="grid h-14 w-14 place-items-center rounded-xl bg-elevated text-primary"><QrCode size={30} /></div>
-        <div>
-          <div className="text-sm font-bold text-primary">Your profile QR</div>
-          <div className="text-xs text-secondary">Staff scan it. No code to remember.</div>
+      <div className="relative mb-6 w-full max-w-xs overflow-hidden rounded-2xl border border-border-token">
+        <img src="/games/ggob/pokemon.jpg" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-black/70" />
+        <div className="relative flex flex-col items-center px-4 py-5">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-xp text-2xl">😎</div>
+          <div className="mt-3 text-lg font-extrabold text-white">Hyperbolic Creative</div>
+          <div className="mt-3 grid w-full grid-cols-3 text-center">
+            <div><div className="text-xl font-extrabold text-white">11</div><div className="text-[10px] font-semibold uppercase text-white/70">Level</div></div>
+            <div><div className="text-xl font-extrabold text-xp">1,080</div><div className="text-[10px] font-semibold uppercase text-white/70">Total XP</div></div>
+            <div><div className="text-xl font-extrabold text-accent">250</div><div className="text-[10px] font-semibold uppercase text-white/70">{currency}</div></div>
+          </div>
         </div>
       </div>
     );
@@ -130,6 +156,7 @@ export function WelcomeOverlay() {
   const [visible, setVisible] = useState(false);
   const [slide, setSlide] = useState(0);
   const [config, setConfig] = useState<StoreConfig>(DEFAULT_CONFIG);
+  const [prizes, setPrizes] = useState<PrizePreview[]>([]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -140,6 +167,18 @@ export function WelcomeOverlay() {
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setConfig({ ...DEFAULT_CONFIG, ...data }); })
       .catch(() => {});
+
+    // Real prizes from the player's store for the Prize Wall slide (the slide falls back to game art without them)
+    const storeId = localStorage.getItem('ggc_selected_store_id');
+    if (storeId) {
+      fetch(`/api/prize-wall?storeId=${encodeURIComponent(storeId)}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          const withArt = (data?.items ?? []).filter((i: PrizePreview) => i.image_url);
+          setPrizes(withArt.slice(0, 2));
+        })
+        .catch(() => {});
+    }
 
     setVisible(true);
   }, []);
@@ -179,7 +218,7 @@ export function WelcomeOverlay() {
       {/* Slide content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
         {slide === 0 && <img src="/brand/pp-lockup.png" alt="Player Pass" className="mx-auto mb-8 h-44 w-auto" />}
-        <SlideArt slide={slide} />
+        <SlideArt slide={slide} prizes={prizes} currency={config.currency_name} />
         <h2 className="text-primary text-2xl font-bold mb-4 leading-snug">{current.title}</h2>
         <p className="text-secondary text-base leading-relaxed max-w-sm">{current.body}</p>
       </div>
