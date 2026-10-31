@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { LaneLink } from '@/components/LaneLink';
+import { DoorsCarousel } from '@/components/DoorsCarousel';
 
 const PLAYER_ART = ['pokemon', 'one_piece', 'riftbound'];
 
@@ -12,7 +13,7 @@ const STORE_TILES = [
 
 function PlayerDoor() {
   return (
-    <section className={`relative min-h-[430px] overflow-hidden rounded-[28px] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] `}>
+    <section className={`relative min-h-[400px] md:min-h-[430px] overflow-hidden rounded-[28px] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] `}>
       <div className="absolute inset-0 grid grid-cols-3">
         {PLAYER_ART.map((g) => (
           <div key={g} className="relative">
@@ -40,7 +41,7 @@ function PlayerDoor() {
 
 function StoreDoor() {
   return (
-    <section className="relative flex min-h-[430px] flex-col justify-between gap-8 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] p-6 ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-9">
+    <section className="relative flex min-h-[400px] md:min-h-[430px] flex-col justify-between gap-8 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] p-6 ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:p-9">
       <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_80%_0%,rgba(77,141,255,0.18),transparent_70%)]" />
       <div className="relative grid grid-cols-3 gap-2.5">
         {STORE_TILES.map((t) => (
@@ -90,20 +91,20 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-[1180px] px-5 pb-16 pt-14 sm:px-10 md:pt-[72px]">
-        <div className="mb-12 text-center">
-          <h1 className="font-display text-[44px] font-black leading-[1.02] tracking-[-0.035em] sm:text-[68px]">
+      <main className="relative z-10 mx-auto max-w-[1180px] px-5 pb-14 pt-9 sm:px-10 md:pt-[72px]">
+        <div className="mb-7 text-center md:mb-12">
+          <h1 className="font-display text-[36px] font-black leading-[1.04] tracking-[-0.035em] sm:text-[68px]">
             Your game store,<br />now with a scoreboard.
           </h1>
-          <p className="mx-auto mt-5 max-w-[35rem] text-lg leading-relaxed text-secondary">
+          <p className="mx-auto mt-4 max-w-[35rem] text-[16px] leading-relaxed text-secondary sm:mt-5 sm:text-lg">
             Check in to events, earn XP, and spend Prize Points. Pick the door that fits you.
           </p>
         </div>
 
-        <div className="grid gap-7 md:grid-cols-2">
+        <DoorsCarousel labels={['For players', 'For stores']}>
           <PlayerDoor />
           <StoreDoor />
-        </div>
+        </DoorsCarousel>
 
         <p className="mt-6 text-center text-[13px] text-tertiary">
           Staff? Sign in, then open Staff HQ from the menu. · <Link href="/calculator" className="hover:text-primary">Pricing calculator</Link> · <Link href="/privacy" className="hover:text-primary">Privacy</Link>
