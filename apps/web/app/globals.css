@@ -191,3 +191,9 @@ body {
   .pp-sheet-out { animation-name: pp-fade-out; }
   .pp-press:active:not(:disabled) { transform: none; }
 }
+
+/* Bottom sheets become centered dialogs on larger screens */
+@media (min-width: 768px) {
+  .pp-sheet { animation-name: pp-pop-in; animation-duration: 200ms; animation-timing-function: var(--ease-out); }
+  .pp-sheet-out { animation-name: pp-fade-out; animation-duration: 150ms; }
+}

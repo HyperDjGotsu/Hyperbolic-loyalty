@@ -203,7 +203,9 @@ export function WelcomeOverlay() {
   const current = SLIDES[slide];
 
   return (
-    <div className="fixed inset-0 z-[100] bg-base flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-base md:flex md:items-center md:justify-center md:bg-black/70 md:backdrop-blur-sm">
+     {/* Phones: full screen. Larger screens: a centered card on a dimmed backdrop */}
+     <div className="flex h-full flex-col md:h-[680px] md:max-h-[90vh] md:w-[480px] md:overflow-hidden md:rounded-[28px] md:border md:border-border-token md:bg-base md:shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
       {/* Skip */}
       <div className="flex justify-end p-4">
         <button
@@ -246,6 +248,7 @@ export function WelcomeOverlay() {
           {current.cta ?? 'Next →'}
         </button>
       </div>
+     </div>
     </div>
   );
 }

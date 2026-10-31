@@ -20,8 +20,8 @@ export function PassesSheet({ currentTier, onClose }: { currentTier: PassTierKey
   });
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-end justify-center bg-black/70 ${closing ? 'pp-backdrop-out' : 'pp-backdrop'}`} role="dialog" aria-modal="true" aria-label="Passes" onClick={close}>
-      <div className={`w-full max-w-md max-h-[85vh] overflow-y-auto rounded-t-3xl bg-surface border-t border-border-token p-5 pb-8 ${closing ? 'pp-sheet-out' : 'pp-sheet'}`} onClick={e => e.stopPropagation()}>
+    <div className={`fixed inset-0 z-50 flex items-end justify-center bg-black/70 md:items-center md:p-6 ${closing ? 'pp-backdrop-out' : 'pp-backdrop'}`} role="dialog" aria-modal="true" aria-label="Passes" onClick={close}>
+      <div className={`w-full max-w-md max-h-[85vh] md:max-h-[92vh] overflow-y-auto rounded-t-3xl bg-surface border-t border-border-token p-5 pb-8 md:rounded-3xl md:border md:pb-5 ${closing ? 'pp-sheet-out' : 'pp-sheet'}`} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-bold text-primary">Passes</h2>
           <button type="button" onClick={close} className="pp-press px-3 py-1.5 rounded-lg border border-border-token text-secondary text-sm font-semibold">Close</button>
