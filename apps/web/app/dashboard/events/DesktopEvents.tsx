@@ -24,6 +24,7 @@ interface FriendInterest {
 interface CalendarEvent {
   id: string;
   imageUrl?: string | null;
+  storeId?: string | null;
   name: string;
   description: string | null;
   date: string;
@@ -727,6 +728,7 @@ function EventsPageContent() {
     >
       <CoverImage
         gameId={event.game?.id}
+        storeId={event.storeId}
         color={event.game?.color || '#64748b'}
         src={event.imageUrl}
         className="h-[190px]"
@@ -787,12 +789,13 @@ function EventsPageContent() {
         style={{ borderLeftColor: event.game?.color || '#64748b' }}
       >
         <div className="flex items-center gap-3">
-          <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-            style={{ backgroundColor: `${event.game?.color || '#64748b'}20` }}
-          >
-            {event.game?.icon || '🎮'}
-          </div>
+          <CoverImage
+            gameId={event.game?.id}
+            storeId={event.storeId}
+            color={event.game?.color || '#64748b'}
+            src={event.imageUrl}
+            className="h-14 w-14 shrink-0 rounded-xl"
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-primary font-bold truncate">{event.name}</span>
@@ -803,7 +806,7 @@ function EventsPageContent() {
                 <span className="px-2 py-0.5 bg-yellow-500 text-black text-xs rounded-full">SOON</span>
               )}
             </div>
-            <div className="text-secondary text-sm">{event.time}</div>
+            <div className="text-secondary text-sm">{event.time}{event.game?.name ? ` · ${event.game.name}` : ''}</div>
             
             <FriendsInterested 
               friends={event.interestedFriends || []} 
