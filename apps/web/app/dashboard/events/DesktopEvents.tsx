@@ -228,7 +228,13 @@ const ShareModal = ({
           </div>
           <div className="mt-2 p-3 bg-elevated rounded-lg">
             <div className="flex items-center gap-2">
-              <span className="text-xl">{event.game?.icon || '🎮'}</span>
+              <CoverImage
+                gameId={event.game?.id}
+                storeId={event.storeId}
+                color={event.game?.color || '#64748b'}
+                src={event.imageUrl}
+                className="h-10 w-10 shrink-0 rounded-lg"
+              />
               <div>
                 <div className="text-primary font-medium text-sm">{event.name}</div>
                 <div className="text-secondary text-xs">{event.date} @ {event.time}</div>
@@ -863,12 +869,13 @@ function EventsPageContent() {
           </button>
           
           <div className="flex items-center gap-4">
-            <div 
-              className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl"
-              style={{ backgroundColor: `${event.game?.color || '#64748b'}30` }}
-            >
-              {event.game?.icon || '🎮'}
-            </div>
+            <CoverImage
+              gameId={event.game?.id}
+              storeId={event.storeId}
+              color={event.game?.color || '#64748b'}
+              src={event.imageUrl}
+              className="h-16 w-16 shrink-0 rounded-xl"
+            />
             <div>
               <h2 className="text-2xl font-bold text-primary">{event.name}</h2>
               <div className="text-primary">{event.game?.name || 'General Event'}</div>
@@ -1003,9 +1010,10 @@ function EventsPageContent() {
             </button>
             <button
               onClick={() => setShareEvent(event)}
-              className="px-6 py-3 bg-elevated text-primary rounded-xl font-bold hover:bg-elevated"
+              aria-label="Share event"
+              className="pp-press px-6 py-3 bg-elevated text-primary rounded-xl font-bold hover:bg-elevated"
             >
-              📤
+              <Share2 size={18} />
             </button>
           </div>
           <p className="text-secondary text-xs text-center mt-2">Registration handled in-store</p>
@@ -1231,7 +1239,7 @@ function EventsPageContent() {
       </div>
 
       {/* Modals */}
-      {selectedEvent && <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+      {selectedEvent && EventDetailModal({ event: selectedEvent, onClose: () => setSelectedEvent(null) })}
       {shareEvent && <ShareModal event={shareEvent} onClose={() => setShareEvent(null)} onShare={handleShareEvent} />}
     </div>
   );
