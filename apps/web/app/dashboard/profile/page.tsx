@@ -1077,10 +1077,106 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Sections: one column on phones, two on desktop */}
-      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+      {/* Sections: one column on phones (original order); desktop is two independent columns */}
+      <div className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
+        <div className="contents lg:flex lg:flex-col">
+      {/* Membership */}
+      <div className="px-4 lg:px-0 mt-6 order-3 lg:order-none">
+        <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
+          Membership
+        </h2>
+        <div className={`rounded-xl p-4 border ${
+          playerData.passStatus === 'active'
+            ? 'bg-accent/10 border-accent/30'
+            : 'bg-elevated/50 border-border-token'
+        }`}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-primary font-semibold">
+              {playerData.passTier === 'access' ? 'Bronze Pass' :
+               playerData.passTier === 'player' ? 'Silver Pass' :
+               playerData.passTier === 'all_access' ? 'Gold Pass' :
+               playerData.passTier === 'diamond' ? 'Diamond Pass' :
+               playerData.passTier === 'shadow_vip' ? 'Shadow VIP' :
+               'Free Member'}
+            </span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              playerData.passStatus === 'active'
+                ? 'bg-green-500/20 text-green-400'
+                : playerData.passStatus === 'grace_period'
+                ? 'bg-yellow-500/20 text-yellow-400'
+                : 'bg-surface text-secondary'
+            }`}>
+              {playerData.passStatus === 'active' ? 'Active' :
+               playerData.passStatus === 'grace_period' ? 'Grace Period' :
+               playerData.passStatus === 'cancelled' ? 'Cancelled' :
+               playerData.passStatus === 'expired' ? 'Expired' :
+               'Free'}
+            </span>
+          </div>
+          {playerData.passExpiresAt && playerData.passStatus === 'active' && (
+            <p className="text-secondary text-xs mt-1">
+              {playerData.isTrial ? 'Trial ends' : 'Renews'} {new Date(playerData.passExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
+          {!playerData.passTier || playerData.passTier === 'none' ? (
+            <p className="text-secondary text-xs mt-1">
+              Ask staff in-store to upgrade your membership and unlock the Prize Wall.
+            </p>
+          ) : null}
+          {playerData.passTier === 'diamond' && playerData.passStatus === 'active' && <EventCreditCard />}
+        </div>
+      </div>
+      {/* Favorite Games */}
+      <div className="px-4 lg:px-0 mt-6 order-2 lg:order-none">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
+            Favorite Games
+          </h2>
+          <button
+            type="button"
+            onClick={startEditingFavorites}
+            className="text-accent text-sm font-medium"
+          >
+            Edit
+          </button>
+        </div>
+        
+        {favoriteGames.length > 0 ? (
+          <div className="bg-surface rounded-[22px] p-4 border border-border-token">
+            <div className="flex flex-wrap gap-2">
+              {favoriteGames.map(gameId => {
+                const game = ALL_GAMES.find(g => g.id === gameId);
+                if (!game) return null;
+                return (
+                  <div
+                    key={gameId}
+                    className="flex items-center gap-2 px-3 py-2 bg-elevated/50 rounded-lg border border-border-token/50"
+                  >
+                    <span>{game.icon}</span>
+                    <span className="text-primary text-sm">{game.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-secondary text-xs mt-3">
+              These games appear on your dashboard and leaderboard tabs
+            </p>
+          </div>
+        ) : (
+          <div className="bg-surface rounded-[22px] p-4 border border-border-token text-center">
+            <p className="text-secondary">No favorite games selected</p>
+            <button
+              type="button"
+              onClick={startEditingFavorites}
+              className="mt-2 text-accent text-sm font-medium"
+            >
+              + Add favorites
+            </button>
+          </div>
+        )}
+      </div>
       {/* Referral Section */}
-      <div className="px-4 lg:px-0 mt-6">
+      <div className="px-4 lg:px-0 mt-6 order-1 lg:order-none">
         <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Invite Friends
         </h2>
@@ -1208,143 +1304,10 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
-      {/* Favorite Games */}
-      <div className="px-4 lg:px-0 mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2">
-            Favorite Games
-          </h2>
-          <button
-            type="button"
-            onClick={startEditingFavorites}
-            className="text-accent text-sm font-medium"
-          >
-            Edit
-          </button>
         </div>
-        
-        {favoriteGames.length > 0 ? (
-          <div className="bg-surface rounded-[22px] p-4 border border-border-token">
-            <div className="flex flex-wrap gap-2">
-              {favoriteGames.map(gameId => {
-                const game = ALL_GAMES.find(g => g.id === gameId);
-                if (!game) return null;
-                return (
-                  <div
-                    key={gameId}
-                    className="flex items-center gap-2 px-3 py-2 bg-elevated/50 rounded-lg border border-border-token/50"
-                  >
-                    <span>{game.icon}</span>
-                    <span className="text-primary text-sm">{game.name}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-secondary text-xs mt-3">
-              These games appear on your dashboard and leaderboard tabs
-            </p>
-          </div>
-        ) : (
-          <div className="bg-surface rounded-[22px] p-4 border border-border-token text-center">
-            <p className="text-secondary">No favorite games selected</p>
-            <button
-              type="button"
-              onClick={startEditingFavorites}
-              className="mt-2 text-accent text-sm font-medium"
-            >
-              + Add favorites
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Membership */}
-      <div className="px-4 lg:px-0 mt-6">
-        <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
-          Membership
-        </h2>
-        <div className={`rounded-xl p-4 border ${
-          playerData.passStatus === 'active'
-            ? 'bg-accent/10 border-accent/30'
-            : 'bg-elevated/50 border-border-token'
-        }`}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-primary font-semibold">
-              {playerData.passTier === 'access' ? 'Bronze Pass' :
-               playerData.passTier === 'player' ? 'Silver Pass' :
-               playerData.passTier === 'all_access' ? 'Gold Pass' :
-               playerData.passTier === 'diamond' ? 'Diamond Pass' :
-               playerData.passTier === 'shadow_vip' ? 'Shadow VIP' :
-               'Free Member'}
-            </span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-              playerData.passStatus === 'active'
-                ? 'bg-green-500/20 text-green-400'
-                : playerData.passStatus === 'grace_period'
-                ? 'bg-yellow-500/20 text-yellow-400'
-                : 'bg-surface text-secondary'
-            }`}>
-              {playerData.passStatus === 'active' ? 'Active' :
-               playerData.passStatus === 'grace_period' ? 'Grace Period' :
-               playerData.passStatus === 'cancelled' ? 'Cancelled' :
-               playerData.passStatus === 'expired' ? 'Expired' :
-               'Free'}
-            </span>
-          </div>
-          {playerData.passExpiresAt && playerData.passStatus === 'active' && (
-            <p className="text-secondary text-xs mt-1">
-              {playerData.isTrial ? 'Trial ends' : 'Renews'} {new Date(playerData.passExpiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-          )}
-          {!playerData.passTier || playerData.passTier === 'none' ? (
-            <p className="text-secondary text-xs mt-1">
-              Ask staff in-store to upgrade your membership and unlock the Prize Wall.
-            </p>
-          ) : null}
-          {playerData.passTier === 'diamond' && playerData.passStatus === 'active' && <EventCreditCard />}
-        </div>
-      </div>
-
-      {/* Sign Out */}
-      <div className="px-4 lg:px-0 mt-8 lg:order-2 lg:mt-6">
-        <button
-          type="button"
-          onClick={() => signOut({ redirectUrl: '/' })}
-          className="w-full py-3 rounded-xl border border-border-token text-secondary hover:text-primary hover:border-border-token/80 font-medium text-sm transition-colors"
-        >
-          Sign Out
-        </button>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="px-4 lg:px-0 mt-6 mb-6 lg:order-3">
-        <div className="border-t border-red-500/20 pt-6">
-          <h2 className="text-xs font-bold text-secondary/60 uppercase tracking-widest mb-3">
-            Danger Zone
-          </h2>
-          <div className="bg-red-500/5 rounded-xl p-4 border border-red-500/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-primary text-sm font-medium">Delete Account</div>
-                <div className="text-secondary text-xs mt-0.5">
-                  Permanently delete your account and all data
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={openDeleteModal}
-                className="px-4 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-400 font-semibold text-sm hover:bg-red-500/25 transition-colors flex-shrink-0 ml-4"
-              >
-                Delete Account
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+        <div className="contents lg:flex lg:flex-col">
       {/* Settings */}
-      <div className="px-4 lg:px-0 mt-6 mb-6">
+      <div className="px-4 lg:px-0 mt-6 mb-6 order-6 lg:order-none">
         <h2 className="font-display text-xl font-bold text-primary flex items-center gap-2 mb-3">
           Settings
         </h2>
@@ -1433,6 +1396,42 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+      {/* Sign Out */}
+      <div className="px-4 lg:px-0 mt-8 order-4 lg:order-none">
+        <button
+          type="button"
+          onClick={() => signOut({ redirectUrl: '/' })}
+          className="w-full py-3 rounded-xl border border-border-token text-secondary hover:text-primary hover:border-border-token/80 font-medium text-sm transition-colors"
+        >
+          Sign Out
+        </button>
+      </div>
+      {/* Danger Zone */}
+      <div className="px-4 lg:px-0 mt-6 mb-6 order-5 lg:order-none">
+        <div className="border-t border-red-500/20 pt-6">
+          <h2 className="text-xs font-bold text-secondary/60 uppercase tracking-widest mb-3">
+            Danger Zone
+          </h2>
+          <div className="bg-red-500/5 rounded-xl p-4 border border-red-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-primary text-sm font-medium">Delete Account</div>
+                <div className="text-secondary text-xs mt-0.5">
+                  Permanently delete your account and all data
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={openDeleteModal}
+                className="px-4 py-2 rounded-lg bg-red-500/15 border border-red-500/40 text-red-400 font-semibold text-sm hover:bg-red-500/25 transition-colors flex-shrink-0 ml-4"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+        </div>
       </div>
 
       {/* Notifications Modal */}
