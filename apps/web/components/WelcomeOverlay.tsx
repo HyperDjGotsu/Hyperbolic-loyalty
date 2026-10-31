@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const STORAGE_KEY = 'hxp_welcome_seen';
 
@@ -53,8 +54,6 @@ function buildSlides(cfg: StoreConfig) {
 
 const CARD = 'w-full max-w-xs rounded-2xl border border-border-token bg-surface p-4 text-left';
 
-interface PrizePreview { id: string; name: string; image_url: string | null; xp_cost: number }
-
 const MEDALS: Array<{ name: string; price: number; face: string; ring: string }> = [
   { name: 'Bronze', price: 10, face: 'linear-gradient(135deg,#e8a56a,#8c4f22)', ring: '#b8703a' },
   { name: 'Silver', price: 15, face: 'linear-gradient(135deg,#f1f3f6,#8d96a3)', ring: '#c4cad3' },
@@ -63,7 +62,7 @@ const MEDALS: Array<{ name: string; price: number; face: string; ring: string }>
 ];
 
 // Mock of the feature each slide describes. Slide 0 is the logo; 1.. follow buildSlides order.
-function SlideArt({ slide, prizes, currency }: { slide: number; prizes: PrizePreview[]; currency: string }) {
+function SlideArt({ slide, currency }: { slide: number; currency: string }) {
   if (slide === 1) {
     return (
       <div className={`${CARD} mb-6`}>
@@ -88,25 +87,14 @@ function SlideArt({ slide, prizes, currency }: { slide: number; prizes: PrizePre
     );
   }
   if (slide === 3) {
-    const shown = prizes.slice(0, 2);
-    if (shown.length === 0) {
-      return (
-        <div className="mb-6 grid w-full max-w-xs grid-cols-2 gap-3">
-          {['pokemon', 'one_piece'].map(g => (
-            <img key={g} src={`/games/ggob/${g}.jpg`} alt="" className="h-28 w-full rounded-2xl border border-border-token object-cover" />
-          ))}
-        </div>
-      );
-    }
+    // Fixed placeholder prizes (cover art + generic labels) so this slide always looks right, whatever the store has listed.
     return (
-      <div className={`mb-6 grid w-full max-w-xs gap-3 ${shown.length > 1 ? 'grid-cols-2' : 'grid-cols-1 max-w-[11rem]'}`}>
-        {shown.map(p => (
-          <div key={p.id} className="overflow-hidden rounded-2xl border border-border-token bg-surface text-left">
-            {p.image_url && <img src={p.image_url} alt="" className="h-28 w-full object-cover" />}
-            <div className="p-2.5">
-              <div className="truncate text-xs font-bold text-primary">{p.name}</div>
-              <div className="text-[11px] font-semibold text-accent">{p.xp_cost.toLocaleString()} {currency}</div>
-            </div>
+      <div className="mb-6 grid w-full max-w-xs grid-cols-2 gap-3">
+        {[{ art: 'pokemon', label: 'Sealed product' }, { art: 'one_piece', label: 'Singles' }].map(t => (
+          <div key={t.art} className="relative h-32 overflow-hidden rounded-2xl border border-border-token">
+            <Image src={`/games/ggob/${t.art}.jpg`} alt="" fill sizes="160px" className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+            <div className="absolute inset-x-3 bottom-2.5 text-left text-xs font-bold text-white">{t.label}</div>
           </div>
         ))}
       </div>
@@ -156,7 +144,6 @@ export function WelcomeOverlay() {
   const [visible, setVisible] = useState(false);
   const [slide, setSlide] = useState(0);
   const [config, setConfig] = useState<StoreConfig>(DEFAULT_CONFIG);
-  const [prizes, setPrizes] = useState<PrizePreview[]>([]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -167,18 +154,6 @@ export function WelcomeOverlay() {
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data) setConfig({ ...DEFAULT_CONFIG, ...data }); })
       .catch(() => {});
-
-    // Real prizes from the player's store for the Prize Wall slide (the slide falls back to game art without them)
-    const storeId = localStorage.getItem('ggc_selected_store_id');
-    if (storeId) {
-      fetch(`/api/prize-wall?storeId=${encodeURIComponent(storeId)}`)
-        .then((r) => r.ok ? r.json() : null)
-        .then((data) => {
-          const withArt = (data?.items ?? []).filter((i: PrizePreview) => i.image_url);
-          setPrizes(withArt.slice(0, 2));
-        })
-        .catch(() => {});
-    }
 
     setVisible(true);
   }, []);
@@ -220,7 +195,7 @@ export function WelcomeOverlay() {
       {/* Slide content */}
       <div key={slide} className="pp-slide flex-1 flex flex-col items-center justify-center px-8 text-center">
         {slide === 0 && <img src="/brand/pp-lockup.png" alt="Player Pass" className="mx-auto mb-8 h-44 w-auto" />}
-        <SlideArt slide={slide} prizes={prizes} currency={config.currency_name} />
+        <SlideArt slide={slide} currency={config.currency_name} />
         <h2 className="text-primary text-2xl font-bold mb-4 leading-snug">{current.title}</h2>
         <p className="text-secondary text-base leading-relaxed max-w-sm">{current.body}</p>
       </div>
