@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { LaneLink, LANE_COOKIE, type Lane } from '@/components/LaneLink';
+import { LaneLink } from '@/components/LaneLink';
 
 const PLAYER_ART = ['pokemon', 'one_piece', 'riftbound'];
 
@@ -11,9 +10,9 @@ const STORE_TILES = [
   { label: 'Prize Wall', value: 'Your catalog' },
 ];
 
-function PlayerDoor({ first }: { first: boolean }) {
+function PlayerDoor() {
   return (
-    <section className={`relative min-h-[430px] overflow-hidden rounded-[28px] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] ${first ? 'md:order-1' : 'md:order-2'}`}>
+    <section className={`relative min-h-[430px] overflow-hidden rounded-[28px] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] `}>
       <div className="absolute inset-0 grid grid-cols-3">
         {PLAYER_ART.map((g) => (
           <div key={g} className="relative">
@@ -39,9 +38,9 @@ function PlayerDoor({ first }: { first: boolean }) {
   );
 }
 
-function StoreDoor({ first }: { first: boolean }) {
+function StoreDoor() {
   return (
-    <section className={`relative min-h-[430px] overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] ${first ? 'md:order-1' : 'md:order-2'}`}>
+    <section className={`relative min-h-[430px] overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2c2b27] to-[#1c1b19] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.45)] `}>
       <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_80%_0%,rgba(77,141,255,0.18),transparent_70%)]" />
       <div className="absolute inset-x-6 top-6 grid grid-cols-3 gap-2.5 sm:inset-x-9 sm:top-9">
         {STORE_TILES.map((t) => (
@@ -68,11 +67,9 @@ function StoreDoor({ first }: { first: boolean }) {
   );
 }
 
+// Signed-in players never get here (middleware sends them to the dashboard), and signed-out visitors
+// remembered as players are sent to sign-in. Everyone else sees both doors.
 export default function LandingPage() {
-  // The door the visitor used last time goes first. Anyone signed in never gets here (middleware sends them to the dashboard).
-  const saved = cookies().get(LANE_COOKIE)?.value;
-  const lane: Lane = saved === 'store' ? 'store' : 'player';
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-base text-primary">
       <div className="pointer-events-none absolute inset-x-0 -top-52 h-[900px] bg-[radial-gradient(60%_60%_at_50%_30%,rgba(61,220,106,0.13),transparent_70%)]" />
@@ -104,8 +101,8 @@ export default function LandingPage() {
         </div>
 
         <div className="grid gap-7 md:grid-cols-2">
-          <PlayerDoor first={lane === 'player'} />
-          <StoreDoor first={lane === 'store'} />
+          <PlayerDoor />
+          <StoreDoor />
         </div>
 
         <p className="mt-6 text-center text-[13px] text-tertiary">
