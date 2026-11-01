@@ -263,7 +263,7 @@ export default function KioskPage() {
     : '';
 
   return (
-    <div className="min-h-screen bg-base text-primary select-none overflow-hidden">
+    <div className="min-h-screen bg-base text-primary select-none md:overflow-hidden">
       {/* Renewal opportunity interstitial — persistent, requires staff action */}
       {renewal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
@@ -338,7 +338,7 @@ export default function KioskPage() {
           )}
         </div>
       ) : (
-        <div className="min-h-screen flex flex-col p-8 gap-6">
+        <div className="min-h-screen flex flex-col p-4 md:p-8 gap-4 md:gap-6">
           {liveEvents.length > 1 && !scopeRef.current.eventId && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-tertiary text-sm uppercase tracking-widest mr-1">Checking in to</span>
@@ -355,15 +355,15 @@ export default function KioskPage() {
           )}
 
           {/* Header */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-xl font-bold" style={{ color: gameColor }}>
                 {activeEvent.game?.icon} {activeEvent.game?.name || 'Event'}
               </div>
-              <h1 className="text-5xl font-black text-primary mt-1 leading-tight">{activeEvent.name}</h1>
+              <h1 className="text-3xl md:text-5xl font-black text-primary mt-1 leading-tight break-words">{activeEvent.name}</h1>
             </div>
             <div className="text-right flex-shrink-0">
-              <div className="text-7xl font-black leading-none" style={{ color: gameColor }}>
+              <div className="text-5xl md:text-7xl font-black leading-none" style={{ color: gameColor }}>
                 {activeEvent.attendanceCount}
               </div>
               <div className="text-secondary text-lg">checked in</div>
@@ -371,9 +371,9 @@ export default function KioskPage() {
           </div>
 
           {/* Main 3-column layout */}
-          <div className="flex-1 flex gap-8 items-center">
+          <div className="flex-1 flex flex-col md:flex-row gap-6 md:gap-8 items-center">
             {/* Left: QR code */}
-            <div className="flex flex-col items-center gap-4 w-64 flex-shrink-0">
+            <div className="flex flex-col items-center gap-4 md:w-64 flex-shrink-0">
               <div className="bg-surface rounded-2xl p-3 border border-border">
                 {qrUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -386,19 +386,19 @@ export default function KioskPage() {
             {/* Center: Tap prompt */}
             <div className="flex-1 flex flex-col items-center justify-center gap-6 text-center">
               <div
-                className="w-44 h-44 rounded-full flex items-center justify-center border-4 border-dashed animate-pulse"
+                className="w-28 h-28 md:w-44 md:h-44 rounded-full flex items-center justify-center border-4 border-dashed animate-pulse"
                 style={{ borderColor: gameColor, backgroundColor: `${gameColor}12` }}
               >
-                <span className="text-8xl">📡</span>
+                <span className="text-5xl md:text-8xl">📡</span>
               </div>
-              <h2 className="text-5xl font-black text-primary">Tap Your Card</h2>
+              <h2 className="text-3xl md:text-5xl font-black text-primary">Tap Your Card</h2>
               <div
                 className="px-8 py-4 rounded-2xl text-2xl font-black"
                 style={{ backgroundColor: `${gameColor}20`, color: gameColor }}
               >
                 +{activeEvent.attendanceXp} XP
               </div>
-              <p className="text-tertiary text-lg">or scan the QR code →</p>
+              <p className="text-tertiary text-lg">or scan the QR code <span className="hidden md:inline">→</span></p>
               <div className={`flex items-center gap-2 text-sm ${nfcEnabled ? 'text-emerald-500' : 'text-tertiary'}`}>
                 <span className={`w-2 h-2 rounded-full ${nfcEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-tertiary'}`} />
                 {nfcEnabled ? 'NFC Active' : 'NFC unavailable — use QR code'}
@@ -406,7 +406,7 @@ export default function KioskPage() {
             </div>
 
             {/* Right: Recent check-ins */}
-            <div className="w-64 flex-shrink-0">
+            <div className="w-full md:w-64 flex-shrink-0">
               <h3 className="text-tertiary text-sm font-semibold uppercase tracking-widest mb-4">Recent</h3>
               <div className="space-y-3">
                 {activeEvent.recentCheckIns.length === 0 ? (
