@@ -1175,24 +1175,32 @@ export default function HQPage() {
         game: e.game ? { name: e.game.name, icon: e.game.icon } : null,
       }));
 
-      // Also include any active event that may not appear in "upcoming"
-      if (activeData.event) {
-        const activeId = activeData.event.id;
-        const exists = events.find(e => e.id === activeId);
+      // Every live event, each with its own check-in count
+      const liveDetails = await Promise.all(
+        ((activeData.events || []) as Array<{ id: string }>).map(async (le) => {
+          const r = await fetch(`/api/events/active?event_id=${encodeURIComponent(le.id)}`, { cache: 'no-store' });
+          const d = await r.json();
+          return d.event ?? null;
+        })
+      );
+      if (requestedStoreId !== activeStoreRef.current) return;
+      for (const live of liveDetails) {
+        if (!live) continue;
+        const exists = events.find(e => e.id === live.id);
         if (!exists) {
           events.unshift({
-            id: activeData.event.id,
-            name: activeData.event.name,
-            game_id: activeData.event.gameId,
-            scheduled_at: activeData.event.scheduledAt,
+            id: live.id,
+            name: live.name,
+            game_id: live.gameId,
+            scheduled_at: live.scheduledAt,
             status: 'active',
-            attendance_xp: activeData.event.attendanceXp,
-            game: activeData.event.game,
-            attendanceCount: activeData.event.attendanceCount,
+            attendance_xp: live.attendanceXp,
+            game: live.game,
+            attendanceCount: live.attendanceCount,
           });
         } else {
           exists.status = 'active';
-          exists.attendanceCount = activeData.event.attendanceCount;
+          exists.attendanceCount = live.attendanceCount;
         }
       }
 
