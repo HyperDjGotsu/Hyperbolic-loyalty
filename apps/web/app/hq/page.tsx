@@ -2901,8 +2901,10 @@ export default function HQPage() {
                   </div>
                 </div>
 
+                <div className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start">
+                  <div className="contents lg:flex lg:flex-col">
                 {/* Game XP Section - REDESIGNED */}
-                <div className="p-4 sm:p-6 border-b border-border-token">
+                <div className="order-1 lg:order-none lg:border-b-0 p-4 sm:p-6 border-b border-border-token">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
                       Game XP
@@ -3033,221 +3035,8 @@ export default function HQPage() {
                   )}
                 </div>
 
-                {/* XP Management - Multi-select Tiles */}
-                <div className="p-4 sm:p-6 border-b border-border-token">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
-                      Award XP
-                    </h3>
-                    {/* Game selector for XP */}
-                    <select
-                      value={selectedGame}
-                      onChange={(e) => setSelectedGame(e.target.value)}
-                      className="bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
-                    >
-                      {games.map(game => (
-                        <option key={game.id} value={game.id}>
-                          {game.icon} {game.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Event Entry */}
-                  <div className="mb-4">
-                    <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">📅 Event Entry</div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => toggleTile('Attended', 10)}
-                        className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
-                          isTileSelected('Attended')
-                            ? 'bg-purple-500/20 border-purple-500 text-primary'
-                            : 'bg-elevated border-border-token hover:border-purple-500 hover:bg-purple-500/10'
-                        }`}
-                      >
-                        <span className="font-medium">Attended</span>
-                        <span className="text-xs text-accent">+10 XP</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Match Wins */}
-                  <div className="mb-4">
-                    <div className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2">🏆 Match Wins</div>
-                    <div className="flex flex-wrap gap-3 items-center">
-                      {/* Additive + Win counter — each press = one win (+5 XP / +5 PP base) */}
-                      <div className="flex items-center gap-2 bg-elevated border-2 border-border-token rounded-xl px-3 py-2">
-                        <button
-                          onClick={() => setWinCount(c => Math.max(0, c - 1))}
-                          disabled={winCount === 0}
-                          className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 font-bold text-lg hover:bg-green-500/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        >−</button>
-                        <div className="text-center w-12">
-                          <div className="text-lg font-bold text-primary leading-none">{winCount}</div>
-                          <div className="text-[10px] text-green-400 mt-0.5">{winCount === 1 ? 'win' : 'wins'}</div>
-                        </div>
-                        <button
-                          onClick={() => setWinCount(c => c + 1)}
-                          className="px-3 h-8 rounded-lg bg-green-500/20 border border-green-500/40 text-green-400 font-bold text-sm hover:bg-green-500/30 transition-colors"
-                        >+ Win</button>
-                      </div>
-                      {winCount > 0 && (
-                        <div className="text-xs text-green-400">
-                          +{winCount * 5} XP · +{winCount * 5} PP base
-                        </div>
-                      )}
-                      {/* Undefeated stays as a standalone bonus tile */}
-                      <button
-                        onClick={() => toggleTile('Undefeated', 5)}
-                        className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
-                          isTileSelected('Undefeated')
-                            ? 'bg-green-500/20 border-green-500 text-primary'
-                            : 'bg-elevated border-border-token hover:border-green-500 hover:bg-green-500/10'
-                        }`}
-                      >
-                        <span className="font-medium">Undefeated</span>
-                        <span className="text-xs text-green-400">+5 XP</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Community */}
-                  <div className="mb-4">
-                    <div className="text-xs font-medium text-orange-400 uppercase tracking-wider mb-2">👥 Community</div>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: 'First Timer', xp: 25 },
-                        { label: 'Returner', xp: 25 },
-                        { label: 'Signed Up', xp: 50 },
-                        { label: 'Taught Player', xp: 20 },
-                      ].map(item => (
-                        <button
-                          key={item.label}
-                          onClick={() => toggleTile(item.label, item.xp)}
-                          className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
-                            isTileSelected(item.label)
-                              ? 'bg-orange-500/20 border-orange-500 text-primary'
-                              : 'bg-elevated border-border-token hover:border-orange-500 hover:bg-orange-500/10'
-                          }`}
-                        >
-                          <span className="font-medium">{item.label}</span>
-                          <span className="text-xs text-orange-400">+{item.xp} XP</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Selected Summary & Award Button */}
-                  {(selectedTiles.length > 0 || winCount > 0) && (
-                    <div className="mb-4 p-4 bg-elevated rounded-xl border border-accent/30">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="text-sm text-secondary">Selected:</div>
-                        <button
-                          onClick={() => { setSelectedTiles([]); setWinCount(0); }}
-                          className="text-xs text-secondary hover:text-primary"
-                        >
-                          Clear all
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {selectedTiles.map(tile => (
-                          <span
-                            key={tile.label}
-                            className="px-2 py-1 bg-accent/10 text-accent rounded text-sm"
-                          >
-                            {tile.label} (+{tile.xp})
-                          </span>
-                        ))}
-                        {winCount > 0 && (
-                          <span className="px-2 py-1 bg-green-500/10 text-green-400 rounded text-sm">
-                            {winCount} {winCount === 1 ? 'Win' : 'Wins'} (+{winCount * 5} XP)
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="text-lg font-bold text-accent">
-                          Total: +{getSelectedTotal()} XP
-                        </div>
-                        <button
-                          onClick={awardSelectedXp}
-                          disabled={isAwardingXp}
-                          className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg font-bold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          ⚡ Award XP
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Custom Award/Remove */}
-                  <div>
-                    <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">✨ Custom (+ or -)</div>
-                    <div className="flex gap-3">
-                      <input
-                        type="number"
-                        value={xpAmount}
-                        onChange={(e) => setXpAmount(e.target.value)}
-                        placeholder="+/- XP"
-                        className="w-24 bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent text-center"
-                      />
-                      <input
-                        type="text"
-                        value={xpReason}
-                        onChange={(e) => setXpReason(e.target.value)}
-                        placeholder="Reason (e.g., Prize payout, Correction)"
-                        className="flex-1 bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
-                      />
-                      <button
-                        onClick={addCustomXp}
-                        className="px-5 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                    <p className="text-xs text-secondary mt-2">Use negative numbers to remove XP (e.g., -25)</p>
-                  </div>
-                </div>
-
-                {/* Prize Points */}
-                <div className="p-4 sm:p-6 border-t border-border-token">
-                  <div className="bg-surface rounded-xl border border-border-token p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-primary">Prize Points</h3>
-                      {ppBalance !== null && (
-                        <span className="text-accent font-bold text-sm">{ppBalance} pts</span>
-                      )}
-                      {ppBalance === null && ppLoading && (
-                        <span className="text-secondary text-xs">Loading…</span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        value={ppAmount}
-                        onChange={e => setPpAmount(e.target.value)}
-                        placeholder="±amount (e.g. 50 or -25)"
-                        className="flex-1 bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      value={ppReason}
-                      onChange={e => setPpReason(e.target.value)}
-                      placeholder="Reason (required)"
-                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
-                    />
-                    <button
-                      onClick={adjustPrizePoints}
-                      disabled={ppAdjusting || !ppAmount || !ppReason.trim() || !hqStore.activeStoreId}
-                      className="w-full py-2 bg-accent text-accent-fg text-sm font-semibold rounded-lg hover:opacity-90 disabled:opacity-40 transition-opacity"
-                    >
-                      {ppAdjusting ? 'Adjusting…' : 'Adjust Prize Points'}
-                    </button>
-                  </div>
-                </div>
-
                 {/* Recent Activity */}
-                <div className="p-4 sm:p-6">
+                <div className="order-4 lg:order-none lg:border-t p-4 sm:p-6">
                   <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-4">
                     Recent Activity
                   </h3>
@@ -3276,7 +3065,7 @@ export default function HQPage() {
                 </div>
 
                 {/* Account Management */}
-                <div className="p-4 sm:p-6 border-t border-border-token space-y-6">
+                <div className="order-5 lg:order-none p-4 sm:p-6 border-t border-border-token space-y-6">
                   {/* Pass Status */}
                   <div>
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">
@@ -3285,9 +3074,10 @@ export default function HQPage() {
                     <div className="bg-elevated rounded-xl p-4 border border-border-token mb-4">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium text-primary">
-                          {playerDetails.player.pass_tier === 'player' ? 'Player Pass' :
-                           playerDetails.player.pass_tier === 'all_access' ? 'All Access Pass' :
-                           playerDetails.player.pass_tier === 'shadow_vip' ? 'Shadow VIP' :
+                          {playerDetails.player.pass_tier === 'access' ? 'Bronze Pass' :
+                           playerDetails.player.pass_tier === 'player' ? 'Silver Pass' :
+                           playerDetails.player.pass_tier === 'all_access' ? 'Gold Pass' :
+                           playerDetails.player.pass_tier === 'diamond' ? 'Diamond Pass' :
                            'Free Member'}
                         </span>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -3485,6 +3275,223 @@ export default function HQPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+                  </div>
+                  <div className="contents lg:flex lg:flex-col lg:border-l lg:border-border-token">
+                {/* XP Management - Multi-select Tiles */}
+                <div className="order-2 lg:order-none lg:border-b-0 p-4 sm:p-6 border-b border-border-token">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-secondary uppercase tracking-wider">
+                      Award XP
+                    </h3>
+                    {/* Game selector for XP */}
+                    <select
+                      value={selectedGame}
+                      onChange={(e) => setSelectedGame(e.target.value)}
+                      className="bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary text-sm focus:outline-none focus:border-accent"
+                    >
+                      {games.map(game => (
+                        <option key={game.id} value={game.id}>
+                          {game.icon} {game.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Event Entry */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">📅 Event Entry</div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => toggleTile('Attended', 10)}
+                        className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
+                          isTileSelected('Attended')
+                            ? 'bg-purple-500/20 border-purple-500 text-primary'
+                            : 'bg-elevated border-border-token hover:border-purple-500 hover:bg-purple-500/10'
+                        }`}
+                      >
+                        <span className="font-medium">Attended</span>
+                        <span className="text-xs text-accent">+10 XP</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Match Wins */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2">🏆 Match Wins</div>
+                    <div className="flex flex-wrap gap-3 items-center">
+                      {/* Additive + Win counter — each press = one win (+5 XP / +5 PP base) */}
+                      <div className="flex items-center gap-2 bg-elevated border-2 border-border-token rounded-xl px-3 py-2">
+                        <button
+                          onClick={() => setWinCount(c => Math.max(0, c - 1))}
+                          disabled={winCount === 0}
+                          className="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 font-bold text-lg hover:bg-green-500/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >−</button>
+                        <div className="text-center w-12">
+                          <div className="text-lg font-bold text-primary leading-none">{winCount}</div>
+                          <div className="text-[10px] text-green-400 mt-0.5">{winCount === 1 ? 'win' : 'wins'}</div>
+                        </div>
+                        <button
+                          onClick={() => setWinCount(c => c + 1)}
+                          className="px-3 h-8 rounded-lg bg-green-500/20 border border-green-500/40 text-green-400 font-bold text-sm hover:bg-green-500/30 transition-colors"
+                        >+ Win</button>
+                      </div>
+                      {winCount > 0 && (
+                        <div className="text-xs text-green-400">
+                          +{winCount * 5} XP · +{winCount * 5} PP base
+                        </div>
+                      )}
+                      {/* Undefeated stays as a standalone bonus tile */}
+                      <button
+                        onClick={() => toggleTile('Undefeated', 5)}
+                        className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
+                          isTileSelected('Undefeated')
+                            ? 'bg-green-500/20 border-green-500 text-primary'
+                            : 'bg-elevated border-border-token hover:border-green-500 hover:bg-green-500/10'
+                        }`}
+                      >
+                        <span className="font-medium">Undefeated</span>
+                        <span className="text-xs text-green-400">+5 XP</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Community */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-orange-400 uppercase tracking-wider mb-2">👥 Community</div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: 'First Timer', xp: 25 },
+                        { label: 'Returner', xp: 25 },
+                        { label: 'Signed Up', xp: 50 },
+                        { label: 'Taught Player', xp: 20 },
+                      ].map(item => (
+                        <button
+                          key={item.label}
+                          onClick={() => toggleTile(item.label, item.xp)}
+                          className={`flex flex-col items-center px-4 py-3 rounded-lg transition-all border-2 ${
+                            isTileSelected(item.label)
+                              ? 'bg-orange-500/20 border-orange-500 text-primary'
+                              : 'bg-elevated border-border-token hover:border-orange-500 hover:bg-orange-500/10'
+                          }`}
+                        >
+                          <span className="font-medium">{item.label}</span>
+                          <span className="text-xs text-orange-400">+{item.xp} XP</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Selected Summary & Award Button */}
+                  {(selectedTiles.length > 0 || winCount > 0) && (
+                    <div className="mb-4 p-4 bg-elevated rounded-xl border border-accent/30">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm text-secondary">Selected:</div>
+                        <button
+                          onClick={() => { setSelectedTiles([]); setWinCount(0); }}
+                          className="text-xs text-secondary hover:text-primary"
+                        >
+                          Clear all
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {selectedTiles.map(tile => (
+                          <span
+                            key={tile.label}
+                            className="px-2 py-1 bg-accent/10 text-accent rounded text-sm"
+                          >
+                            {tile.label} (+{tile.xp})
+                          </span>
+                        ))}
+                        {winCount > 0 && (
+                          <span className="px-2 py-1 bg-green-500/10 text-green-400 rounded text-sm">
+                            {winCount} {winCount === 1 ? 'Win' : 'Wins'} (+{winCount * 5} XP)
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-lg font-bold text-accent">
+                          Total: +{getSelectedTotal()} XP
+                        </div>
+                        <button
+                          onClick={awardSelectedXp}
+                          disabled={isAwardingXp}
+                          className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg font-bold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          ⚡ Award XP
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom Award/Remove */}
+                  <div>
+                    <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">✨ Custom (+ or -)</div>
+                    <div className="flex gap-3">
+                      <input
+                        type="number"
+                        value={xpAmount}
+                        onChange={(e) => setXpAmount(e.target.value)}
+                        placeholder="+/- XP"
+                        className="w-24 bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent text-center"
+                      />
+                      <input
+                        type="text"
+                        value={xpReason}
+                        onChange={(e) => setXpReason(e.target.value)}
+                        placeholder="Reason (e.g., Prize payout, Correction)"
+                        className="flex-1 bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary placeholder:text-secondary focus:outline-none focus:border-accent"
+                      />
+                      <button
+                        onClick={addCustomXp}
+                        className="px-5 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    <p className="text-xs text-secondary mt-2">Use negative numbers to remove XP (e.g., -25)</p>
+                  </div>
+                </div>
+
+                {/* Prize Points */}
+                <div className="order-3 lg:order-none p-4 sm:p-6 border-t border-border-token">
+                  <div className="bg-surface rounded-xl border border-border-token p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-primary">Prize Points</h3>
+                      {ppBalance !== null && (
+                        <span className="text-accent font-bold text-sm">{ppBalance} pts</span>
+                      )}
+                      {ppBalance === null && ppLoading && (
+                        <span className="text-secondary text-xs">Loading…</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={ppAmount}
+                        onChange={e => setPpAmount(e.target.value)}
+                        placeholder="±amount (e.g. 50 or -25)"
+                        className="flex-1 bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={ppReason}
+                      onChange={e => setPpReason(e.target.value)}
+                      placeholder="Reason (required)"
+                      className="w-full bg-input border border-border-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent"
+                    />
+                    <button
+                      onClick={adjustPrizePoints}
+                      disabled={ppAdjusting || !ppAmount || !ppReason.trim() || !hqStore.activeStoreId}
+                      className="w-full py-2 bg-accent text-accent-fg text-sm font-semibold rounded-lg hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    >
+                      {ppAdjusting ? 'Adjusting…' : 'Adjust Prize Points'}
+                    </button>
+                  </div>
+                </div>
+
                   </div>
                 </div>
               </div>
