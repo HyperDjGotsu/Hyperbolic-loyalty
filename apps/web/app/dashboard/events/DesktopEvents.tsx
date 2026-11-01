@@ -597,11 +597,13 @@ function EventsPageContent() {
       const storeParam = storeId ? `&store_id=${storeId}` : '';
       const res = await fetch(`/api/events?status=upcoming&limit=50${storeParam}${networkParam}`);
       // Special events are pinned separately; they can fall outside the soonest-first window
-      fetch(`/api/events?status=upcoming&special=true&limit=5${storeParam}${networkParam}`)
+      const specialDone = fetch(`/api/events?status=upcoming&special=true&limit=5${storeParam}${networkParam}`)
         .then(r => (r.ok ? r.json() : { events: [] }))
         .then(d => setSpecialEvents(d.events || []))
         .catch(() => setSpecialEvents([]));
       const data = await res.json();
+      // Wait for it too, so the pinned section is there when the list appears instead of pushing it down later
+      await specialDone;
       
       if (res.ok) {
         setEvents(data.events || []);

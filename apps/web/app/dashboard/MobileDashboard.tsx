@@ -341,11 +341,14 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       )}
 
       {/* Special Events */}
-      {specialEvents.length > 0 && (
-        <div className="mt-6">
-          <SpecialEvents events={specialEvents} />
+      {/* Arrives after the rest of Home loads, so it eases open instead of snapping the page down */}
+      <div className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-300 motion-safe:ease-out ${specialEvents.length > 0 ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="min-h-0 overflow-hidden">
+          <div className="pt-6">
+            <SpecialEvents events={specialEvents} />
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Up next */}
       <section data-tour="events" className="mt-8">
