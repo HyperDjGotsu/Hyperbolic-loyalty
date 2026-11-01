@@ -40,7 +40,29 @@ export default function KioskPage() {
   const [activeEvent, setActiveEvent] = useState<ActiveEvent | null>(null);
   // The kiosk is tied to a store (?store_id=) or to one event (?event_id=). When several events are live, staff pick one.
   const [liveEvents, setLiveEvents] = useState<Array<{ id: string; name: string }>>([]);
-  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinValue, setPinValue] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [pinBusy, setPinBusy] = useState(false);
+  const submitPin = async () => {
+    setPinBusy(true);
+    setPinError('');
+    try {
+      const res = await fetch('/api/hq/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', pin: pinValue }),
+      });
+      if (res.ok) { window.location.href = '/hq'; return; }
+      // Not signed in as staff: HQ itself will ask for sign-in, so nothing to protect here
+      if (res.status === 403) { window.location.href = '/hq'; return; }
+      // Signed in but never set a PIN: HQ will prompt them to set one
+      if (res.status === 409) { window.location.href = '/hq'; return; }
+      const d = await res.json().catch(() => ({}));
+      setPinError(d.error || 'Wrong PIN');
+      setPinValue('');
+    } catch { setPinError('Could not check the PIN. Try again.'); } finally { setPinBusy(false); }
+  };
   const scopeRef = useRef<{ storeId: string | null; eventId: string | null }>({ storeId: null, eventId: null });
   const pickedRef = useRef<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -265,16 +287,34 @@ export default function KioskPage() {
 
   return (
     <div className="min-h-screen bg-base text-primary select-none md:overflow-hidden">
-      {/* Hold 1.5s to leave: a stray tap from a customer must not open HQ on a staff-signed-in tablet */}
       <button
         type="button"
-        onPointerDown={() => { exitTimer.current = setTimeout(() => { window.location.href = '/hq'; }, 1500); }}
-        onPointerUp={() => { if (exitTimer.current) clearTimeout(exitTimer.current); }}
-        onPointerLeave={() => { if (exitTimer.current) clearTimeout(exitTimer.current); }}
+        onClick={() => { setPinOpen(true); setPinValue(''); setPinError(''); }}
         className="fixed bottom-4 left-4 z-40 px-4 py-2 rounded-full text-sm font-semibold bg-surface/90 border border-border text-tertiary select-none"
       >
-        Staff: hold to exit
+        Staff: exit
       </button>
+      {pinOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-xs text-center">
+            <h2 className="text-lg font-bold text-primary mb-1">Staff PIN</h2>
+            <p className="text-sm text-secondary mb-4">Enter your PIN to leave kiosk mode.</p>
+            <input
+              inputMode="numeric" type="password" autoComplete="off" autoFocus maxLength={6}
+              value={pinValue} onChange={e => setPinValue(e.target.value.replace(/\D/g, ''))}
+              onKeyDown={e => { if (e.key === 'Enter') submitPin(); }}
+              className="w-full px-4 py-3 rounded-xl bg-elevated border border-border text-primary text-center text-2xl tracking-[0.4em] outline-none focus:border-accent"
+            />
+            {pinError && <p className="text-red-400 text-sm mt-3">{pinError}</p>}
+            <div className="flex gap-3 mt-4">
+              <button type="button" onClick={() => setPinOpen(false)} className="flex-1 py-3 rounded-xl border border-border text-secondary">Cancel</button>
+              <button type="button" onClick={submitPin} disabled={pinBusy || pinValue.length < 4} className="flex-1 py-3 rounded-xl bg-accent text-white font-bold disabled:opacity-50">
+                {pinBusy ? '…' : 'Exit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Renewal opportunity interstitial — persistent, requires staff action */}
       {renewal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">

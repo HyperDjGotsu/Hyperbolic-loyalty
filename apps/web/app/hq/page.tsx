@@ -1,6 +1,7 @@
 'use client';
 
 import StaffGuide from '@/components/StaffGuide';
+import StaffPinSetup from '@/components/StaffPinSetup';
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -2213,6 +2214,20 @@ export default function HQPage() {
     }
   };
 
+  const resetPin = async (appUserId: string) => {
+    if (!confirm('Clear this person\'s kiosk PIN? They will pick a new one next time they open HQ.')) return;
+    try {
+      const res = await fetch('/api/hq/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset', app_user_id: appUserId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || 'Failed to reset PIN', 'error'); return; }
+      showToast('PIN cleared', 'success');
+    } catch { showToast('Failed to reset PIN', 'error'); }
+  };
+
   const sendInvite = async () => {
     if (!inviteForm.email || !inviteForm.store_id || !inviteForm.role) return;
     setInviteSending(true);
@@ -2910,6 +2925,7 @@ export default function HQPage() {
         </div>
       </div>
 
+      <StaffPinSetup />
       <StaffGuide tabKey={activeTab} />
 
       <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-3 sm:px-4 py-4 sm:py-6">
@@ -5706,6 +5722,14 @@ export default function HQPage() {
                           {m.player_id && <span className="text-xs text-tertiary font-mono">{m.player_id}</span>}
                         </div>
                       </div>
+                      {m.app_user_id && (
+                        <button
+                          onClick={() => resetPin(m.app_user_id as string)}
+                          className="text-xs text-secondary hover:text-primary shrink-0"
+                        >
+                          Reset PIN
+                        </button>
+                      )}
                       {/* Can't revoke network_admin from UI */}
                       {m.role !== 'network_admin' && (
                         <button

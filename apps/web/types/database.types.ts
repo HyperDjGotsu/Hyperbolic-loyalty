@@ -798,6 +798,38 @@ export type Database = {
           },
         ]
       }
+      staff_pins: {
+        Row: {
+          app_user_id: string
+          failed_attempts: number
+          locked_until: string | null
+          pin_hash: string
+          set_at: string
+        }
+        Insert: {
+          app_user_id: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash: string
+          set_at?: string
+        }
+        Update: {
+          app_user_id?: string
+          failed_attempts?: number
+          locked_until?: string | null
+          pin_hash?: string
+          set_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_pins_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: true
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_guide_log: {
         Row: {
           action: string
