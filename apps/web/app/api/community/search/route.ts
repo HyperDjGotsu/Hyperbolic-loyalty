@@ -78,6 +78,7 @@ export async function GET(request: Request) {
     const results = visiblePlayers.map((player: any) => {
       const totalXp = xpMap[player.id] || 0;
       const level = Math.floor(totalXp / 100) + 1;
+      const isPrivate = player.privacy_profile_visibility === 'private';
       const isFriend = friendIds.has(player.id);
       const isPending = pendingIds.has(player.id);
 
@@ -85,9 +86,9 @@ export async function GET(request: Request) {
         id: player.player_id,
         odid: player.id, // UUID for API calls
         name: player.display_name || 'Unknown',
-        title: `Level ${level}`,
-        level,
-        totalXp,
+        title: isPrivate ? '???' : `Level ${level}`,
+        level: isPrivate ? null : level,
+        totalXp: isPrivate ? null : totalXp,
         avatar: (() => {
           const cfg = (player.avatar_config && typeof player.avatar_config === 'object' && !Array.isArray(player.avatar_config))
             ? player.avatar_config as Record<string, unknown>

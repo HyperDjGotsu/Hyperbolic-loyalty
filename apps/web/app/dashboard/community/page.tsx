@@ -103,9 +103,9 @@ interface BountyHunterStatus {
 // Privacy options configuration
 const privacyOptions = {
   profileVisibility: [
-    { id: 'public', label: 'Public', description: 'Anyone can see your profile' },
-    { id: 'friends', label: 'Friends Only', description: 'Only friends can see your profile' },
-    { id: 'private', label: 'Private', description: 'Only you can see your profile' },
+    { id: 'public', label: 'Public', description: 'Anyone can see your status' },
+    { id: 'friends', label: 'Friends Only', description: 'Only friends can see your status' },
+    { id: 'private', label: 'Private', description: 'Your status and stats are hidden from others' },
   ],
 };
 
