@@ -264,7 +264,6 @@ export async function POST(
         player_id: playerId,
         game_id: event.game_id,
         xp_awarded: lifetimeXp,
-        store_id: storeId || null,
       });
 
     if (attendanceError) {

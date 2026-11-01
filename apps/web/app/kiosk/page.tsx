@@ -38,6 +38,10 @@ interface RenewalOpportunity {
 
 export default function KioskPage() {
   const [activeEvent, setActiveEvent] = useState<ActiveEvent | null>(null);
+  // The kiosk is tied to a store (?store_id=) or to one event (?event_id=). When several events are live, staff pick one.
+  const [liveEvents, setLiveEvents] = useState<Array<{ id: string; name: string }>>([]);
+  const scopeRef = useRef<{ storeId: string | null; eventId: string | null }>({ storeId: null, eventId: null });
+  const pickedRef = useRef<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [renewal, setRenewal] = useState<RenewalOpportunity | null>(null);
   const [nfcEnabled, setNfcEnabled] = useState(false);
@@ -47,12 +51,20 @@ export default function KioskPage() {
 
   useEffect(() => {
     setOrigin(window.location.origin);
+    const sp = new URLSearchParams(window.location.search);
+    scopeRef.current = { storeId: sp.get('store_id'), eventId: sp.get('event_id') };
   }, []);
 
   const fetchActiveEvent = useCallback(async () => {
     try {
-      const res = await fetch('/api/events/active', { cache: 'no-store' });
+      const sp = new URLSearchParams();
+      const { storeId, eventId } = scopeRef.current;
+      if (storeId) sp.set('store_id', storeId);
+      const wanted = pickedRef.current || eventId;
+      if (wanted) sp.set('event_id', wanted);
+      const res = await fetch(`/api/events/active?${sp.toString()}`, { cache: 'no-store' });
       const data = await res.json();
+      setLiveEvents(data.events ?? []);
       setActiveEvent(data.event);
     } catch {
       // silently ignore poll failures
@@ -327,6 +339,21 @@ export default function KioskPage() {
         </div>
       ) : (
         <div className="min-h-screen flex flex-col p-8 gap-6">
+          {liveEvents.length > 1 && !scopeRef.current.eventId && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-tertiary text-sm uppercase tracking-widest mr-1">Checking in to</span>
+              {liveEvents.map(e => (
+                <button
+                  key={e.id}
+                  onClick={() => { pickedRef.current = e.id; fetchActiveEvent(); }}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold border ${e.id === activeEvent.id ? 'bg-accent/15 border-accent/40 text-accent' : 'border-border text-secondary'}`}
+                >
+                  {e.name}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>

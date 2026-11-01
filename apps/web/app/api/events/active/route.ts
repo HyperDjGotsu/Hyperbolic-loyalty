@@ -12,6 +12,7 @@ const NO_STORE = { 'Cache-Control': 'no-store, max-age=0' };
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const storeId = searchParams.get('store_id');
+  const eventId = searchParams.get('event_id');
 
   // Find the active event — use .in() to match the working pattern in /api/events
   let query = supabaseAdmin
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     .select('id, name, game_id, attendance_xp, scheduled_at, status')
     .in('status', ['active'])
     .order('scheduled_at', { ascending: true })
-    .limit(1);
+    .limit(10);
 
   if (storeId) {
     query = query.eq('store_id', storeId);
@@ -32,10 +33,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ event: null }, { headers: NO_STORE });
   }
 
-  const event = activeEvents?.[0] ?? null;
+  // Every live event in scope, so a kiosk or check-in page can tell which one a player means
+  const liveList = (activeEvents ?? []).map(e => ({ id: e.id, name: e.name }));
+  const event = (eventId ? activeEvents?.find(e => e.id === eventId) : activeEvents?.[0]) ?? null;
 
   if (!event) {
-    return NextResponse.json({ event: null }, { headers: NO_STORE });
+    return NextResponse.json({ event: null, events: liveList }, { headers: NO_STORE });
   }
 
   const { data: game } = await supabaseAdmin
@@ -87,6 +90,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
+    events: liveList,
     event: {
       id: event.id,
       name: event.name,

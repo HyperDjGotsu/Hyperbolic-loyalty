@@ -4819,7 +4819,7 @@ export default function HQPage() {
                 <div className="text-secondary text-sm">Open on the Android device at the door</div>
               </div>
               <a
-                href="/kiosk"
+                href={hqStore.activeStoreId ? `/kiosk?store_id=${hqStore.activeStoreId}` : '/kiosk'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 bg-accent/10 text-accent rounded-lg hover:bg-accent/20 text-sm font-medium"
@@ -4917,6 +4917,14 @@ export default function HQPage() {
                                 className="px-3 py-1.5 bg-elevated text-secondary rounded-lg text-xs hover:bg-elevated/80 transition-colors"
                               >
                                 QR Preview
+                              </a>
+                              <a
+                                href={`/kiosk?event_id=${event.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 bg-elevated text-secondary rounded-lg text-xs hover:bg-elevated/80 transition-colors"
+                              >
+                                Kiosk
                               </a>
                               <button
                                 onClick={() => activateEvent(event.id, 'end')}
