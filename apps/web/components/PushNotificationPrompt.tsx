@@ -20,14 +20,18 @@ export default function PushNotificationPrompt() {
     if (perm === 'granted') { setStatus('subscribed'); return; }
     if (perm === 'denied') { setStatus('denied'); return; }
 
-    // Ask at most once a day per account, however many pages they open. Recorded when it is shown,
-    // so ignoring it or tapping Not now both hold it off until tomorrow.
+    // Ask at most once a day per account, on any device: the time is kept on the Clerk user. Recorded when it is
+    // shown, so ignoring it or tapping Not now both hold it off until tomorrow. This device's storage is a backstop
+    // in case the account update fails.
     const key = `pp_push_prompt_${user.id}`;
-    try {
-      const last = Number(localStorage.getItem(key) || 0);
-      if (last && Date.now() - last < DAY_MS) return;
-      localStorage.setItem(key, String(Date.now()));
-    } catch { /* storage blocked: fall through and show it */ }
+    const meta = (user.unsafeMetadata ?? {}) as Record<string, unknown>;
+    const accountLast = typeof meta.pushPromptAt === 'number' ? meta.pushPromptAt : 0;
+    let deviceLast = 0;
+    try { deviceLast = Number(localStorage.getItem(key) || 0); } catch { /* storage blocked */ }
+    if (Date.now() - Math.max(accountLast, deviceLast) < DAY_MS) return;
+    const now = Date.now();
+    try { localStorage.setItem(key, String(now)); } catch { /* storage blocked */ }
+    user.update({ unsafeMetadata: { ...meta, pushPromptAt: now } }).catch(() => {});
     setStatus('prompt');
   }, [isLoaded, user]);
 
