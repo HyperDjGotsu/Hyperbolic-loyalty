@@ -84,40 +84,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // --- Source 2: Recently added events (last 14 days) ---
-    {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 14);
-
-      let q = supabaseAdmin
-        .from('events')
-        .select('id, name, scheduled_at, game_id, created_at')
-        .gte('created_at', cutoff.toISOString())
-        .in('status', ['scheduled', 'active'])
-        .order('created_at', { ascending: false })
-        .limit(2);
-
-      if (storeId) {
-        q = q.eq('store_id', storeId);
-      }
-
-      const { data: newEvents } = await q;
-
-      for (const ev of newEvents || []) {
-        const scheduledDate = new Date(ev.scheduled_at).toLocaleDateString('en-US', {
-          weekday: 'short', month: 'short', day: 'numeric',
-        });
-        updates.push({
-          type: 'new_event',
-          icon: (ev.game_id ? GAME_ICONS[ev.game_id] : null) || '📅',
-          label: 'New Event',
-          headline: ev.name,
-          subtext: scheduledDate,
-          date: ev.created_at || ev.scheduled_at,
-          link: `/dashboard/events?event=${ev.id}`,
-        });
-      }
-    }
+    // New events are intentionally not listed here: store updates are announcements staff post (broadcasts) and results.
 
     // --- Source 3: Broadcasts (store-scoped + network-wide) ---
     {
