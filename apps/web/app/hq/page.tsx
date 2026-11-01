@@ -701,6 +701,28 @@ export default function HQPage() {
   } | null>(null);
   const [welcomeBanner, setWelcomeBanner] = useState(false);
   const [activeTab, setActiveTab] = useState('players');
+  // Emperor and Bounty are parked: dulled, and behind a manual-override passcode for now
+  const PARKED_TABS = ['emperor', 'bounty'];
+  const [parkedUnlocked, setParkedUnlocked] = useState(false);
+  const [parkedPrompt, setParkedPrompt] = useState<string | null>(null);
+  const [parkedCode, setParkedCode] = useState('');
+  const [parkedError, setParkedError] = useState(false);
+  const goToTab = (id: string) => {
+    if (PARKED_TABS.includes(id) && !parkedUnlocked) {
+      setParkedPrompt(id); setParkedCode(''); setParkedError(false);
+      return;
+    }
+    setActiveTab(id);
+  };
+  const submitParkedCode = () => {
+    if (parkedCode.trim().toLowerCase() === 'drum') {
+      setParkedUnlocked(true);
+      if (parkedPrompt) setActiveTab(parkedPrompt);
+      setParkedPrompt(null);
+    } else {
+      setParkedError(true);
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   
@@ -2798,6 +2820,29 @@ export default function HQPage() {
         </div>
       </div>
 
+      {parkedPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" onClick={() => setParkedPrompt(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-surface border border-border-token p-5" onClick={e => e.stopPropagation()}>
+            <h2 className="font-display text-lg font-bold text-primary">Not supported yet</h2>
+            <p className="text-secondary text-sm mt-1">This part of HQ isn&apos;t ready. If you were told to use it, enter the override code.</p>
+            <input
+              type="password"
+              autoFocus
+              value={parkedCode}
+              onChange={e => { setParkedCode(e.target.value); setParkedError(false); }}
+              onKeyDown={e => { if (e.key === 'Enter') submitParkedCode(); }}
+              placeholder="Override code"
+              className="mt-4 w-full bg-elevated border border-border-token rounded-lg px-3 py-2.5 text-primary focus:outline-none focus:border-accent"
+            />
+            {parkedError && <p className="text-red-500 text-xs mt-2">That code isn&apos;t right.</p>}
+            <div className="mt-4 flex gap-2 justify-end">
+              <button type="button" onClick={() => setParkedPrompt(null)} className="px-4 py-2 rounded-lg border border-border-token text-secondary text-sm font-semibold">Close</button>
+              <button type="button" onClick={submitParkedCode} disabled={!parkedCode} className="px-4 py-2 rounded-lg bg-accent text-accent-fg text-sm font-semibold disabled:opacity-40">Unlock</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="border-b border-border-token">
         <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-4">
@@ -2805,7 +2850,7 @@ export default function HQPage() {
           <div className="sm:hidden py-2">
             <select
               value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
+              onChange={(e) => goToTab(e.target.value)}
               className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2.5 text-primary focus:outline-none focus:border-accent"
             >
               <option value="players">Players</option>
@@ -2840,10 +2885,12 @@ export default function HQPage() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => goToTab(tab.id)}
                 className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'bg-accent/10 text-accent border border-accent/30'
+                    : PARKED_TABS.includes(tab.id) && !parkedUnlocked
+                    ? 'text-tertiary opacity-50 hover:opacity-70'
                     : 'text-secondary hover:text-primary hover:bg-elevated'
                 }`}
               >
