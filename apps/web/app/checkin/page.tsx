@@ -161,6 +161,9 @@ function CheckInContent() {
       <button onClick={() => setState('ready')} className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
         Try Again
       </button>
+      <Link href="/dashboard" className="text-tertiary hover:text-secondary text-sm transition-colors">
+        Back to Dashboard
+      </Link>
     </div>
   );
 

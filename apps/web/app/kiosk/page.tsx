@@ -264,6 +264,12 @@ export default function KioskPage() {
 
   return (
     <div className="min-h-screen bg-base text-primary select-none md:overflow-hidden">
+      <a
+        href="/hq"
+        className="fixed bottom-4 left-4 z-40 px-4 py-2 rounded-full text-sm font-semibold bg-surface/90 border border-border text-secondary hover:text-primary transition-colors"
+      >
+        ← Exit to HQ
+      </a>
       {/* Renewal opportunity interstitial — persistent, requires staff action */}
       {renewal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
