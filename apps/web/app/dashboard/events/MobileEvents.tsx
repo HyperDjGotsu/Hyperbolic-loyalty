@@ -1,5 +1,6 @@
 'use client';
 
+import { EVENT_GAME_FILTERS } from '@/lib/games';
 import EventCounts from '@/components/EventCounts';
 import SpecialEvents from '@/components/SpecialEvents';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
@@ -64,22 +65,8 @@ interface Friend {
   avatar: any;
 }
 
-// Game filter options
-const GAME_FILTERS = [
-  { id: 'all', name: 'All Games', icon: '🎮' },
-  { id: 'one_piece', name: 'One Piece', icon: '🏴‍☠️' },
-  { id: 'gundam', name: 'Gundam', icon: '🤖' },
-  { id: 'pokemon', name: 'Pokémon', icon: '⚡' },
-  { id: 'mtg', name: 'Magic', icon: '✨' },
-  { id: 'star_wars_unlimited', name: 'Star Wars', icon: '🌟' },
-  { id: 'vanguard', name: 'Vanguard', icon: '⚔️' },
-  { id: 'lorcana', name: 'Lorcana', icon: '🪄' },
-  { id: 'hololive', name: 'Hololive', icon: '🎤' },
-  { id: 'riftbound', name: 'Riftbound', icon: '🌀' },
-  { id: 'uvs', name: 'UVS', icon: '👊' },
-  { id: 'warhammer', name: 'Warhammer', icon: '⚔️' },
-  { id: 'sw_legion', name: 'Legion', icon: '🎖️' },
-];
+// Game filter options: one list for the whole app, so a new game never goes missing here
+const GAME_FILTERS = EVENT_GAME_FILTERS;
 
 // Mini avatar component
 const MiniAvatar = ({ avatar, name }: { avatar: any; name: string }) => {

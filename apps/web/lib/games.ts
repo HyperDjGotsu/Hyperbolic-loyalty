@@ -84,3 +84,21 @@ export function parseBackdrop(value: string | null | undefined): { gameId?: stri
   if (value.startsWith('upload:')) return { uploadUrl: value.slice(7) };
   return {};
 }
+
+// Game chips on the Events page: every selectable game, so none can be left out of the filter, plus board games
+// (events carry that id but it is not a ranked game). Short labels keep the chips compact.
+const FILTER_SHORT_NAMES: Record<string, string> = {
+  mtg: 'Magic',
+  star_wars_unlimited: 'Star Wars',
+  sw_legion: 'Legion',
+  dbfw: 'Fusion World',
+  dbs: 'DB Masters',
+  union_arena: 'Union Arena',
+  blood_bowl: 'Blood Bowl',
+  bolt_action: 'Bolt Action',
+};
+export const EVENT_GAME_FILTERS: Array<{ id: string; name: string; icon: string }> = [
+  { id: 'all', name: 'All Games', icon: '🎮' },
+  ...SELECTABLE_GAMES.map(g => ({ id: g.id, name: FILTER_SHORT_NAMES[g.id] ?? g.name, icon: g.icon })),
+  { id: 'board_games', name: 'Board Games', icon: '🎲' },
+];
