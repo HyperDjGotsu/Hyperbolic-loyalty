@@ -878,6 +878,66 @@ export type Database = {
           },
         ]
       }
+      event_results: {
+        Row: {
+          awarded_by: string | null
+          created_at: string
+          event_id: string
+          id: string
+          placement: number | null
+          player_id: string
+          prize_points_awarded: number
+          rounds_won: number
+          tiles: string[]
+          undefeated: boolean
+          updated_at: string
+          xp_awarded: number
+        }
+        Insert: {
+          awarded_by?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          placement?: number | null
+          player_id: string
+          prize_points_awarded?: number
+          rounds_won?: number
+          tiles?: string[]
+          undefeated?: boolean
+          updated_at?: string
+          xp_awarded?: number
+        }
+        Update: {
+          awarded_by?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          placement?: number | null
+          player_id?: string
+          prize_points_awarded?: number
+          rounds_won?: number
+          tiles?: string[]
+          undefeated?: boolean
+          updated_at?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_results_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_guide_log: {
         Row: {
           action: string

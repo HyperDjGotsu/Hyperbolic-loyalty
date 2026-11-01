@@ -17,7 +17,7 @@ export interface StaffGuide {
 
 export const STAFF_GUIDES: Record<string, StaffGuide> = {
   events: {
-    version: 1,
+    version: 2,
     title: 'Running an event',
     intro: 'Players earn their points from the events you start and end. Follow these steps in order.',
     steps: [
@@ -25,8 +25,9 @@ export const STAFF_GUIDES: Record<string, StaffGuide> = {
       { do: 'Tap Start Event when play begins.', why: 'Players can only check in while the event is live.' },
       { do: 'Open the Door Kiosk on the tablet at the door, or tap Kiosk on the event itself.', why: 'Players tap their card or scan the QR code to check in. You don\'t need to type anything. If two events are running, pick the right one at the top of the kiosk.' },
       { do: 'Tap End Event when the last round is finished.', why: 'This closes check-in and finishes the event.' },
+      { do: 'In the wrap-up list that opens, tap each player and enter their results from the tournament software.', why: 'Wins and placement go in here. Saving gives them their XP and Prize Points. You can close the list and finish later from Wrap up recent events.' },
     ],
-    careful: 'Only press End Event when the event is really over, and make sure it\'s the right event if more than one is running. Ending it early locks out anyone who hasn\'t checked in yet.',
+    careful: 'Only press End Event when the event is really over, and make sure it\'s the right event if more than one is running. Ending it early locks out anyone who hasn\'t checked in yet. A saved wrap-up result can only be changed with your own PIN.',
   },
   players: {
     version: 1,

@@ -1,26 +1,9 @@
 import { NextResponse } from 'next/server';
-import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireAnyStaff } from '@/lib/auth-helpers';
+import { PIN_RE, hashPin, verifyStaffPin } from '@/lib/staff-pin';
 
 export const dynamic = 'force-dynamic';
-
-const MAX_ATTEMPTS = 5;
-const LOCK_MINUTES = 5;
-const PIN_RE = /^\d{4,6}$/;
-
-function hashPin(pin: string): string {
-  const salt = randomBytes(16);
-  return `${salt.toString('hex')}:${scryptSync(pin, salt, 32).toString('hex')}`;
-}
-
-function checkPin(pin: string, stored: string): boolean {
-  const [saltHex, hashHex] = stored.split(':');
-  if (!saltHex || !hashHex) return false;
-  const expected = Buffer.from(hashHex, 'hex');
-  const actual = scryptSync(pin, Buffer.from(saltHex, 'hex'), expected.length);
-  return timingSafeEqual(expected, actual);
-}
 
 // Does the signed-in staff member have a PIN yet?
 export async function GET() {
@@ -56,36 +39,9 @@ export async function POST(request: Request) {
   }
 
   if (body.action === 'verify') {
-    if (!body.pin || !PIN_RE.test(body.pin)) return NextResponse.json({ ok: false, error: 'Wrong PIN' }, { status: 401 });
-    const { data: row } = await supabaseAdmin
-      .from('staff_pins')
-      .select('pin_hash, failed_attempts, locked_until')
-      .eq('app_user_id', staff.appUserId)
-      .maybeSingle();
-    if (!row) return NextResponse.json({ ok: false, error: 'No PIN set', needsSetup: true }, { status: 409 });
-
-    if (row.locked_until && new Date(row.locked_until).getTime() > Date.now()) {
-      return NextResponse.json({ ok: false, error: 'Too many tries. Try again in a few minutes.', locked: true }, { status: 429 });
-    }
-
-    if (checkPin(body.pin, row.pin_hash)) {
-      await supabaseAdmin.from('staff_pins').update({ failed_attempts: 0, locked_until: null }).eq('app_user_id', staff.appUserId);
-      return NextResponse.json({ ok: true });
-    }
-
-    const attempts = row.failed_attempts + 1;
-    const lock = attempts >= MAX_ATTEMPTS;
-    await supabaseAdmin
-      .from('staff_pins')
-      .update({
-        failed_attempts: lock ? 0 : attempts,
-        locked_until: lock ? new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString() : null,
-      })
-      .eq('app_user_id', staff.appUserId);
-    return NextResponse.json(
-      { ok: false, error: lock ? `Too many tries. Locked for ${LOCK_MINUTES} minutes.` : 'Wrong PIN', locked: lock },
-      { status: lock ? 429 : 401 },
-    );
+    const r = await verifyStaffPin(staff.appUserId, body.pin);
+    if (r.ok) return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: false, error: r.error, locked: r.locked, needsSetup: r.needsSetup }, { status: r.status });
   }
 
   if (body.action === 'reset') {

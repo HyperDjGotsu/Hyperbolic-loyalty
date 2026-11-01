@@ -2,6 +2,7 @@
 
 import StaffGuide from '@/components/StaffGuide';
 import StaffPinSetup from '@/components/StaffPinSetup';
+import { EventWrapUp, RecentWrapUps } from '@/components/EventWrapUp';
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -1215,6 +1216,9 @@ export default function HQPage() {
     }
   };
 
+  const [wrapUpEventId, setWrapUpEventId] = useState<string | null>(null);
+  const [wrapUpRefresh, setWrapUpRefresh] = useState(0);
+
   const activateEvent = async (eventId: string, action: 'start' | 'end') => {
     setActivatingEventId(eventId);
     try {
@@ -1227,6 +1231,8 @@ export default function HQPage() {
       if (data.success) {
         showToast(action === 'start' ? 'Event started!' : 'Event ended', 'success');
         loadHQEvents();
+        // Closing never waits on the wrap-up: the event is already ended, the list just opens for rewards
+        if (action === 'end') { setWrapUpEventId(eventId); setWrapUpRefresh(n => n + 1); }
       } else {
         showToast(data.error || 'Failed', 'error');
       }
@@ -2926,6 +2932,7 @@ export default function HQPage() {
       </div>
 
       <StaffPinSetup />
+      {wrapUpEventId && <EventWrapUp eventId={wrapUpEventId} onClose={() => { setWrapUpEventId(null); setWrapUpRefresh(n => n + 1); }} />}
       <StaffGuide tabKey={activeTab} />
 
       <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-3 sm:px-4 py-4 sm:py-6">
@@ -4851,6 +4858,8 @@ export default function HQPage() {
                 Open Kiosk →
               </a>
             </div>
+
+            <RecentWrapUps storeId={hqStore.activeStoreId} refreshKey={wrapUpRefresh} onOpen={setWrapUpEventId} />
 
             {/* Event list */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">
