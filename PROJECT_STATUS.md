@@ -319,3 +319,27 @@ This document should be updated whenever major decisions are made or features ar
 - TCG stores have many kids, so that is a weak position. Talk to a lawyer before launch.
 - Design decision needed: birthdate field, "I'm 13 or older" confirmation, or parent-managed accounts. Then update /privacy to match.
 - Applies to all stores, so it also matters for the SaaS version.
+
+---
+
+## Nov 1, 2026 — redesign-home / desktop-polish (main untouched)
+
+Branches `redesign-home` and `desktop-polish` are identical (head `a77eb6c`). Preview: hyperbolic-loyalty-git-redesign-home-hyperbolic1.vercel.app
+
+**Shipped (on branches):**
+- Staff HQ: dense two-column layouts, gated tabs, per-tab staff guides (5 views then opt-out; append-only `staff_guide_log`). Drafts exist for Events, Players, Redemptions only.
+- Age gate at signup (neutral birthdate screen, 13+, birthdate never stored, `players.age_confirmed_at`).
+- Friends mini panel; status privacy rules on leaderboard/search.
+- Events/kiosk fixes: active-event lookup never cached; check-in no longer inserts nonexistent `event_attendances.store_id`; several events can be live at once (Start no longer ends others); kiosk scoped by `?store_id=` / `?event_id=` with event picker; QR check-in validates its own event; HQ shows per-event check-in counts; kiosk stacks on mobile.
+- Kiosk exit: "Staff: exit" opens a PIN pad. `staff_pins` table (hashed PIN, 5 tries then 5 min lock). PIN set on first HQ visit; managers/admins reset from Staff tab. Fails closed if no PIN. Player check-in error screen has a dashboard link.
+
+**DB migrations applied this session:** `players.age_confirmed_at`, `staff_guide_log`, `staff_pins`.
+
+**Open / TODO:**
+- Dj test data to clean before any main merge: `[TEST]` events, `[TEST seed]` xp_ledger rows, Dj's attendance/XP from kiosk tests, reset Dj and remove Dj's staff rows (app_users 3ace1580..., staff_store_roles).
+- Fix `effectivePassTier` '+00:00' bug on main if not already there.
+- Staff guides for remaining tabs; confirm Redemptions wording matches the real button flow.
+- Home-page walkthrough for players (mobile-first, coach marks, replayable) after HQ work.
+- Event Credit HQ redemptions screen; missing cover art (dbs/dbfw/general/yugioh); calculator ignores Diamond credit.
+- Lawyer review of privacy wording; Profile light mode untested.
+- Kiosk PIN is client-side navigation only (no server cookie lock); acceptable since kiosk tablets are not expected to be handed to customers.
