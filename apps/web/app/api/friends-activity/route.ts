@@ -106,7 +106,7 @@ export async function GET() {
     }
 
     // --- Source 2: Friend XP events (wins, achievements, undefeated) ---
-    const { data: xpEvents } = await supabaseAdmin
+    const { data: xpEvents, error: xpError } = await supabaseAdmin
       .from('xp_ledger')
       .select(`
         created_at,
@@ -115,13 +115,15 @@ export async function GET() {
         game_id,
         description,
         player_id,
-        players ( display_name )
+        players!xp_ledger_player_id_fkey ( display_name )
       `)
       .in('player_id', friendIds)
       .in('source', ['match_win', 'achievement', 'undefeated_bonus'])
       .gte('created_at', cutoffStr)
       .order('created_at', { ascending: false })
       .limit(10);
+
+    if (xpError) console.error('friends-activity xp query failed:', xpError);
 
     const SOURCE_LABELS: Record<string, string> = {
       match_win: 'won a match',
