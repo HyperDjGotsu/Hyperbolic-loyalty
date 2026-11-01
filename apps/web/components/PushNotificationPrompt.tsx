@@ -2,20 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
+
+const DAY_MS = 24 * 3600_000;
 
 export default function PushNotificationPrompt() {
+  const { user, isLoaded } = useUser();
   const [status, setStatus] = useState<'idle' | 'prompt' | 'subscribing' | 'subscribed' | 'denied' | 'unsupported'>('idle');
 
   useEffect(() => {
+    if (!isLoaded || !user) return;
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setStatus('unsupported');
       return;
     }
     const perm = Notification.permission;
-    if (perm === 'granted') setStatus('subscribed');
-    else if (perm === 'denied') setStatus('denied');
-    else setStatus('prompt');
-  }, []);
+    if (perm === 'granted') { setStatus('subscribed'); return; }
+    if (perm === 'denied') { setStatus('denied'); return; }
+
+    // Ask at most once a day per account, however many pages they open. Recorded when it is shown,
+    // so ignoring it or tapping Not now both hold it off until tomorrow.
+    const key = `pp_push_prompt_${user.id}`;
+    try {
+      const last = Number(localStorage.getItem(key) || 0);
+      if (last && Date.now() - last < DAY_MS) return;
+      localStorage.setItem(key, String(Date.now()));
+    } catch { /* storage blocked: fall through and show it */ }
+    setStatus('prompt');
+  }, [isLoaded, user]);
 
   const subscribe = async () => {
     setStatus('subscribing');
