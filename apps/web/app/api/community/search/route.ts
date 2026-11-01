@@ -82,14 +82,16 @@ export async function GET(request: Request) {
       const isFriendsOnly = player.privacy_profile_visibility === 'friends';
       const isFriend = friendIds.has(player.id);
       const isPending = pendingIds.has(player.id);
+      // Private hides stats from everyone; friends-only hides them from non-friends
+      const hideStats = isPrivate || (isFriendsOnly && !isFriend);
 
       return {
         id: player.player_id,
         odid: player.id, // UUID for API calls
         name: player.display_name || 'Unknown',
-        title: isPrivate ? '???' : `Level ${level}`,
-        level: isPrivate ? null : level,
-        totalXp: isPrivate ? null : totalXp,
+        title: hideStats ? '???' : `Level ${level}`,
+        level: hideStats ? null : level,
+        totalXp: hideStats ? null : totalXp,
         avatar: (() => {
           const cfg = (player.avatar_config && typeof player.avatar_config === 'object' && !Array.isArray(player.avatar_config))
             ? player.avatar_config as Record<string, unknown>
