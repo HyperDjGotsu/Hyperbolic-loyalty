@@ -79,7 +79,7 @@ export async function GET(request: Request) {
           label: 'Event Winner',
           headline: `${player.display_name} placed ${placementLabel(row.placement)} at ${event.name}`,
           date: row.qualified_at || new Date().toISOString(),
-          link: `/event/${row.qualifier_event_id}`,
+          link: `/dashboard/events?event=${row.qualifier_event_id}`,
         });
       }
     }
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
           headline: ev.name,
           subtext: scheduledDate,
           date: ev.created_at || ev.scheduled_at,
-          link: `/event/${ev.id}`,
+          link: `/dashboard/events?event=${ev.id}`,
         });
       }
     }
