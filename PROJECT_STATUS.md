@@ -343,3 +343,20 @@ Branches `redesign-home` and `desktop-polish` are identical (head `a77eb6c`). Pr
 - Event Credit HQ redemptions screen; missing cover art (dbs/dbfw/general/yugioh); calculator ignores Diamond credit.
 - Lawyer review of privacy wording; Profile light mode untested.
 - Kiosk PIN is client-side navigation only (no server cookie lock); acceptable since kiosk tablets are not expected to be handed to customers.
+
+### Nov 1, 2026 (later) — shipped to main
+- Event wrap-up: after End Event a list of checked-in players opens; staff enter wins / Undefeated / community tiles / placement (logged only). One award per event (`event_results`), changes need the staff member's own PIN and post only the difference; failed saves undo every write; no self-awards; completed events only, 7-day window. "Wrap up recent events" card in HQ Events. Any store staff can run it.
+- Floating friends button on all player pages (Activity/Friends sheet). Share a win with a friend: preset card built from your own ledger row, friends only, no text, 20/day (`friend_shares`); red dot + "From friends" strip. No points move between accounts.
+- Home walkthrough (spotlight tour, plays once after welcome, replay on Profile) and one-time "about this page" cards (Events, Community, Prize Wall, Profile). Separate replay links on Profile.
+- Events page shows checked-in and interested counts (hidden at zero). Cover images stay hidden until loaded; cards no longer remount on star taps. Special events load without snapping the page.
+- Mobile Home: Friends section removed (floating button), Activity scrolls inside its card (~5 rows). Store updates open in-app event view.
+- Staff PIN (`staff_pins`) required to exit kiosk; set on first HQ visit; shared check in `lib/staff-pin.ts`.
+- Age gate wording: "Please enter your birthdate. We will not save or share your birthdate." Privacy page matches. Under-13 blocked.
+- Staff guides updated to match real buttons; Events guide v2 includes the wrap-up.
+- Migrations this stretch: `staff_pins`, `friend_shares`, `event_results` (plus earlier `players.age_confirmed_at`, `staff_guide_log`).
+
+**Decision:** all player data is reset at go-live, so no Dj/[TEST] cleanup before merge.
+
+**Still to test on production after merge (needs two accounts):** wrap-up end to end, friend shares, Dj2/real-account signup flow, kiosk with two live events.
+
+**Deferred:** kiosk server-side lock / kiosk-only account; per-placement point bonuses; guides for remaining HQ tabs; Event Credit HQ redemptions screen; missing cover art (user has the files); calculator ignores Diamond credit; lawyer review of privacy wording.
