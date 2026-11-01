@@ -2749,7 +2749,7 @@ export default function HQPage() {
 
       {/* Header — sticky so store pill stays visible on scroll */}
       <div className="sticky top-0 z-40 border-b border-border-token bg-surface/80 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1.5">
               <h1 className="text-xl sm:text-2xl font-bold text-accent">
@@ -2800,7 +2800,7 @@ export default function HQPage() {
 
       {/* Tabs */}
       <div className="border-b border-border-token">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-4">
           {/* Mobile: native select dropdown */}
           <div className="sm:hidden py-2">
             <select
@@ -2854,7 +2854,7 @@ export default function HQPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Players Tab */}
         {activeTab === 'players' && (
           <div className="space-y-6">
