@@ -23,7 +23,14 @@ function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<'choice' | 'link' | 'create'>('create');
-  const [step, setStep] = useState<'profile' | 'store'>('profile');
+  const [step, setStep] = useState<'age' | 'profile' | 'store'>('age');
+  // Age gate: birthdate is only used to check 13+ (the server re-checks it and does not store it)
+  const [bMonth, setBMonth] = useState('');
+  const [bDay, setBDay] = useState('');
+  const [bYear, setBYear] = useState('');
+  const [underage, setUnderage] = useState(false);
+  const [birthdate, setBirthdate] = useState('');
+  useEffect(() => { try { if (localStorage.getItem('pp_age_blocked') === '1') setUnderage(true); } catch {} }, []);
   const [playerId, setPlayerId] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [discordUsername, setDiscordUsername] = useState('');
@@ -168,6 +175,26 @@ function OnboardingContent() {
     }
   };
 
+  const handleAgeNext = () => {
+    const y = Number(bYear), m = Number(bMonth), d = Number(bDay);
+    const dob = new Date(y, m - 1, d);
+    if (!y || !m || !d || dob.getFullYear() !== y || dob.getMonth() !== m - 1 || dob.getDate() !== d || dob > new Date() || y < 1900) {
+      setError('Please enter a valid birthdate');
+      return;
+    }
+    const today = new Date();
+    let age = today.getFullYear() - y;
+    if (today.getMonth() < m - 1 || (today.getMonth() === m - 1 && today.getDate() < d)) age--;
+    if (age < 13) {
+      try { localStorage.setItem('pp_age_blocked', '1'); } catch {}
+      setUnderage(true);
+      return;
+    }
+    setBirthdate(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    setError('');
+    setStep('profile');
+  };
+
   const handleProfileNext = () => {
     if (!displayName.trim()) {
       setError('Please enter a display name');
@@ -199,12 +226,14 @@ function OnboardingContent() {
           referralCode: referralCode.trim().toUpperCase() || null,
           staffInviteCode: staffInviteCode || null,
           homeStoreId,
+          birthdate,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        if (data.code === 'underage') { try { localStorage.setItem('pp_age_blocked', '1'); } catch {} setUnderage(true); return; }
         setError(data.error || 'Failed to create player');
         return;
       }
@@ -302,7 +331,42 @@ function OnboardingContent() {
           </div>
         )}
 
-        {mode === 'create' && (
+        {underage && (
+          <div className="card p-6 text-center">
+            <h2 className="text-xl font-bold text-primary mb-2">Sorry, you can&apos;t sign up yet</h2>
+            <p className="text-secondary text-sm">Player Pass is for players 13 and older. Ask a parent or guardian, and check back when you&apos;re 13.</p>
+          </div>
+        )}
+
+        {!underage && mode === 'create' && step === 'age' && (
+          <div className="card p-6">
+            <h2 className="text-xl font-bold text-primary mb-2">When were you born?</h2>
+            <p className="text-secondary text-sm mb-6">We use this once to check you&apos;re 13 or older. We don&apos;t save your birthdate.</p>
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <select value={bMonth} onChange={e => setBMonth(e.target.value)} className="w-full bg-input border border-border-strong rounded-xl py-3 px-3 text-primary focus:outline-none focus:border-accent" aria-label="Month">
+                <option value="">Month</option>
+                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
+              </select>
+              <select value={bDay} onChange={e => setBDay(e.target.value)} className="w-full bg-input border border-border-strong rounded-xl py-3 px-3 text-primary focus:outline-none focus:border-accent" aria-label="Day">
+                <option value="">Day</option>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              <select value={bYear} onChange={e => setBYear(e.target.value)} className="w-full bg-input border border-border-strong rounded-xl py-3 px-3 text-primary focus:outline-none focus:border-accent" aria-label="Year">
+                <option value="">Year</option>
+                {Array.from({ length: 90 }, (_, i) => new Date().getFullYear() - i).map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <button
+              onClick={handleAgeNext}
+              disabled={!bMonth || !bDay || !bYear}
+              className="mt-4 w-full bg-accent text-accent-fg font-bold py-4 rounded-xl disabled:opacity-50 hover:opacity-90 transition-opacity"
+            >
+              Continue
+            </button>
+          </div>
+        )}
+
+        {!underage && mode === 'create' && step !== 'age' && (
           <div className="card p-6">
             <button
               onClick={() => { setMode('choice'); setError(''); }}
@@ -444,7 +508,7 @@ function OnboardingContent() {
         )}
 
         {/* Store picker step */}
-        {mode === 'create' && step === 'store' && (
+        {!underage && mode === 'create' && step === 'store' && (
           <div>
             <button
               onClick={() => setStep('profile')}

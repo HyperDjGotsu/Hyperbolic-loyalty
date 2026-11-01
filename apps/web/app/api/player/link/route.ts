@@ -4,6 +4,21 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { enforceRateLimitPermissive, getClientIp } from '@/lib/rate-limit';
 import { SELECTABLE_GAME_IDS, resolveGameId } from '@/lib/games';
 
+const MIN_AGE = 13;
+const AGE_BLOCK_COOKIE = 'pp_age_blocked';
+
+// Whole years between a YYYY-MM-DD birthdate and today; null if the date isn't real
+function ageFromBirthdate(value: unknown): number | null {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [y, m, d] = value.split('-').map(Number);
+  const dob = new Date(Date.UTC(y, m - 1, d));
+  if (dob.getUTCFullYear() !== y || dob.getUTCMonth() !== m - 1 || dob.getUTCDate() !== d || y < 1900) return null;
+  const now = new Date();
+  let age = now.getUTCFullYear() - y;
+  if (now.getUTCMonth() < m - 1 || (now.getUTCMonth() === m - 1 && now.getUTCDate() < d)) age--;
+  return age >= 0 ? age : null;
+}
+
 export const dynamic = 'force-dynamic';
 
 // Generate random network player ID — prefix comes from the player's home store, chars exclude O/0/I/1
@@ -36,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId } = body;
+    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId, birthdate } = body;
     // Note: managedStoreId is intentionally NOT accepted here.
     // Staff store assignments are granted through the staff invitation flow
     // (staff_store_roles table), never through account creation.
@@ -115,6 +130,20 @@ export async function POST(request: Request) {
       });
 
     } else if (action === 'create_new') {
+      // Age gate (13+). The birthdate is checked here and never stored; only the confirmation time is.
+      if (request.headers.get('cookie')?.includes(`${AGE_BLOCK_COOKIE}=1`)) {
+        return NextResponse.json({ error: 'You must be 13 or older to use Player Pass.', code: 'underage' }, { status: 403 });
+      }
+      const age = ageFromBirthdate(birthdate);
+      if (age === null) {
+        return NextResponse.json({ error: 'Birthdate required', code: 'birthdate_required' }, { status: 400 });
+      }
+      if (age < MIN_AGE) {
+        const res = NextResponse.json({ error: 'You must be 13 or older to use Player Pass.', code: 'underage' }, { status: 403 });
+        res.cookies.set(AGE_BLOCK_COOKIE, '1', { httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30, path: '/' });
+        return res;
+      }
+
       // Create a new player
       if (!displayName) {
         return NextResponse.json({ error: 'Display name required' }, { status: 400 });
@@ -190,6 +219,7 @@ export async function POST(request: Request) {
           player_id: newPlayerId,
           display_name: displayName,
           clerk_user_id: userId,
+          age_confirmed_at: new Date().toISOString(),
           // Auto-pulled from Clerk
           email: clerkEmail,
           real_name: clerkRealName,

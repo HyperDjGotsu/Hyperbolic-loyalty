@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 };
 
 const CONTACT_EMAIL = 'darrell@hyperbolictcg.com';
-const LAST_UPDATED = 'October 18, 2026';
+const LAST_UPDATED = 'October 31, 2026';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -110,9 +110,11 @@ export default function PrivacyPage() {
 
         <Section title="Children">
           <p>
-            Player Pass is not directed to children under 13, and we do not knowingly collect their
-            information. If you believe a child has created an account, contact us and we will
-            remove it.
+            Player Pass is for players 13 and older. When you sign up we ask for your birthdate once
+            to check your age. We do not save the birthdate, only that you confirmed you are 13 or
+            older. If you are under 13 we do not create your player profile. We do not knowingly
+            collect information from children under 13. If you believe a child has created an
+            account, contact us and we will remove it.
           </p>
         </Section>
 
