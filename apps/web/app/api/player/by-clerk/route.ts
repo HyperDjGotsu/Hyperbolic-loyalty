@@ -358,6 +358,7 @@ export async function GET() {
       heroBackdrop: player.hero_backdrop ?? null,
       passTier: player.pass_tier,
       passStatus: player.pass_status,
+      status: player.status_text ?? null,
       passExpiresAt: player.pass_expires_at,
       passStartedAt: player.pass_started_at,
       isTrial: !!player.has_claimed_trial && player.pass_tier === 'access' && !player.stripe_subscription_id,

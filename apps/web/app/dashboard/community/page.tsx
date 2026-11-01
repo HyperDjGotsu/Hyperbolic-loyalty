@@ -29,6 +29,7 @@ interface LeaderboardEntry {
   avatar: PlayerAvatar;
   hidden?: boolean;
   isWanted?: boolean;
+  status?: string | null;
 }
 
 interface SearchResult {

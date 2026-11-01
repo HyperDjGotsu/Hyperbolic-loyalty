@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
     if (clerkUserId) {
       const { data: self } = await supabaseAdmin
         .from('players')
-        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config')
+        .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, status_text')
         .eq('clerk_user_id', clerkUserId)
         .maybeSingle();
       const selfIndex = self ? sortedPlayerIds.indexOf(self.id) : -1;
@@ -109,6 +109,7 @@ export async function GET(request: NextRequest) {
           level: Math.floor((xpByPlayer[self.id] || 0) / 100) + 1,
           hidden: false,
           avatar: buildAvatar(self),
+          status: self.status_text || null,
         };
       }
     }
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest) {
     // ── Fetch player display data for ranked players ──────────────────────────
     const { data: players, error: playersError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous, status_text')
       .in('id', rankedPlayerIds);
 
     if (playersError) {
@@ -145,6 +146,7 @@ export async function GET(request: NextRequest) {
           level: Math.floor((xpByPlayer[playerId] || 0) / 100) + 1,
           hidden: isAnonymous,
           avatar: isAnonymous ? ANONYMOUS_AVATAR : buildAvatar(player),
+          status: isAnonymous ? null : (player.status_text || null),
         };
       })
       .filter(Boolean);

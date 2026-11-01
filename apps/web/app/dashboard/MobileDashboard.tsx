@@ -1,5 +1,6 @@
 'use client';
 
+import { FriendsMini } from '@/components/FriendsMini';
 import React, { useEffect, useState } from 'react';
 import {
   Avatar,
@@ -287,6 +288,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
           </Ring>
           <div className="min-w-0">
             <div className="text-lg font-bold text-white truncate">{playerData?.displayName || 'Player'}</div>
+            {playerData?.status && <div className="text-[13px] text-white/80 truncate">{playerData.status}</div>}
             <div className="text-[13px] text-white/70 tabular-nums">{levelProgress} of 100 XP to Level {level + 1}</div>
             <div className="mt-3 flex items-baseline gap-1.5">
               <span className="text-3xl leading-none font-extrabold tabular-nums text-xp">{spendable.toLocaleString()}</span>
@@ -478,7 +480,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
         </section>
       )}
 
-      {/* Activity: yours, then friends */}
+      {/* Activity: yours */}
       <section className="mt-8">
         <SectionHeader title="Activity" href="/dashboard/community" linkLabel="Community" />
         <div className="rounded-[26px] bg-surface border border-border-token overflow-hidden divide-y divide-border-token">
@@ -493,20 +495,19 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
               </div>
             </div>
           ))}
-          {friendActivity.map((item: any, i: number) => (
-            <div key={`f${i}`} className="flex items-start gap-3 px-4 py-3.5">
-              <span className="flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-base bg-elevated">{item.icon}</span>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-primary leading-snug">{item.headline}</div>
-                {item.subtext && <div className="text-xs text-secondary mt-0.5">{item.subtext}</div>}
-              </div>
-            </div>
-          ))}
-          {recentActivity.length === 0 && friendActivity.length === 0 && (
+          {recentActivity.length === 0 && (
             <div className="px-4 py-6 text-center text-sm text-secondary">
               No activity yet. Check in to events, or <a href="/dashboard/community" className="text-accent font-semibold">find players</a>.
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Friends: what they are doing, and who they are */}
+      <section className="mt-8">
+        <SectionHeader title="Friends" href="/dashboard/community" linkLabel="Community" />
+        <div className="rounded-[26px] bg-surface border border-border-token p-4">
+          <FriendsMini activity={friendActivity} limit={4} />
         </div>
       </section>
 

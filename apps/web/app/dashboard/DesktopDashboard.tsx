@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { EventCreditCard } from '@/components/EventCreditCard';
+import { FriendsMini } from '@/components/FriendsMini';
 import { PassesSheet } from '@/components/PassesSheet';
 import type { DashboardData } from './useDashboardData';
 import { Loader } from '@/components/Loader';
@@ -181,6 +182,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
               <h1 className="truncate font-display text-[26px] font-extrabold leading-none tracking-[-0.03em]">{playerData?.displayName || 'Player'}</h1>
               <span className="shrink-0 rounded-lg bg-gradient-to-br from-orange-500 to-yellow-500 px-2.5 py-0.5 text-xs font-bold">Level {level}</span>
             </div>
+            {playerData?.status && <div className="mt-1.5 truncate text-sm text-white/80">{playerData.status}</div>}
             <div className="mt-2 h-2.5 max-w-[340px] overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${levelProgress}%` }} /></div>
             <div className="mt-1 text-xs text-white/70">{totalXp.toLocaleString()} / {nextLevelXp.toLocaleString()} XP</div>
           </div>
@@ -386,18 +388,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
 
         <section className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
           <PanelTitle title="Friends" action="Find players →" onAction={() => router.push('/dashboard/community')} />
-          {friendActivity.length === 0 ? (
-            <Empty>Add friends to see what they are playing.</Empty>
-          ) : (
-            <ul className="flex flex-1 flex-col justify-between">
-              {friendActivity.slice(0, 3).map((f: any, i: number) => (
-                <li key={i} className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-elevated text-sm">{f.icon}</span>
-                  <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{f.headline}</div>{f.subtext && <div className="truncate text-xs text-secondary">{f.subtext}</div>}</div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <FriendsMini activity={friendActivity} />
         </section>
 
         <section className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
