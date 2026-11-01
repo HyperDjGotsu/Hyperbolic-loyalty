@@ -97,7 +97,7 @@ export async function GET() {
         privacy: {
           profileVisibility: friend.privacy_profile_visibility || 'public',
         },
-        status: friend.status_text || null,
+        status: friend.privacy_profile_visibility === 'private' ? null : (friend.status_text || null),
         isFriend: true,
         isOnline: null, // TODO: implement online status
       };
