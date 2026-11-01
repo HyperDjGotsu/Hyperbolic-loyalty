@@ -161,6 +161,8 @@ export function WelcomeOverlay() {
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
     setVisible(false);
+    // The Home walkthrough starts once the welcome slides are done
+    window.dispatchEvent(new Event('pp:welcome-closed'));
   };
 
   const next = () => {

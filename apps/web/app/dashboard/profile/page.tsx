@@ -1455,12 +1455,12 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => {
-              try { localStorage.removeItem('hxp_welcome_seen'); } catch { /* private mode: the tour just won't replay */ }
+              try { localStorage.removeItem('hxp_welcome_seen'); localStorage.removeItem('pp_home_tour_seen'); } catch { /* private mode: the tour just won't replay */ }
               window.location.assign('/dashboard');
             }}
             className="mx-auto mt-1 text-xs text-tertiary underline-offset-2 transition-colors hover:text-secondary hover:underline"
           >
-            Replay welcome tour
+            Replay welcome tour and Home walkthrough
           </button>
         </div>
       </div>

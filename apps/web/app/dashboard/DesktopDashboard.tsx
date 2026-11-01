@@ -164,7 +164,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
     <div className="h-[calc(100vh-64px)] min-h-[780px] bg-base text-primary">
       <div className="grid h-full grid-cols-12 grid-rows-[auto_minmax(0,1fr)_minmax(0,1fr)] gap-4 py-5">
         {/* Hero */}
-        <section className="relative isolate col-span-6 flex items-center gap-5 overflow-hidden rounded-[28px] border border-white/10 p-4 text-white">
+        <section data-tour="hero" className="relative isolate col-span-6 flex items-center gap-5 overflow-hidden rounded-[28px] border border-white/10 p-4 text-white">
           <HeroBackdrop
             gameId={parseBackdrop(playerData?.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)}
             src={parseBackdrop(playerData?.heroBackdrop).uploadUrl}
@@ -194,7 +194,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
         </section>
 
         {/* Pass */}
-        <section className={`relative col-span-4 flex flex-col justify-center overflow-hidden p-4 ${PANEL}`}>
+        <section data-tour="pass" className={`relative col-span-4 flex flex-col justify-center overflow-hidden p-4 ${PANEL}`}>
           <div className="relative flex items-center gap-3">
             {tier !== 'free' ? (
               <div
@@ -302,7 +302,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
         </section>
 
         {/* My Games */}
-        <section className={`col-span-4 flex min-h-0 flex-col p-4 ${PANEL}`}>
+        <section data-tour="games" className={`col-span-4 flex min-h-0 flex-col p-4 ${PANEL}`}>
           <PanelTitle title="My Games" action={`View all (${games.length}) →`} onAction={() => router.push('/dashboard/profile')} />
           {displayedGames.length === 0 ? (
             <Empty>Check in to an event to start your first game.</Empty>
@@ -346,14 +346,14 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             </div>
             {!hasSpunToday && !isSpinning && <span className="shrink-0 rounded-full bg-accent px-4 py-2 text-sm font-bold text-accent-fg">Claim</span>}
           </button>
-          <section className={`flex min-h-0 flex-1 flex-col overflow-hidden p-4 ${PANEL}`}>
+          <section data-tour="cotd" className={`flex min-h-0 flex-1 flex-col overflow-hidden p-4 ${PANEL}`}>
             <PanelTitle title="Card of the Day" />
             <div className="flex min-h-0 flex-1 items-center overflow-y-auto"><div className="w-full"><CardOfTheDayCompact /></div></div>
           </section>
         </div>
 
         {/* Bottom row */}
-        <section className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
+        <section data-tour="events" className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
           <PanelTitle title="This week" action="Calendar →" onAction={() => router.push('/dashboard/events')} />
           {upcomingEvents.length === 0 && specialEvents.length === 0 ? (
             <Empty>No upcoming events. Check back soon.</Empty>
@@ -370,7 +370,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
           )}
         </section>
 
-        <section className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
+        <section data-tour="activity" className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
           <PanelTitle title="Recent Activity" action="View all →" onAction={() => router.push('/dashboard/profile')} />
           {activity.length === 0 ? (
             <Empty>No activity yet. Attend events to start earning XP.</Empty>
@@ -386,7 +386,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
           )}
         </section>
 
-        <section className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
+        <section data-tour="friends" className={`col-span-3 flex min-h-0 flex-col overflow-hidden p-4 ${PANEL}`}>
           <PanelTitle title="Friends" action="Find players →" onAction={() => router.push('/dashboard/community')} />
           <FriendsMini activity={friendActivity} />
         </section>

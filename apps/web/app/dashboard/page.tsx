@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
+import HomeTour from '@/components/HomeTour';
 import { HomeSkeleton } from '@/components/Skeleton';
 import { useDashboardData, type DashboardData } from './useDashboardData';
 
@@ -69,6 +70,7 @@ export default function DashboardPage() {
   return (
     <>
       <WelcomeOverlay />
+      <HomeTour />
       {isDesktop === null ? (
         <HomeSkeleton />
       ) : isDesktop ? (

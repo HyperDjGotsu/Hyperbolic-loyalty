@@ -275,7 +275,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       )}
 
       {/* Hero: level, points, spin */}
-      <section className="relative isolate overflow-hidden mt-5 rounded-[30px] bg-elevated border border-border-token p-5 shadow-xl">
+      <section data-tour="hero" className="relative isolate overflow-hidden mt-5 rounded-[30px] bg-elevated border border-border-token p-5 shadow-xl">
         <HeroBackdrop
           storeId={(selectedStore ?? homeStore)?.id}
           gameId={parseBackdrop(playerData?.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)}
@@ -347,7 +347,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       )}
 
       {/* Up next */}
-      <section className="mt-8">
+      <section data-tour="events" className="mt-8">
         <SectionHeader title="Up next" href="/dashboard/events" linkLabel="Calendar" />
         {upcomingEvents.length === 0 ? (
           <div className="rounded-[26px] bg-surface border border-border-token p-5 text-sm text-secondary">No upcoming events</div>
@@ -371,7 +371,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       </section>
 
       {/* Your games */}
-      <section className="mt-8">
+      <section data-tour="games" className="mt-8">
         <SectionHeader title="Your games" />
         {filteredGames.length > 0 ? (
           <>
@@ -440,13 +440,13 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       </section>
 
       {/* Card of the Day */}
-      <div className="mt-8">
+      <div data-tour="cotd" className="mt-8">
         <CardOfTheDayCompact />
       </div>
 
       {/* Prize Wall */}
       {prizeHighlights.length > 0 && (
-        <section className="mt-8">
+        <section data-tour="prizes" className="mt-8">
           <SectionHeader title="Prize Wall" href="/dashboard/prize-wall" linkLabel="See all" />
           <div className={RAIL}>
             {prizeHighlights.map((item: any) => {
@@ -481,7 +481,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       )}
 
       {/* Activity: yours */}
-      <section className="mt-8">
+      <section data-tour="activity" className="mt-8">
         <SectionHeader title="Activity" href="/dashboard/community" linkLabel="Community" />
         <div className="rounded-[26px] bg-surface border border-border-token overflow-hidden divide-y divide-border-token">
           {recentActivity.map((a: any) => (
@@ -504,7 +504,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       </section>
 
       {/* Friends: what they are doing, and who they are */}
-      <section className="mt-8">
+      <section data-tour="friends" className="mt-8">
         <SectionHeader title="Friends" href="/dashboard/community" linkLabel="Community" />
         <div className="rounded-[26px] bg-surface border border-border-token p-4">
           <FriendsMini activity={friendActivity} limit={4} />
