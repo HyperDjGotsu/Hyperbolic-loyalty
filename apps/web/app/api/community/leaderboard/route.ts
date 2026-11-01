@@ -92,12 +92,14 @@ export async function GET(request: NextRequest) {
     // The caller's own standing, when they rank below the cut-off
     let me: Record<string, unknown> | null = null;
     const { userId: clerkUserId } = await auth();
+    let viewerId: string | null = null;
     if (clerkUserId) {
       const { data: self } = await supabaseAdmin
         .from('players')
         .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, status_text')
         .eq('clerk_user_id', clerkUserId)
         .maybeSingle();
+      viewerId = self?.id ?? null;
       const selfIndex = self ? sortedPlayerIds.indexOf(self.id) : -1;
       if (self && selfIndex >= limit) {
         me = {
@@ -121,13 +123,29 @@ export async function GET(request: NextRequest) {
     // ── Fetch player display data for ranked players ──────────────────────────
     const { data: players, error: playersError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous, status_text')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_show_as_anonymous, privacy_profile_visibility, status_text')
       .in('id', rankedPlayerIds);
 
     if (playersError) {
       console.error('Leaderboard players error:', playersError);
       return NextResponse.json({ error: 'Failed to fetch players' }, { status: 500 });
     }
+
+    // Status follows profile visibility: public = anyone, friends = accepted friends only, private = nobody (except yourself)
+    const friendIds = new Set<string>();
+    if (viewerId) {
+      const { data: fs } = await supabaseAdmin
+        .from('friendships')
+        .select('requester_id, addressee_id')
+        .eq('status', 'accepted')
+        .or(`requester_id.eq.${viewerId},addressee_id.eq.${viewerId}`);
+      for (const f of fs ?? []) friendIds.add(f.requester_id === viewerId ? f.addressee_id : f.requester_id);
+    }
+    const canSeeStatus = (p: { id: string; privacy_profile_visibility?: string | null }) => {
+      if (p.id === viewerId) return true;
+      const v = p.privacy_profile_visibility || 'public';
+      return v === 'public' || (v === 'friends' && friendIds.has(p.id));
+    };
 
     const playerMap: Record<string, (typeof players)[0]> = {};
     for (const p of players ?? []) playerMap[p.id] = p;
@@ -146,7 +164,7 @@ export async function GET(request: NextRequest) {
           level: Math.floor((xpByPlayer[playerId] || 0) / 100) + 1,
           hidden: isAnonymous,
           avatar: isAnonymous ? ANONYMOUS_AVATAR : buildAvatar(player),
-          status: isAnonymous ? null : (player.status_text || null),
+          status: !isAnonymous && canSeeStatus(player) ? (player.status_text || null) : null,
         };
       })
       .filter(Boolean);
