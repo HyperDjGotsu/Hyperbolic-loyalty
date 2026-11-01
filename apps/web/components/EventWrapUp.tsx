@@ -151,14 +151,17 @@ function PlayerEditor({ eventId, attendee, config, onSaved }: { eventId: string;
 
       <div>
         <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-secondary">Outcome (from the tournament software)</label>
-        <select
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="Place, like 1 or 4 (leave empty for none)"
           value={placement ?? ''}
-          onChange={e => setPlacement(e.target.value ? Number(e.target.value) : null)}
+          onChange={e => {
+            const digits = e.target.value.replace(/\D/g, '').slice(0, 2);
+            setPlacement(digits ? Math.min(64, Number(digits)) || null : null);
+          }}
           className="w-full rounded-lg border border-border-token bg-surface px-3 py-2.5 text-sm text-primary"
-        >
-          <option value="">No placement</option>
-          {Array.from({ length: 32 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{ordinal(n)} place</option>)}
-        </select>
+        />
       </div>
 
       <div className="rounded-lg bg-surface px-3 py-2 text-sm text-secondary">

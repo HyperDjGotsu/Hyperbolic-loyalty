@@ -11,8 +11,9 @@ export const dynamic = 'force-dynamic';
 const MAX_WINS = 10;
 const MAX_PLACEMENT = 64;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-// Community tiles staff can tick. Undefeated is its own switch; Attended is excluded because check-in already awarded it.
-const COMMUNITY_TILES = Object.keys(BONUS_TILE_XP).filter(t => t !== 'Undefeated');
+// Community tiles staff can tick after an event. Undefeated is its own switch; Attended is excluded because check-in
+// already awarded it; Signed Up and Taught Player aren't event results, so they stay on the Players page only.
+const COMMUNITY_TILES = Object.keys(BONUS_TILE_XP).filter(t => !['Undefeated', 'Signed Up', 'Taught Player'].includes(t));
 
 async function loadEvent(eventId: string) {
   const { data: event } = await supabaseAdmin
