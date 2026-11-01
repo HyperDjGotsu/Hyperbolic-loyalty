@@ -78,6 +78,7 @@ interface PlayerData {
   isTrial: boolean;
   isStaff: boolean;
   heroBackdrop: string | null;
+  homeStoreId: string | null;
   gamesPlayed: number;
   eventsAttended: number;
   eventsThisMonth: number;
@@ -276,6 +277,7 @@ export default function ProfilePage() {
             isTrial: data.isTrial === true,
             isStaff: data.isStaff || false,
             heroBackdrop: data.heroBackdrop ?? null,
+            homeStoreId: data.homeStoreId ?? null,
             gamesPlayed: Array.isArray(data.gameXP) ? data.gameXP.length : 0,
             eventsAttended: data.eventsAttended ?? 0,
             eventsThisMonth: data.eventsThisMonth ?? 0,
@@ -1037,7 +1039,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-base pb-20 lg:pt-8">
       {/* Hero: the player's picture, blurred, behind their avatar, name and numbers */}
       <div className="relative isolate overflow-hidden px-4 pt-10 pb-7 lg:rounded-[30px]">
-        <HeroBackdrop gameId={parseBackdrop(playerData.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)} />
+        <HeroBackdrop storeId={playerData.homeStoreId} gameId={parseBackdrop(playerData.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)} />
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-base" />
         <BrandMark className="absolute left-4 top-4 h-9" />
         <div className="relative flex flex-col items-center">
@@ -1631,7 +1633,7 @@ export default function ProfilePage() {
                     onClick={() => void saveBackdrop({ gameId: g.id })}
                     className={`rounded-2xl overflow-hidden border-2 ${selected ? 'border-accent' : 'border-transparent'}`}
                   >
-                    <CoverImage gameId={g.id} color={g.color} className="h-24">
+                    <CoverImage gameId={g.id} storeId={playerData.homeStoreId} color={g.color} className="h-24">
                       <div className="absolute inset-x-2.5 bottom-2 text-left text-sm font-extrabold text-white leading-tight">{g.name}</div>
                     </CoverImage>
                   </button>

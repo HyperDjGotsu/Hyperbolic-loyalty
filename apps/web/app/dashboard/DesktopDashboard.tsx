@@ -167,6 +167,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
         {/* Hero */}
         <section data-tour="hero" className="relative isolate col-span-6 flex items-center gap-5 overflow-hidden rounded-[28px] border border-white/10 p-4 text-white">
           <HeroBackdrop
+            storeId={artStoreId}
             gameId={parseBackdrop(playerData?.heroBackdrop).gameId ?? pickBackdropGame(favoriteGames)}
             src={parseBackdrop(playerData?.heroBackdrop).uploadUrl}
           />
