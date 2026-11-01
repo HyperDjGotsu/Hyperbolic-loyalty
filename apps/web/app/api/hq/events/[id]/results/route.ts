@@ -109,7 +109,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
   // Results are entered after the event has ended, and only for a week afterwards
   if (event.status !== 'completed') return NextResponse.json({ error: 'End the event before wrapping it up' }, { status: 400 });
   const { data: evTime } = await supabaseAdmin.from('events').select('scheduled_at').eq('id', event.id).maybeSingle();
-  if (evTime?.scheduled_at && Date.now() - new Date(evTime.scheduled_at).getTime() > 7 * 24 * 3600_000) {
+  const scheduledMs = evTime?.scheduled_at ? new Date(evTime.scheduled_at).getTime() : NaN;
+  if (!Number.isFinite(scheduledMs) || Date.now() - scheduledMs > 7 * 24 * 3600_000) {
     return NextResponse.json({ error: 'This event ended more than a week ago. Ask a manager to adjust points.' }, { status: 400 });
   }
 
@@ -128,17 +129,18 @@ export async function POST(request: Request, { params }: { params: { id: string 
     .eq('clerk_user_id', staff.clerkUserId)
     .maybeSingle();
 
-  // Nobody rewards themselves: another staff member does it
-  if (staffPlayer && staffPlayer.id === playerId) {
-    return NextResponse.json({ error: 'You can\'t reward yourself. Ask another staff member to do it.' }, { status: 403 });
-  }
-
   const { data: player } = await supabaseAdmin
     .from('players')
-    .select('pass_tier, pass_expires_at, pass_status')
+    .select('clerk_user_id, pass_tier, pass_expires_at, pass_status')
     .eq('id', playerId)
     .maybeSingle();
   if (!player) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+
+  // Nobody rewards themselves: another staff member does it. Fails closed if we can't tell who the staff member is.
+  if (!staffPlayer) return NextResponse.json({ error: 'Your staff profile could not be found' }, { status: 403 });
+  if (staffPlayer.id === playerId || (player.clerk_user_id && player.clerk_user_id === staff.clerkUserId)) {
+    return NextResponse.json({ error: 'You can\'t reward yourself. Ask another staff member to do it.' }, { status: 403 });
+  }
 
   const { data: existing } = await supabaseAdmin
     .from('event_results')
