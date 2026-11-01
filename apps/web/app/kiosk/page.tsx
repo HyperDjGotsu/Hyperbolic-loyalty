@@ -40,6 +40,7 @@ export default function KioskPage() {
   const [activeEvent, setActiveEvent] = useState<ActiveEvent | null>(null);
   // The kiosk is tied to a store (?store_id=) or to one event (?event_id=). When several events are live, staff pick one.
   const [liveEvents, setLiveEvents] = useState<Array<{ id: string; name: string }>>([]);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scopeRef = useRef<{ storeId: string | null; eventId: string | null }>({ storeId: null, eventId: null });
   const pickedRef = useRef<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -264,12 +265,16 @@ export default function KioskPage() {
 
   return (
     <div className="min-h-screen bg-base text-primary select-none md:overflow-hidden">
-      <a
-        href="/hq"
-        className="fixed bottom-4 left-4 z-40 px-4 py-2 rounded-full text-sm font-semibold bg-surface/90 border border-border text-secondary hover:text-primary transition-colors"
+      {/* Hold 1.5s to leave: a stray tap from a customer must not open HQ on a staff-signed-in tablet */}
+      <button
+        type="button"
+        onPointerDown={() => { exitTimer.current = setTimeout(() => { window.location.href = '/hq'; }, 1500); }}
+        onPointerUp={() => { if (exitTimer.current) clearTimeout(exitTimer.current); }}
+        onPointerLeave={() => { if (exitTimer.current) clearTimeout(exitTimer.current); }}
+        className="fixed bottom-4 left-4 z-40 px-4 py-2 rounded-full text-sm font-semibold bg-surface/90 border border-border text-tertiary select-none"
       >
-        ← Exit to HQ
-      </a>
+        Staff: hold to exit
+      </button>
       {/* Renewal opportunity interstitial — persistent, requires staff action */}
       {renewal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
