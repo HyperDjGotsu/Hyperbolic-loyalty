@@ -106,6 +106,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
     placement = n;
   }
 
+  // Results are entered after the event has ended, and only for a week afterwards
+  if (event.status !== 'completed') return NextResponse.json({ error: 'End the event before wrapping it up' }, { status: 400 });
+  const { data: evTime } = await supabaseAdmin.from('events').select('scheduled_at').eq('id', event.id).maybeSingle();
+  if (evTime?.scheduled_at && Date.now() - new Date(evTime.scheduled_at).getTime() > 7 * 24 * 3600_000) {
+    return NextResponse.json({ error: 'This event ended more than a week ago. Ask a manager to adjust points.' }, { status: 400 });
+  }
+
   // Only players who checked in to this event can be rewarded for it
   const { data: att } = await supabaseAdmin
     .from('event_attendances')
@@ -121,6 +128,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
     .eq('clerk_user_id', staff.clerkUserId)
     .maybeSingle();
 
+  // Nobody rewards themselves: another staff member does it
+  if (staffPlayer && staffPlayer.id === playerId) {
+    return NextResponse.json({ error: 'You can\'t reward yourself. Ask another staff member to do it.' }, { status: 403 });
+  }
+
   const { data: player } = await supabaseAdmin
     .from('players')
     .select('pass_tier, pass_expires_at, pass_status')
@@ -130,7 +142,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const { data: existing } = await supabaseAdmin
     .from('event_results')
-    .select('id, rounds_won, xp_awarded, prize_points_awarded')
+    .select('id, rounds_won, undefeated, tiles, placement, xp_awarded, prize_points_awarded, updated_at')
     .eq('event_id', event.id)
     .eq('player_id', playerId)
     .maybeSingle();
@@ -155,25 +167,51 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     const dXp = xp - existing.xp_awarded;
     const dPp = prizePoints - existing.prize_points_awarded;
-    if (dXp !== 0) {
-      const { error } = await supabaseAdmin.from('xp_ledger').insert({
-        player_id: playerId, game_id: gameId, base_xp: dXp, final_xp: dXp, multiplier: 1,
-        description: `Wrap-up correction: ${label}`, source: 'manual_adjustment',
-        awarded_by: staffPlayer?.id ?? null, store_id: storeId, event_id: event.id,
-      });
-      if (error) return NextResponse.json({ error: 'Failed to save correction' }, { status: 500 });
-    }
-    if (dPp !== 0) {
-      await logPointTransaction({
-        playerId, storeId, amount: dPp, type: 'admin_adjust', source: 'event_wrapup',
-        referenceId: event.id, note: `Wrap-up correction: ${label}`,
-      });
-    }
-    await supabaseAdmin.from('event_results').update({
+
+    // Claim the change first, only if nobody changed the row since we read it. A second device or a double tap
+    // finds the row already changed and stops here, so a correction is never posted twice.
+    const { data: claimed } = await supabaseAdmin.from('event_results').update({
       rounds_won: roundsWon, undefeated, tiles, placement,
       xp_awarded: xp, prize_points_awarded: prizePoints,
       awarded_by: staff.appUserId, updated_at: new Date().toISOString(),
+    })
+      .eq('id', existing.id)
+      .eq('xp_awarded', existing.xp_awarded)
+      .eq('prize_points_awarded', existing.prize_points_awarded)
+      .eq('updated_at', existing.updated_at)
+      .select('id');
+    if (!claimed || claimed.length === 0) {
+      return NextResponse.json({ error: 'Someone just changed this result. Reload and try again.' }, { status: 409 });
+    }
+
+    const undo = () => supabaseAdmin.from('event_results').update({
+      rounds_won: existing.rounds_won, undefeated: existing.undefeated, tiles: existing.tiles, placement: existing.placement,
+      xp_awarded: existing.xp_awarded, prize_points_awarded: existing.prize_points_awarded, updated_at: existing.updated_at,
     }).eq('id', existing.id);
+
+    let xpRowId: string | null = null;
+    try {
+      if (dXp !== 0) {
+        const { data: xr, error } = await supabaseAdmin.from('xp_ledger').insert({
+          player_id: playerId, game_id: gameId, base_xp: dXp, final_xp: dXp, multiplier: 1,
+          description: `Wrap-up correction: ${label}`, source: 'manual_adjustment',
+          awarded_by: staffPlayer?.id ?? null, store_id: storeId, event_id: event.id,
+        }).select('id').single();
+        if (error || !xr) throw error ?? new Error('xp insert failed');
+        xpRowId = xr.id;
+      }
+      if (dPp !== 0) {
+        await logPointTransaction({
+          playerId, storeId, amount: dPp, type: 'admin_adjust', source: 'event_wrapup',
+          referenceId: event.id, note: `Wrap-up correction: ${label}`,
+        });
+      }
+    } catch (err) {
+      console.error('wrap-up correction failed, reverting:', err);
+      if (xpRowId) await supabaseAdmin.from('xp_ledger').delete().eq('id', xpRowId);
+      await undo();
+      return NextResponse.json({ error: 'Failed to save the change. Nothing was changed, try again.' }, { status: 500 });
+    }
     return NextResponse.json({ ok: true, corrected: true, xp, prizePoints });
   }
 
@@ -192,14 +230,18 @@ export async function POST(request: Request, { params }: { params: { id: string 
   if (undefeated) ledger.push({ source: 'undefeated_bonus', xp: BONUS_TILE_XP['Undefeated'], desc: `${label} — Undefeated` });
   if (tiles.length > 0) ledger.push({ source: 'community_contribution', xp: tiles.reduce((s, t) => s + (BONUS_TILE_XP[t] ?? 0), 0), desc: `${label} — ${tiles.join(', ')}` });
 
+  // Track what this request wrote so a failure part-way undoes all of it, not just the result row
+  const writtenXpIds: string[] = [];
   try {
     for (const l of ledger) {
-      const { error } = await supabaseAdmin.from('xp_ledger').insert({
+      const { data: xr, error } = await supabaseAdmin.from('xp_ledger').insert({
         player_id: playerId, game_id: gameId, base_xp: l.xp, final_xp: l.xp, multiplier: 1,
         description: l.desc, source: l.source, awarded_by: staffPlayer?.id ?? null, store_id: storeId, event_id: event.id,
-      });
-      if (error) throw error;
+      }).select('id').single();
+      if (error || !xr) throw error ?? new Error('xp insert failed');
+      writtenXpIds.push(xr.id);
     }
+    // Prize Points go last: if it fails nothing from it exists, and the XP rows are removed below
     if (prizePoints > 0) {
       await logPointTransaction({
         playerId, storeId, amount: prizePoints, type: 'earn', source: 'event_wrapup',
@@ -207,7 +249,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
       });
     }
   } catch (err) {
-    console.error('wrap-up award failed, rolling back result row:', err);
+    console.error('wrap-up award failed, undoing this request:', err);
+    if (writtenXpIds.length) await supabaseAdmin.from('xp_ledger').delete().in('id', writtenXpIds);
     await supabaseAdmin.from('event_results').delete().eq('id', row.id);
     return NextResponse.json({ error: 'Failed to award. Nothing was saved, try again.' }, { status: 500 });
   }
