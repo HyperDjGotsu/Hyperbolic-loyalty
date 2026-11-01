@@ -1,6 +1,5 @@
 'use client';
 
-import { FriendsMini } from '@/components/FriendsMini';
 import ShareWinButton from '@/components/ShareWinButton';
 import React, { useEffect, useState } from 'react';
 import {
@@ -118,7 +117,6 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
     upcomingEvents,
     specialEvents,
     storeUpdates,
-    friendActivity,
     prizeHighlights,
     spin,
     claimDailySpin,
@@ -505,14 +503,6 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
               No activity yet. Check in to events, or <a href="/dashboard/community" className="text-accent font-semibold">find players</a>.
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Friends: what they are doing, and who they are */}
-      <section data-tour="friends" className="mt-8">
-        <SectionHeader title="Friends" href="/dashboard/community" linkLabel="Community" />
-        <div className="rounded-[26px] bg-surface border border-border-token p-4">
-          <FriendsMini activity={friendActivity} limit={4} />
         </div>
       </section>
 
