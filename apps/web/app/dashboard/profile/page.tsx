@@ -1452,16 +1452,29 @@ export default function ProfilePage() {
             </a>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
-              try { localStorage.removeItem('hxp_welcome_seen'); localStorage.removeItem('pp_home_tour_seen'); } catch { /* private mode: the tour just won't replay */ }
-              window.location.assign('/dashboard');
-            }}
-            className="mx-auto mt-1 text-xs text-tertiary underline-offset-2 transition-colors hover:text-secondary hover:underline"
-          >
-            Replay welcome tour and Home walkthrough
-          </button>
+          <div className="mx-auto mt-1 flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => {
+                // Welcome slides only; the Home walkthrough keeps its own replay below
+                try { localStorage.removeItem('hxp_welcome_seen'); localStorage.setItem('pp_home_tour_seen', 'true'); } catch { /* private mode: the tour just won't replay */ }
+                window.location.assign('/dashboard');
+              }}
+              className="text-xs text-tertiary underline-offset-2 transition-colors hover:text-secondary hover:underline"
+            >
+              Replay welcome tour
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                try { localStorage.removeItem('pp_home_tour_seen'); } catch { /* private mode: the tour just won't replay */ }
+                window.location.assign('/dashboard');
+              }}
+              className="text-xs text-tertiary underline-offset-2 transition-colors hover:text-secondary hover:underline"
+            >
+              Replay Home walkthrough
+            </button>
+          </div>
         </div>
       </div>
       {/* Sign Out */}
