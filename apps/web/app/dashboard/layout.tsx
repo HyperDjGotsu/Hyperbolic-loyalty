@@ -1,6 +1,7 @@
 'use client';
 
 import FriendsFab from '@/components/FriendsFab';
+import PageIntro from '@/components/PageIntro';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -235,6 +236,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </nav>
 
+      <PageIntro />
       <FriendsFab />
       <PushNotificationPrompt />
       {showStoreSwitcher && (

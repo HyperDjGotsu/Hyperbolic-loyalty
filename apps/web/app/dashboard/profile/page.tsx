@@ -1452,7 +1452,7 @@ export default function ProfilePage() {
             </a>
           )}
 
-          <div className="mx-auto mt-1 flex items-center gap-4">
+          <div className="mx-auto mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <button
               type="button"
               onClick={() => {
@@ -1473,6 +1473,18 @@ export default function ProfilePage() {
               className="text-xs text-tertiary underline-offset-2 transition-colors hover:text-secondary hover:underline"
             >
               Replay Home walkthrough
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  for (const k of ['events', 'community', 'prize-wall', 'profile']) localStorage.removeItem('pp_page_intro_' + k);
+                } catch { /* private mode: tips just won't replay */ }
+                window.location.assign('/dashboard/events');
+              }}
+              className="text-xs text-tertiary underline-offset-2 transition-colors hover:text-secondary hover:underline"
+            >
+              Replay page tips
             </button>
           </div>
         </div>
