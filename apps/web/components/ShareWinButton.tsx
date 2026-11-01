@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Share2, X } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 
-type Friend = { id: string; name: string; avatar: any };
+// `id` is the public player code (HYP-…); `odid` is the internal id the server needs
+type Friend = { id: string; odid: string; name: string; avatar: any };
 
 // Share one of your own wins (a row from your activity) with a friend. No text, no points move:
 // the friend just sees a card saying what you earned.
@@ -32,7 +33,7 @@ export default function ShareWinButton({ ledgerId, className = '' }: { ledgerId:
       const res = await fetch('/api/friend-shares', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ledger_id: ledgerId, friend_id: f.id }),
+        body: JSON.stringify({ ledger_id: ledgerId, friend_id: f.odid }),
       });
       const d = await res.json().catch(() => ({}));
       setStatus(res.ok ? `Sent to ${f.name}` : d.error || 'Could not share');
@@ -64,7 +65,7 @@ export default function ShareWinButton({ ledgerId, className = '' }: { ledgerId:
             ) : (
               <ul className="flex-1 space-y-1 overflow-y-auto">
                 {friends.map(f => (
-                  <li key={f.id}>
+                  <li key={f.odid}>
                     <button type="button" disabled={busy} onClick={() => send(f)} className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-elevated disabled:opacity-50">
                       <div className="shrink-0 scale-75 origin-left -mr-2.5"><Avatar avatar={f.avatar} size="sm" /></div>
                       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{f.name}</span>
