@@ -51,7 +51,7 @@ export default function KioskPage() {
 
   const fetchActiveEvent = useCallback(async () => {
     try {
-      const res = await fetch('/api/events/active');
+      const res = await fetch('/api/events/active', { cache: 'no-store' });
       const data = await res.json();
       setActiveEvent(data.event);
     } catch {

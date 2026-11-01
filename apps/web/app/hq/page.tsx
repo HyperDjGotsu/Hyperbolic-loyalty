@@ -640,17 +640,17 @@ function StoreIndicator({
   }
 
   const roleLabel = isNetworkAdmin
-    ? '· Network Admin'
+    ? 'Network Admin'
     : hqStore.activeStore.role === 'store_manager'
-      ? '· Manager'
-      : '· Staff';
+      ? 'Manager'
+      : 'Staff';
 
   if (!hqStore.canSwitchStores) {
     return (
-      <span className="inline-flex items-center gap-2 bg-accent/15 border border-accent/40 text-accent rounded-full px-3 py-1 text-sm">
-        <span className="w-2 h-2 rounded-full bg-accent inline-block" />
-        <span className="font-semibold">{hqStore.activeStore.name}</span>
-        <span className="text-accent/70 font-normal">{roleLabel}</span>
+      <span className="inline-flex max-w-full items-center gap-2 bg-accent/15 border border-accent/40 text-accent rounded-full px-3 py-1 text-sm">
+        <span className="w-2 h-2 shrink-0 rounded-full bg-accent inline-block" />
+        <span className="font-semibold truncate min-w-0">{hqStore.activeStore.name}</span>
+        <span className="text-accent/70 font-normal shrink-0 whitespace-nowrap">· {roleLabel}</span>
       </span>
     );
   }
@@ -660,12 +660,12 @@ function StoreIndicator({
       <button
         onClick={() => setDropdownOpen(v => !v)}
         disabled={storeTransitioning}
-        className="inline-flex items-center gap-2 bg-accent/15 border border-accent/40 text-accent rounded-full px-3 py-1 text-sm hover:bg-accent/25 transition-colors disabled:opacity-50"
+        className="inline-flex max-w-full items-center gap-2 bg-accent/15 border border-accent/40 text-accent rounded-full px-3 py-1 text-sm hover:bg-accent/25 transition-colors disabled:opacity-50"
       >
-        <span className="w-2 h-2 rounded-full bg-accent inline-block" />
-        <span className="font-semibold">{hqStore.activeStore.name}</span>
-        <span className="text-accent/70 font-normal">{roleLabel}</span>
-        <span className="text-accent/50 text-xs">▼</span>
+        <span className="w-2 h-2 shrink-0 rounded-full bg-accent inline-block" />
+        <span className="font-semibold truncate min-w-0">{hqStore.activeStore.name}</span>
+        <span className="text-accent/70 font-normal shrink-0 whitespace-nowrap">· {roleLabel}</span>
+        <span className="text-accent/50 text-xs shrink-0">▼</span>
       </button>
       {dropdownOpen && (
         <div className="absolute top-full left-0 mt-1 bg-surface border border-border-token rounded-xl shadow-xl z-50 min-w-[220px] overflow-hidden">
@@ -1155,8 +1155,8 @@ export default function HQPage() {
         ? `/api/events/active?store_id=${encodeURIComponent(requestedStoreId)}`
         : '/api/events/active';
       const [eventsRes, activeRes] = await Promise.all([
-        fetch(eventsUrl),
-        fetch(activeUrl),
+        fetch(eventsUrl, { cache: 'no-store' }),
+        fetch(activeUrl, { cache: 'no-store' }),
       ]);
       // Stale-response guard: discard if store switched while awaiting
       if (requestedStoreId !== activeStoreRef.current) return;
@@ -2773,8 +2773,8 @@ export default function HQPage() {
       {/* Header — sticky so store pill stays visible on scroll */}
       <div className="sticky top-0 z-40 border-b border-border-token bg-surface/80 backdrop-blur-sm">
         <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1.5">
+          <div className="relative flex items-center justify-between">
+            <div className="flex flex-col items-start gap-1.5 min-w-0 max-w-full">
               <h1 className="text-xl sm:text-2xl font-bold text-accent">
                 HQ Command Center
               </h1>
@@ -2814,8 +2814,8 @@ export default function HQPage() {
                 }}
               />
             </div>
-            <a href="/dashboard" className="text-secondary hover:text-primary text-sm">
-              ← Back to Dashboard
+            <a href="/dashboard" className="absolute right-0 top-0 sm:static shrink-0 whitespace-nowrap text-secondary hover:text-primary text-sm">
+              ← Dashboard
             </a>
           </div>
         </div>
@@ -4862,7 +4862,7 @@ export default function HQPage() {
                     return (
                       <div
                         key={event.id}
-                        className={`rounded-xl p-4 border flex items-center justify-between gap-4 ${
+                        className={`rounded-xl p-3 sm:p-4 border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 ${
                           isActive
                             ? 'bg-emerald-950/40 border-emerald-500/40'
                             : 'bg-elevated border-border-token'
@@ -4870,7 +4870,7 @@ export default function HQPage() {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div
-                            className="relative h-14 w-20 flex-none overflow-hidden rounded-lg bg-surface border border-border-token"
+                            className="relative h-12 w-16 sm:h-14 sm:w-20 flex-none overflow-hidden rounded-lg bg-surface border border-border-token"
                             style={event.imageUrl ? { backgroundImage: `url(${JSON.stringify(event.imageUrl)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                           />
                         <div className="min-w-0">
@@ -4907,7 +4907,7 @@ export default function HQPage() {
                           </div>
                         </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-2 sm:flex-shrink-0 [&>*]:flex-1 sm:[&>*]:flex-none [&>*]:text-center">
                           {isActive ? (
                             <>
                               <a

@@ -3,6 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { ATTENDANCE_LIFETIME_XP } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
+// Which event is live changes the moment staff press Start/End, so this answer must never be reused
+const NO_STORE = { 'Cache-Control': 'no-store, max-age=0' };
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -24,13 +29,13 @@ export async function GET(request: Request) {
 
   if (eventError) {
     console.error('Active event query error:', eventError);
-    return NextResponse.json({ event: null });
+    return NextResponse.json({ event: null }, { headers: NO_STORE });
   }
 
   const event = activeEvents?.[0] ?? null;
 
   if (!event) {
-    return NextResponse.json({ event: null });
+    return NextResponse.json({ event: null }, { headers: NO_STORE });
   }
 
   const { data: game } = await supabaseAdmin
@@ -92,5 +97,5 @@ export async function GET(request: Request) {
       attendanceCount,
       recentCheckIns,
     },
-  });
+  }, { headers: NO_STORE });
 }

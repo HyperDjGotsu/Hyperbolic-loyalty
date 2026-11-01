@@ -32,7 +32,7 @@ function CheckInContent() {
     if (!user) { setState('no-auth'); return; }
     if (!eventId) { setState('no-event'); return; }
 
-    fetch('/api/events/active')
+    fetch('/api/events/active', { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (!data.event || data.event.id !== eventId) {
