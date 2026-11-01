@@ -487,7 +487,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
       {/* Activity: yours */}
       <section data-tour="activity" className="mt-8">
         <SectionHeader title="Activity" href="/dashboard/community" linkLabel="Community" />
-        <div className="rounded-[26px] bg-surface border border-border-token overflow-hidden divide-y divide-border-token">
+        <div className="rounded-[26px] bg-surface border border-border-token overflow-y-auto overscroll-contain max-h-[330px] divide-y divide-border-token">
           {recentActivity.map((a: any) => (
             <div key={a.id} className="flex items-center gap-3 px-4 py-3.5">
               <span className={`flex-none w-[38px] h-[38px] rounded-full grid place-items-center text-[13px] font-extrabold tabular-nums bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] ${a.xp >= 0 ? 'text-accent' : 'text-danger'}`}>
