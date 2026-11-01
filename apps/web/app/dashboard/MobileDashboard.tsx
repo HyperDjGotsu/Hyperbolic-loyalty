@@ -1,6 +1,7 @@
 'use client';
 
 import { FriendsMini } from '@/components/FriendsMini';
+import ShareWinButton from '@/components/ShareWinButton';
 import React, { useEffect, useState } from 'react';
 import {
   Avatar,
@@ -493,6 +494,7 @@ export default function MobileDashboard({ dashboard }: { dashboard: DashboardDat
                 <div className="text-sm font-semibold text-primary truncate">{a.text}</div>
                 <div className="text-xs text-secondary">{a.time}{a.storeTag ? ` · @ ${a.storeTag}` : ''}</div>
               </div>
+              {a.xp > 0 && <ShareWinButton ledgerId={a.id} />}
             </div>
           ))}
           {recentActivity.length === 0 && (

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { EventCreditCard } from '@/components/EventCreditCard';
 import { FriendsMini } from '@/components/FriendsMini';
+import ShareWinButton from '@/components/ShareWinButton';
 import { PassesSheet } from '@/components/PassesSheet';
 import type { DashboardData } from './useDashboardData';
 import { Loader } from '@/components/Loader';
@@ -380,6 +381,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                 <li key={a.id} className="flex flex-1 items-center justify-between gap-3">
                   <div className="min-w-0"><div className="truncate text-sm font-medium">{a.text}</div><div className="text-xs text-tertiary">{a.time}</div></div>
                   <span className={`shrink-0 text-sm font-bold ${a.xp >= 0 ? 'text-accent' : 'text-red-400'}`}>{a.xp >= 0 ? '+' : ''}{a.xp}</span>
+                  {a.xp > 0 && <ShareWinButton ledgerId={a.id} />}
                 </li>
               ))}
             </ul>

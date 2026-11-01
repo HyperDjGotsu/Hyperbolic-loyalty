@@ -830,6 +830,54 @@ export type Database = {
           },
         ]
       }
+      friend_shares: {
+        Row: {
+          amount: number | null
+          created_at: string
+          id: string
+          kind: string
+          label: string | null
+          recipient_id: string
+          seen_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          kind: string
+          label?: string | null
+          recipient_id: string
+          seen_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          recipient_id?: string
+          seen_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friend_shares_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friend_shares_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_guide_log: {
         Row: {
           action: string
