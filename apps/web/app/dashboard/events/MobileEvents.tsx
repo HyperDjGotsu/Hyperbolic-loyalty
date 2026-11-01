@@ -1,5 +1,6 @@
 'use client';
 
+import EventCounts from '@/components/EventCounts';
 import SpecialEvents from '@/components/SpecialEvents';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -45,6 +46,7 @@ interface CalendarEvent {
   attendanceXp: number;
   winXp: number;
   interestedCount: number;
+  checkedInCount: number;
   isInterested: boolean;
   interestedFriends: FriendInterest[];
   isStartingSoon: boolean;
@@ -558,6 +560,7 @@ function EventsPageContent() {
         <div className="absolute inset-x-4 bottom-3.5">
           <div className="text-[11px] font-bold uppercase tracking-wide text-white/70">{event.time}{event.game?.name ? ` · ${event.game.name}` : ''}</div>
           <div className="mt-0.5 text-xl font-extrabold leading-tight text-white line-clamp-2">{event.name}</div>
+          <EventCounts interested={event.interestedCount} checkedIn={event.checkedInCount} className="mt-1.5" />
         </div>
       </CoverImage>
     </div>
@@ -580,8 +583,8 @@ function EventsPageContent() {
         <div className="truncate text-[15px] font-bold text-primary">{event.name}</div>
         <div className="mt-0.5 truncate text-xs text-secondary">
           {event.time}{event.game?.name ? ` · ${event.game.name}` : ''}
-          {event.interestedCount > 0 ? ` · ${event.interestedCount} interested` : ''}
         </div>
+        <EventCounts interested={event.interestedCount} checkedIn={event.checkedInCount} className="mt-1" />
       </div>
       <span className={`shrink-0 text-xs font-bold ${event.isFree ? 'text-accent' : 'text-primary'}`}>{event.entryFee}</span>
       <StarButton event={event} />
@@ -639,6 +642,7 @@ function EventsPageContent() {
           </div>
           
           {/* Friends interested */}
+          <EventCounts interested={0} checkedIn={event.checkedInCount} className="text-sm" />
           {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
             <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="flex items-center gap-3">

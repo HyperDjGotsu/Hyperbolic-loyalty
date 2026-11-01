@@ -129,6 +129,16 @@ export async function GET(request: Request) {
       `)
       .in('event_id', eventIds);
 
+    // Check-in counts per event (social proof on the events page)
+    const checkedInByEvent: Record<string, number> = {};
+    const { data: attendanceRows } = await supabaseAdmin
+      .from('event_attendances')
+      .select('event_id')
+      .in('event_id', eventIds);
+    (attendanceRows ?? []).forEach(r => {
+      if (r.event_id) checkedInByEvent[r.event_id] = (checkedInByEvent[r.event_id] || 0) + 1;
+    });
+
     // Get user's friends (accepted friendships only)
     let friendIds: Set<string> = new Set();
     if (currentPlayerId) {
@@ -256,6 +266,7 @@ export async function GET(request: Request) {
         attendanceXp: ATTENDANCE_LIFETIME_XP,
         winXp: WIN_LIFETIME_XP,
         interestedCount: interest.count,
+        checkedInCount: checkedInByEvent[event.id] || 0,
         isInterested: interest.isInterested,
         interestedFriends: interest.friends,
         isStartingSoon: hoursUntil > 0 && hoursUntil <= 2,

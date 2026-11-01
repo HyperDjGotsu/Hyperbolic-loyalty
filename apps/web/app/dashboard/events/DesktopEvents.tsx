@@ -1,5 +1,6 @@
 'use client';
 
+import EventCounts from '@/components/EventCounts';
 import SpecialEvents from '@/components/SpecialEvents';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -45,6 +46,7 @@ interface CalendarEvent {
   attendanceXp: number;
   winXp: number;
   interestedCount: number;
+  checkedInCount: number;
   isInterested: boolean;
   interestedFriends: FriendInterest[];
   isStartingSoon: boolean;
@@ -765,8 +767,13 @@ function EventsPageContent() {
       </CoverImage>
       <div className="flex items-center gap-2 p-3.5">
         <div className="flex-1 min-w-0">
-          {(event.interestedFriends?.length > 0 || event.interestedCount > 0) ? (
-            <FriendsInterested friends={event.interestedFriends || []} totalCount={event.interestedCount} />
+          {(event.interestedFriends?.length > 0 || event.interestedCount > 0 || event.checkedInCount > 0) ? (
+            <div className="space-y-1">
+              <EventCounts interested={0} checkedIn={event.checkedInCount} />
+              {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
+                <FriendsInterested friends={event.interestedFriends || []} totalCount={event.interestedCount} />
+              )}
+            </div>
           ) : (
             <span className="text-xs text-tertiary">{event.hasStream ? 'Streamed' : 'Be the first to join'}</span>
           )}
@@ -965,6 +972,7 @@ function EventsPageContent() {
           )}
           
           {/* Friends interested */}
+          <EventCounts interested={0} checkedIn={event.checkedInCount} className="text-sm" />
           {(event.interestedFriends?.length > 0 || event.interestedCount > 0) && (
             <div className="bg-elevated/50 rounded-xl p-4 border border-border-token">
               <div className="text-accent font-bold mb-2">{event.interestedCount} Interested</div>
