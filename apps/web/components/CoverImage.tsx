@@ -11,12 +11,17 @@ function useImageFallback(urls: string[]) {
   const ref = useRef<HTMLImageElement>(null);
   const key = urls.join('|');
   const [idx, setIdx] = useState(0);
+  // The image stays invisible until it has really loaded, so a missing file never flashes the browser's broken-image icon
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => { setIdx(0); }, [key]);
+  useEffect(() => { setLoaded(false); }, [idx, key]);
   useEffect(() => {
     const img = ref.current;
-    if (img && img.complete && img.naturalWidth === 0) setIdx(i => i + 1);
+    if (!img || !img.complete) return;
+    if (img.naturalWidth === 0) setIdx(i => i + 1);
+    else setLoaded(true);
   }, [idx, key]);
-  return { ref, url: urls[idx], failed: idx >= urls.length, onError: () => setIdx(i => i + 1) };
+  return { ref, url: urls[idx], failed: idx >= urls.length, loaded, onLoad: () => setLoaded(true), onError: () => setIdx(i => i + 1) };
 }
 
 // Picture-led card top. Shows the game's cover art; until the art exists (or if it fails to
@@ -36,7 +41,7 @@ export function CoverImage({
   className?: string;
   children?: React.ReactNode;
 }) {
-  const { ref, url, failed, onError } = useImageFallback([...(src ? [src] : []), ...gameArtCandidates(gameId, storeId)]);
+  const { ref, url, failed, loaded, onLoad, onError } = useImageFallback([...(src ? [src] : []), ...gameArtCandidates(gameId, storeId)]);
   return (
     <div
       className={`relative overflow-hidden ${className}`}
@@ -49,8 +54,9 @@ export function CoverImage({
           ref={ref}
           alt=""
           loading="lazy"
+          onLoad={onLoad}
           onError={onError}
-          className="absolute inset-0 h-full w-full object-cover"
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-150 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
@@ -62,7 +68,7 @@ export function CoverImage({
 // Full-bleed art behind a hero card. Put `isolate` on the parent; this sits at -z-10 under its content.
 // Dark scrim keeps white text readable on any image; gradient shows until the art exists.
 export function HeroBackdrop({ gameId, storeId, src, color }: { gameId?: string | null; storeId?: string | null; src?: string | null; color?: string }) {
-  const { ref, url, failed, onError } = useImageFallback([...(src ? [src] : []), ...gameArtCandidates(gameId, storeId)]);
+  const { ref, url, failed, loaded, onLoad, onError } = useImageFallback([...(src ? [src] : []), ...gameArtCandidates(gameId, storeId)]);
   const base = color || 'var(--accent)';
   return (
     <div
@@ -76,8 +82,9 @@ export function HeroBackdrop({ gameId, storeId, src, color }: { gameId?: string 
           src={url}
           ref={ref}
           alt=""
+          onLoad={onLoad}
           onError={onError}
-          className="absolute inset-0 h-full w-full object-cover"
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-150 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-black/80" />
