@@ -56,8 +56,8 @@ export default function KioskPage() {
       if (res.ok) { window.location.href = '/hq'; return; }
       // Not signed in as staff: HQ itself will ask for sign-in, so nothing to protect here
       if (res.status === 403) { window.location.href = '/hq'; return; }
-      // Signed in but never set a PIN: HQ will prompt them to set one
-      if (res.status === 409) { window.location.href = '/hq'; return; }
+      // Signed in but no PIN yet: stay locked rather than let anyone through
+      if (res.status === 409) { setPinError('No staff PIN is set for this account. Set one in HQ first.'); setPinValue(''); return; }
       const d = await res.json().catch(() => ({}));
       setPinError(d.error || 'Wrong PIN');
       setPinValue('');
