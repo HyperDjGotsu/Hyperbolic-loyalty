@@ -111,7 +111,7 @@ export default function PrivacyPage() {
         <Section title="Children">
           <p>
             Player Pass is for players 13 and older. When you sign up we ask for your birthdate once
-            to check your age. We do not save the birthdate, only that you confirmed you are 13 or
+            to check your age. We do not save or share the birthdate, only that you confirmed you are 13 or
             older. If you are under 13 we do not create your player profile. We do not knowingly
             collect information from children under 13. If you believe a child has created an
             account, contact us and we will remove it.

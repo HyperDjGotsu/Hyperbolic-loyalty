@@ -341,7 +341,7 @@ function OnboardingContent() {
         {!underage && mode === 'create' && step === 'age' && (
           <div className="card p-6">
             <h2 className="text-xl font-bold text-primary mb-2">When were you born?</h2>
-            <p className="text-secondary text-sm mb-6">We use this once to make sure Player Pass is right for you. We don&apos;t save your birthdate.</p>
+            <p className="text-secondary text-sm mb-6">Please enter your birthdate. We will not save or share your birthdate.</p>
             <div className="grid grid-cols-3 gap-2 mb-2">
               <select value={bMonth} onChange={e => setBMonth(e.target.value)} className="w-full bg-input border border-border-strong rounded-xl py-3 px-3 text-primary focus:outline-none focus:border-accent" aria-label="Month">
                 <option value="">Month</option>
