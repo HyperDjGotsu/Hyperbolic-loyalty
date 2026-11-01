@@ -1247,11 +1247,11 @@ function EventsPageContent() {
                         <div key={event.id}>
                           {/* Mobile card - hidden on desktop */}
                           <div className="lg:hidden">
-                            <MobileEventCard event={event} />
+                            {MobileEventCard({ event })}
                           </div>
                           {/* Desktop card - hidden on mobile */}
                           <div className="hidden lg:block">
-                            <DesktopEventCard event={event} />
+                            {DesktopEventCard({ event })}
                           </div>
                         </div>
                       ))}

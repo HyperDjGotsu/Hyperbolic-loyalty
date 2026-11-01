@@ -540,6 +540,8 @@ function EventsPageContent() {
     </button>
   );
 
+  // Cards are called as plain functions (not <Tags>) so they keep their identity across renders;
+  // as components defined inside this one they would remount, and reload every cover, on each star tap.
   // Big card: only for what is live or starting soon
   const SpotlightCard = ({ event, className = '' }: { event: CalendarEvent; className?: string }) => (
     <div
@@ -861,7 +863,7 @@ function EventsPageContent() {
                 </h2>
                 <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {liveEvents.map(event => (
-                    <SpotlightCard key={event.id} event={event} className={`snap-center shrink-0 ${liveEvents.length > 1 ? 'w-[85%]' : 'w-full'}`} />
+                    <React.Fragment key={event.id}>{SpotlightCard({ event, className: `snap-center shrink-0 ${liveEvents.length > 1 ? 'w-[85%]' : 'w-full'}` })}</React.Fragment>
                   ))}
                 </div>
               </div>
@@ -874,7 +876,7 @@ function EventsPageContent() {
                 </h2>
                 <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {soonEvents.map(event => (
-                    <SpotlightCard key={event.id} event={event} className={`snap-center shrink-0 ${soonEvents.length > 1 ? 'w-[85%]' : 'w-full'}`} />
+                    <React.Fragment key={event.id}>{SpotlightCard({ event, className: `snap-center shrink-0 ${soonEvents.length > 1 ? 'w-[85%]' : 'w-full'}` })}</React.Fragment>
                   ))}
                 </div>
               </div>
@@ -884,7 +886,7 @@ function EventsPageContent() {
                 <h2 className="font-display text-xl font-bold text-primary mb-3">{date}</h2>
                 <div className="space-y-2">
                   {dateEvents.map(event => (
-                    <EventRow key={event.id} event={event} />
+                    <React.Fragment key={event.id}>{EventRow({ event })}</React.Fragment>
                   ))}
                 </div>
               </div>
