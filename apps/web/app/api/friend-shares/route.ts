@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 const DAILY_LIMIT = 20;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Cards are built from the sender's own ledger row. Nothing typed by the sender ever reaches a friend.
 const SOURCE_LABEL: Record<string, string> = {
@@ -75,16 +76,16 @@ export async function POST(request: Request) {
   }
 
   const { ledger_id: ledgerId, friend_id: friendId } = body;
-  if (!ledgerId || !friendId || friendId === me) return NextResponse.json({ error: 'Bad request' }, { status: 400 });
+  if (!ledgerId || !friendId || friendId === me || !UUID_RE.test(ledgerId) || !UUID_RE.test(friendId)) {
+    return NextResponse.json({ error: 'Bad request' }, { status: 400 });
+  }
 
-  // Friends only
-  const { data: fr } = await supabaseAdmin
-    .from('friendships')
-    .select('id')
-    .eq('status', 'accepted')
-    .or(`and(requester_id.eq.${me},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${me})`)
-    .limit(1);
-  if (!fr || fr.length === 0) return NextResponse.json({ error: 'You can only share with friends' }, { status: 403 });
+  // Friends only (two plain lookups, one per direction; no filter strings built from request input)
+  const [{ data: sent }, { data: received }] = await Promise.all([
+    supabaseAdmin.from('friendships').select('id').eq('status', 'accepted').eq('requester_id', me).eq('addressee_id', friendId).limit(1),
+    supabaseAdmin.from('friendships').select('id').eq('status', 'accepted').eq('requester_id', friendId).eq('addressee_id', me).limit(1),
+  ]);
+  if ((sent?.length ?? 0) + (received?.length ?? 0) === 0) return NextResponse.json({ error: 'You can only share with friends' }, { status: 403 });
 
   // The win must be the sender's own, and positive
   const { data: win } = await supabaseAdmin
