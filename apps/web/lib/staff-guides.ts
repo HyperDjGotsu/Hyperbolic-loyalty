@@ -21,12 +21,12 @@ export const STAFF_GUIDES: Record<string, StaffGuide> = {
     title: 'Running an event',
     intro: 'Players earn their points from the events you start and end. Follow these steps in order.',
     steps: [
-      { do: 'Find today\'s event in the Upcoming Events list.', why: 'Events come from your store\'s Google Calendar. If it\'s missing, tap Sync Events first.' },
+      { do: 'Find today\'s event in the Upcoming Events list.', why: 'Events come from your store\'s Google Calendar. If it\'s missing, tap Sync Events from Google Calendar first.' },
       { do: 'Tap Start Event when play begins.', why: 'Players can only check in while the event is live.' },
-      { do: 'Open the Door Kiosk on the tablet at the door.', why: 'Players tap their card or scan the QR code to check in. You don\'t need to type anything.' },
+      { do: 'Open the Door Kiosk on the tablet at the door, or tap Kiosk on the event itself.', why: 'Players tap their card or scan the QR code to check in. You don\'t need to type anything. If two events are running, pick the right one at the top of the kiosk.' },
       { do: 'Tap End Event when the last round is finished.', why: 'This closes check-in and finishes the event.' },
     ],
-    careful: 'Only press End Event when the event is really over. Ending it early locks out anyone who hasn\'t checked in yet.',
+    careful: 'Only press End Event when the event is really over, and make sure it\'s the right event if more than one is running. Ending it early locks out anyone who hasn\'t checked in yet.',
   },
   players: {
     version: 1,
@@ -47,9 +47,9 @@ export const STAFF_GUIDES: Record<string, StaffGuide> = {
     steps: [
       { do: 'Ask the player to show you their claim code (looks like XXXX-XXXX).', why: 'The code proves they really spent the points.' },
       { do: 'Type the code in and look it up.', why: 'You\'ll see the prize name and whether it\'s still waiting to be claimed.' },
-      { do: 'Check the prize matches what they\'re asking for, then mark it as claimed.', why: 'Marking it claimed stops the same code being used twice.' },
-      { do: 'Hand over the prize only after you\'ve marked it claimed.' },
+      { do: 'Check the prize name matches what they\'re asking for.', why: 'Make sure it\'s the right item before you commit.' },
+      { do: 'Tap Confirm Claim, then hand over the prize.', why: 'Confirming stops the same code being used twice. Only hand it over once you see "Claimed!".' },
     ],
-    careful: 'If a code says claimed, expired or voided, don\'t give out the prize. Ask a manager.',
+    careful: 'If a code says claimed, expired or voided, don\'t give out the prize. Ask a manager. Void is only for when you can\'t give the prize (out of stock, or the player changed their mind). It refunds their points, so always write the reason.',
   },
 };
