@@ -798,6 +798,41 @@ export type Database = {
           },
         ]
       }
+      staff_guide_log: {
+        Row: {
+          action: string
+          app_user_id: string
+          created_at: string
+          guide_version: number
+          id: string
+          tab_key: string
+        }
+        Insert: {
+          action: string
+          app_user_id: string
+          created_at?: string
+          guide_version?: number
+          id?: string
+          tab_key: string
+        }
+        Update: {
+          action?: string
+          app_user_id?: string
+          created_at?: string
+          guide_version?: number
+          id?: string
+          tab_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_guide_log_app_user_id_fkey"
+            columns: ["app_user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_interest: {
         Row: {
           created_at: string | null

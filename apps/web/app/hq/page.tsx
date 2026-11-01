@@ -1,5 +1,6 @@
 'use client';
 
+import StaffGuide from '@/components/StaffGuide';
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -2900,6 +2901,8 @@ export default function HQPage() {
           </div>
         </div>
       </div>
+
+      <StaffGuide tabKey={activeTab} />
 
       <div className="max-w-[1320px] min-[1700px]:max-w-[1920px] min-[1700px]:px-10 mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Players Tab */}
