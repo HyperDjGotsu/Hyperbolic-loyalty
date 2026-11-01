@@ -449,8 +449,8 @@ function RedemptionsPanel({
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
+    <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+      <div className="lg:col-span-2">
         <h2 className="text-lg font-bold text-primary">Prize Redemptions</h2>
         <p className="text-xs text-tertiary mt-1">Enter a player's claim code to verify and mark as claimed.</p>
       </div>
@@ -2808,40 +2808,40 @@ export default function HQPage() {
               onChange={(e) => setActiveTab(e.target.value)}
               className="w-full bg-elevated border border-border-token rounded-lg px-4 py-2.5 text-primary focus:outline-none focus:border-accent"
             >
-              <option value="players">👤 Players</option>
-              <option value="emperor">👑 Emperor</option>
-              <option value="bounty">🎯 Bounty</option>
-              <option value="banners">🎨 Banners</option>
-              <option value="cotd">🃏 Card of Day</option>
-              <option value="events">📅 Events</option>
-              <option value="prize-wall">🏆 Prize Wall</option>
-              <option value="redemptions">🎟️ Redemptions</option>
-              <option value="circuit">🏆 Circuit</option>
-              <option value="access">👥 Staff & Access</option>
-              <option value="broadcasts">📢 Broadcasts</option>
-              <option value="settings">⚙️ Settings</option>
+              <option value="players">Players</option>
+              <option value="emperor">Emperor</option>
+              <option value="bounty">Bounty</option>
+              <option value="banners">Banners</option>
+              <option value="cotd">Card of Day</option>
+              <option value="events">Events</option>
+              <option value="prize-wall">Prize Wall</option>
+              <option value="redemptions">Redemptions</option>
+              <option value="circuit">Circuit</option>
+              <option value="access">Staff</option>
+              <option value="broadcasts">Broadcasts</option>
+              <option value="settings">Settings</option>
             </select>
           </div>
           {/* Desktop: tab buttons */}
-          <div className="hidden sm:flex flex-wrap gap-2 py-2">
+          <div className="hidden sm:flex flex-wrap gap-1 py-2">
             {[
-              { id: 'players', label: '👤 Players' },
-              { id: 'emperor', label: '👑 Emperor' },
-              { id: 'bounty', label: '🎯 Bounty' },
-              { id: 'banners', label: '🎨 Banners' },
-              { id: 'cotd', label: '🃏 Card of Day' },
-              { id: 'events', label: '📅 Events' },
-              { id: 'prize-wall', label: '🏆 Prize Wall' },
-              { id: 'redemptions', label: '🎟️ Redemptions' },
-              { id: 'circuit', label: '🏆 Circuit' },
-              { id: 'access', label: '👥 Staff & Access' },
-              { id: 'broadcasts', label: '📢 Broadcasts' },
-              { id: 'settings', label: '⚙️ Settings' },
+              { id: 'players', label: 'Players' },
+              { id: 'emperor', label: 'Emperor' },
+              { id: 'bounty', label: 'Bounty' },
+              { id: 'banners', label: 'Banners' },
+              { id: 'cotd', label: 'Card of Day' },
+              { id: 'events', label: 'Events' },
+              { id: 'prize-wall', label: 'Prize Wall' },
+              { id: 'redemptions', label: 'Redemptions' },
+              { id: 'circuit', label: 'Circuit' },
+              { id: 'access', label: 'Staff' },
+              { id: 'broadcasts', label: 'Broadcasts' },
+              { id: 'settings', label: 'Settings' },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'bg-accent/10 text-accent border border-accent/30'
                     : 'text-secondary hover:text-primary hover:bg-elevated'
@@ -4497,6 +4497,7 @@ export default function HQPage() {
               )}
             </div>
 
+            <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
             {/* Upcoming Schedule */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">
               <h2 className="text-xl font-bold mb-4">📅 Upcoming Schedule</h2>
@@ -4670,6 +4671,7 @@ export default function HQPage() {
                   <p className="text-sm mt-1">Search for cards above, select one, then add it to a voting pool</p>
                 </div>
               )}
+            </div>
             </div>
 
             <div className="bg-surface rounded-xl p-6 border border-border-token">
@@ -5154,7 +5156,7 @@ export default function HQPage() {
         )}
         {/* Settings Tab */}
         {activeTab === 'circuit' && (
-          <div className="space-y-6 max-w-3xl">
+          <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
 
             {/* Qualifiers board */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">
@@ -5398,7 +5400,7 @@ export default function HQPage() {
         )}
 
         {activeTab === 'broadcasts' && (
-          <div className="space-y-6 max-w-xl">
+          <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
             {/* Compose */}
             <div className="bg-surface rounded-xl border border-border-token p-5 space-y-4">
               <h2 className="text-sm font-semibold text-primary">Send Message to Players</h2>
@@ -5651,7 +5653,7 @@ export default function HQPage() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="space-y-6 max-w-xl">
+          <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
 
             {/* Currency */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">
@@ -5874,7 +5876,7 @@ export default function HQPage() {
               </div>
             )}
 
-            <div className="flex justify-end">
+            <div className="flex justify-end lg:col-span-2">
               <button
                 onClick={saveStoreConfig}
                 disabled={settingsSaving}
