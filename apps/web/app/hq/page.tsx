@@ -867,6 +867,7 @@ export default function HQPage() {
   };
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [staffMembersLoading, setStaffMembersLoading] = useState(false);
+  const [staffStoreFilter, setStaffStoreFilter] = useState('all');
   const [promoteSearch, setPromoteSearch] = useState('');
   const [promoteResults, setPromoteResults] = useState<PlayerSearchResult[]>([]);
   const [promoteSearching, setPromoteSearching] = useState(false);
@@ -5728,13 +5729,28 @@ export default function HQPage() {
                 <button onClick={loadStaffMembers} className="text-xs text-secondary hover:text-primary">Refresh</button>
               </div>
 
+              {(() => {
+                const stores = Array.from(new Map(staffMembers.filter(m => m.store_id).map(m => [m.store_id as string, m.store_name ?? 'Store'])).entries());
+                if (stores.length < 2) return null;
+                return (
+                  <select
+                    value={staffStoreFilter}
+                    onChange={e => setStaffStoreFilter(e.target.value)}
+                    className="mb-3 w-full rounded-lg border border-border-token bg-elevated px-3 py-2 text-sm text-primary"
+                  >
+                    <option value="all">All stores</option>
+                    {stores.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                  </select>
+                );
+              })()}
+
               {staffMembersLoading ? (
                 <p className="text-sm text-secondary">Loading…</p>
               ) : staffMembers.length === 0 ? (
                 <p className="text-sm text-tertiary">No staff assigned yet.</p>
               ) : (
                 <div className="space-y-2">
-                  {staffMembers.map(m => (
+                  {staffMembers.filter(m => staffStoreFilter === 'all' || m.role === 'network_admin' || m.store_id === staffStoreFilter).map(m => (
                     <div key={m.row_id} className="flex items-center gap-3 p-3 bg-elevated rounded-lg">
                       <div className="flex-1 min-w-0">
                         <p className="text-primary text-sm font-medium truncate">{m.display_name}</p>
