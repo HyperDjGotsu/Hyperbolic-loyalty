@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/spin-reminder",
-      "schedule": "0 18 * * *"
+      "schedule": "0 22,23 * * *"
     },
     {
       "path": "/api/cron/event-reminders?mode=morning",

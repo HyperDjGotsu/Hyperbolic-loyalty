@@ -5,17 +5,20 @@ import { sendExpoPushToPlayers } from '@/lib/expo-push';
 
 export const dynamic = 'force-dynamic';
 
-// Runs daily at 6pm UTC — remind players who haven't spun yet today (Pacific time)
+// 3pm Pacific daily — remind players who haven't spun yet today.
+// Scheduled at both 22:00 and 23:00 UTC so it lands at 3pm through daylight saving; the other run exits.
 export async function GET(request: Request) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const pacificOffset = -7; // PDT; adjust to -8 for PST if needed
     const now = new Date();
-    const pacificNow = new Date(now.getTime() + pacificOffset * 60 * 60 * 1000);
-    const todayPacific = pacificNow.toISOString().split('T')[0];
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', hourCycle: 'h23' })
+      .formatToParts(now)
+      .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+    if (parts.hour !== '15') return NextResponse.json({ sent: 0, skipped: 'not 3pm Pacific' });
+    const todayPacific = `${parts.year}-${parts.month}-${parts.day}`;
 
     const { data: spunToday } = await supabaseAdmin
       .from('daily_spins')
