@@ -717,6 +717,7 @@ export default function HQPage() {
       return;
     }
     setActiveTab(id);
+    try { localStorage.setItem('hq-active-tab', id); } catch {}
   };
   const submitParkedCode = () => {
     if (parkedCode.trim().toLowerCase() === 'drum') {
@@ -727,6 +728,14 @@ export default function HQPage() {
       setParkedError(true);
     }
   };
+  // Remember the last tab so a refresh stays put (parked tabs always need the passcode again)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('hq-active-tab');
+      const ok = ['players', 'banners', 'cotd', 'events', 'prize-wall', 'redemptions', 'circuit', 'access', 'broadcasts', 'settings'];
+      if (saved && ok.includes(saved)) setActiveTab(saved);
+    } catch {}
+  }, []);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   
