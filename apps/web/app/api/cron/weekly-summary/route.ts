@@ -19,51 +19,68 @@ export async function GET(request: Request) {
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Get XP earned per player in the last 7 days
-    const { data: ledgerRows } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('player_id, final_xp')
-      .gte('created_at', sevenDaysAgo);
-
-    if (!ledgerRows?.length) return NextResponse.json({ sent: 0 });
-
-    // Aggregate XP per player
+    // XP earned per player in the last 7 days (paged: Supabase returns at most 1000 rows per request)
     const xpMap: Record<string, number> = {};
-    for (const row of ledgerRows) {
-      if (!row.player_id) continue;
-      xpMap[row.player_id] = (xpMap[row.player_id] ?? 0) + (row.final_xp ?? 0);
+    for (let from = 0; ; from += 1000) {
+      const { data: rows } = await supabaseAdmin
+        .from('xp_ledger')
+        .select('player_id, final_xp')
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: true })
+        .range(from, from + 999);
+      for (const row of rows ?? []) {
+        if (!row.player_id) continue;
+        xpMap[row.player_id] = (xpMap[row.player_id] ?? 0) + (row.final_xp ?? 0);
+      }
+      if ((rows?.length ?? 0) < 1000) break;
     }
 
-    const playerIds = Object.keys(xpMap);
+    const playerIds = Object.keys(xpMap).filter((id) => xpMap[id] > 0);
     if (!playerIds.length) return NextResponse.json({ sent: 0 });
 
-    // Get total XP and compute ranks for all active players
-    const { data: allXp } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('player_id, final_xp');
-
-    const totalMap: Record<string, number> = {};
-    for (const row of allXp ?? []) {
-      if (!row.player_id) continue;
-      totalMap[row.player_id] = (totalMap[row.player_id] ?? 0) + (row.final_xp ?? 0);
+    // Home store for each player who earned XP, plus store names
+    const homeStore: Record<string, string | null> = {};
+    for (let i = 0; i < playerIds.length; i += 200) {
+      const { data: players } = await supabaseAdmin
+        .from('players')
+        .select('id, home_store_id')
+        .in('id', playerIds.slice(i, i + 200));
+      for (const p of players ?? []) homeStore[p.id] = p.home_store_id;
     }
+    const { data: stores } = await supabaseAdmin.from('stores').select('id, name');
+    const storeName: Record<string, string> = {};
+    for (const st of stores ?? []) storeName[st.id] = st.name;
 
-    const rankList = Object.entries(totalMap).sort((a, b) => b[1] - a[1]);
+    // Rank within each home store by this week's XP (ties share a rank)
     const rankMap: Record<string, number> = {};
-    rankList.forEach(([id], i) => { rankMap[id] = i + 1; });
+    const countMap: Record<string, number> = {};
+    const byStore: Record<string, string[]> = {};
+    for (const id of playerIds) {
+      const storeId = homeStore[id];
+      if (storeId) (byStore[storeId] ??= []).push(id);
+    }
+    for (const ids of Object.values(byStore)) {
+      ids.sort((a, b) => xpMap[b] - xpMap[a]);
+      ids.forEach((id, i) => {
+        rankMap[id] = i > 0 && xpMap[ids[i - 1]] === xpMap[id] ? rankMap[ids[i - 1]] : i + 1;
+        countMap[id] = ids.length;
+      });
+    }
 
     let sent = 0;
     for (const playerId of playerIds) {
       const weeklyXp = xpMap[playerId];
-      if (weeklyXp <= 0) continue;
-      const rank = rankMap[playerId] ?? null;
+      const storeId = homeStore[playerId];
+      // A rank only means something when at least two players at the store earned XP
+      const rank = storeId && countMap[playerId] > 1 ? rankMap[playerId] : null;
+      const name = storeId ? storeName[storeId] : null;
 
       await createNotification(
         playerId,
         'weekly_summary',
         `📊 Your week in review`,
-        `You earned +${weeklyXp} XP this week${rank ? ` — you're ranked #${rank}` : ''}.`,
-        { weekly_xp: String(weeklyXp), rank: rank ? String(rank) : null },
+        `You earned +${weeklyXp} XP this week${rank ? ` — #${rank} at ${name ?? 'your store'}` : ''}.`,
+        { weekly_xp: String(weeklyXp), store_rank: rank ? String(rank) : null },
         'daily_rewards'
       );
       sent++;
