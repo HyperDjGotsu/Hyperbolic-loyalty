@@ -712,6 +712,7 @@ export default function HQPage() {
   const [parkedCode, setParkedCode] = useState('');
   const [parkedError, setParkedError] = useState(false);
   const goToTab = (id: string) => {
+    if (id === 'calculator') { router.push('/calculator'); return; }
     if (PARKED_TABS.includes(id) && !parkedUnlocked) {
       setParkedPrompt(id); setParkedCode(''); setParkedError(false);
       return;
@@ -2920,6 +2921,7 @@ export default function HQPage() {
               <option value="access">Staff</option>
               <option value="broadcasts">Broadcasts</option>
               <option value="settings">Settings</option>
+              <option value="calculator">Calculator ↗</option>
             </select>
           </div>
           {/* Desktop: tab buttons */}
@@ -2937,6 +2939,7 @@ export default function HQPage() {
               { id: 'access', label: 'Staff' },
               { id: 'broadcasts', label: 'Broadcasts' },
               { id: 'settings', label: 'Settings' },
+              { id: 'calculator', label: 'Calculator ↗' },
             ].map(tab => (
               <button
                 key={tab.id}
