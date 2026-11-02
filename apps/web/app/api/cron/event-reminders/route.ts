@@ -5,7 +5,7 @@ import { gameArtUrl } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
 
-// Runs once a day at 15:00 UTC (see vercel.json) — notifies players of events starting in the next 1-13h window
+// Runs once a day at 18:00 UTC = 10am Pacific in winter, 11am in summer (see vercel.json) — notifies players of events starting in the next 1-13h window
 export async function GET(request: Request) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,6 +19,7 @@ export async function GET(request: Request) {
     const { data: events } = await supabaseAdmin
       .from('events')
       .select('id, name, scheduled_at, game_id, store_id, image_url')
+      .or('status.is.null,status.in.(scheduled,active)') // skip cancelled and completed events
       .gte('scheduled_at', windowStart.toISOString())
       .lte('scheduled_at', windowEnd.toISOString());
 
