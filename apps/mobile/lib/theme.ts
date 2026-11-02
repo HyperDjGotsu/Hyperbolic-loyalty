@@ -1,20 +1,24 @@
+// Legacy static palette for screens that haven't moved to useTheme() yet. Values are the web's Dark / Warm tone.
+import { TONES } from '@/lib/tokens';
+const W = TONES.warm.palette;
+
 export const C = {
-  bgBase:        '#111009',
-  bgSurface:     '#1a1810',
-  bgElevated:    '#222018',
-  bgInput:       '#1e1c14',
-  textPrimary:   '#f2efe8',
-  textSecondary: '#a89f90',
-  textTertiary:  '#7a7060',
-  accent:        '#c4b5fd',
-  accentFg:      '#111009',
-  xp:            '#f4c542',
-  border:        'rgba(242,239,232,0.08)',
-  borderStrong:  'rgba(242,239,232,0.14)',
+  bgBase:        W.bgBase,
+  bgSurface:     W.bgSurface,
+  bgElevated:    W.bgElevated,
+  bgInput:       W.bgInput,
+  textPrimary:   W.textPrimary,
+  textSecondary: W.textSecondary,
+  textTertiary:  W.textTertiary,
+  accent:        W.accent,
+  accentFg:      W.accentFg,
+  xp:            W.xp,
+  border:        W.border,
+  borderStrong:  W.borderStrong,
   orange:        '#f97316',
   yellow:        '#eab308',
-  success:       '#22c55e',
-  danger:        '#ef4444',
+  success:       W.success,
+  danger:        W.danger,
 } as const;
 
 // One level per 100 XP, same as the web Home and Profile.

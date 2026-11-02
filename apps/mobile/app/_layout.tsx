@@ -8,6 +8,9 @@ import { useEffect, useRef } from 'react';
 import { tokenCache } from '@/lib/auth';
 import { registerForPushNotifications } from '@/lib/push';
 import { API_BASE } from '@/lib/config';
+import { useAppFonts } from '@/lib/fonts';
+import { ThemeProvider, useTheme } from '@/lib/theme-context';
+import { StatusBar } from 'expo-status-bar';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -82,10 +85,21 @@ function AuthGuard() {
   return <Slot />;
 }
 
+function ThemedStatusBar() {
+  const { mode } = useTheme();
+  return <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />;
+}
+
 export default function RootLayout() {
+  const fontsReady = useAppFonts();
+  // Keep the splash screen up until the fonts are in, so text never flashes in the wrong face
+  if (!fontsReady) return null;
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} tokenCache={tokenCache}>
-      <AuthGuard />
-    </ClerkProvider>
+    <ThemeProvider>
+      <ThemedStatusBar />
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} tokenCache={tokenCache}>
+        <AuthGuard />
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
