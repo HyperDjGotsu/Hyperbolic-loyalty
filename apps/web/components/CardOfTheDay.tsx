@@ -241,7 +241,7 @@ function useCardImage(game: string | undefined, cardNumber: string | undefined, 
 
 function formatPriceChange(change: number | null): string | null {
   if (change === null) return null;
-  const sign = change >= 0 ? '+' : '';
+  const sign = change > 0 ? '+' : '';
   return `${sign}${change.toFixed(1)}%`;
 }
 

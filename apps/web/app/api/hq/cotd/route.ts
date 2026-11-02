@@ -303,8 +303,8 @@ export async function GET(request: Request) {
                 language: variant.language || 'EN',
                 tcgplayerId: card.tcgplayerId,
                 price: variant.price || null,
-                priceChange7d: variant.priceChange7d || null,
-                priceChange30d: variant.priceChange30d || null,
+                priceChange7d: variant.priceChange7d ?? null,
+                priceChange30d: variant.priceChange30d ?? null,
               });
             });
           }
