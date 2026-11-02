@@ -4,13 +4,19 @@ import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
-// Runs every Sunday at 8pm UTC — sends each player their weekly XP recap
+// Sunday 6pm Pacific — sends each player their weekly XP recap.
+// Scheduled at 01:00 and 02:00 UTC Monday so it lands at 6pm through daylight saving; the other run exits.
 export async function GET(request: Request) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    const pacific = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', hour: 'numeric', hourCycle: 'h23' })
+      .formatToParts(new Date())
+      .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+    if (pacific.weekday !== 'Sun' || pacific.hour !== '18') return NextResponse.json({ sent: 0, skipped: 'not Sunday 6pm Pacific' });
+
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Get XP earned per player in the last 7 days
