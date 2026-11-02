@@ -90,7 +90,7 @@ export async function POST(request: Request) {
   // The win must be the sender's own, and positive
   const { data: win } = await supabaseAdmin
     .from('xp_ledger')
-    .select('id, player_id, final_xp, source, event_id')
+    .select('id, player_id, final_xp, source, event_id, description')
     .eq('id', ledgerId)
     .maybeSingle();
   if (!win || win.player_id !== me || win.final_xp <= 0 || win.source === 'manual_adjustment') {
@@ -106,11 +106,18 @@ export async function POST(request: Request) {
     .gte('created_at', since);
   if ((count ?? 0) >= DAILY_LIMIT) return NextResponse.json({ error: 'Daily share limit reached. Try again tomorrow.' }, { status: 429 });
 
-  let label = SOURCE_LABEL[win.source] ?? 'an event';
-  if (win.source === 'event_attendance' && win.event_id) {
+  // Name the event when we know it: from the row's event, else from the "Attended <event>" description older check-ins carry
+  let eventName: string | null = null;
+  if (win.event_id) {
     const { data: ev } = await supabaseAdmin.from('events').select('name').eq('id', win.event_id).maybeSingle();
-    if (ev?.name) label = ev.name;
+    eventName = ev?.name ?? null;
   }
+  if (!eventName && win.source === 'event_attendance') {
+    const m = /^Attended (.+?)(?: — .*)?$/.exec(win.description ?? '');
+    if (m && !m[1].startsWith('[TEST')) eventName = m[1].slice(0, 80);
+  }
+  let label = SOURCE_LABEL[win.source] ?? 'an event';
+  if (eventName) label = win.source === 'event_attendance' ? eventName : `${label} at ${eventName}`;
 
   const { error } = await supabaseAdmin.from('friend_shares').insert({
     sender_id: me,

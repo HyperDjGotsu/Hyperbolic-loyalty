@@ -289,6 +289,7 @@ export async function POST(
       source: 'event_attendance',
       awarded_by: staffId,
       store_id: storeId || null,
+      event_id: eventId,
     });
 
     // Award Prize Points (multiplier applies to event actions)
