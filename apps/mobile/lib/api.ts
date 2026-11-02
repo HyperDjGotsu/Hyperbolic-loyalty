@@ -1,6 +1,27 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE } from '@/lib/config';
 
+// Thrown for any non-2xx response. The message keeps the raw "API path → status: body" text (some screens match on it);
+// use errorMessage() to show players the server's own wording instead.
+export class ApiError extends Error {
+  status: number;
+  code: string | null;
+  serverMessage: string | null;
+  constructor(path: string, status: number, text: string) {
+    super(`API ${path} → ${status}: ${text}`);
+    this.status = status;
+    let body: { error?: unknown; code?: unknown } | null = null;
+    try { body = JSON.parse(text); } catch { body = null; }
+    this.serverMessage = typeof body?.error === 'string' ? body.error : null;
+    this.code = typeof body?.code === 'string' ? body.code : null;
+  }
+}
+
+export function errorMessage(e: unknown, fallback: string): string {
+  if (e instanceof ApiError) return e.serverMessage ?? fallback;
+  return fallback;
+}
+
 export function useApi() {
   const { getToken } = useAuth();
 
@@ -17,7 +38,7 @@ export function useApi() {
 
     if (!res.ok) {
       const text = await res.text().catch(() => res.statusText);
-      throw new Error(`API ${path} → ${res.status}: ${text}`);
+      throw new ApiError(path, res.status, text);
     }
 
     return res.json() as Promise<T>;

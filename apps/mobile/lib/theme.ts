@@ -17,14 +17,17 @@ export const C = {
   danger:        '#ef4444',
 } as const;
 
+// One level per 100 XP, same as the web Home and Profile.
+const XP_PER_LEVEL = 100;
+
 export function getLevel(xp: number): number {
-  return Math.floor(xp / 1000) + 1;
+  return Math.floor(xp / XP_PER_LEVEL) + 1;
 }
 
 export function getXpProgress(xp: number): number {
-  return (xp % 1000) / 1000;
+  return (xp % XP_PER_LEVEL) / XP_PER_LEVEL;
 }
 
 export function getXpToNext(xp: number): number {
-  return 1000 - (xp % 1000);
+  return XP_PER_LEVEL - (xp % XP_PER_LEVEL);
 }

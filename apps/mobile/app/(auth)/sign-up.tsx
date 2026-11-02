@@ -1,4 +1,5 @@
 import { useSignUp } from '@clerk/clerk-expo';
+import LegalLinks from '@/components/LegalLinks';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -109,6 +110,7 @@ export default function SignUpScreen() {
             <Link href="/(auth)/sign-in" style={styles.link}>
               Already have an account? Sign in
             </Link>
+            <LegalLinks prefix="By creating an account you agree to our" />
           </>
         ) : (
           <>

@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useApi } from '@/lib/api';
+import { eventIdFromQr, runCheckin } from '@/lib/checkin';
 
 export default function QRCheckinScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,7 +19,7 @@ export default function QRCheckinScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string; xp?: number } | null>(null);
+  const [result, setResult] = useState<{ success: boolean; message: string; xp?: number; prizePoints?: number; warn?: boolean } | null>(null);
   const scanLock = useRef(false);
 
   async function handleBarcode({ data }: { data: string }) {
@@ -28,23 +29,21 @@ export default function QRCheckinScreen() {
     setProcessing(true);
 
     try {
-      // QR codes from the web app encode the event ID directly or as a URL
-      const eventId = data.includes('/') ? data.split('/').pop() : data;
-
+      const eventId = eventIdFromQr(data);
+      if (!eventId) {
+        setResult({ success: false, message: "That doesn't look like a Player Pass QR code." });
+        return;
+      }
       if (eventId !== id) {
         setResult({ success: false, message: 'This QR code is for a different event.' });
         return;
       }
 
-      const res = await api.post<{ xp_awarded: number; message: string }>(`/api/events/${id}/checkin`, {
-        method: 'qr',
-      });
-      setResult({ success: true, message: 'Checked in!', xp: res.xp_awarded });
-    } catch (e: unknown) {
-      setResult({
-        success: false,
-        message: e instanceof Error ? e.message : 'Check-in failed. Please try again.',
-      });
+      const out = await runCheckin(api.post, id, { method: 'qr' });
+      if (out.kind === 'success') setResult({ success: true, message: 'Checked in!', xp: out.xp, prizePoints: out.prizePoints });
+      else if (out.kind === 'already') setResult({ success: true, warn: true, message: "You've already checked in to this event." });
+      else if (out.kind === 'renewal') setResult({ success: false, message: 'Your Player Pass has expired. See a staff member at the check-in kiosk to renew or finish checking in.' });
+      else setResult({ success: false, message: out.message });
     } finally {
       setProcessing(false);
       scanLock.current = false;
@@ -78,12 +77,14 @@ export default function QRCheckinScreen() {
   if (result) {
     return (
       <View style={styles.center}>
-        <Text style={styles.resultIcon}>{result.success ? '✅' : '❌'}</Text>
+        <Text style={styles.resultIcon}>{result.warn ? '⏰' : result.success ? '✅' : '❌'}</Text>
         <Text style={[styles.resultText, result.success ? styles.successText : styles.errorText]}>
           {result.message}
         </Text>
         {result.xp ? (
-          <Text style={styles.xpText}>+{result.xp} XP earned</Text>
+          <Text style={styles.xpText}>
+            +{result.xp} XP{result.prizePoints ? ` · +${result.prizePoints} Prize Points` : ''} earned
+          </Text>
         ) : null}
         <Pressable style={styles.btn} onPress={() => router.back()}>
           <Text style={styles.btnText}>← Back to Event</Text>

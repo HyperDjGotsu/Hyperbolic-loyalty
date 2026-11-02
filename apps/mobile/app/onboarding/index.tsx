@@ -11,15 +11,17 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useApi } from '@/lib/api';
+import { ApiError, errorMessage, useApi } from '@/lib/api';
+import { ageFromIso, isAgeBlocked, MIN_AGE, parseBirthdate, setAgeBlocked } from '@/lib/age';
 import { C } from '@/lib/theme';
 import { SELECTABLE_GAMES } from '@/lib/games';
+import LegalLinks from '@/components/LegalLinks';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Store = { id: string; name: string; city: string; is_flagship: boolean };
 type Mode = 'choice' | 'link' | 'create';
-type Step = 'profile' | 'store';
+type Step = 'age' | 'profile' | 'store';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -32,7 +34,15 @@ export default function OnboardingScreen() {
   const router = useRouter();
 
   const [mode, setMode] = useState<Mode>('create');
-  const [step, setStep] = useState<Step>('profile');
+  const [step, setStep] = useState<Step>('age');
+
+  // Age gate (13+): birthdate is only checked, never saved
+  const [bMonth, setBMonth] = useState('');
+  const [bDay, setBDay]     = useState('');
+  const [bYear, setBYear]   = useState('');
+  const [birthdate, setBirthdate] = useState('');
+  const [underage, setUnderage]   = useState(false);
+  useEffect(() => { isAgeBlocked().then(b => { if (b) setUnderage(true); }); }, []);
 
   // Link existing
   const [playerId, setPlayerId] = useState('');
@@ -103,10 +113,24 @@ export default function OnboardingScreen() {
       });
       router.replace('/(tabs)' as never);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to link card');
+      setError(errorMessage(e, 'Failed to link card'));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function blockUnderage() {
+    await setAgeBlocked();
+    setUnderage(true);
+  }
+
+  async function handleAgeNext() {
+    const iso = parseBirthdate(bMonth, bDay, bYear);
+    if (!iso) { setError("That date doesn't look right. Please check it and try again."); return; }
+    if (ageFromIso(iso) < MIN_AGE) { await blockUnderage(); return; }
+    setBirthdate(iso);
+    setError('');
+    setStep('profile');
   }
 
   function handleProfileNext() {
@@ -127,10 +151,12 @@ export default function OnboardingScreen() {
         primaryGame: primaryGame || null,
         referralCode: referralCode.trim().toUpperCase() || null,
         homeStoreId,
+        birthdate,
       });
       router.replace('/(tabs)' as never);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to create profile');
+      if (e instanceof ApiError && e.code === 'underage') { await blockUnderage(); return; }
+      setError(errorMessage(e, 'Failed to create profile'));
     } finally {
       setLoading(false);
     }
@@ -160,6 +186,64 @@ export default function OnboardingScreen() {
           </View>
         )}
 
+
+        {/* ── Underage ──────────────────────────────────────────────────────── */}
+        {underage && mode === 'create' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Sorry, you can't join yet</Text>
+            <Text style={styles.sectionBody}>
+              Player Pass is for players 13 and older. Ask a parent or guardian to make an account.
+            </Text>
+          </View>
+        )}
+
+        {/* ── Create — Age step ─────────────────────────────────────────────── */}
+        {!underage && mode === 'create' && step === 'age' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>When were you born?</Text>
+            <Text style={styles.sectionBody}>Please enter your birthdate. We will not save or share your birthdate.</Text>
+            <View style={styles.dobRow}>
+              <TextInput
+                style={[styles.input, styles.dobInput]}
+                placeholder="MM"
+                placeholderTextColor={C.textTertiary}
+                keyboardType="number-pad"
+                maxLength={2}
+                value={bMonth}
+                onChangeText={v => setBMonth(v.replace(/\D/g, ''))}
+                accessibilityLabel="Birth month"
+              />
+              <TextInput
+                style={[styles.input, styles.dobInput]}
+                placeholder="DD"
+                placeholderTextColor={C.textTertiary}
+                keyboardType="number-pad"
+                maxLength={2}
+                value={bDay}
+                onChangeText={v => setBDay(v.replace(/\D/g, ''))}
+                accessibilityLabel="Birth day"
+              />
+              <TextInput
+                style={[styles.input, styles.dobInput, { flex: 1.6 }]}
+                placeholder="YYYY"
+                placeholderTextColor={C.textTertiary}
+                keyboardType="number-pad"
+                maxLength={4}
+                value={bYear}
+                onChangeText={v => setBYear(v.replace(/\D/g, ''))}
+                accessibilityLabel="Birth year"
+              />
+            </View>
+            <Pressable
+              style={[styles.btn, (!bMonth || !bDay || bYear.length !== 4) && styles.btnDisabled]}
+              onPress={handleAgeNext}
+              disabled={!bMonth || !bDay || bYear.length !== 4}
+            >
+              <Text style={styles.btnText}>Continue</Text>
+            </Pressable>
+            <LegalLinks prefix="By continuing you agree to our" />
+          </View>
+        )}
 
         {/* ── Link existing ─────────────────────────────────────────────────── */}
         {mode === 'link' && (
@@ -200,7 +284,7 @@ export default function OnboardingScreen() {
         )}
 
         {/* ── Create — Profile step ─────────────────────────────────────────── */}
-        {mode === 'create' && step === 'profile' && (
+        {!underage && mode === 'create' && step === 'profile' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Create Profile</Text>
             <Text style={styles.sectionBody}>Set up your player profile to start earning XP.</Text>
@@ -315,7 +399,7 @@ export default function OnboardingScreen() {
         )}
 
         {/* ── Create — Store step ───────────────────────────────────────────── */}
-        {mode === 'create' && step === 'store' && (
+        {!underage && mode === 'create' && step === 'store' && (
           <View style={styles.section}>
             <Pressable onPress={() => { setStep('profile'); setError(''); }} style={styles.back}>
               <Text style={styles.backText}>← Back</Text>
@@ -399,6 +483,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   errorText: { color: C.danger, fontSize: 13, textAlign: 'center' },
+
+  // Birthdate
+  dobRow:   { flexDirection: 'row', gap: 10, marginBottom: 8 },
+  dobInput: { flex: 1, textAlign: 'center' },
 
   // Section
   section:      { gap: 4 },

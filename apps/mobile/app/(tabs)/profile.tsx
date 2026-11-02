@@ -19,6 +19,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import LegalLinks from '@/components/LegalLinks';
+import { PASS_NAMES, passTierKey, passTierLabel } from '@/lib/pass-tiers';
 import { useApi } from '@/lib/api';
 
 type Player = {
@@ -435,11 +437,8 @@ export default function ProfileScreen() {
     } catch { Alert.alert('Could not save privacy settings', 'Please try again.'); } finally { setModalSaving(false); }
   }
 
-  const passTierLabel = !player || !player.passTier || player.passTier === 'none' ? 'Free Member'
-    : player.passTier === 'player' || player.passTier === 'player_pass' ? 'Player Pass'
-    : player.passTier === 'all_access' || player.passTier === 'all_access_pass' ? 'All Access Pass'
-    : player.passTier === 'shadow_vip' ? 'Shadow VIP' : player.passTier;
-  const isFree = passTierLabel === 'Free Member';
+  const passTierLabelText = passTierLabel(player?.passTier);
+  const isFree = passTierKey(player?.passTier) === 'free';
   const isGrace = !isFree && player?.passStatus === 'grace_period';
   const isActive = !isFree && player?.passStatus === 'active';
   const avatarEmoji = avatarAsset('base', player?.avatarConfig?.base)?.emoji ?? player?.avatarConfig?.base ?? '🙂';
@@ -491,7 +490,7 @@ export default function ProfileScreen() {
           <View style={styles.statDivider} />
           <View style={styles.stat}>
             <Text style={styles.statVal}>
-              {(player.passTier === 'none' || !player.passTier ? 'FREE' : player.passTier).toUpperCase()}
+              {PASS_NAMES[passTierKey(player.passTier)].toUpperCase()}
             </Text>
             <Text style={styles.statLabel}>Pass</Text>
           </View>
@@ -500,7 +499,7 @@ export default function ProfileScreen() {
 
       <Text style={styles.sectionTitle}>Membership</Text>
       <View style={[styles.card, styles.cardLeft, styles.membershipRow]}>
-        <View style={styles.flex}><Text style={styles.membershipTier}>{passTierLabel}</Text>
+        <View style={styles.flex}><Text style={styles.membershipTier}>{passTierLabelText}</Text>
           {isFree && <Text style={styles.helper}>Ask staff in-store to upgrade your membership</Text>}
         </View>
         <View style={[styles.statusBadge, isActive ? styles.statusActive : isGrace ? styles.statusGrace : styles.statusFree]}>
@@ -573,6 +572,8 @@ export default function ProfileScreen() {
       <Pressable style={[styles.card, styles.settingsRow]} onPress={openPrivacy}>
         <Text style={styles.prefIcon}>🔒</Text><View style={styles.flex}><Text style={styles.settingsTitle}>Privacy Settings</Text><Text style={styles.helper}>Visibility, leaderboard and discovery</Text></View><Text style={styles.chevron}>›</Text>
       </Pressable>
+
+      <LegalLinks />
 
       <Pressable style={styles.signOutBtn} onPress={() => void handleSignOut()}>
         <Text style={styles.signOutText}>Sign Out</Text>

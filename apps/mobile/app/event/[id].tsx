@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
+import { runCheckin } from '@/lib/checkin';
 
 type EventDetail = {
   id: string;
@@ -60,10 +61,11 @@ export default function EventDetailScreen() {
     setCheckinLoading(true);
     setCheckinError('');
     try {
-      await api.post(`/api/events/${id}/checkin`, {});
-      setCheckinSuccess(true);
-    } catch (e: unknown) {
-      setCheckinError(e instanceof Error ? e.message : 'Check-in failed');
+      const out = await runCheckin(api.post, String(id));
+      if (out.kind === 'success') setCheckinSuccess(true);
+      else if (out.kind === 'already') setCheckinError("You've already checked in to this event.");
+      else if (out.kind === 'renewal') setCheckinError('Your Player Pass has expired. See a staff member at the check-in kiosk to renew or finish checking in.');
+      else setCheckinError(out.message);
     } finally {
       setCheckinLoading(false);
     }

@@ -67,6 +67,12 @@ function AuthGuard() {
       const data = response.notification.request.content.data as Record<string, string>;
       if (data?.event_id && /^[a-zA-Z0-9-]{1,64}$/.test(data.event_id)) {
         router.push(`/event/${data.event_id}`);
+      } else if (data?.kind === 'morning') {
+        // The 11am "events today" nudge has no single event, so it opens the Events tab
+        router.push('/(tabs)/events');
+      } else {
+        // Everything else (spin, weekly recap, friend request, store news) lands on the notifications list
+        router.push('/(tabs)/notifications');
       }
     });
 
