@@ -38,9 +38,9 @@ function Slider({ label, value, min, max, step = 1, onChange, format = (v: numbe
 }) {
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginBottom: 6 }}>
         <label style={{ fontSize: 13, color: "#D1D5DB", fontFamily: "system-ui" }}>{label}</label>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "#F9FAFB", fontFamily: "Georgia, serif" }}>{format(value)}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: "#F9FAFB", fontFamily: "Georgia, serif", whiteSpace: "nowrap" }}>{format(value)}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
@@ -72,7 +72,7 @@ function UnlockThresholdTab() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 20 }}>
         <div style={{ background: "#111827", borderRadius: 14, padding: 24, border: "1px solid #1F2937" }}>
           <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Prize Settings</div>
 
@@ -186,6 +186,7 @@ export default function LoyaltyCalculator() {
   const [packCost, setPackCost] = useState(4);
   const [rounds, setRounds] = useState(3);
   const [playersPerEvent, setPlayersPerEvent] = useState(10);
+  const [creditUsePct, setCreditUsePct] = useState(100);
 
   const tier = TIERS.find((t) => t.id === selectedTier) || TIERS[0];
 
@@ -218,7 +219,9 @@ export default function LoyaltyCalculator() {
     const subRevenuePerRedeemer = tier.monthlyFee * monthsToRedeem;
     const otherSubscribers = totalSubscribers - 1;
     const crowdPoolRevenue = otherSubscribers * tier.monthlyFee * monthsToRedeem;
-    const totalRevenue = subRevenuePerRedeemer + entryFeeRevenue + crowdPoolRevenue;
+    // Diamond only: every subscriber can take $15 off an event entry once a month, which is revenue we give up
+    const creditCost = tier.id === "diamond" ? totalSubscribers * 15 * monthsToRedeem * (creditUsePct / 100) : 0;
+    const totalRevenue = subRevenuePerRedeemer + entryFeeRevenue + crowdPoolRevenue - creditCost;
     const prizeCostToStore = prizeCostActual;
     const trueNet = totalRevenue - prizeCostToStore;
 
@@ -231,6 +234,7 @@ export default function LoyaltyCalculator() {
       subRevenuePerRedeemer: Math.round(subRevenuePerRedeemer),
       entryFeeRevenue,
       crowdPoolRevenue: Math.round(crowdPoolRevenue),
+      creditCost: Math.round(creditCost),
       totalRevenue: Math.round(totalRevenue),
       trueNet: Math.round(trueNet),
       prizeCostToStore: Math.round(prizeCostToStore),
@@ -241,7 +245,7 @@ export default function LoyaltyCalculator() {
       netEventRevenue: Math.round(netEventRevenue),
       prizeMargin: prizeValue > 0 ? Math.round(((prizeValue - prizeCostActual) / prizeValue) * 100) : 0,
     };
-  }, [selectedTier, eventsPerWeek, avgWins, goesUndefeated, referralsPerMonth, taughtPerMonth, prizeValue, prizeCostActual, totalSubscribers, entryFee, packCost, rounds, playersPerEvent, tier]);
+  }, [selectedTier, eventsPerWeek, avgWins, goesUndefeated, referralsPerMonth, taughtPerMonth, prizeValue, prizeCostActual, totalSubscribers, entryFee, packCost, rounds, playersPerEvent, creditUsePct, tier]);
 
   const fmt = (n: number) => `$${n.toLocaleString()}`;
   const fmtXP = (n: number) => `${n.toLocaleString()} XP`;
@@ -252,7 +256,7 @@ export default function LoyaltyCalculator() {
 
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 11, color: "#0D9488", fontFamily: "monospace", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>
-            Games of · Loyalty Program
+            Player Pass · Internal
           </div>
           <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, fontFamily: "Georgia, serif", lineHeight: 1.1 }}>
             Prize Wall Economics
@@ -295,7 +299,7 @@ export default function LoyaltyCalculator() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24 }}>
             <div style={{ background: "#111827", borderRadius: 14, padding: 24, border: "1px solid #1F2937" }}>
               <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Player Profile</div>
 
@@ -330,6 +334,10 @@ export default function LoyaltyCalculator() {
                   format={(v) => `${v} players`} hint="Determines packs given out (ceil(players ÷ 2) per round)" />
                 <Slider label="Rounds per event" value={rounds} min={1} max={6} step={1} onChange={setRounds}
                   format={(v) => `${v} rounds`} hint="Number of rounds in a typical event" />
+                {tier.id === "diamond" && (
+                  <Slider label="Event Credit used" value={creditUsePct} min={0} max={100} step={10} onChange={setCreditUsePct}
+                    format={(v) => `${v}%`} hint="Share of Diamond subscribers who use their $15 credit each month" />
+                )}
                 <Slider label="Pack cost to store" value={packCost} min={1} max={20} step={1} onChange={setPackCost}
                   format={(v) => `$${v}`} hint="Your cost per pack used for pack-per-win prizing" />
 
@@ -380,10 +388,13 @@ export default function LoyaltyCalculator() {
                   { label: `Redeemer's sub fees (${calc.monthsToRedeem} mo × ${fmt(tier.monthlyFee)})`, value: calc.subRevenuePerRedeemer, color: "#0D9488" },
                   { label: `Net event revenue (~${Math.round(calc.eventsPerMonth * calc.monthsToRedeem)} events × $${calc.netEventRevenue} net)`, value: calc.entryFeeRevenue, color: "#0D9488" },
                   { label: `Crowd pool (${totalSubscribers - 1} other subs × ${fmt(tier.monthlyFee)} × ${calc.monthsToRedeem} mo)`, value: calc.crowdPoolRevenue, color: "#F59E0B" },
-                ].map((row, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < 2 ? "1px solid #1F2937" : "none" }}>
-                    <span style={{ fontSize: 12, color: "#9CA3AF", maxWidth: "70%" }}>{row.label}</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: row.color }}>{fmt(row.value)}</span>
+                  ...(tier.id === "diamond"
+                    ? [{ label: `Event Credits given (${totalSubscribers} subs × $15 × ${calc.monthsToRedeem} mo × ${creditUsePct}% used)`, value: -calc.creditCost, color: "#EF4444" }]
+                    : []),
+                ].map((row, i, rows) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: i < rows.length - 1 ? "1px solid #1F2937" : "none" }}>
+                    <span style={{ fontSize: 12, color: "#9CA3AF", minWidth: 0 }}>{row.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: row.color, whiteSpace: "nowrap" }}>{row.value < 0 ? `-${fmt(-row.value)}` : fmt(row.value)}</span>
                   </div>
                 ))}
                 <div style={{ marginTop: 12, padding: "12px 16px", background: "#0B0F1A", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
