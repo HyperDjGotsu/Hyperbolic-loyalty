@@ -46,6 +46,10 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(new URL('/sign-in', req.url));
     }
   }
+}, {
+  // Send signed-out visitors to our own pages, not Clerk's hosted account portal (previews had no env var for this)
+  signInUrl: '/sign-in',
+  signUpUrl: '/sign-up',
 });
 
 export const config = {
