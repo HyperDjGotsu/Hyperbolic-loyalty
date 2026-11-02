@@ -1,8 +1,20 @@
 # Hyperbolic Loyalty System - Project Status
 
-**Last Updated:** January 26, 2026  
+**Last Updated:** November 2, 2026  
 **Project Owner:** DjGotsu  
 **Store:** Games of Martinez (Hyperbolic Games)
+
+---
+
+## 🆕 Nov 2, 2026 update (branch `redesign-home` / `desktop-polish`, NOT yet merged to `main`)
+
+Unmerged, tested on the preview: desktop Home fixes (packed lists, big Card of the Day, 7d/30d change, flat 0% kept), forced own `/sign-in` + `/sign-up` (no Clerk hosted page on previews), share cards name the event, line icons on Friends activity / From the store, staff guides for every HQ tab, **Event Credit staff-confirm flow** (check-in offer or Profile -> pending -> HQ Redemptions "waiting" list with Confirm/Decline, badge, logged both sides; migration `event_credit_staff_confirm`), HQ Staff store filter, HQ remembers last tab, Calculator linked in HQ + open to any HQ staff (404 for non-staff), restyled in app tokens, 3 sliders + advanced, Diamond $15 credit modeled, pack payouts (1/win, 2/win, 1-3-5; odd player counts pay like next even number).
+
+Decisions: no extra points for 1st-3rd place (only undefeated bonus). Bandai TCG+ rank targets are not disclosed; do not quote numbers in pitches.
+
+Before go-live: remove `TEMP_SELF_AWARD_TEST_PLAYER_IDS` in `app/api/hq/events/[id]/results/route.ts`; all data wiped at go-live (Dj test rows incl. extra store roles need no cleanup).
+
+Open: merge to main + verify sign-in on playerpass.gg; Google brand verification (TXT at GoDaddy) + Terms page; lawyer review of privacy text; reminder-push frequency check; kiosk server-side lock; optional staff push for Event Credits; optional TCG+ rank tracker in HQ.
 
 ---
 
