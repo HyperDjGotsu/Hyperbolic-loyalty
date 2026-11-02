@@ -509,7 +509,7 @@ export function CardOfTheDay() {
 // MOBILE COMPONENT - Compact card with image
 // =============================================================================
 
-export function CardOfTheDayCompact() {
+export function CardOfTheDayCompact({ large = false }: { large?: boolean } = {}) {
   const { card, loading } = useCardOfTheDay();
   const { voting, loading: votingLoading, refetch: refetchVoting } = useVoting();
   const { imageUrl, handleImageError } = useCardImage(
@@ -609,6 +609,36 @@ export function CardOfTheDayCompact() {
           </button>
         )}
       </div>
+    );
+  }
+
+  if (large) {
+    return (
+      <a
+        href={card.tcgplayerUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex flex-col items-center gap-3 rounded-xl border border-border-token bg-elevated p-4 text-center transition-colors hover:border-border-strong"
+      >
+        <div className="aspect-[5/7] w-[min(55%,200px)] overflow-hidden rounded-lg bg-elevated shadow-lg">
+          {imageUrl ? (
+            <img src={imageUrl} alt={card.name} className="h-full w-full object-cover" onError={handleImageError} />
+          ) : (
+            <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br text-4xl ${theme.gradient} border ${theme.border}`}>{theme.icon}</div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="line-clamp-2 text-base font-semibold leading-tight text-primary">{card.name}</p>
+          <p className={`mt-0.5 text-xs ${theme.accent}`}>{card.gameDisplay}</p>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-lg font-bold text-primary">{formatPrice(card.price)}</span>
+          {card.priceChange7d !== null && (
+            <span className={`text-xs font-medium ${isPositive7d ? 'text-green-400' : 'text-red-400'}`}>{formatPriceChange(card.priceChange7d)}</span>
+          )}
+        </div>
+        {voting?.hasVoted && <div className="text-[10px] text-green-400">✓ Vote cast for tomorrow</div>}
+      </a>
     );
   }
 
