@@ -6,15 +6,19 @@
 
 ---
 
-## 🆕 Nov 2, 2026 update (branch `redesign-home` / `desktop-polish`, NOT yet merged to `main`)
+## 🆕 Nov 2, 2026 update — MERGED TO `main` (head `390cd2d`), live on playerpass.gg
 
-Unmerged, tested on the preview: desktop Home fixes (packed lists, big Card of the Day, 7d/30d change, flat 0% kept), forced own `/sign-in` + `/sign-up` (no Clerk hosted page on previews), share cards name the event, line icons on Friends activity / From the store, staff guides for every HQ tab, **Event Credit staff-confirm flow** (check-in offer or Profile -> pending -> HQ Redemptions "waiting" list with Confirm/Decline, badge, logged both sides; migration `event_credit_staff_confirm`), HQ Staff store filter, HQ remembers last tab, Calculator linked in HQ + open to any HQ staff (404 for non-staff), restyled in app tokens, 3 sliders + advanced, Diamond $15 credit modeled, pack payouts (1/win, 2/win, 1-3-5; odd player counts pay like next even number).
+Live: desktop Home fixes, own `/sign-in` + `/sign-up`, share cards, staff guides, **Event Credit staff-confirm flow**, HQ Staff store filter, HQ remembers last tab, Calculator (linked in HQ, 404 for non-staff, app-token restyle, 3 sliders + advanced, Diamond $15 credit, pack payouts 1/win, 2/win, 1-3-5, odd player counts pay like next even), HQ Banners empty state, Home walkthrough wording ("What's up next at the store", "Your games"), **`/terms` Terms of Service** (linked from landing + sign-in footers; California law, liability cap, passes sold by stores; needs lawyer review with privacy).
 
-Decisions: no extra points for 1st-3rd place (only undefeated bonus). Bandai TCG+ rank targets are not disclosed; do not quote numbers in pitches.
+**Notifications (Vercel Pro, 7 crons in `apps/web/vercel.json`)**, Pacific times, DST-safe (two UTC slots, code exits when not the right hour): "Events today" digest 11am (interested players only); "[Event] is happening in an hour" every 15 min (interested players, once per player/event, skips cancelled/completed); daily spin reminder 3pm; Sunday 6pm weekly recap ("You earned +X XP this week. You are now ranked #N at <store>.", store rank by this week's XP, omitted if under 2 players earned XP; no push); pass-expiring 7-day warning (in-app); calendar-sync 6am; expire-events 2am. Reminder route: `app/api/cron/event-reminders?mode=morning|hour`.
 
-Before go-live: remove `TEMP_SELF_AWARD_TEST_PLAYER_IDS` in `app/api/hq/events/[id]/results/route.ts`; all data wiped at go-live (Dj test rows incl. extra store roles need no cleanup).
+Google brand verification done (domain verified via TXT at GoDaddy, branding verified + published). Add `https://playerpass.gg/terms` to the consent screen if not yet.
 
-Open: merge to main + verify sign-in on playerpass.gg; Google brand verification (TXT at GoDaddy) + Terms page; lawyer review of privacy text; reminder-push frequency check; kiosk server-side lock; optional staff push for Event Credits; optional TCG+ rank tracker in HQ.
+Decisions: no extra points for 1st-3rd (only undefeated bonus). Bandai TCG+ rank targets undisclosed; don't quote numbers. Weekly recap stays a one-line notification; a Spotify-Wrapped-style Week in Review page and a monthly network-rank notification are saved for later.
+
+Before go-live: remove `TEMP_SELF_AWARD_TEST_PLAYER_IDS` in `app/api/hq/events/[id]/results/route.ts`; all data wiped at go-live (no Dj/[TEST] cleanup).
+
+Open: verify Clerk form / Google sign-in / light mode on playerpass.gg phone; lawyer review of privacy + Terms; kiosk server-side lock; optional staff push for Event Credits; optional TCG+ rank tracker in HQ; optional weekly recap push.
 
 ---
 
