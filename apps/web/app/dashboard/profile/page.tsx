@@ -1,5 +1,6 @@
 'use client';
 
+import ConnectedAccounts from '@/components/ConnectedAccounts';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ProfileSkeleton } from '@/components/Skeleton';
 import { useUser, useClerk } from '@clerk/nextjs';
@@ -1490,6 +1491,10 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+      </div>
+      {/* Sign-in methods: link Google / Discord for one-tap login */}
+      <div className="px-4 lg:px-0 mt-8 order-4 lg:order-none">
+        <ConnectedAccounts />
       </div>
       {/* Sign Out */}
       <div className="px-4 lg:px-0 mt-8 order-4 lg:order-none">
