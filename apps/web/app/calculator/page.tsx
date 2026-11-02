@@ -22,30 +22,42 @@ const BASE_XP = {
   dailySpin: 11.6, // expected value of weighted spin (Bronze→Jackpot)
 };
 
-function StatCard({ label, value, sub, color = "#0D9488" }: { label: string; value: string; sub?: string; color?: string }) {
-  return (
-    <div style={{ background: "#111827", border: "1px solid #1F2937", borderRadius: 12, padding: "16px 20px", flex: 1, minWidth: 140 }}>
-      <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color, fontFamily: "Georgia, serif", lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>{sub}</div>}
-    </div>
-  );
-}
+const CARD = "rounded-xl border border-border-token bg-surface p-5 sm:p-6";
+const EYEBROW = "text-[11px] font-semibold uppercase tracking-[0.14em] text-tertiary";
 
 function Slider({ label, value, min, max, step = 1, onChange, format = (v: number) => String(v), hint }: {
   label: string; value: number; min: number; max: number; step?: number;
   onChange: (v: number) => void; format?: (v: number) => string; hint?: string;
 }) {
   return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginBottom: 6 }}>
-        <label style={{ fontSize: 13, color: "#D1D5DB", fontFamily: "system-ui" }}>{label}</label>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "#F9FAFB", fontFamily: "Georgia, serif", whiteSpace: "nowrap" }}>{format(value)}</span>
+    <div className="mb-5">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <label className="text-sm text-secondary">{label}</label>
+        <span className="whitespace-nowrap text-base font-bold tabular-nums text-primary">{format(value)}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: "#0D9488", cursor: "pointer" }} />
-      {hint && <div style={{ fontSize: 11, color: "#4B5563", marginTop: 3 }}>{hint}</div>}
+        className="h-2 w-full cursor-pointer accent-[var(--accent)]" />
+      {hint && <div className="mt-1.5 text-xs text-tertiary">{hint}</div>}
+    </div>
+  );
+}
+
+function Stat({ label, value, sub, valueClass = "text-accent" }: { label: string; value: string; sub?: string; valueClass?: string }) {
+  return (
+    <div className="min-w-[140px] flex-1 rounded-lg border border-border-token bg-elevated p-4">
+      <div className={EYEBROW}>{label}</div>
+      <div className={`mt-1.5 text-2xl font-extrabold tabular-nums leading-none ${valueClass}`}>{value}</div>
+      {sub && <div className="mt-1.5 text-xs text-tertiary">{sub}</div>}
+    </div>
+  );
+}
+
+function Row({ label, value, valueClass = "text-primary", strong = false }: { label: string; value: string; valueClass?: string; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-1.5 text-sm">
+      <span className={strong ? "font-semibold text-primary" : "text-secondary"}>{label}</span>
+      <span className={`whitespace-nowrap font-bold tabular-nums ${valueClass}`}>{value}</span>
     </div>
   );
 }
@@ -71,100 +83,87 @@ function UnlockThresholdTab() {
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 20 }}>
-        <div style={{ background: "#111827", borderRadius: 14, padding: 24, border: "1px solid #1F2937" }}>
-          <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Prize Settings</div>
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-5">
+        <div className={CARD}>
+          <div className={`${EYEBROW} mb-5`}>Prize Settings</div>
 
           <Slider label="Your retail price" value={retailPrice} min={10} max={600} step={5} onChange={setRetailPrice}
             format={(v) => `$${v}`} hint="What you charge customers for this item" />
           <Slider label="Your cost to store" value={costToStore} min={1} max={600} step={1} onChange={setCostToStore}
-            format={(v) => `$${v}`} hint="What you actually paid for it — not an assumption" />
+            format={(v) => `$${v}`} hint="What you actually paid for it, not an assumption" />
           <Slider label="Monthly sub fee" value={subFee} min={5} max={30} step={5} onChange={setSubFee}
-            format={(v) => `$${v}/mo`} hint="Tier doesn't matter — every sub counts as 1" />
+            format={(v) => `$${v}/mo`} hint="Tier doesn't matter, every sub counts as 1" />
           <Slider label="Safety buffer" value={buffer} min={0} max={50} step={5} onChange={setBuffer}
             format={(v) => `${v}%`} hint="Extra subscribers above break-even before unlocking" />
 
-          <div style={{ marginTop: 8, padding: "12px 14px", background: "#0B0F1A", borderRadius: 8, fontSize: 12 }}>
-            <div style={{ color: "#6B7280", marginBottom: 8, fontWeight: 600 }}>Item P&L</div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ color: "#6B7280" }}>Retail price</span><span style={{ color: "#F9FAFB" }}>${retailPrice}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ color: "#6B7280" }}>Cost to store</span><span style={{ color: "#EF4444" }}>-${costToStore}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #1F2937", paddingTop: 6, marginTop: 4 }}>
-              <span style={{ color: "#D1D5DB", fontWeight: 700 }}>Gross margin if sold</span>
-              <span style={{ color: margin >= 0 ? "#10B981" : "#EF4444", fontWeight: 700 }}>{margin}% (${retailPrice - costToStore})</span>
+          <div className="mt-2 rounded-lg bg-elevated p-4">
+            <div className="mb-2 text-xs font-semibold text-tertiary">Item P&amp;L</div>
+            <Row label="Retail price" value={`$${retailPrice}`} />
+            <Row label="Cost to store" value={`-$${costToStore}`} valueClass="text-danger" />
+            <div className="mt-1 border-t border-border-token pt-1">
+              <Row label="Gross margin if sold" value={`${margin}% ($${retailPrice - costToStore})`} valueClass={margin >= 0 ? "text-success" : "text-danger"} strong />
             </div>
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ background: "#111827", borderRadius: 14, padding: 24, border: "2px solid #0D9488", flex: 1 }}>
-            <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Unlock Threshold</div>
-            <div style={{ fontSize: 64, fontWeight: 800, color: "#0D9488", fontFamily: "Georgia, serif", lineHeight: 1 }}>
-              {threshold}<span style={{ fontSize: 18, color: "#6B7280", fontWeight: 400 }}> subs</span>
+        <div className="flex flex-col gap-4">
+          <div className="flex-1 rounded-xl border-2 border-accent bg-surface p-5 sm:p-6">
+            <div className={`${EYEBROW} mb-3`}>Unlock Threshold</div>
+            <div className="font-display text-6xl font-extrabold leading-none text-accent">
+              {threshold}<span className="font-sans text-lg font-normal text-tertiary"> subs</span>
             </div>
-            <div style={{ fontSize: 12, color: "#6B7280", marginTop: 8 }}>{Math.ceil(rawThreshold)} minimum + {buffer}% buffer</div>
-            <div style={{ fontSize: 11, color: "#4B5563", marginTop: 6 }}>Based on retail price (${retailPrice}) ÷ ${subFee}/mo sub fee</div>
+            <div className="mt-2 text-xs text-secondary">{Math.ceil(rawThreshold)} minimum + {buffer}% buffer</div>
+            <div className="mt-1 text-xs text-tertiary">Based on retail price (${retailPrice}) ÷ ${subFee}/mo sub fee</div>
           </div>
-          <div style={{ display: "flex", gap: 12 }}>
-            <div style={{ flex: 1, background: "#111827", borderRadius: 10, padding: "14px 16px", border: "1px solid #1F2937" }}>
-              <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4 }}>Revenue at unlock</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#10B981", fontFamily: "Georgia, serif" }}>${revenueAtUnlock}</div>
-            </div>
-            <div style={{ flex: 1, background: "#0D2618", borderRadius: 10, padding: "14px 16px", border: "1px solid #10B981" }}>
-              <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4 }}>Profit before claim</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#10B981", fontFamily: "Georgia, serif" }}>${profitAtUnlock}</div>
-            </div>
+          <div className="flex gap-3">
+            <Stat label="Revenue at unlock" value={`$${revenueAtUnlock}`} valueClass="text-success" />
+            <Stat label="Profit before claim" value={`$${profitAtUnlock}`} valueClass="text-success" />
           </div>
-          <div style={{ background: "#0B0F1A", borderRadius: 10, padding: "14px 16px", border: "1px solid #1F2937" }}>
-            <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 10, fontFamily: "monospace", letterSpacing: 1, textTransform: "uppercase" }}>Prize Wall vs Selling It</div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4 }}>Sell outright</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#6B7280" }}>${retailPrice - costToStore}</div>
-                <div style={{ fontSize: 10, color: "#4B5563" }}>one transaction</div>
+          <div className={CARD}>
+            <div className={`${EYEBROW} mb-3`}>Prize Wall vs Selling It</div>
+            <div className="flex gap-3 text-center">
+              <div className="flex-1 rounded-lg bg-elevated p-3">
+                <div className="text-xs text-tertiary">Sell outright</div>
+                <div className="mt-1 text-lg font-bold tabular-nums text-secondary">${retailPrice - costToStore}</div>
+                <div className="text-[11px] text-tertiary">one transaction</div>
               </div>
-              <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4 }}>Prize wall</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#10B981" }}>${profitAtUnlock}</div>
-                <div style={{ fontSize: 10, color: "#4B5563" }}>before claimed</div>
+              <div className="flex-1 rounded-lg border border-success/40 bg-success/10 p-3">
+                <div className="text-xs text-tertiary">Prize wall</div>
+                <div className="mt-1 text-lg font-bold tabular-nums text-success">${profitAtUnlock}</div>
+                <div className="text-[11px] text-tertiary">before claimed</div>
               </div>
             </div>
-            <div style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: profitAtUnlock > (retailPrice - costToStore) ? "#10B981" : "#EF4444", fontWeight: 700 }}>
+            <div className={`mt-3 text-center text-sm font-bold ${profitAtUnlock > (retailPrice - costToStore) ? "text-success" : "text-danger"}`}>
               {profitAtUnlock > (retailPrice - costToStore)
                 ? `+$${profitAtUnlock - (retailPrice - costToStore)} advantage from prize wall`
-                : `Selling outright nets more — lower your buffer or raise sub fee`}
+                : `Selling outright nets more. Lower your buffer or raise sub fee`}
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ background: "#111827", borderRadius: 14, padding: 24, border: "1px solid #1F2937" }}>
-        <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>
-          Prize Ladder — Unlock Thresholds at ${subFee}/mo
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className={CARD}>
+        <div className={`${EYEBROW} mb-4`}>Prize Ladder · Unlock Thresholds at ${subFee}/mo</div>
+        <div className="flex flex-col gap-2">
           {ladderItems.map((p, i) => {
             const thresh = Math.ceil((p.retail / subFee) * (1 + buffer / 100));
             const rev = thresh * subFee;
             const isHighlight = p.retail === retailPrice && p.cost === costToStore;
             return (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: isHighlight ? "#0D2618" : "#0B0F1A", border: `1px solid ${isHighlight ? "#10B981" : "#1F2937"}` }}>
-                <div style={{ flex: 2, fontSize: 13, color: isHighlight ? "#F9FAFB" : "#9CA3AF", fontWeight: isHighlight ? 700 : 400 }}>
-                  {p.name}<span style={{ color: "#4B5563", fontWeight: 400, fontSize: 11 }}> · ${p.retail} retail</span>
+              <div key={i} className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border p-3 ${isHighlight ? "border-accent/50 bg-accent/10" : "border-border-token bg-elevated"}`}>
+                <div className={`min-w-[160px] flex-[2] text-sm ${isHighlight ? "font-bold text-primary" : "text-secondary"}`}>
+                  {p.name}<span className="text-xs font-normal text-tertiary"> · ${p.retail} retail</span>
                 </div>
-                <div style={{ flex: 1, fontSize: 13, color: "#6B7280" }}>Cost: <span style={{ color: "#9CA3AF" }}>${p.cost}</span></div>
-                <div style={{ flex: 1, fontSize: 14, fontWeight: 700, color: "#0D9488", textAlign: "center" }}>{thresh} subs</div>
-                <div style={{ flex: 1, fontSize: 12, color: "#6B7280", textAlign: "right" }}>${rev} revenue</div>
+                <div className="flex-1 text-sm text-tertiary">Cost <span className="tabular-nums text-secondary">${p.cost}</span></div>
+                <div className="flex-1 text-center text-sm font-bold tabular-nums text-accent">{thresh} subs</div>
+                <div className="flex-1 text-right text-xs tabular-nums text-tertiary">${rev} revenue</div>
               </div>
             );
           })}
         </div>
-        <div style={{ marginTop: 14, fontSize: 12, color: "#4B5563", lineHeight: 1.6 }}>
-          Booster Box row uses your actual cost inputs. Other rows use estimated costs — update them as needed.
+        <div className="mt-4 text-xs leading-relaxed text-tertiary">
+          Booster Box row uses your actual cost inputs. Other rows use estimated costs, update them as needed.
         </div>
       </div>
     </div>
@@ -252,197 +251,180 @@ export default function LoyaltyCalculator() {
   const fmtXP = (n: number) => `${n.toLocaleString()} XP`;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0B0F1A", color: "#F9FAFB", fontFamily: "system-ui, sans-serif", padding: "24px 16px" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+    <div className="min-h-screen bg-base px-4 py-8 text-primary">
+      <div className="mx-auto max-w-[1100px]">
 
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 11, color: "#0D9488", fontFamily: "monospace", letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>
-            Player Pass · Internal
-          </div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, fontFamily: "Georgia, serif", lineHeight: 1.1 }}>
-            Prize Wall Economics
-          </h1>
-          <p style={{ color: "#6B7280", marginTop: 8, fontSize: 14, margin: "8px 0 0" }}>
-            Model the revenue generated before a single prize walks out the door.
-          </p>
+        <div className="mb-8">
+          <a href="/hq" className="mb-4 inline-block text-sm text-secondary hover:text-primary">← HQ</a>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Player Pass · Internal</div>
+          <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">Prize Wall Economics</h1>
+          <p className="mt-2 text-sm text-secondary">Model the revenue generated before a single prize walks out the door.</p>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+        <div className="mb-7 flex flex-wrap gap-1">
           {[{ id: "economics", label: "Prize Wall Economics" }, { id: "unlock", label: "Unlock Thresholds" }].map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontFamily: "system-ui", fontSize: 13, fontWeight: 600,
-              background: tab === t.id ? "#0D9488" : "#111827",
-              color: tab === t.id ? "#FFFFFF" : "#6B7280",
-              transition: "all 0.15s",
-            }}>{t.label}</button>
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                tab === t.id ? "border border-accent/30 bg-accent/10 text-accent" : "border border-transparent text-secondary hover:bg-elevated hover:text-primary"
+              }`}>{t.label}</button>
           ))}
         </div>
 
         {tab === "unlock" && <UnlockThresholdTab />}
 
         {tab === "economics" && <>
-          <div style={{ marginBottom: 28 }}>
-            <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Membership Tier</div>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div className="mb-7">
+            <div className={`${EYEBROW} mb-3`}>Membership Tier</div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {TIERS.map((t) => (
-                <button key={t.id} onClick={() => setSelectedTier(t.id)} style={{
-                  flex: 1, minWidth: 120, padding: "14px 16px", borderRadius: 10,
-                  border: `2px solid ${selectedTier === t.id ? t.color : "#1F2937"}`,
-                  background: selectedTier === t.id ? t.bg : "#111827",
-                  cursor: "pointer", transition: "all 0.15s", textAlign: "left",
-                }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: t.color, fontFamily: "Georgia, serif" }}>{t.name}</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "#F9FAFB", marginTop: 2 }}>${t.monthlyFee}<span style={{ fontSize: 12, color: "#6B7280", fontWeight: 400 }}>/mo</span></div>
-                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>{t.label}</div>
+                <button key={t.id} onClick={() => setSelectedTier(t.id)}
+                  style={selectedTier === t.id ? { borderColor: t.color } : undefined}
+                  className={`rounded-xl border-2 p-4 text-left transition-colors ${selectedTier === t.id ? "bg-elevated" : "border-border-token bg-surface hover:bg-elevated"}`}>
+                  <div className="text-base font-extrabold" style={{ color: t.color }}>{t.name}</div>
+                  <div className="mt-0.5 text-xl font-bold tabular-nums text-primary">${t.monthlyFee}<span className="text-xs font-normal text-tertiary">/mo</span></div>
+                  <div className="mt-0.5 text-xs text-tertiary">{t.label}</div>
                 </button>
               ))}
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24 }}>
-            <div style={{ background: "#111827", borderRadius: 14, padding: 24, border: "1px solid #1F2937" }}>
-              <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Prize &amp; Program</div>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-6">
+            <div className={`${CARD} self-start`}>
+              <div className={`${EYEBROW} mb-5`}>Prize &amp; Program</div>
 
               <Slider label="Prize wall item retail price" value={prizeValue} min={10} max={500} step={10} onChange={setPrizeValue}
                 format={(v) => `$${v}`} hint="What you charge customers for this item" />
               <Slider label="Your cost to store" value={prizeCostActual} min={1} max={500} step={1} onChange={setPrizeCostActual}
-                format={(v) => `$${v}`} hint={`Actual cost — not an assumption. Margin: ${calc.prizeMargin}%`} />
+                format={(v) => `$${v}`} hint={`Actual cost, not an assumption. Margin: ${calc.prizeMargin}%`} />
               <Slider label="Total subscribers" value={totalSubscribers} min={5} max={200} step={5} onChange={setTotalSubscribers}
                 format={(v) => `${v} members`} hint="Total paying subscribers across the program" />
 
-              <button onClick={() => setShowAdvanced(v => !v)} style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #1F2937", background: "#0B0F1A", color: "#9CA3AF", fontSize: 13, fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+              <button onClick={() => setShowAdvanced(v => !v)}
+                className="w-full rounded-lg border border-border-strong bg-elevated px-4 py-2.5 text-left text-sm font-semibold text-secondary hover:text-primary">
                 {showAdvanced ? "Hide" : "Show"} advanced assumptions {showAdvanced ? "▴" : "▾"}
               </button>
-              <div style={{ fontSize: 11, color: "#4B5563", marginTop: 6 }}>Defaults are fine for a quick answer. Open this to change how often players attend, event size and entry fee.</div>
+              <div className="mt-1.5 text-xs text-tertiary">Defaults are fine for a quick answer. Open this to change how often players attend, event size and entry fee.</div>
 
               {showAdvanced && (
-                <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Player Profile</div>
+                <div className="mt-6">
+                  <div className={`${EYEBROW} mb-5`}>Player Profile</div>
 
-              <Slider label="Events per week" value={eventsPerWeek} min={1} max={7} onChange={setEventsPerWeek} hint="How often does a typical subscriber attend?" />
-              <Slider label="Average wins per event" value={avgWins} min={0} max={4} onChange={setAvgWins} hint="0–4 wins. Affects XP earned per event." />
+                  <Slider label="Events per week" value={eventsPerWeek} min={1} max={7} onChange={setEventsPerWeek} hint="How often does a typical subscriber attend?" />
+                  <Slider label="Average wins per event" value={avgWins} min={0} max={4} onChange={setAvgWins} hint="0–4 wins. Affects XP earned per event." />
 
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                  <input type="checkbox" checked={goesUndefeated} onChange={(e) => setGoesUndefeated(e.target.checked)}
-                    style={{ accentColor: "#0D9488", width: 16, height: 16 }} />
-                  <span style={{ fontSize: 13, color: "#D1D5DB" }}>Goes undefeated (+5 XP bonus)</span>
-                </label>
-              </div>
+                  <label className="mb-5 flex cursor-pointer items-center gap-3">
+                    <input type="checkbox" checked={goesUndefeated} onChange={(e) => setGoesUndefeated(e.target.checked)}
+                      className="h-4 w-4 accent-[var(--accent)]" />
+                    <span className="text-sm text-secondary">Goes undefeated (+5 XP bonus)</span>
+                  </label>
 
-              <Slider label="Referrals brought per month" value={referralsPerMonth} min={0} max={5} onChange={setReferralsPerMonth}
-                format={(v) => `${v} player${v !== 1 ? "s" : ""}`} hint="+50 XP per referral who attends first event" />
-              <Slider label="Players taught per month" value={taughtPerMonth} min={0} max={5} onChange={setTaughtPerMonth}
-                format={(v) => `${v} player${v !== 1 ? "s" : ""}`} hint="+20 XP per player taught" />
+                  <Slider label="Referrals brought per month" value={referralsPerMonth} min={0} max={5} onChange={setReferralsPerMonth}
+                    format={(v) => `${v} player${v !== 1 ? "s" : ""}`} hint="+50 XP per referral who attends first event" />
+                  <Slider label="Players taught per month" value={taughtPerMonth} min={0} max={5} onChange={setTaughtPerMonth}
+                    format={(v) => `${v} player${v !== 1 ? "s" : ""}`} hint="+20 XP per player taught" />
 
-                  <div style={{ borderTop: "1px solid #1F2937", paddingTop: 20, marginTop: 4 }}>
-                    <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Event Settings</div>
+                  <div className="mt-1 border-t border-border-token pt-5">
+                    <div className={`${EYEBROW} mb-5`}>Event Settings</div>
 
-                <Slider label="Event entry fee" value={entryFee} min={0} max={30} step={1} onChange={setEntryFee}
-                  format={(v) => `$${v}`} hint="What players pay to enter each event" />
-                <Slider label="Players per event" value={playersPerEvent} min={4} max={32} step={1} onChange={setPlayersPerEvent}
-                  format={(v) => `${v} players`} hint="Determines packs given out (ceil(players ÷ 2) per round)" />
-                <Slider label="Rounds per event" value={rounds} min={1} max={6} step={1} onChange={setRounds}
-                  format={(v) => `${v} rounds`} hint="Number of rounds in a typical event" />
-                {tier.id === "diamond" && (
-                  <Slider label="Event Credit used" value={creditUsePct} min={0} max={100} step={10} onChange={setCreditUsePct}
-                    format={(v) => `${v}%`} hint="Share of Diamond subscribers who use their $15 credit each month" />
-                )}
-                <Slider label="Pack cost to store" value={packCost} min={1} max={20} step={1} onChange={setPackCost}
-                  format={(v) => `$${v}`} hint="Your cost per pack used for pack-per-win prizing" />
+                    <Slider label="Event entry fee" value={entryFee} min={0} max={30} step={1} onChange={setEntryFee}
+                      format={(v) => `$${v}`} hint="What players pay to enter each event" />
+                    <Slider label="Players per event" value={playersPerEvent} min={4} max={32} step={1} onChange={setPlayersPerEvent}
+                      format={(v) => `${v} players`} hint="Determines packs given out (ceil(players ÷ 2) per round)" />
+                    <Slider label="Rounds per event" value={rounds} min={1} max={6} step={1} onChange={setRounds}
+                      format={(v) => `${v} rounds`} hint="Number of rounds in a typical event" />
+                    {tier.id === "diamond" && (
+                      <Slider label="Event Credit used" value={creditUsePct} min={0} max={100} step={10} onChange={setCreditUsePct}
+                        format={(v) => `${v}%`} hint="Share of Diamond subscribers who use their $15 credit each month" />
+                    )}
+                    <Slider label="Pack cost to store" value={packCost} min={1} max={20} step={1} onChange={setPackCost}
+                      format={(v) => `$${v}`} hint="Your cost per pack used for pack-per-win prizing" />
 
-                <div style={{ marginTop: 8, padding: "12px 14px", background: "#0B0F1A", borderRadius: 8, fontSize: 12 }}>
-                  <div style={{ color: "#6B7280", marginBottom: 8, fontWeight: 600 }}>Event P&L Preview</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ color: "#6B7280" }}>Gross entry ({playersPerEvent} × ${entryFee})</span>
-                    <span style={{ color: "#F9FAFB" }}>${calc.grossEntryPerEvent}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ color: "#6B7280" }}>Prizing cost ({calc.packsPerRound} packs × {rounds} rounds × ${packCost})</span>
-                    <span style={{ color: "#EF4444" }}>-${calc.prizingCostPerEvent}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #1F2937", paddingTop: 6, marginTop: 4 }}>
-                    <span style={{ color: "#D1D5DB", fontWeight: 700 }}>Net per event</span>
-                    <span style={{ color: calc.netEventRevenue >= 0 ? "#10B981" : "#EF4444", fontWeight: 700 }}>${calc.netEventRevenue}</span>
-                  </div>
-                </div>
+                    <div className="mt-2 rounded-lg bg-elevated p-4">
+                      <div className="mb-2 text-xs font-semibold text-tertiary">Event P&amp;L Preview</div>
+                      <Row label={`Gross entry (${playersPerEvent} × $${entryFee})`} value={`$${calc.grossEntryPerEvent}`} />
+                      <Row label={`Prizing cost (${calc.packsPerRound} packs × ${rounds} rounds × $${packCost})`} value={`-$${calc.prizingCostPerEvent}`} valueClass="text-danger" />
+                      <div className="mt-1 border-t border-border-token pt-1">
+                        <Row label="Net per event" value={`$${calc.netEventRevenue}`} valueClass={calc.netEventRevenue >= 0 ? "text-success" : "text-danger"} strong />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ background: "#111827", borderRadius: 14, padding: 20, border: "1px solid #1F2937" }}>
-                <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>XP Earn Rate</div>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <StatCard label="Per Event" value={fmtXP(calc.xpPerEvent)} color="#0D9488" />
-                  <StatCard label="Per Month" value={fmtXP(calc.monthlyXP)} sub={`${tier.multiplier}x multiplier applied`} color="#0D9488" />
+            <div className="flex flex-col gap-4">
+              <div className={CARD}>
+                <div className={`${EYEBROW} mb-4`}>XP Earn Rate</div>
+                <div className="flex flex-wrap gap-3">
+                  <Stat label="Per Event" value={fmtXP(calc.xpPerEvent)} />
+                  <Stat label="Per Month" value={fmtXP(calc.monthlyXP)} sub={`${tier.multiplier}x multiplier applied`} />
                 </div>
-                <div style={{ marginTop: 14, padding: "10px 14px", background: "#0B0F1A", borderRadius: 8, fontSize: 12, color: "#6B7280" }}>
-                  Prize wall cost: <span style={{ color: "#F9FAFB", fontWeight: 700 }}>{fmtXP(calc.prizeCost)}</span>
-                  <span style={{ color: "#4B5563" }}> (${prizeValue} ÷ 0.30)</span>
+                <div className="mt-3 rounded-lg bg-elevated px-4 py-2.5 text-sm text-secondary">
+                  Prize wall cost: <span className="font-bold tabular-nums text-primary">{fmtXP(calc.prizeCost)}</span>
+                  <span className="text-tertiary"> (${prizeValue} ÷ 0.30)</span>
                 </div>
               </div>
 
-              <div style={{ background: "#111827", borderRadius: 14, padding: 20, border: `1px solid ${tier.border}` }}>
-                <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Time to Redeem</div>
-                <div style={{ fontSize: 52, fontWeight: 800, color: tier.color, fontFamily: "Georgia, serif", lineHeight: 1 }}>
-                  {calc.monthsToRedeem}<span style={{ fontSize: 18, color: "#6B7280", fontWeight: 400 }}> months</span>
+              <div className="rounded-xl border-2 bg-surface p-5 sm:p-6" style={{ borderColor: tier.color }}>
+                <div className={`${EYEBROW} mb-3`}>Time to Redeem</div>
+                <div className="font-display text-5xl font-extrabold leading-none" style={{ color: tier.color }}>
+                  {calc.monthsToRedeem}<span className="font-sans text-lg font-normal text-tertiary"> months</span>
                 </div>
-                <div style={{ fontSize: 12, color: "#6B7280", marginTop: 6 }}>
+                <div className="mt-2 text-xs text-secondary">
                   ~{Math.round(calc.eventsPerMonth * calc.monthsToRedeem)} total events attended
                 </div>
               </div>
 
-              <div style={{ background: "#111827", borderRadius: 14, padding: 20, border: "1px solid #1F2937" }}>
-                <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>Revenue Before Prize Is Claimed</div>
-                {[
-                  { label: `Redeemer's sub fees (${calc.monthsToRedeem} mo × ${fmt(tier.monthlyFee)})`, value: calc.subRevenuePerRedeemer, color: "#0D9488" },
-                  { label: `Net event revenue (~${Math.round(calc.eventsPerMonth * calc.monthsToRedeem)} events × $${calc.netEventRevenue} net)`, value: calc.entryFeeRevenue, color: "#0D9488" },
-                  { label: `Crowd pool (${totalSubscribers - 1} other subs × ${fmt(tier.monthlyFee)} × ${calc.monthsToRedeem} mo)`, value: calc.crowdPoolRevenue, color: "#F59E0B" },
-                  ...(tier.id === "diamond"
-                    ? [{ label: `Event Credits given (${totalSubscribers} subs × $15 × ${calc.monthsToRedeem} mo × ${creditUsePct}% used)`, value: -calc.creditCost, color: "#EF4444" }]
-                    : []),
-                ].map((row, i, rows) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: i < rows.length - 1 ? "1px solid #1F2937" : "none" }}>
-                    <span style={{ fontSize: 12, color: "#9CA3AF", minWidth: 0 }}>{row.label}</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: row.color, whiteSpace: "nowrap" }}>{row.value < 0 ? `-${fmt(-row.value)}` : fmt(row.value)}</span>
-                  </div>
-                ))}
-                <div style={{ marginTop: 12, padding: "12px 16px", background: "#0B0F1A", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 13, color: "#D1D5DB", fontWeight: 600 }}>Total Revenue</span>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: "#10B981", fontFamily: "Georgia, serif" }}>{fmt(calc.totalRevenue)}</span>
+              <div className={CARD}>
+                <div className={`${EYEBROW} mb-3`}>Revenue Before Prize Is Claimed</div>
+                <div className="divide-y divide-border-token">
+                  {[
+                    { label: `Redeemer's sub fees (${calc.monthsToRedeem} mo × ${fmt(tier.monthlyFee)})`, value: calc.subRevenuePerRedeemer, cls: "text-accent" },
+                    { label: `Net event revenue (~${Math.round(calc.eventsPerMonth * calc.monthsToRedeem)} events × $${calc.netEventRevenue} net)`, value: calc.entryFeeRevenue, cls: "text-accent" },
+                    { label: `Crowd pool (${totalSubscribers - 1} other subs × ${fmt(tier.monthlyFee)} × ${calc.monthsToRedeem} mo)`, value: calc.crowdPoolRevenue, cls: "text-warning" },
+                    ...(tier.id === "diamond"
+                      ? [{ label: `Event Credits given (${totalSubscribers} subs × $15 × ${calc.monthsToRedeem} mo × ${creditUsePct}% used)`, value: -calc.creditCost, cls: "text-danger" }]
+                      : []),
+                  ].map((row, i) => (
+                    <div key={i} className="flex items-center justify-between gap-3 py-2.5">
+                      <span className="min-w-0 text-xs text-secondary">{row.label}</span>
+                      <span className={`whitespace-nowrap text-sm font-bold tabular-nums ${row.cls}`}>{row.value < 0 ? `-${fmt(-row.value)}` : fmt(row.value)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 flex items-center justify-between rounded-lg bg-elevated px-4 py-3">
+                  <span className="text-sm font-semibold text-primary">Total Revenue</span>
+                  <span className="text-2xl font-extrabold tabular-nums text-success">{fmt(calc.totalRevenue)}</span>
                 </div>
               </div>
 
-              <div style={{ background: "#0B0F1A", borderRadius: 14, padding: 20, border: "1px solid #1F2937" }}>
-                <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Prize Wall vs. Just Selling It</div>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <div style={{ flex: 1, background: "#111827", borderRadius: 10, padding: "14px 16px", border: "1px solid #1F2937" }}>
-                    <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4 }}>Sell it outright</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "#6B7280", fontFamily: "Georgia, serif" }}>{fmt(prizeValue)}</div>
-                    <div style={{ fontSize: 10, color: "#4B5563", marginTop: 2 }}>one transaction, done</div>
+              <div className={CARD}>
+                <div className={`${EYEBROW} mb-3`}>Prize Wall vs. Just Selling It</div>
+                <div className="flex gap-3">
+                  <div className="flex-1 rounded-lg bg-elevated p-4">
+                    <div className="text-xs text-tertiary">Sell it outright</div>
+                    <div className="mt-1 text-xl font-bold tabular-nums text-secondary">{fmt(prizeValue)}</div>
+                    <div className="mt-0.5 text-[11px] text-tertiary">one transaction, done</div>
                   </div>
-                  <div style={{ flex: 1, background: "#0D2618", borderRadius: 10, padding: "14px 16px", border: "1px solid #10B981" }}>
-                    <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4 }}>Put it on prize wall</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "#10B981", fontFamily: "Georgia, serif" }}>{fmt(calc.totalRevenue)}</div>
-                    <div style={{ fontSize: 10, color: "#4B5563", marginTop: 2 }}>generated before claimed</div>
+                  <div className="flex-1 rounded-lg border border-success/40 bg-success/10 p-4">
+                    <div className="text-xs text-tertiary">Put it on prize wall</div>
+                    <div className="mt-1 text-xl font-bold tabular-nums text-success">{fmt(calc.totalRevenue)}</div>
+                    <div className="mt-0.5 text-[11px] text-tertiary">generated before claimed</div>
                   </div>
                 </div>
-                <div style={{ marginTop: 12, textAlign: "center", padding: "10px", background: calc.trueNet > 0 ? "#0D2618" : "#1F0A0A", borderRadius: 8, border: `1px solid ${calc.trueNet > 0 ? "#10B981" : "#EF4444"}` }}>
-                  <span style={{ fontSize: 12, color: "#9CA3AF" }}>Net advantage of prize wall: </span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: calc.trueNet > 0 ? "#10B981" : "#EF4444" }}>
+                <div className={`mt-3 rounded-lg border p-3 text-center ${calc.trueNet > 0 ? "border-success/40 bg-success/10" : "border-danger/40 bg-danger/10"}`}>
+                  <span className="text-sm text-secondary">Net advantage of prize wall: </span>
+                  <span className={`text-base font-extrabold tabular-nums ${calc.trueNet > 0 ? "text-success" : "text-danger"}`}>
                     {calc.trueNet > 0 ? "+" : ""}{fmt(calc.trueNet)}
                   </span>
-                  <div style={{ fontSize: 10, color: "#4B5563", marginTop: 2 }}>after actual cost of prize (${calc.prizeCostToStore})</div>
+                  <div className="mt-0.5 text-[11px] text-tertiary">after actual cost of prize (${calc.prizeCostToStore})</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: 24, padding: "16px 20px", background: "#111827", borderRadius: 12, border: "1px solid #1F2937", fontSize: 13, color: "#9CA3AF", lineHeight: 1.6 }}>
-            <span style={{ color: "#F59E0B", fontWeight: 700 }}>The crowd pool ({fmt(calc.crowdPoolRevenue)}) </span>
+          <div className={`${CARD} mt-6 text-sm leading-relaxed text-secondary`}>
+            <span className="font-bold text-warning">The crowd pool ({fmt(calc.crowdPoolRevenue)}) </span>
             is revenue from subscribers who never redeem anything. They&apos;re funding the prize wall by paying in month after month while only the top earners ever claim a prize. The bigger the subscriber base, the more powerful this effect gets.
           </div>
         </>}
