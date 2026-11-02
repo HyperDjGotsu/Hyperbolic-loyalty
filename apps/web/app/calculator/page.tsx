@@ -187,6 +187,7 @@ export default function LoyaltyCalculator() {
   const [rounds, setRounds] = useState(3);
   const [playersPerEvent, setPlayersPerEvent] = useState(10);
   const [creditUsePct, setCreditUsePct] = useState(100);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const tier = TIERS.find((t) => t.id === selectedTier) || TIERS[0];
 
@@ -301,6 +302,22 @@ export default function LoyaltyCalculator() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 24 }}>
             <div style={{ background: "#111827", borderRadius: 14, padding: 24, border: "1px solid #1F2937" }}>
+              <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Prize &amp; Program</div>
+
+              <Slider label="Prize wall item retail price" value={prizeValue} min={10} max={500} step={10} onChange={setPrizeValue}
+                format={(v) => `$${v}`} hint="What you charge customers for this item" />
+              <Slider label="Your cost to store" value={prizeCostActual} min={1} max={500} step={1} onChange={setPrizeCostActual}
+                format={(v) => `$${v}`} hint={`Actual cost — not an assumption. Margin: ${calc.prizeMargin}%`} />
+              <Slider label="Total subscribers" value={totalSubscribers} min={5} max={200} step={5} onChange={setTotalSubscribers}
+                format={(v) => `${v} members`} hint="Total paying subscribers across the program" />
+
+              <button onClick={() => setShowAdvanced(v => !v)} style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #1F2937", background: "#0B0F1A", color: "#9CA3AF", fontSize: 13, fontWeight: 600, cursor: "pointer", textAlign: "left" }}>
+                {showAdvanced ? "Hide" : "Show"} advanced assumptions {showAdvanced ? "▴" : "▾"}
+              </button>
+              <div style={{ fontSize: 11, color: "#4B5563", marginTop: 6 }}>Defaults are fine for a quick answer. Open this to change how often players attend, event size and entry fee.</div>
+
+              {showAdvanced && (
+                <div style={{ marginTop: 20 }}>
               <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Player Profile</div>
 
               <Slider label="Events per week" value={eventsPerWeek} min={1} max={7} onChange={setEventsPerWeek} hint="How often does a typical subscriber attend?" />
@@ -319,15 +336,9 @@ export default function LoyaltyCalculator() {
               <Slider label="Players taught per month" value={taughtPerMonth} min={0} max={5} onChange={setTaughtPerMonth}
                 format={(v) => `${v} player${v !== 1 ? "s" : ""}`} hint="+20 XP per player taught" />
 
-              <div style={{ borderTop: "1px solid #1F2937", paddingTop: 20, marginTop: 4 }}>
-                <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Store Variables</div>
+                  <div style={{ borderTop: "1px solid #1F2937", paddingTop: 20, marginTop: 4 }}>
+                    <div style={{ fontSize: 11, color: "#6B7280", fontFamily: "monospace", letterSpacing: 2, textTransform: "uppercase", marginBottom: 20 }}>Event Settings</div>
 
-                <Slider label="Prize wall item retail price" value={prizeValue} min={10} max={500} step={10} onChange={setPrizeValue}
-                  format={(v) => `$${v}`} hint="What you charge customers for this item" />
-                <Slider label="Your cost to store" value={prizeCostActual} min={1} max={500} step={1} onChange={setPrizeCostActual}
-                  format={(v) => `$${v}`} hint={`Actual cost — not an assumption. Margin: ${calc.prizeMargin}%`} />
-                <Slider label="Total subscribers" value={totalSubscribers} min={5} max={200} step={5} onChange={setTotalSubscribers}
-                  format={(v) => `${v} members`} hint="Total paying subscribers across the program" />
                 <Slider label="Event entry fee" value={entryFee} min={0} max={30} step={1} onChange={setEntryFee}
                   format={(v) => `$${v}`} hint="What players pay to enter each event" />
                 <Slider label="Players per event" value={playersPerEvent} min={4} max={32} step={1} onChange={setPlayersPerEvent}
@@ -356,7 +367,9 @@ export default function LoyaltyCalculator() {
                     <span style={{ color: calc.netEventRevenue >= 0 ? "#10B981" : "#EF4444", fontWeight: 700 }}>${calc.netEventRevenue}</span>
                   </div>
                 </div>
-              </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
