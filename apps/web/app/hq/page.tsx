@@ -3754,6 +3754,12 @@ export default function HQPage() {
               <div className="text-center py-8 text-secondary">Loading banners...</div>
             ) : (
               <div className="grid gap-4">
+                {banners.length === 0 && bannersDataset.status !== 'error' && (
+                  <div className="bg-surface rounded-xl border border-border-token p-8 text-center">
+                    <div className="text-primary font-semibold">No banners yet</div>
+                    <p className="text-secondary text-sm mt-1">Banners show at the top of players&apos; Home page. Tap + New Banner to add one.</p>
+                  </div>
+                )}
                 {banners.map(banner => (
                   <div
                     key={banner.id}

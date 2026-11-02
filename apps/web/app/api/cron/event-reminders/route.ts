@@ -5,7 +5,7 @@ import { gameArtUrl } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
 
-// Runs every hour — notifies players of events starting in the next 1-13h window
+// Runs once a day at 15:00 UTC (see vercel.json) — notifies players of events starting in the next 1-13h window
 export async function GET(request: Request) {
   if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
