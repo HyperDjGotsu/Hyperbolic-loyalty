@@ -915,6 +915,20 @@ export default function HQPage() {
 
   // Store context hook — initialized from staffContext once auth resolves
   const hqStore = useHQStore(staffContext);
+  // Event Credits players have used that staff haven't confirmed yet (badge on the Redemptions tab)
+  const [creditsPending, setCreditsPending] = useState(0);
+  useEffect(() => {
+    const sid = hqStore.activeStoreId;
+    if (!sid) { setCreditsPending(0); return; }
+    let live = true;
+    const poll = () => fetch(`/api/hq/event-credits?storeId=${encodeURIComponent(sid)}&summary=1`, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (live && d) setCreditsPending(d.pending ?? 0); })
+      .catch(() => {});
+    void poll();
+    const t = setInterval(poll, 20000);
+    return () => { live = false; clearInterval(t); };
+  }, [hqStore.activeStoreId]);
   const activeStoreRef = useRef<string | null>(null);
   useEffect(() => {
     activeStoreRef.current = hqStore.activeStoreId;
@@ -2891,7 +2905,7 @@ export default function HQPage() {
               <option value="cotd">Card of Day</option>
               <option value="events">Events</option>
               <option value="prize-wall">Prize Wall</option>
-              <option value="redemptions">Redemptions</option>
+              <option value="redemptions">{creditsPending > 0 ? `Redemptions (${creditsPending})` : 'Redemptions'}</option>
               <option value="circuit">Circuit</option>
               <option value="access">Staff</option>
               <option value="broadcasts">Broadcasts</option>
@@ -2926,6 +2940,9 @@ export default function HQPage() {
                 }`}
               >
                 {tab.label}
+                {tab.id === 'redemptions' && creditsPending > 0 && (
+                  <span className="ml-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-accent-fg">{creditsPending}</span>
+                )}
               </button>
             ))}
           </div>

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Loader } from '@/components/Loader';
+import { EventCreditCard } from '@/components/EventCreditCard';
 
 interface EventInfo {
   id: string;
@@ -132,6 +133,7 @@ function CheckInContent() {
           </div>
         )}
       </div>
+      <div className="w-full max-w-sm text-left"><EventCreditCard eventId={eventId ?? undefined} /></div>
       <Link
         href="/dashboard"
         className="mt-2 px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token"

@@ -7,6 +7,9 @@ interface EventCreditState {
   monthKey: string;
   amountCents: number;
   redeemedAt: string | null;
+  status: 'pending' | 'confirmed' | null;
+  confirmedAt: string | null;
+  confirmedByName: string | null;
   name: string;
   playerId: string;
 }
@@ -20,7 +23,7 @@ const monthName = (monthKey: string) => new Date(`${monthKey}T12:00:00`).toLocal
 const when = (iso: string) => new Date(iso).toLocaleString('en-US', { timeZone: PACIFIC, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
 // Diamond members only: renders nothing for anyone else. The server decides who is eligible and enforces one use per month.
-export function EventCreditCard() {
+export function EventCreditCard({ eventId }: { eventId?: string } = {}) {
   const [credit, setCredit] = useState<EventCreditState | null>(null);
   const [step, setStep] = useState<Step>('idle');
   const [redeeming, setRedeeming] = useState(false);
@@ -37,11 +40,23 @@ export function EventCreditCard() {
 
   useEffect(() => { void load(); }, [load]);
 
+  // While staff haven't confirmed yet, keep checking so the ticket flips to Confirmed on its own
+  const waiting = credit?.status === 'pending';
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setInterval(() => { void load(); }, 5000);
+    return () => clearInterval(t);
+  }, [waiting, load]);
+
   async function redeem() {
     setRedeeming(true);
     setError(null);
     try {
-      const res = await fetch('/api/player/event-credit', { method: 'POST' });
+      const res = await fetch('/api/player/event-credit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventId ? { event_id: eventId } : {}),
+      });
       const data = await res.json();
       if (!res.ok || !data.success) {
         if (res.status === 409) {
@@ -51,7 +66,7 @@ export function EventCreditCard() {
         }
         throw new Error(data.error ?? 'Could not redeem');
       }
-      setCredit(prev => prev ? { ...prev, redeemedAt: data.redeemedAt, name: data.name, playerId: data.playerId } : prev);
+      setCredit(prev => prev ? { ...prev, redeemedAt: data.redeemedAt, status: 'pending', confirmedAt: null, confirmedByName: null, name: data.name, playerId: data.playerId } : prev);
       setStep('ticket');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not redeem');
@@ -73,7 +88,7 @@ export function EventCreditCard() {
         <div className="min-w-0">
           <div className="text-primary text-sm font-semibold">Event Credit · {amount}</div>
           <div className="text-secondary text-xs mt-0.5">
-            {used ? `Used for ${month}` : 'For events only · 1 per month'}
+            {used ? (waiting ? 'Waiting for staff to confirm' : `Used for ${month}`) : 'For events only · 1 per month'}
           </div>
           {error && <div className="text-danger text-xs mt-1">{error}</div>}
         </div>
@@ -91,7 +106,7 @@ export function EventCreditCard() {
       {step === 'confirm' && (
         <Popup
           title={`Redeem your ${amount} Event Credit?`}
-          body="Only tap this when you're at the counter with a staff member."
+          body={eventId ? 'Staff will be asked to take it off your entry. Only tap this when you are at the counter.' : "Only tap this when you're at the counter with a staff member."}
           confirmLabel="Continue"
           cancelLabel="Not now"
           onConfirm={() => setStep('sure')}
@@ -148,14 +163,22 @@ function Ticket({ credit, amount, month, onClose }: { credit: EventCreditState; 
           <div className="text-secondary text-xs font-bold uppercase tracking-widest">Event Credit</div>
           <div className="text-accent font-extrabold text-6xl mt-2 tabular-nums">{amount}</div>
           <div className="text-secondary text-sm mt-1">Events only · Used for {month}</div>
+          {credit.status === 'pending' ? (
+            <div className="mt-3 rounded-xl bg-elevated px-3 py-2 text-sm font-semibold text-secondary">Waiting for staff to confirm…</div>
+          ) : (
+            <div className="mt-3 rounded-xl bg-accent/15 px-3 py-2 text-sm font-semibold text-accent">
+              Confirmed{credit.confirmedByName ? ` by ${credit.confirmedByName}` : ''}
+            </div>
+          )}
           <div className="mt-5 divide-y divide-border-token text-left text-sm">
             <Row label="Name" value={credit.name} />
             <Row label="Player ID" value={credit.playerId} />
             <Row label="Redeemed" value={credit.redeemedAt ? when(credit.redeemedAt) : ''} />
+            {credit.confirmedAt && <Row label="Confirmed" value={when(credit.confirmedAt)} />}
             <Row label="Right now" value={now.toLocaleTimeString('en-US', { timeZone: PACIFIC, hour: 'numeric', minute: '2-digit', second: '2-digit' })} />
           </div>
         </div>
-        <p className="text-secondary text-xs text-center mt-3">Show this screen to staff.</p>
+        <p className="text-secondary text-xs text-center mt-3">{credit.status === 'pending' ? 'Show this screen to staff. They will confirm it on their side.' : 'Show this screen to staff.'}</p>
         <button type="button" onClick={onClose} className="pp-press mt-4 w-full py-3 rounded-xl border border-border-token text-secondary font-semibold">Close</button>
       </div>
     </div>

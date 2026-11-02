@@ -756,29 +756,41 @@ export type Database = {
       event_credit_redemptions: {
         Row: {
           amount_cents: number
+          confirmed_at: string | null
+          confirmed_by: string | null
+          event_id: string | null
           id: string
           month_key: string
           pass_tier: string
           player_id: string
           redeemed_at: string
+          status: string
           store_id: string | null
         }
         Insert: {
           amount_cents?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          event_id?: string | null
           id?: string
           month_key: string
           pass_tier: string
           player_id: string
           redeemed_at?: string
+          status?: string
           store_id?: string | null
         }
         Update: {
           amount_cents?: number
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          event_id?: string | null
           id?: string
           month_key?: string
           pass_tier?: string
           player_id?: string
           redeemed_at?: string
+          status?: string
           store_id?: string | null
         }
         Relationships: [

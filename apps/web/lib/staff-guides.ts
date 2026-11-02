@@ -42,7 +42,7 @@ export const STAFF_GUIDES: Record<string, StaffGuide> = {
     careful: 'Remove Subscription and Delete Account can\'t be undone. Don\'t use them unless the player has asked you to, or a manager has told you to.',
   },
   redemptions: {
-    version: 2,
+    version: 3,
     title: 'Handing out a prize',
     intro: 'When a player spends points on a prize, they get a claim code. You check it here before handing over the item.',
     steps: [
@@ -51,7 +51,7 @@ export const STAFF_GUIDES: Record<string, StaffGuide> = {
       { do: 'Check the prize name matches what they\'re asking for.', why: 'Make sure it\'s the right item before you commit.' },
       { do: 'Tap Confirm Claim, then hand over the prize.', why: 'Confirming stops the same code being used twice. Only hand it over once you see "Claimed!".' },
     ],
-    careful: 'Below the prize list, Event Credits used shows the Diamond $15 credits players have redeemed this month. When a player shows their Event Credit ticket, check the live clock is moving, then take $15 off their event in Square. It is a record only. Nothing there needs confirming. If a code says claimed, expired or voided, don\'t give out the prize. Ask a manager. Void is only for when you can\'t give the prize (out of stock, or the player changed their mind). It refunds their points, so always write the reason.',
+    careful: 'Diamond members can use a $15 Event Credit at check-in or from their Profile. When one comes in, Event Credits waiting shows at the top of this page with a number on the Redemptions tab. Take $15 off their event in Square, then tap Confirm. Tap Decline if you can\'t give it, and they get the credit back. If a code says claimed, expired or voided, don\'t give out the prize. Ask a manager. Void is only for when you can\'t give the prize (out of stock, or the player changed their mind). It refunds their points, so always write the reason.',
   },
   'prize-wall': {
     version: 1,
