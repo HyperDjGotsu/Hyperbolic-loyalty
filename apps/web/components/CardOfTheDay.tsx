@@ -631,12 +631,17 @@ export function CardOfTheDayCompact({ large = false }: { large?: boolean } = {})
           <p className="line-clamp-2 text-base font-semibold leading-tight text-primary">{card.name}</p>
           <p className={`mt-0.5 text-xs ${theme.accent}`}>{card.gameDisplay}</p>
         </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold text-primary">{formatPrice(card.price)}</span>
-          {card.priceChange7d !== null && (
-            <span className={`text-xs font-medium ${isPositive7d ? 'text-green-400' : 'text-red-400'}`}>{formatPriceChange(card.priceChange7d)}</span>
-          )}
-        </div>
+        <div className="text-lg font-bold text-primary">{formatPrice(card.price)}</div>
+        {(card.priceChange7d !== null || card.priceChange30d !== null) && (
+          <div className="flex items-center gap-3 text-xs font-medium">
+            {card.priceChange7d !== null && (
+              <span className={isPositive7d ? 'text-green-400' : 'text-red-400'}>{formatPriceChange(card.priceChange7d)} <span className="opacity-70">7d</span></span>
+            )}
+            {card.priceChange30d !== null && (
+              <span className={card.priceChange30d >= 0 ? 'text-green-400' : 'text-red-400'}>{formatPriceChange(card.priceChange30d)} <span className="opacity-70">30d</span></span>
+            )}
+          </div>
+        )}
         {voting?.hasVoted && <div className="text-[10px] text-green-400">✓ Vote cast for tomorrow</div>}
       </a>
     );
