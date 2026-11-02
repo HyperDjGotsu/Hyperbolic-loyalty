@@ -105,7 +105,7 @@ function Legal({ className = '', extra }: { className?: string; extra?: ReactNod
   return (
     <div className={`text-xs text-white/55 ${className}`}>
       <p>
-        © 2026 Hyperbolic Creative · <Link href="/privacy" className="underline underline-offset-2 hover:text-white/80">Privacy</Link>
+        © 2026 Hyperbolic Creative · <Link href="/privacy" className="underline underline-offset-2 hover:text-white/80">Privacy</Link> · <Link href="/terms" className="underline underline-offset-2 hover:text-white/80">Terms</Link>
       </p>
       {extra && <p className="mt-1.5">{extra}</p>}
     </div>

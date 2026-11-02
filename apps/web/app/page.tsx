@@ -107,6 +107,8 @@ export default function LandingPage() {
 
         <p className="mt-6 text-center text-[13px] text-tertiary">
           <Link href="/privacy" className="hover:text-primary">Privacy</Link>
+          <span className="mx-2 text-tertiary">·</span>
+          <Link href="/terms" className="hover:text-primary">Terms</Link>
         </p>
       </main>
     </div>
