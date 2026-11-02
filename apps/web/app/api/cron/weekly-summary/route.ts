@@ -79,7 +79,7 @@ export async function GET(request: Request) {
         playerId,
         'weekly_summary',
         `📊 Your week in review`,
-        `You earned +${weeklyXp} XP this week${rank ? ` — #${rank} at ${name ?? 'your store'}` : ''}.`,
+        `You earned +${weeklyXp} XP this week.${rank ? ` You are now ranked #${rank} at ${name ?? 'your store'}.` : ''}`,
         { weekly_xp: String(weeklyXp), store_rank: rank ? String(rank) : null },
         'daily_rewards'
       );
