@@ -12,28 +12,6 @@ interface FriendActivity {
   date: string;
 }
 
-const GAME_ICONS: Record<string, string> = {
-  one_piece: '🏴‍☠️',
-  gundam: '🤖',
-  pokemon: '⚡',
-  mtg: '✨',
-  star_wars: '🌟',
-  star_wars_unlimited: '🌟',
-  vanguard: '⚔️',
-  uvs: '👊',
-  hololive: '🎤',
-  riftbound: '🌀',
-  lorcana: '🪄',
-  yugioh: '🃏',
-  digimon: '🦖',
-  weiss_schwarz: '🎴',
-  weiss: '🎴',
-  union_arena: '🏟️',
-  warhammer: '⚔️',
-  sw_legion: '🎖️',
-  general: '🎮',
-};
-
 function placementLabel(n: number): string {
   if (n === 1) return '1st';
   if (n === 2) return '2nd';
@@ -95,10 +73,9 @@ export async function GET() {
       const player = row.players as any;
       const event = row.events as any;
       if (!player?.display_name) continue;
-      const gameIcon = (row.game_id ? GAME_ICONS[row.game_id] : null) || '🎮';
       activity.push({
         type: 'checkin',
-        icon: gameIcon,
+        icon: 'checkin',
         headline: `${player.display_name} checked into ${event?.name || 'an event'}`,
         subtext: row.xp_awarded > 0 ? `+${row.xp_awarded} Guild Points` : undefined,
         date: row.checked_in_at,
@@ -134,11 +111,10 @@ export async function GET() {
     for (const row of xpEvents || []) {
       const player = row.players as any;
       if (!player?.display_name) continue;
-      const gameIcon = (row.game_id ? GAME_ICONS[row.game_id] : null) || '⚡';
       const verb = SOURCE_LABELS[row.source] || 'earned XP';
       activity.push({
         type: 'xp',
-        icon: gameIcon,
+        icon: 'xp',
         headline: `${player.display_name} ${verb}`,
         subtext: row.description || `+${row.final_xp} Guild Points`,
         date: row.created_at || new Date().toISOString(),
@@ -165,10 +141,9 @@ export async function GET() {
       const player = row.players as any;
       const event = row.events as any;
       if (!player?.display_name || !event?.name) continue;
-      const gameIcon = (event.game_id ? GAME_ICONS[event.game_id] : null) || '🏆';
       activity.push({
         type: 'placement',
-        icon: gameIcon,
+        icon: 'placement',
         headline: `${player.display_name} placed ${placementLabel(row.placement)} at ${event.name}`,
         date: row.qualified_at || new Date().toISOString(),
       });

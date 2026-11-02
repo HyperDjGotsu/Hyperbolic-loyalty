@@ -13,28 +13,6 @@ interface StoreUpdate {
   link?: string;
 }
 
-const GAME_ICONS: Record<string, string> = {
-  one_piece: '🏴‍☠️',
-  gundam: '🤖',
-  pokemon: '⚡',
-  mtg: '✨',
-  star_wars: '🌟',
-  star_wars_unlimited: '🌟',
-  vanguard: '⚔️',
-  uvs: '👊',
-  hololive: '🎤',
-  riftbound: '🌀',
-  lorcana: '🪄',
-  yugioh: '🃏',
-  digimon: '🦖',
-  weiss_schwarz: '🎴',
-  weiss: '🎴',
-  union_arena: '🏟️',
-  warhammer: '⚔️',
-  sw_legion: '🎖️',
-  general: '🎮',
-};
-
 function placementLabel(n: number): string {
   if (n === 1) return '1st';
   if (n === 2) return '2nd';
@@ -75,7 +53,7 @@ export async function GET(request: Request) {
         if (!player?.display_name || !event?.name) continue;
         updates.push({
           type: 'winner',
-          icon: GAME_ICONS[event.game_id] || '🏆',
+          icon: 'winner',
           label: 'Event Winner',
           headline: `${player.display_name} placed ${placementLabel(row.placement)} at ${event.name}`,
           date: row.qualified_at || new Date().toISOString(),
@@ -109,7 +87,7 @@ export async function GET(request: Request) {
         });
         updates.push({
           type: 'new_event',
-          icon: (ev.game_id ? GAME_ICONS[ev.game_id] : null) || '📅',
+          icon: 'new_event',
           label: 'New Event',
           headline: ev.name,
           subtext: scheduledDate,
@@ -138,7 +116,7 @@ export async function GET(request: Request) {
       for (const b of relevant) {
         updates.push({
           type: 'broadcast',
-          icon: '📢',
+          icon: 'broadcast',
           label: b.scope === 'network' ? 'Network Update' : 'Store Update',
           headline: b.title,
           subtext: b.message.length > 80 ? b.message.slice(0, 77) + '…' : b.message,

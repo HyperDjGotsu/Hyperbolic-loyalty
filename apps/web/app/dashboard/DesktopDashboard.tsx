@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CardOfTheDayCompact } from '@/components/CardOfTheDay';
 import { EventCreditCard } from '@/components/EventCreditCard';
 import { FriendsMini } from '@/components/FriendsMini';
+import ActivityIcon from '@/components/ActivityIcon';
 import ShareWinButton from '@/components/ShareWinButton';
 import { PassesSheet } from '@/components/PassesSheet';
 import type { DashboardData } from './useDashboardData';
@@ -402,7 +403,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
             <ul className="flex min-h-0 flex-1 flex-col divide-y divide-border-token overflow-y-auto">
               {storeUpdates.map((u: any, i: number) => (
                 <li key={i} className={`flex shrink-0 items-center gap-2.5 py-2.5 ${u.link ? 'cursor-pointer' : ''}`} onClick={() => u.link && (window.location.href = u.link)}>
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-sm">{u.icon}</span>
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-sm"><ActivityIcon name={u.icon} /></span>
                   <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{u.headline}</div>{u.subtext && <div className="truncate text-xs text-secondary">{u.subtext}</div>}</div>
                 </li>
               ))}

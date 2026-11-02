@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/ui';
+import ActivityIcon from './ActivityIcon';
 
 type Activity = { icon: string; headline: string; subtext?: string };
 type Friend = { id: string; name: string; level?: number; status?: string | null; avatar: any };
@@ -43,7 +44,7 @@ export function FriendsMini({ activity, limit = 3 }: { activity: Activity[]; lim
           <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
             {activity.slice(0, limit).map((f, i) => (
               <li key={i} className="flex items-center gap-2.5">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-elevated text-sm">{f.icon}</span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-elevated text-sm"><ActivityIcon name={f.icon} /></span>
                 <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{f.headline}</div>{f.subtext && <div className="truncate text-xs text-secondary">{f.subtext}</div>}</div>
               </li>
             ))}
