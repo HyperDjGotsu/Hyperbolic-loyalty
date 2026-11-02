@@ -350,7 +350,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
           </button>
           <section data-tour="cotd" className={`flex min-h-0 flex-1 flex-col overflow-hidden p-4 ${PANEL}`}>
             <PanelTitle title="Card of the Day" />
-            <div className="flex min-h-0 flex-1 items-center overflow-y-auto"><div className="w-full"><CardOfTheDayCompact large /></div></div>
+            <div className="min-h-0 flex-1 overflow-y-auto"><CardOfTheDayCompact large /></div>
           </section>
         </div>
 

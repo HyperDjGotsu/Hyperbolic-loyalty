@@ -618,22 +618,22 @@ export function CardOfTheDayCompact({ large = false }: { large?: boolean } = {})
         href={card.tcgplayerUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex flex-col items-center gap-3 rounded-xl border border-border-token bg-elevated p-4 text-center transition-colors hover:border-border-strong"
+        className="flex h-full min-h-0 flex-col items-center gap-2 rounded-xl border border-border-token bg-elevated p-3 text-center transition-colors hover:border-border-strong"
       >
-        <div className="aspect-[5/7] w-[min(55%,200px)] overflow-hidden rounded-lg bg-elevated shadow-lg">
+        <div className="flex min-h-0 w-full flex-1 justify-center"><div className="aspect-[5/7] h-full max-w-full overflow-hidden rounded-lg bg-elevated shadow-lg">
           {imageUrl ? (
             <img src={imageUrl} alt={card.name} className="h-full w-full object-cover" onError={handleImageError} />
           ) : (
             <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br text-4xl ${theme.gradient} border ${theme.border}`}>{theme.icon}</div>
           )}
-        </div>
-        <div className="min-w-0">
+        </div></div>
+        <div className="min-w-0 shrink-0">
           <p className="line-clamp-2 text-base font-semibold leading-tight text-primary">{card.name}</p>
           <p className={`mt-0.5 text-xs ${theme.accent}`}>{card.gameDisplay}</p>
         </div>
-        <div className="text-lg font-bold text-primary">{formatPrice(card.price)}</div>
+        <div className="shrink-0 text-lg font-bold leading-none text-primary">{formatPrice(card.price)}</div>
         {(card.priceChange7d !== null || card.priceChange30d !== null) && (
-          <div className="flex items-center gap-3 text-xs font-medium">
+          <div className="flex shrink-0 items-center gap-3 text-xs font-medium">
             {card.priceChange7d !== null && (
               <span className={isPositive7d ? 'text-green-400' : 'text-red-400'}>{formatPriceChange(card.priceChange7d)} <span className="opacity-70">7d</span></span>
             )}
