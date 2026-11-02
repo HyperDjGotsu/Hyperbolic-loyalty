@@ -131,7 +131,7 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
     games.find((g: { id: string }) => favoriteGames.includes(g.id)) ??
     games[0];
 
-  const activity = (playerData?.recentActivity || []).slice(0, 4).map((a: any) => ({
+  const activity = (playerData?.recentActivity || []).slice(0, 8).map((a: any) => ({
     id: a.id,
     text: a.description || a.source?.replace(/_/g, ' ') || 'XP Earned',
     xp: a.final_xp || a.base_xp || 0,
@@ -360,9 +360,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
           {upcomingEvents.length === 0 && specialEvents.length === 0 ? (
             <Empty>No upcoming events. Check back soon.</Empty>
           ) : (
-            <div className="flex flex-1 flex-col justify-between gap-2">
-              {[...specialEvents.slice(0, 1), ...upcomingEvents].slice(0, 3).map((e: any) => (
-                <button key={e.id} type="button" onClick={() => router.push('/dashboard/events')} className="pp-press flex items-center gap-3 rounded-2xl bg-elevated p-2 text-left">
+            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+              {[...specialEvents.slice(0, 1), ...upcomingEvents].slice(0, 8).map((e: any) => (
+                <button key={e.id} type="button" onClick={() => router.push('/dashboard/events')} className="pp-press flex shrink-0 items-center gap-3 rounded-2xl bg-elevated p-2 text-left">
                   <CoverImage gameId={e.game?.id} storeId={e.storeId ?? artStoreId} color={e.game?.color || '#64748b'} src={e.imageUrl} className="h-10 w-10 shrink-0 rounded-xl" />
                   <div className="min-w-0 flex-1"><div className="truncate text-sm font-bold">{e.name}</div><div className="truncate text-xs text-secondary">{e.date} · {e.time}</div></div>
                   {e.entryFee && <span className={`shrink-0 text-xs font-bold ${e.isFree ? 'text-accent' : ''}`}>{e.entryFee}</span>}
@@ -377,9 +377,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
           {activity.length === 0 ? (
             <Empty>No activity yet. Attend events to start earning XP.</Empty>
           ) : (
-            <ul className="flex flex-1 flex-col justify-between divide-y divide-border-token">
+            <ul className="flex min-h-0 flex-1 flex-col divide-y divide-border-token overflow-y-auto">
               {activity.map((a: { id: string; text: string; xp: number; time: string }) => (
-                <li key={a.id} className="flex flex-1 items-center justify-between gap-3">
+                <li key={a.id} className="flex shrink-0 items-center justify-between gap-3 py-2.5">
                   <div className="min-w-0"><div className="truncate text-sm font-medium">{a.text}</div><div className="text-xs text-tertiary">{a.time}</div></div>
                   <span className={`shrink-0 text-sm font-bold ${a.xp >= 0 ? 'text-accent' : 'text-red-400'}`}>{a.xp >= 0 ? '+' : ''}{a.xp}</span>
                   {a.xp > 0 && <ShareWinButton ledgerId={a.id} />}
@@ -399,9 +399,9 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
           {storeUpdates.length === 0 ? (
             <Empty>Nothing new from the store.</Empty>
           ) : (
-            <ul className="flex flex-1 flex-col justify-between divide-y divide-border-token">
-              {storeUpdates.slice(0, 3).map((u: any, i: number) => (
-                <li key={i} className={`flex flex-1 items-center gap-2.5 ${u.link ? 'cursor-pointer' : ''}`} onClick={() => u.link && (window.location.href = u.link)}>
+            <ul className="flex min-h-0 flex-1 flex-col divide-y divide-border-token overflow-y-auto">
+              {storeUpdates.slice(0, 6).map((u: any, i: number) => (
+                <li key={i} className={`flex shrink-0 items-center gap-2.5 py-2.5 ${u.link ? 'cursor-pointer' : ''}`} onClick={() => u.link && (window.location.href = u.link)}>
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] text-sm">{u.icon}</span>
                   <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold">{u.headline}</div>{u.subtext && <div className="truncate text-xs text-secondary">{u.subtext}</div>}</div>
                 </li>

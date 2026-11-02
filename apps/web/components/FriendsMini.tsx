@@ -40,7 +40,7 @@ export function FriendsMini({ activity, limit = 3 }: { activity: Activity[]; lim
         activity.length === 0 ? (
           <div className="grid flex-1 place-items-center px-2 text-center text-xs text-tertiary">Add friends to see what they are playing.</div>
         ) : (
-          <ul className="flex flex-1 flex-col justify-between gap-2">
+          <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
             {activity.slice(0, limit).map((f, i) => (
               <li key={i} className="flex items-center gap-2.5">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-elevated text-sm">{f.icon}</span>
