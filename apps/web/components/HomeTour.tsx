@@ -12,8 +12,8 @@ interface Stop { key: string; title: string; text: string }
 const STOPS: Stop[] = [
   { key: 'hero', title: 'This is you', text: 'Your level fills up as you earn XP. Prize Points are what you spend on the Prize Wall.' },
   { key: 'pass', title: 'Your Player Pass', text: 'Your pass sets how fast you earn. Tap it any time to compare passes.' },
-  { key: 'events', title: 'What is on', text: 'Events at your store. Tap the star to say you are interested, and check in when you arrive.' },
-  { key: 'games', title: 'Your games', text: 'Every game keeps its own rank, so you can climb in the ones you play.' },
+  { key: 'events', title: "What's up next at the store", text: 'These are the events happening at the store. You can find more on the Events page, but this is a quick snapshot.' },
+  { key: 'games', title: 'Your games', text: 'Track your progress in each game you play. Each game has its own rank, and all your points combine for your store and network rank in that game.' },
   { key: 'cotd', title: 'Card of the Day', text: 'A new card every day. Come back daily to see it and vote.' },
   { key: 'prizes', title: 'Prize Wall', text: 'Spend your Prize Points here on rewards from the store.' },
   { key: 'activity', title: 'Your activity', text: 'Every XP you earn shows up here, so you can see where it came from.' },
