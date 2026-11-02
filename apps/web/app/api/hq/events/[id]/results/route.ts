@@ -8,10 +8,6 @@ import { WIN_LIFETIME_XP, WIN_PRIZE_POINTS, BONUS_TILE_XP } from '@/lib/xp-const
 
 export const dynamic = 'force-dynamic';
 
-// TEMP: lets the Dj test account reward itself so the wrap-up can be tested with one player. Delete this and its
-// use below before go-live (all test data is wiped then anyway). Only this one player id is exempt.
-const TEMP_SELF_AWARD_TEST_PLAYER_IDS = ['3917190e-23f4-454a-8abf-2aeb90314780'];
-
 const MAX_WINS = 10;
 const MAX_PLACEMENT = 64;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -144,7 +140,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   // Nobody rewards themselves: another staff member does it. Fails closed if we can't tell who the staff member is.
   if (!staffPlayer) return NextResponse.json({ error: 'Your staff profile could not be found' }, { status: 403 });
   const isSelf = staffPlayer.id === playerId || (!!player.clerk_user_id && player.clerk_user_id === staff.clerkUserId);
-  if (isSelf && !TEMP_SELF_AWARD_TEST_PLAYER_IDS.includes(playerId)) {
+  if (isSelf) {
     return NextResponse.json({ error: 'You can\'t reward yourself. Ask another staff member to do it.' }, { status: 403 });
   }
 

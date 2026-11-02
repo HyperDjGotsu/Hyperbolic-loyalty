@@ -16,7 +16,7 @@ Google brand verification done (domain verified via TXT at GoDaddy, branding ver
 
 Decisions: no extra points for 1st-3rd (only undefeated bonus). Bandai TCG+ rank targets undisclosed; don't quote numbers. Weekly recap stays a one-line notification; a Spotify-Wrapped-style Week in Review page and a monthly network-rank notification are saved for later.
 
-Before go-live: remove `TEMP_SELF_AWARD_TEST_PLAYER_IDS` in `app/api/hq/events/[id]/results/route.ts`; all data wiped at go-live (no Dj/[TEST] cleanup).
+Self-award bypass REMOVED (Nov 2): nobody can reward themselves in event wrap-up, Dj included; test wrap-ups need a second staff account. All data wiped at go-live (no Dj/[TEST] cleanup).
 
 Open: verify Clerk form / Google sign-in / light mode on playerpass.gg phone; lawyer review of privacy + Terms; kiosk server-side lock; optional staff push for Event Credits; optional TCG+ rank tracker in HQ; optional weekly recap push.
 
