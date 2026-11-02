@@ -1,6 +1,7 @@
 'use client';
 
 import StaffGuide from '@/components/StaffGuide';
+import EventCreditLog from '@/components/EventCreditLog';
 import StaffPinSetup from '@/components/StaffPinSetup';
 import { EventWrapUp, RecentWrapUps } from '@/components/EventWrapUp';
 import { useState, useEffect, useRef } from 'react';
@@ -5491,10 +5492,13 @@ export default function HQPage() {
         )}
 
         {activeTab === 'redemptions' && (
-          <RedemptionsPanel
-            activeStoreId={hqStore.activeStoreId}
-            onDatasetChange={setRedemptionsDataset}
-          />
+          <div className="space-y-6">
+            <RedemptionsPanel
+              activeStoreId={hqStore.activeStoreId}
+              onDatasetChange={setRedemptionsDataset}
+            />
+            <EventCreditLog storeId={hqStore.activeStoreId} />
+          </div>
         )}
 
         {activeTab === 'broadcasts' && (
