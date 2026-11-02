@@ -39,7 +39,8 @@ function expectedPacks(payoutId: string, players: number, rounds: number) {
     perPlayer += (choose / 2 ** rounds) * payout.packs(k);
     choose = (choose * (rounds - k)) / (k + 1);
   }
-  return perPlayer * players;
+  // An odd player count gets a bye each round, and a bye is an automatic win, so 5 players pay out like 6
+  return perPlayer * (players + (players % 2));
 }
 
 const CARD = "rounded-xl border border-border-token bg-surface p-5 sm:p-6";
