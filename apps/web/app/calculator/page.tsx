@@ -22,6 +22,26 @@ const BASE_XP = {
   dailySpin: 11.6, // expected value of weighted spin (Bronze→Jackpot)
 };
 
+// Pack payout models. Packs a player earns for their total wins in one event.
+const PAYOUTS = [
+  { id: "one", label: "1 pack / win", packs: (w: number) => w },
+  { id: "two", label: "2 packs / win", packs: (w: number) => w * 2 },
+  { id: "135", label: "1-3-5", packs: (w: number) => (w <= 0 ? 0 : 2 * w - 1) },
+] as const;
+
+// Expected packs handed out in one event. Assumes a Swiss-style spread: a player wins k of r rounds
+// with probability C(r,k) / 2^r, so it works for any player count and round count.
+function expectedPacks(payoutId: string, players: number, rounds: number) {
+  const payout = PAYOUTS.find((x) => x.id === payoutId) ?? PAYOUTS[0];
+  let perPlayer = 0;
+  let choose = 1;
+  for (let k = 0; k <= rounds; k++) {
+    perPlayer += (choose / 2 ** rounds) * payout.packs(k);
+    choose = (choose * (rounds - k)) / (k + 1);
+  }
+  return perPlayer * players;
+}
+
 const CARD = "rounded-xl border border-border-token bg-surface p-5 sm:p-6";
 const EYEBROW = "text-[11px] font-semibold uppercase tracking-[0.14em] text-tertiary";
 
@@ -187,6 +207,7 @@ export default function LoyaltyCalculator() {
   const [playersPerEvent, setPlayersPerEvent] = useState(10);
   const [creditUsePct, setCreditUsePct] = useState(100);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [payoutId, setPayoutId] = useState("one");
 
   const tier = TIERS.find((t) => t.id === selectedTier) || TIERS[0];
 
@@ -208,8 +229,7 @@ export default function LoyaltyCalculator() {
     const prizeCost = Math.round(prizeValue / 0.30);
     const monthsToRedeem = prizeCost / totalMonthlyXP;
 
-    const packsPerRound = Math.ceil(playersPerEvent / 2);
-    const totalPacksPerEvent = packsPerRound * rounds;
+    const totalPacksPerEvent = expectedPacks(payoutId, playersPerEvent, rounds);
     const prizingCostPerEvent = totalPacksPerEvent * packCost;
     const grossEntryPerEvent = playersPerEvent * entryFee;
     const netEventRevenue = grossEntryPerEvent - prizingCostPerEvent;
@@ -238,14 +258,13 @@ export default function LoyaltyCalculator() {
       totalRevenue: Math.round(totalRevenue),
       trueNet: Math.round(trueNet),
       prizeCostToStore: Math.round(prizeCostToStore),
-      packsPerRound,
       totalPacksPerEvent,
       prizingCostPerEvent: Math.round(prizingCostPerEvent),
       grossEntryPerEvent,
       netEventRevenue: Math.round(netEventRevenue),
       prizeMargin: prizeValue > 0 ? Math.round(((prizeValue - prizeCostActual) / prizeValue) * 100) : 0,
     };
-  }, [selectedTier, eventsPerWeek, avgWins, goesUndefeated, referralsPerMonth, taughtPerMonth, prizeValue, prizeCostActual, totalSubscribers, entryFee, packCost, rounds, playersPerEvent, creditUsePct, tier]);
+  }, [selectedTier, eventsPerWeek, avgWins, goesUndefeated, referralsPerMonth, taughtPerMonth, prizeValue, prizeCostActual, totalSubscribers, entryFee, packCost, rounds, playersPerEvent, creditUsePct, payoutId, tier]);
 
   const fmt = (n: number) => `$${n.toLocaleString()}`;
   const fmtXP = (n: number) => `${n.toLocaleString()} XP`;
@@ -329,22 +348,46 @@ export default function LoyaltyCalculator() {
                     <Slider label="Event entry fee" value={entryFee} min={0} max={30} step={1} onChange={setEntryFee}
                       format={(v) => `$${v}`} hint="What players pay to enter each event" />
                     <Slider label="Players per event" value={playersPerEvent} min={4} max={32} step={1} onChange={setPlayersPerEvent}
-                      format={(v) => `${v} players`} hint="Determines packs given out (ceil(players ÷ 2) per round)" />
+                      format={(v) => `${v} players`} hint="Drives how many packs get handed out" />
                     <Slider label="Rounds per event" value={rounds} min={1} max={6} step={1} onChange={setRounds}
                       format={(v) => `${v} rounds`} hint="Number of rounds in a typical event" />
                     {tier.id === "diamond" && (
                       <Slider label="Event Credit used" value={creditUsePct} min={0} max={100} step={10} onChange={setCreditUsePct}
                         format={(v) => `${v}%`} hint="Share of Diamond subscribers who use their $15 credit each month" />
                     )}
+                    <div className="mb-5">
+                      <div className="mb-2 text-sm text-secondary">Pack payout</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {PAYOUTS.map((o) => (
+                          <button key={o.id} onClick={() => setPayoutId(o.id)}
+                            className={`rounded-lg border px-2 py-2 text-sm font-medium transition-colors ${
+                              payoutId === o.id ? "border-accent/40 bg-accent/10 text-accent" : "border-border-strong bg-elevated text-secondary hover:text-primary"
+                            }`}>{o.label}</button>
+                        ))}
+                      </div>
+                      <div className="mt-1.5 text-xs text-tertiary">1-3-5 pays 1 pack for 1 win, 3 for 2 wins, 5 for 3 wins (then +2 each extra win).</div>
+                    </div>
                     <Slider label="Pack cost to store" value={packCost} min={1} max={20} step={1} onChange={setPackCost}
                       format={(v) => `$${v}`} hint="Your cost per pack used for pack-per-win prizing" />
 
                     <div className="mt-2 rounded-lg bg-elevated p-4">
                       <div className="mb-2 text-xs font-semibold text-tertiary">Event P&amp;L Preview</div>
                       <Row label={`Gross entry (${playersPerEvent} × $${entryFee})`} value={`$${calc.grossEntryPerEvent}`} />
-                      <Row label={`Prizing cost (${calc.packsPerRound} packs × ${rounds} rounds × $${packCost})`} value={`-$${calc.prizingCostPerEvent}`} valueClass="text-danger" />
+                      <Row label={`Prizing cost (~${Math.round(calc.totalPacksPerEvent)} packs × $${packCost})`} value={`-$${calc.prizingCostPerEvent}`} valueClass="text-danger" />
                       <div className="mt-1 border-t border-border-token pt-1">
                         <Row label="Net per event" value={`$${calc.netEventRevenue}`} valueClass={calc.netEventRevenue >= 0 ? "text-success" : "text-danger"} strong />
+                      </div>
+                      <div className="mt-3 border-t border-border-token pt-2 text-xs text-tertiary">
+                        {PAYOUTS.map((o) => {
+                          const packs = expectedPacks(o.id, playersPerEvent, rounds);
+                          const net = Math.round(calc.grossEntryPerEvent - packs * packCost);
+                          return (
+                            <div key={o.id} className="flex justify-between py-0.5">
+                              <span>{o.label}: ~{Math.round(packs)} packs</span>
+                              <span className={`tabular-nums ${net >= 0 ? "text-secondary" : "text-danger"}`}>net ${net}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
