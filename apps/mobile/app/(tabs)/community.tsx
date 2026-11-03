@@ -1,20 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Modal, Pressable, RefreshControl, ScrollView, TextInput, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
-import { LoadingView } from '@/components/ui';
-import { C } from '@/lib/theme';
+import { useTheme } from '@/lib/theme-context';
+import { AppText, Button, Skeleton } from '@/components/kit';
 import { useAlertsContext } from '@/lib/alerts-context';
 import { SELECTABLE_GAMES } from '@/lib/games';
 
@@ -76,32 +66,29 @@ const GAMES = [
   ...SELECTABLE_GAMES.map(g => ({ id: g.id, label: g.name, icon: g.icon })),
 ];
 
-function rankColor(rank: number): string {
+function rankColor(rank: number, fallback: string): string {
   if (rank === 1) return '#f4c542';
   if (rank === 2) return '#d4d4d8';
   if (rank === 3) return '#c97c3a';
-  return C.textTertiary;
+  return fallback;
 }
 
-function AvatarBubble({ avatar }: { avatar: Avatar }) {
-  if (avatar.type === 'photo' && avatar.photoUrl) {
-    return (
-      <Image
-        source={{ uri: avatar.photoUrl }}
-        style={[styles.avatarCircle, { backgroundColor: avatar.background }]}
-      />
-    );
-  }
-  return (
-    <View style={[styles.avatarCircle, { backgroundColor: avatar.background }]}>
-      <Text style={styles.avatarEmoji}>{avatar.base}</Text>
-    </View>
-  );
+function AvatarBubble({ avatar, size = 40 }: { avatar: Avatar; size?: number }) {
+  const box = { width: size, height: size, borderRadius: size / 2, backgroundColor: avatar.background, alignItems: 'center' as const, justifyContent: 'center' as const, overflow: 'hidden' as const };
+  if (avatar.type === 'photo' && avatar.photoUrl) return <Image source={{ uri: avatar.photoUrl }} style={box} />;
+  return <View style={box}><AppText style={{ fontSize: size * 0.5 }}>{avatar.base}</AppText></View>;
 }
+
+type Member = { odid: string; name: string; avatar: Avatar; level?: number | null; totalXp?: number | null; rank?: number; isFriend?: boolean };
 
 export default function CommunityScreen() {
   const api = useApi();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const [meId, setMeId] = useState<string | null>(null);
+  const [meEntry, setMeEntry] = useState<LeaderboardEntry | null>(null);
+  const [actionFor, setActionFor] = useState<Member | null>(null);
+  const [blocked, setBlocked] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'ranks' | 'friends'>('ranks');
   const [scope, setScope] = useState<'store' | 'network'>('store');
   const [game, setGame] = useState('overall');
@@ -147,6 +134,10 @@ export default function CommunityScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    api.get<{ id?: string }>('/api/player/by-clerk').then(d => setMeId(d.id ?? null)).catch(() => {});
+  }, []);
+
   // Load the player's homeStoreId once so we know what to pass to the store leaderboard
   useEffect(() => {
     api.get<{ homeStoreId: string | null }>('/api/player/pass-status')
@@ -171,10 +162,11 @@ export default function CommunityScreen() {
     try {
       const gameParam = g !== 'overall' ? `&game=${g}` : '';
       const storeParam = s === 'store' && storeId ? `&store_id=${storeId}` : '';
-      const data = await api.get<{ leaderboard: LeaderboardEntry[] }>(
+      const data = await api.get<{ leaderboard: LeaderboardEntry[]; me?: LeaderboardEntry | null }>(
         `/api/community/leaderboard?limit=50${gameParam}${storeParam}`
       );
       setEntries(data.leaderboard ?? []);
+      setMeEntry(data.me ?? null);
     } catch {
       setEntries([]);
     } finally {
@@ -301,424 +293,230 @@ export default function CommunityScreen() {
     }
   }
 
+  async function blockPlayer(m: Member) {
+    try {
+      await api.post('/api/community/block', { targetPlayerId: m.odid });
+      setBlocked(cur => new Set(cur).add(m.odid));
+      setFriends(cur => cur.filter(f => f.odid !== m.odid));
+      setFriendRequests(cur => cur.filter(r => r.odid !== m.odid));
+      setActionFor(null);
+    } catch {
+      Alert.alert('Error', 'Could not block this player. Try again.');
+    }
+  }
+
+  function confirmBlock(m: Member) {
+    Alert.alert(`Block ${m.name}?`, "They won't be able to find you or send friend requests, and you won't see them in search.", [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Block', style: 'destructive', onPress: () => void blockPlayer(m) },
+    ]);
+  }
+
+  function reportPlayer(m: Member) {
+    const subject = encodeURIComponent(`Report player: ${m.name}`);
+    const body = encodeURIComponent(`Player: ${m.name} (${m.odid})\nReason:\n`);
+    setActionFor(null);
+    void Linking.openURL(`mailto:darrell@hyperbolictcg.com?subject=${subject}&body=${body}`);
+  }
+
+  const shown = entries.filter(e => !blocked.has(e.odid));
+  const mine = meEntry ?? shown.find(e => e.odid === meId) ?? null;
+
+  const memberRow = (m: Member, right?: React.ReactNode) => (
+    <Pressable
+      key={m.odid}
+      onPress={() => m.odid !== meId && setActionFor(m)}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, borderWidth: 1, borderColor: m.odid === meId ? colors.accent : colors.border, backgroundColor: colors.bgSurface }}
+    >
+      {m.rank != null && <AppText variant="numeral" style={{ width: 44, fontSize: 16, color: rankColor(m.rank, colors.textTertiary) }}>#{m.rank}</AppText>}
+      <AvatarBubble avatar={m.avatar} />
+      <View style={{ flex: 1 }}>
+        <AppText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>{m.name}{m.odid === meId ? ' (you)' : ''}</AppText>
+        {m.level != null && <AppText variant="caption" tone="secondary">Lv.{m.level}</AppText>}
+      </View>
+      {right ?? (m.totalXp != null ? <AppText variant="numeral" style={{ fontSize: 16 }}>{m.totalXp.toLocaleString()}</AppText> : null)}
+    </Pressable>
+  );
+
+  const toMember = (e: LeaderboardEntry): Member => ({ odid: e.odid, name: e.hidden ? 'Anonymous' : e.name, avatar: e.avatar, level: e.level, totalXp: e.totalXp, rank: e.rank });
+
   return (
-    <View style={styles.container}>
-      <View style={[styles.tabRow, { marginTop: insets.top }]}>
-        {([
-          { id: 'ranks' as const, label: '🏆 Ranks' },
-          { id: 'friends' as const, label: '👥 Friends' },
-        ]).map(tab => (
-          <Pressable key={tab.id} style={styles.tab} onPress={() => handleTab(tab.id)}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
-                {tab.label}
-              </Text>
-              {tab.id === 'friends' && friendRequests.length > 0 && (
-                <View style={styles.requestBadge}>
-                  <Text style={styles.requestBadgeText}>{friendRequests.length}</Text>
-                </View>
-              )}
-            </View>
-            {activeTab === tab.id && <View style={styles.tabUnderline} />}
+    <View style={{ flex: 1, backgroundColor: colors.bgBase }}>
+      <View style={{ paddingTop: insets.top + 12, paddingHorizontal: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <View>
+            <AppText variant="display">Community</AppText>
+            <AppText variant="caption" tone="secondary">Ranks, friends & players</AppText>
+          </View>
+          <Pressable accessibilityLabel="Search players" onPress={() => setSearchOpen(true)} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.bgElevated, alignItems: 'center', justifyContent: 'center' }}>
+            <Feather name="search" size={18} color={colors.textPrimary} />
           </Pressable>
-        ))}
-        <Pressable accessibilityLabel="Search players" style={styles.searchHeaderButton} onPress={() => setSearchOpen(true)}>
-          <Text style={styles.searchHeaderIcon}>🔍</Text>
-        </Pressable>
+        </View>
+        <View style={{ flexDirection: 'row', marginTop: 16, borderRadius: 16, padding: 4, backgroundColor: colors.bgElevated }}>
+          {([{ id: 'ranks', label: 'Ranks' }, { id: 'friends', label: friendRequests.length ? `Friends (${friendRequests.length})` : 'Friends' }] as const).map(t => (
+            <Pressable key={t.id} onPress={() => handleTab(t.id)} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, alignItems: 'center', backgroundColor: activeTab === t.id ? colors.bgSurface : 'transparent' }}>
+              <AppText variant="caption" tone={activeTab === t.id ? 'primary' : 'tertiary'} style={{ fontWeight: '700', fontSize: 14 }}>{t.label}</AppText>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       {activeTab === 'ranks' ? (
         <>
-          {/* Scope toggle */}
-          <View style={styles.scopeRow}>
-        {(['store', 'network'] as const).map(s => (
-          <Pressable
-            key={s}
-            style={[
-              styles.scopeBtn,
-              scope === s && styles.scopeBtnActive,
-              s === 'store' && !homeStoreId.current && styles.scopeBtnDisabled,
-            ]}
-            onPress={() => { if (s !== 'store' || homeStoreId.current) handleScope(s); }}
-          >
-            <Text style={[styles.scopeText, scope === s && styles.scopeTextActive]}>
-              {s === 'store' ? '🏪 My Store' : '🌐 Network'}
-            </Text>
-          </Pressable>
-        ))}
+          <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 12 }}>
+            {(['store', 'network'] as const).map(sc => {
+              const off = sc === 'store' && !homeStoreId.current;
+              return (
+                <Pressable key={sc} disabled={off} onPress={() => handleScope(sc)} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, alignItems: 'center', opacity: off ? 0.4 : 1, backgroundColor: scope === sc ? colors.accent : colors.bgElevated }}>
+                  <AppText variant="caption" style={{ fontWeight: '700', fontSize: 14, color: scope === sc ? colors.accentFg : colors.textSecondary }}>{sc === 'store' ? 'My Store' : 'Network'}</AppText>
+                </Pressable>
+              );
+            })}
           </View>
-
-          {/* Game filter pills */}
-          <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.pillRow}
-      >
-        {GAMES.map(g => (
-          <Pressable
-            key={g.id}
-            style={[styles.pill, game === g.id && styles.pillActive]}
-            onPress={() => handleGame(g.id)}
-          >
-            <Text style={styles.pillIcon}>{g.icon}</Text>
-            <Text style={[styles.pillLabel, game === g.id && styles.pillLabelActive]}>
-              {g.label}
-            </Text>
-          </Pressable>
-        ))}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
+            {GAMES.map(g => (
+              <Pressable key={g.id} onPress={() => handleGame(g.id)} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: game === g.id ? colors.accent : colors.bgElevated }}>
+                <AppText variant="caption" style={{ fontSize: 14, color: game === g.id ? colors.accentFg : colors.textSecondary }}>{g.icon} {g.label}</AppText>
+              </Pressable>
+            ))}
           </ScrollView>
-
-          {loading ? (
-        <LoadingView style={styles.fill} />
-      ) : entries.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🏆</Text>
-          <Text style={styles.emptyTitle}>No rankings yet</Text>
-          <Text style={styles.emptyBody}>
-            {scope === 'store'
-              ? 'Earn XP at events to appear on the store board.'
-              : game === 'overall'
-              ? 'No players ranked yet.'
-              : `No ${GAMES.find(g => g.id === game)?.label ?? 'game'} rankings yet — be the first to compete!`}
-          </Text>
-        </View>
-      ) : (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />
-          }
-        >
-          <View style={{ height: 8 }} />
-          {entries.map(entry => (
-            <View key={entry.id} style={styles.row}>
-              {/* Rank */}
-              <Text style={[styles.rank, { color: rankColor(entry.rank) }]}>
-                #{entry.rank}
-              </Text>
-
-              {/* Avatar */}
-              <AvatarBubble avatar={entry.avatar} />
-
-              {/* Name + meta */}
-              <View style={styles.info}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {entry.hidden ? 'Anonymous' : entry.name}
-                </Text>
-                <Text style={styles.meta}>Lv.{entry.level}</Text>
+          <ScrollView
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, gap: 8 }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+          >
+            {loading ? (
+              [0, 1, 2, 3, 4].map(i => <Skeleton key={i} height={64} radius={20} />)
+            ) : shown.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: 48, gap: 6 }}>
+                <Feather name="award" size={32} color={colors.textTertiary} />
+                <AppText variant="title">No rankings yet</AppText>
+                <AppText variant="body" tone="secondary" style={{ textAlign: 'center' }}>
+                  {scope === 'store' ? 'Earn XP at events to appear on the store board.' : game === 'overall' ? 'No players ranked yet.' : `No ${GAMES.find(g => g.id === game)?.label ?? 'game'} rankings yet. Be the first to compete!`}
+                </AppText>
               </View>
-
-              {/* XP */}
-              <Text style={styles.xp}>{entry.totalXp.toLocaleString()}</Text>
-            </View>
-          ))}
-          <View style={{ height: 24 }} />
-        </ScrollView>
-          )}
+            ) : (
+              <>
+                {mine && (
+                  <View style={{ marginBottom: 8 }}>
+                    <AppText variant="eyebrow" tone="tertiary" style={{ marginBottom: 8 }}>Your rank</AppText>
+                    {memberRow({ ...toMember(mine), odid: mine.odid })}
+                  </View>
+                )}
+                {shown.map(e => memberRow(toMember(e)))}
+              </>
+            )}
+          </ScrollView>
         </>
-      ) : friendsLoading ? (
-        <LoadingView style={styles.fill} />
       ) : (
         <ScrollView
-          contentContainerStyle={styles.friendsContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={friendsRefreshing}
-              onRefresh={refreshFriends}
-              tintColor={C.accent}
-            />
-          }
+          contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}
+          refreshControl={<RefreshControl refreshing={friendsRefreshing} onRefresh={refreshFriends} tintColor={colors.accent} />}
         >
-          {friendRequests.length > 0 && (
-            <View style={styles.requestsSection}>
-              <Text style={styles.requestsTitle}>
-                ⚠️ Pending Requests ({friendRequests.length})
-              </Text>
-              {friendRequests.map(request => (
-                <View key={request.friendshipId} style={styles.requestCard}>
-                  <AvatarBubble avatar={request.avatar} />
-                  <View style={styles.info}>
-                    <Text style={styles.name} numberOfLines={1}>{request.name}</Text>
-                    <Text style={styles.requestTimestamp}>{request.timestamp}</Text>
-                  </View>
-                  <Pressable
-                    accessibilityLabel={`Accept friend request from ${request.name}`}
-                    style={[styles.requestButton, styles.acceptButton]}
-                    onPress={() => respondToRequest(request.friendshipId, 'accept')}
-                  >
-                    <Text style={styles.requestButtonText}>✓</Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityLabel={`Decline friend request from ${request.name}`}
-                    style={[styles.requestButton, styles.declineButton]}
-                    onPress={() => respondToRequest(request.friendshipId, 'decline')}
-                  >
-                    <Text style={styles.requestButtonText}>✗</Text>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {friends.length > 0 ? (
-            <View>
-              <Text style={styles.friendsTitle}>Friends ({friends.length})</Text>
-              {friends.map(friend => (
-                <View key={friend.id} style={styles.friendRow}>
-                  <AvatarBubble avatar={friend.avatar} />
-                  <View style={styles.info}>
-                    <Text style={styles.name} numberOfLines={1}>{friend.name}</Text>
-                    <Text style={styles.meta}>
-                      Lv.{friend.level} · {friend.totalXp.toLocaleString()} XP
-                    </Text>
-                  </View>
-                  <Pressable
-                    accessibilityLabel={`Remove ${friend.name} from friends`}
-                    style={styles.unfriendButton}
-                    onPress={() => unfriend(friend.odid)}
-                  >
-                    <Text style={styles.unfriendText}>Remove</Text>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
+          {friendsLoading ? (
+            [0, 1, 2].map(i => <Skeleton key={i} height={64} radius={20} />)
           ) : (
-            <View style={styles.friendsEmpty}>
-              <Text style={styles.emptyIcon}>👥</Text>
-              <Text style={styles.emptyBody}>No friends yet — use search to find players!</Text>
-            </View>
+            <>
+              {friendRequests.length > 0 && (
+                <View style={{ gap: 8 }}>
+                  <AppText variant="eyebrow" tone="tertiary">Pending requests ({friendRequests.length})</AppText>
+                  {friendRequests.map(rq => (
+                    <View key={rq.friendshipId} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 20, borderWidth: 1, borderColor: colors.accent, backgroundColor: colors.bgSurface }}>
+                      <AvatarBubble avatar={rq.avatar} />
+                      <View style={{ flex: 1 }}>
+                        <AppText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>{rq.name}</AppText>
+                        <AppText variant="caption" tone="tertiary">{rq.timestamp}</AppText>
+                      </View>
+                      <Button label="Accept" onPress={() => respondToRequest(rq.friendshipId, 'accept')} style={{ paddingVertical: 8, paddingHorizontal: 14 }} />
+                      <Button label="✗" variant="secondary" onPress={() => respondToRequest(rq.friendshipId, 'decline')} style={{ paddingVertical: 8, paddingHorizontal: 14 }} />
+                    </View>
+                  ))}
+                </View>
+              )}
+              {friends.length > 0 ? (
+                <View style={{ gap: 8 }}>
+                  <AppText variant="eyebrow" tone="tertiary">Friends ({friends.length})</AppText>
+                  {friends.map(f => memberRow({ odid: f.odid, name: f.name, avatar: f.avatar, level: f.level, totalXp: f.totalXp, isFriend: true }))}
+                </View>
+              ) : friendRequests.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 48, gap: 6 }}>
+                  <Feather name="users" size={32} color={colors.textTertiary} />
+                  <AppText variant="title">No friends yet</AppText>
+                  <AppText variant="body" tone="secondary" style={{ textAlign: 'center' }}>Use search to find players.</AppText>
+                </View>
+              ) : null}
+            </>
           )}
         </ScrollView>
       )}
 
-      <Modal visible={searchOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={closeSearch}>
-        <View style={[styles.searchModal, { paddingTop: insets.top }]}>
-          <View style={styles.searchModalHeader}>
-            <TextInput autoFocus value={searchQuery} onChangeText={setSearchQuery} placeholder="Search players" placeholderTextColor={C.textTertiary} style={styles.searchInput} autoCapitalize="none" returnKeyType="search" />
-            <Pressable onPress={closeSearch}><Text style={styles.cancelText}>Cancel</Text></Pressable>
-          </View>
-          {searching ? <ActivityIndicator style={styles.searchLoader} color={C.accent} /> : searchQuery.trim() && searchResults.length === 0 ? (
-            <View style={styles.searchEmpty}><Text style={styles.emptyBody}>No players found</Text></View>
-          ) : (
-            <ScrollView keyboardShouldPersistTaps="handled">{searchResults.map(result => {
-              const alreadyFriend = result.isFriend;
-              const sent = requestsSent.has(result.odid);
-              const canAdd = !alreadyFriend && !sent && result.allowFriendRequests;
-              return (
-                <View key={result.id} style={styles.searchResultRow}>
-                  <AvatarBubble avatar={result.avatar} />
-                  <View style={styles.info}>
-                    <Text style={styles.name} numberOfLines={1}>{result.name}</Text>
-                    <Text style={styles.meta}>Lv.{result.level ?? 1} · {(result.totalXp ?? 0).toLocaleString()} XP</Text>
-                  </View>
-                  {sent ? (
-                    <Pressable
-                      style={styles.cancelBtn}
-                      onPress={() => cancelFriendRequest(result.odid)}
-                    >
-                      <Text style={styles.cancelBtnText}>✕ Cancel</Text>
-                    </Pressable>
-                  ) : (
-                    <Pressable
-                      disabled={!canAdd || sendingRequest}
-                      style={[styles.addBtn, !canAdd && styles.addBtnDisabled]}
-                      onPress={() => sendFriendRequest(result)}
-                    >
-                      <Text style={[styles.addBtnText, !canAdd && styles.addBtnTextDisabled]}>
-                        {alreadyFriend ? '✓' : !result.allowFriendRequests ? '—' : '+ Add'}
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-              );
-            })}</ScrollView>
-          )}
-          {selectedResult && <View style={styles.profileOverlay}>
-            <Pressable style={styles.profileBackdrop} onPress={() => setSelectedResult(null)} />
-            <View style={[styles.miniProfile, { paddingBottom: Math.max(insets.bottom, 20) }]}><View style={styles.sheetHandle} /><AvatarBubble avatar={selectedResult.avatar} /><Text style={styles.profileName}>{selectedResult.name}</Text><Text style={styles.profileMeta}>Level {selectedResult.level ?? 1} · {(selectedResult.totalXp ?? 0).toLocaleString()} XP</Text>
-              {requestsSent.has(selectedResult.odid) ? (
-                <Pressable style={styles.cancelRequestButton} onPress={() => cancelFriendRequest(selectedResult.odid)}>
-                  <Text style={styles.cancelRequestText}>✕ Cancel Request</Text>
-                </Pressable>
-              ) : (
-                <Pressable disabled={selectedResult.isFriend || !selectedResult.allowFriendRequests || sendingRequest} style={[styles.friendRequestButton, (selectedResult.isFriend || !selectedResult.allowFriendRequests) && styles.friendRequestDisabled]} onPress={() => sendFriendRequest(selectedResult)}>
-                  <Text style={styles.friendRequestText}>{selectedResult.isFriend ? '✓ Friends' : !selectedResult.allowFriendRequests ? 'Friend Requests Disabled' : sendingRequest ? 'Sending…' : 'Send Friend Request'}</Text>
-                </Pressable>
-              )}
+      {/* Player actions: friend, block, report */}
+      <Modal visible={!!actionFor} transparent animationType="slide" onRequestClose={() => setActionFor(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} onPress={() => setActionFor(null)} />
+        {actionFor && (
+          <View style={{ padding: 20, paddingBottom: 36, gap: 10, borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.bgSurface }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+              <AvatarBubble avatar={actionFor.avatar} size={48} />
+              <View style={{ flex: 1 }}>
+                <AppText variant="title" numberOfLines={1}>{actionFor.name}</AppText>
+                {actionFor.level != null && <AppText variant="caption" tone="secondary">Lv.{actionFor.level}{actionFor.totalXp != null ? ` · ${actionFor.totalXp.toLocaleString()} XP` : ''}</AppText>}
+              </View>
             </View>
-          </View>}
+            {friends.some(f => f.odid === actionFor.odid) ? (
+              <Button label="Remove friend" variant="secondary" onPress={() => { void unfriend(actionFor.odid); setActionFor(null); }} />
+            ) : requestsSent.has(actionFor.odid) ? (
+              <Button label="Cancel friend request" variant="secondary" onPress={() => { void cancelFriendRequest(actionFor.odid); setActionFor(null); }} />
+            ) : (
+              <Button label="Add friend" onPress={() => { void sendFriendRequest({ id: '', odid: actionFor.odid, name: actionFor.name, level: null, totalXp: null, avatar: actionFor.avatar, isFriend: false, allowFriendRequests: true }); setActionFor(null); }} />
+            )}
+            <Button label="Report player" variant="secondary" onPress={() => reportPlayer(actionFor)} />
+            <Button label="Block player" variant="ghost" onPress={() => confirmBlock(actionFor)} />
+          </View>
+        )}
+      </Modal>
+
+      <Modal visible={searchOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={closeSearch}>
+        <View style={{ flex: 1, backgroundColor: colors.bgBase, paddingTop: insets.top }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
+            <TextInput
+              autoFocus value={searchQuery} onChangeText={setSearchQuery} placeholder="Search players"
+              placeholderTextColor={colors.textTertiary} autoCapitalize="none" returnKeyType="search"
+              style={{ flex: 1, color: colors.textPrimary, backgroundColor: colors.bgInput, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15 }}
+            />
+            <Pressable onPress={closeSearch}><AppText variant="body" tone="accent" style={{ fontWeight: '700' }}>Cancel</AppText></Pressable>
+          </View>
+          {searching ? (
+            <ActivityIndicator style={{ marginTop: 32 }} color={colors.accent} />
+          ) : searchQuery.trim() && searchResults.length === 0 ? (
+            <AppText variant="body" tone="secondary" style={{ textAlign: 'center', marginTop: 32 }}>No players found</AppText>
+          ) : (
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+              {searchResults.filter(rs => !blocked.has(rs.odid)).map(rs => {
+                const sent = requestsSent.has(rs.odid);
+                const canAdd = !rs.isFriend && !sent && rs.allowFriendRequests;
+                return (
+                  <View key={rs.odid} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.bgSurface }}>
+                    <AvatarBubble avatar={rs.avatar} />
+                    <View style={{ flex: 1 }}>
+                      <AppText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>{rs.name}</AppText>
+                      {rs.level != null && <AppText variant="caption" tone="secondary">Lv.{rs.level} · {(rs.totalXp ?? 0).toLocaleString()} XP</AppText>}
+                    </View>
+                    {sent ? (
+                      <Button label="Cancel" variant="secondary" onPress={() => cancelFriendRequest(rs.odid)} style={{ paddingVertical: 8, paddingHorizontal: 14 }} />
+                    ) : canAdd ? (
+                      <Button label="Add" onPress={() => sendFriendRequest(rs)} loading={sendingRequest} style={{ paddingVertical: 8, paddingHorizontal: 18 }} />
+                    ) : (
+                      <AppText variant="caption" tone="tertiary">{rs.isFriend ? 'Friends' : 'Not accepting'}</AppText>
+                    )}
+                    <Pressable hitSlop={8} onPress={() => { closeSearch(); setActionFor({ odid: rs.odid, name: rs.name, avatar: rs.avatar, level: rs.level, totalXp: rs.totalXp }); }}>
+                      <Feather name="more-horizontal" size={20} color={colors.textTertiary} />
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
       </Modal>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bgBase },
-  fill:      { flex: 1, backgroundColor: C.bgBase },
-
-  // Tabs
-  tabRow: { flexDirection: 'row', paddingRight: 52, borderBottomWidth: 1, borderBottomColor: C.border },
-  tab: { flex: 1, alignItems: 'center', paddingTop: 14, paddingBottom: 12 },
-  tabText: { color: C.textTertiary, fontSize: 14, fontWeight: '700' },
-  tabTextActive: { color: C.accent },
-  tabUnderline: {
-    position: 'absolute',
-    left: 24,
-    right: 24,
-    bottom: -1,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: C.accent,
-  },
-  requestBadge: {
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  requestBadgeText: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: '700',
-    lineHeight: 14,
-  },
-  searchHeaderButton: { position: 'absolute', right: 8, top: 5, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  searchHeaderIcon: { fontSize: 19 },
-
-  // Scope toggle
-  scopeRow: { flexDirection: 'row', margin: 16, gap: 8 },
-  scopeBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-    backgroundColor: C.bgSurface,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  scopeBtnActive: { backgroundColor: C.accent, borderColor: C.accent },
-  scopeBtnDisabled: { opacity: 0.4 },
-  scopeText: { color: C.textTertiary, fontWeight: '600', fontSize: 14 },
-  scopeTextActive: { color: C.accentFg },
-
-  // Game pills
-  pillRow: { paddingHorizontal: 16, paddingBottom: 12, gap: 8, flexDirection: 'row' },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: C.bgSurface,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  pillActive: { backgroundColor: 'rgba(196,181,253,0.15)', borderColor: C.accent },
-  pillIcon: { fontSize: 14 },
-  pillLabel: { color: C.textSecondary, fontSize: 12, fontWeight: '600' },
-  pillLabelActive: { color: C.accent },
-
-  // Leaderboard rows
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  rank: { width: 36, fontSize: 14, fontWeight: '800', textAlign: 'right' },
-  avatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  avatarEmoji: { fontSize: 20 },
-  info: { flex: 1 },
-  name: { color: C.textPrimary, fontSize: 14, fontWeight: '700' },
-  meta: { color: C.textTertiary, fontSize: 11, marginTop: 1 },
-  xp: { color: C.xp, fontSize: 13, fontWeight: '700' },
-
-  // Friends
-  friendsContent: { flexGrow: 1, padding: 16, paddingBottom: 32 },
-  requestsSection: { marginBottom: 20, gap: 8 },
-  requestsTitle: { color: C.orange, fontSize: 13, fontWeight: '700', marginBottom: 2 },
-  requestCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(249,115,22,0.10)',
-    borderWidth: 1,
-    borderColor: 'rgba(249,115,22,0.30)',
-  },
-  requestTimestamp: { color: C.textSecondary, fontSize: 11, marginTop: 2 },
-  requestButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  acceptButton: { backgroundColor: C.success },
-  declineButton: { backgroundColor: C.bgElevated },
-  requestButtonText: { color: C.textPrimary, fontSize: 17, fontWeight: '800' },
-  friendsTitle: { color: C.textSecondary, fontSize: 13, fontWeight: '700', marginBottom: 6 },
-  friendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 11,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  unfriendButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 8,
-    backgroundColor: C.bgElevated,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  unfriendText: { color: C.textTertiary, fontSize: 11, fontWeight: '700' },
-  friendsEmpty: { flex: 1, minHeight: 320, alignItems: 'center', justifyContent: 'center', padding: 32 },
-
-  // Empty state
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { color: C.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 8 },
-  emptyBody: { color: C.textTertiary, fontSize: 13, textAlign: 'center' },
-  searchModal: { flex: 1, backgroundColor: C.bgBase },
-  searchModalHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  searchInput: { flex: 1, height: 44, borderRadius: 12, paddingHorizontal: 14, color: C.textPrimary, backgroundColor: C.bgSurface, borderWidth: 1, borderColor: C.border, fontSize: 15 },
-  cancelText: { color: C.accent, fontWeight: '700', fontSize: 14 },
-  searchLoader: { marginTop: 32 },
-  searchEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  searchResultRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  addBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.accent },
-  addBtnDisabled: { backgroundColor: C.bgElevated, borderWidth: 1, borderColor: C.border },
-  addBtnText: { color: C.accentFg, fontSize: 13, fontWeight: '700' },
-  addBtnTextDisabled: { color: C.textTertiary },
-  cancelBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: C.bgElevated, borderWidth: 1, borderColor: C.border },
-  cancelBtnText: { color: C.textTertiary, fontSize: 12, fontWeight: '700' },
-  profileOverlay: { ...StyleSheet.absoluteFill, justifyContent: 'flex-end' },
-  profileBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.65)' },
-  miniProfile: { backgroundColor: C.bgElevated, borderTopLeftRadius: 24, borderTopRightRadius: 24, alignItems: 'center', paddingTop: 12, paddingHorizontal: 24 },
-  sheetHandle: { width: 42, height: 4, borderRadius: 2, backgroundColor: C.border, marginBottom: 20 },
-  profileName: { color: C.textPrimary, fontSize: 20, fontWeight: '800', marginTop: 12 },
-  profileMeta: { color: C.textSecondary, fontSize: 13, marginTop: 4, marginBottom: 20 },
-  friendRequestButton: { width: '100%', minHeight: 48, borderRadius: 12, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
-  friendRequestDisabled: { backgroundColor: C.bgSurface, borderWidth: 1, borderColor: C.border },
-  friendRequestText: { color: C.accentFg, fontSize: 14, fontWeight: '800' },
-  cancelRequestButton: { width: '100%', minHeight: 48, borderRadius: 12, backgroundColor: C.bgElevated, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
-  cancelRequestText: { color: C.textTertiary, fontSize: 14, fontWeight: '700' },
-});

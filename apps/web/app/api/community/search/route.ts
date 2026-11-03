@@ -68,14 +68,16 @@ export async function GET(request: Request) {
 
     const friendIds = new Set<string>();
     const pendingIds = new Set<string>();
+    const blockedIds = new Set<string>(); // either direction: hidden from each other
     friendships?.forEach((f: any) => {
       const otherId = f.requester_id === currentPlayer?.id ? f.addressee_id : f.requester_id;
       if (f.status === 'accepted') friendIds.add(otherId);
       if (f.status === 'pending') pendingIds.add(otherId);
+      if (f.status === 'blocked') blockedIds.add(otherId);
     });
 
     // Build results
-    const results = visiblePlayers.map((player: any) => {
+    const results = visiblePlayers.filter((p: any) => !blockedIds.has(p.id)).map((player: any) => {
       const totalXp = xpMap[player.id] || 0;
       const level = Math.floor(totalXp / 100) + 1;
       const isPrivate = player.privacy_profile_visibility === 'private';
