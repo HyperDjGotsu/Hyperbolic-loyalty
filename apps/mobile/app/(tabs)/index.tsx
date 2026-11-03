@@ -11,6 +11,8 @@ import { AppText, Button, Card, Skeleton } from '@/components/kit';
 import { EventCover } from '@/components/EventCover';
 import { CardOfDayVote } from '@/components/CardOfDayVote';
 import { GettingStarted } from '@/components/GettingStarted';
+import { WelcomeOverlay } from '@/components/WelcomeOverlay';
+import { HomeTour } from '@/components/HomeTour';
 
 type GameXP = {
   game_id: string;
@@ -315,6 +317,8 @@ export default function DashboardScreen() {
       contentContainerStyle={{ paddingBottom: 48 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
     >
+      <WelcomeOverlay />
+      <HomeTour />
       {/* Hero */}
       <EventCover gameId={topGame} color={store?.color ?? '#475569'} style={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 20, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>

@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, Image, Modal, Pressable, RefreshControl, Scro
 import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 import { useTheme } from '@/lib/theme-context';
+import { PageIntro } from '@/components/PageIntro';
 import { AppText, Button, Skeleton } from '@/components/kit';
 import { useAlertsContext } from '@/lib/alerts-context';
 import { SELECTABLE_GAMES } from '@/lib/games';
@@ -353,6 +354,7 @@ export default function CommunityScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bgBase }}>
+      <PageIntro page="community" />
       <View style={{ paddingTop: insets.top + 12, paddingHorizontal: 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <View>
