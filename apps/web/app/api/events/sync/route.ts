@@ -583,7 +583,7 @@ function parseICal(icalData: string): ParsedEvent[] {
 export async function POST(request: Request) {
   try {
     // Allow cron jobs (CRON_SECRET) or network admins to sync
-    const isCron = request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
+    const isCron = !!process.env.CRON_SECRET && request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
     if (!isCron) {
       const staffCtx = await requireNetworkAdmin();
       if (!staffCtx) {

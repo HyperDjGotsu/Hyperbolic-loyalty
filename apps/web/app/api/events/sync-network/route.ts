@@ -123,7 +123,7 @@ function parseICal(icalData: string): ParsedEvent[] {
 
 export async function POST(request: Request) {
   try {
-    const isCron = request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
+    const isCron = !!process.env.CRON_SECRET && request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
     if (!isCron) {
       const staffCtx = await requireNetworkAdmin();
       if (!staffCtx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

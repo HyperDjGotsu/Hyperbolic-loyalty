@@ -115,7 +115,8 @@ export async function POST(
       skip_renewal_opportunity?: boolean;
     };
 
-    const roundsWon = Math.min(MAX_ROUNDS, Math.max(0, Math.floor(body.rounds_won ?? 0)));
+    // Only staff (kiosk path, player_id in body) may record round wins; a player's own phone check-in is attendance only
+    const roundsWon = body.player_id ? Math.min(MAX_ROUNDS, Math.max(0, Math.floor(body.rounds_won ?? 0))) : 0;
 
     const { data: event } = await supabaseAdmin
       .from('events')

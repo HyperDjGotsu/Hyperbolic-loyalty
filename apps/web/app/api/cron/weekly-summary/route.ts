@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // Sunday 6pm Pacific — sends each player their weekly XP recap.
 // Scheduled at 01:00 and 02:00 UTC Monday so it lands at 6pm through daylight saving; the other run exits.
 export async function GET(request: Request) {
-  if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

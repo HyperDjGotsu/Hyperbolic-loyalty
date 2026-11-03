@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { effectivePassTier } from '@/lib/points';
+import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,9 @@ export async function POST() {
     if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    const rl = await enforceRateLimitStrict(`claim-trial:${userId}`, 300, 5);
+    if (rl) return rl;
 
     const { data: player, error: fetchError } = await supabaseAdmin
       .from('players')

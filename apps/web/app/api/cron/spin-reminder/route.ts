@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // 3pm Pacific daily — remind players who haven't spun yet today.
 // Scheduled at both 22:00 and 23:00 UTC so it lands at 3pm through daylight saving; the other run exits.
 export async function GET(request: Request) {
-  if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

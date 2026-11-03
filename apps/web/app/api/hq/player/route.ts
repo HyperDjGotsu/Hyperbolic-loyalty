@@ -96,7 +96,7 @@ export async function GET(request: Request) {
     // Search by player_id or display_name - now includes favorite_games
     let playerQuery = supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, email, is_staff, created_at, favorite_games, pass_tier, pass_status, pass_expires_at, pass_started_at');
+      .select('id, player_id, display_name, email, home_store_id, is_staff, created_at, favorite_games, pass_tier, pass_status, pass_expires_at, pass_started_at');
 
     // Player IDs follow the pattern: 2-6 uppercase letters, hyphen, 8 uppercase alphanumeric chars
     // e.g. GGOB-VUE6YFGH, GOM-ABC12345, TEM-XXXXXXXX
@@ -174,8 +174,10 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
       .limit(20);
 
+    // Another store's player: staff here can see activity but not contact details
+    const sameStore = staffCtx.isNetworkAdmin || players.home_store_id === storeId;
     return NextResponse.json({
-      player,
+      player: sameStore ? players : { ...players, email: null },
       totalXp,
       gameXp,
       recentActivity: recentActivity || [],
