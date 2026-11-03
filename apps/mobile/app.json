@@ -81,7 +81,10 @@
           }
         ]
       },
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "associatedDomains": [
+        "applinks:playerpass.gg"
+      ]
     },
     "android": {
       "package": "gg.playerpass.app",
@@ -92,7 +95,24 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#000000"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "playerpass.gg",
+              "pathPrefix": "/event"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -124,7 +144,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#7c3aed",
+          "color": "#3ddc6a",
           "defaultChannel": "default",
           "enableBackgroundRemoteNotifications": false
         }
