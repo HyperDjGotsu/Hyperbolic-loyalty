@@ -1686,7 +1686,7 @@ export default function ProfilePage() {
 
       {/* Favorite Games Editor Modal */}
       {editingFavorites && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
+        <div className="fixed inset-0 bg-base z-50 flex flex-col">
           <div className="p-4 border-b border-border-token flex items-center justify-between">
             <button 
               type="button" 
