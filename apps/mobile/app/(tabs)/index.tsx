@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Alert, Image, ImageBackground, Modal, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, Image, Linking, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { useApi } from '@/lib/api';
@@ -13,6 +13,14 @@ import { CardOfDayVote } from '@/components/CardOfDayVote';
 import { GettingStarted } from '@/components/GettingStarted';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 import { HomeTour } from '@/components/HomeTour';
+import { HomeStorePicker } from '@/components/HomeStorePicker';
+import { ShareWinSheet } from '@/components/ShareWinSheet';
+import { HomeSpecialEvents, type SpecialEvent } from '@/components/HomeSpecialEvents';
+import { HomeBannerCarousel, type HomeBanner } from '@/components/HomeBannerCarousel';
+import { useSelectedStoreId } from '@/lib/selected-store';
+import { useStoreConfig } from '@/lib/store-config';
+import { openAppLink } from '@/lib/home-links';
+import { passTierKey } from '@/lib/pass-tiers';
 
 type GameXP = {
   game_id: string;
@@ -35,23 +43,12 @@ type ActivityEntry = {
   base_xp: number;
   created_at: string;
   game_id: string | null;
+  store_short_id?: string | null;
 };
 
-type Banner = {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: string;
-  colorFrom: string;
-  colorTo: string;
-  badge: string;
-  linkUrl: string | null;
-  eventId: string | null;
-  backgroundImage: string | null;
-  bgSize: string | null;
-  bgPosition: string | null;
-  textColor: string | null;
-};
+type Banner = HomeBanner;
+
+type PassStatus = { tier: string; prizePoints: number; multiplier: number };
 
 type CardOfDay = {
   name: string;
@@ -61,6 +58,9 @@ type CardOfDay = {
   rarity: string;
   price: number | null;
   priceChange7d: number | null;
+  priceChange30d?: number | null;
+  imageUrl?: string | null;
+  tcgplayerUrl?: string | null;
 };
 
 type PrizePreviewItem = {
@@ -68,6 +68,7 @@ type PrizePreviewItem = {
   name: string;
   image_url: string | null;
   xp_cost: number;
+  cost?: number;
 };
 
 type StoreUpdate = {
@@ -77,6 +78,7 @@ type StoreUpdate = {
   headline: string;
   subtext?: string;
   date: string;
+  link?: string;
 };
 
 type FriendActivity = {
@@ -111,10 +113,13 @@ type PlayerResponse = {
   homeStore?: { id: string; name: string; city: string | null; is_flagship: boolean; color: string | null } | null;
   gameXP?: GameXP[];
   recentActivity?: ActivityEntry[];
+  status?: string | null;
+  heroBackdrop?: string | null;
   avatarConfig?: { base?: string; background?: string; frame?: string; photo_url?: string | null } | null;
 };
 
-const FREE_TIER_GATE = 720; // XP required to unlock prize wall trial
+const FREE_TIER_GATE = 720; // prize points required to unlock the prize wall trial
+const PASS_MULTIPLIER: Record<string, string> = { free: '1x', bronze: '1x', silver: '1.5x', gold: '2x', diamond: '2x★' };
 
 const GAME_ICONS: Record<string, string> = {
   one_piece: '🏴‍☠️', pokemon: '⚡', mtg: '✨', gundam: '🤖',
@@ -167,8 +172,15 @@ export default function DashboardScreen() {
   const [spinResult, setSpinResult] = useState<string | null>(null);
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
   const [stores, setStores] = useState<Store[]>([]);
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
-  const manualStoreRef = useRef<Store | null>(null);
+  const [selectedId, setSelectedId] = useSelectedStoreId();
+  const selectedIdRef = useRef<string | null>(null);
+  selectedIdRef.current = selectedId;
+  const cfg = useStoreConfig();
+  const [passStatus, setPassStatus] = useState<PassStatus | null>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [specialEvents, setSpecialEvents] = useState<SpecialEvent[]>([]);
+  const [shareLedgerId, setShareLedgerId] = useState<string | null>(null);
+  const [expandedGame, setExpandedGame] = useState<string | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [card, setCard] = useState<CardOfDay | null>(null);
   const [storeUpdates, setStoreUpdates] = useState<StoreUpdate[]>([]);
@@ -185,6 +197,7 @@ export default function DashboardScreen() {
       ['storeUpdates', api.get<{ updates: StoreUpdate[] }>(`/api/store-updates${storeId ? `?store_id=${storeId}` : ''}`)],
       ['friendActivity', api.get<{ activity: FriendActivity[] }>('/api/friends-activity')],
       ['upcomingEvents', api.get<{ events: UpcomingEvent[] }>(`/api/events?status=upcoming&limit=3${storeId ? `&store_id=${storeId}` : ''}`)],
+      ['specialEvents', api.get<{ events: SpecialEvent[] }>(`/api/events?status=upcoming&special=true&limit=5${storeId ? `&store_id=${storeId}` : ''}`)],
     ] as const;
     const results = await Promise.allSettled(requests.map(([, request]) => request));
     if (generation !== loadGeneration.current) return;
@@ -200,6 +213,7 @@ export default function DashboardScreen() {
       if (key === 'storeUpdates') setStoreUpdates((value as { updates: StoreUpdate[] }).updates ?? []);
       if (key === 'friendActivity') setFriendActivity((value as { activity: FriendActivity[] }).activity ?? []);
       if (key === 'upcomingEvents') setUpcomingEvents((value as { events: UpcomingEvent[] }).events ?? []);
+      if (key === 'specialEvents') setSpecialEvents((value as { events: SpecialEvent[] }).events ?? []);
     });
     setFeedErrors(errors);
   }
@@ -219,9 +233,10 @@ export default function DashboardScreen() {
       setPlayer(data);
       setHasSpunToday(!spinData.canSpin);
       setError('');
-      // Seed selectedStore only if user hasn't manually chosen a store (ref survives stale closures)
-      if (data.homeStore && !manualStoreRef.current) setSelectedStore(data.homeStore as Store);
-      const storeId = (manualStoreRef.current ?? data.homeStore)?.id ?? null;
+      api.get<PassStatus>('/api/player/pass-status').then(p => { if (generation === loadGeneration.current) setPassStatus(p); }).catch(() => {});
+      api.get<{ favorites: string[] }>('/api/player/favorite-games').then(f => { if (generation === loadGeneration.current) setFavorites(f.favorites ?? []); }).catch(() => {});
+      // Browsed store (persisted) wins; otherwise the home store.
+      const storeId = selectedIdRef.current ?? data.homeStore?.id ?? null;
       api.get<{ games: Array<{ gameId: string; name: string; icon: string; xp: number }> }>('/api/player/game-stats')
         .then(g => { if (generation === loadGeneration.current) setGameStats((g.games ?? []).filter(x => x.xp > 0).sort((x, y) => y.xp - x.xp)); })
         .catch(() => {});
@@ -271,6 +286,13 @@ export default function DashboardScreen() {
     }, [])
   );
 
+  const firstStore = useRef(true);
+  useEffect(() => {
+    if (firstStore.current) { firstStore.current = false; return; }
+    setBanners([]); setStoreUpdates([]); setUpcomingEvents([]); setSpecialEvents([]);
+    void loadPlayer();
+  }, [selectedId]);
+
   function onRefresh() {
     setRefreshing(true);
     loadPlayer();
@@ -299,13 +321,22 @@ export default function DashboardScreen() {
   const xpProgress = getXpProgress(player.xp);
   const xpToNext = getXpToNext(player.xp);
   const level = getLevel(player.xp);
-  const rawTier = (player.passTier ?? 'free').toLowerCase();
-  const tier = rawTier === 'none' ? 'free' : rawTier;
+  const tier = passTierKey(passStatus?.tier ?? player.passTier);
   const tierStyle = getTierStyle(tier);
   const isPaidTier = tier !== 'free';
   const initial = (player.displayName ?? '?')[0].toUpperCase();
-  const store = selectedStore ?? player.homeStore ?? null;
-  const topGame = gameStats[0]?.gameId ?? player.gameXP?.[0]?.game_id ?? null;
+  const homeStore = player.homeStore ?? null;
+  const store = stores.find(x => x.id === selectedId) ?? homeStore;
+  const spendable = passStatus?.prizePoints ?? player.gems;
+  const pointsLabel = passStatus ? 'Prize points' : cfg.currency_name;
+  const favSet = favorites.filter(f => f !== 'overall');
+  const backdropValue = player.heroBackdrop ?? '';
+  const backdropGame = backdropValue.startsWith('game:') ? backdropValue.slice(5) : null;
+  const backdropUpload = backdropValue.startsWith('upload:') ? backdropValue.slice(7) : null;
+  const topGame = backdropGame ?? favSet[0] ?? gameStats[0]?.gameId ?? player.gameXP?.[0]?.game_id ?? null;
+  const visibleGames = (player.gameXP ?? [])
+    .filter(g => g && g.game_id && (favSet.length === 0 || g.game_id === 'general' || favSet.includes(g.game_id)))
+    .slice().sort((a, b) => b.game_xp - a.game_xp);
   const goPrize = () => {
     SecureStore.setItemAsync('pp_done_shop', '1').catch(() => {});
     router.push('/prize-wall' as never);
@@ -320,15 +351,16 @@ export default function DashboardScreen() {
       <WelcomeOverlay />
       <HomeTour />
       {/* Hero */}
-      <EventCover gameId={topGame} color={store?.color ?? '#475569'} style={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 20, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}>
+      <EventCover src={backdropUpload} gameId={topGame} storeId={store?.id} color={store?.color ?? '#475569'} style={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 20, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <View style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: colors.accent, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          <Pressable onPress={() => router.push('/(tabs)/notifications' as never)} accessibilityLabel="Alerts" style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: colors.accent, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
             {player.avatarConfig?.photo_url
               ? <Image source={{ uri: player.avatarConfig.photo_url }} style={{ width: 72, height: 72 }} />
               : <AppText variant="display" style={{ color: '#fff', fontSize: 30 }}>{player.avatarConfig?.base ?? initial}</AppText>}
-          </View>
+          </Pressable>
           <View style={{ flex: 1 }}>
             <AppText variant="display" numberOfLines={1} style={{ color: '#fff', fontSize: 26, lineHeight: 30 }}>{player.displayName}</AppText>
+            {player.status ? <AppText variant="caption" numberOfLines={1} style={{ color: 'rgba(255,255,255,0.85)' }}>{player.status}</AppText> : null}
             <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>{player.player_id}</AppText>
             <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
               <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: colors.accent }}>
@@ -352,7 +384,7 @@ export default function DashboardScreen() {
         {store ? (
           <Pressable onPress={() => setShowStoreSwitcher(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: store.color ?? colors.accent }} />
-            <AppText variant="caption" numberOfLines={1} style={{ color: '#fff', flex: 1 }}>{store.name}</AppText>
+            <AppText variant="caption" numberOfLines={1} style={{ color: '#fff', flex: 1 }}>{store.name}{store.id !== homeStore?.id ? ' (viewing)' : ''}</AppText>
             <Feather name="chevron-down" size={14} color="#fff" />
           </Pressable>
         ) : null}
@@ -383,10 +415,11 @@ export default function DashboardScreen() {
 
         <GettingStarted
           items={[
-            { key: 'spin', label: 'Do your first daily spin', done: hasSpunToday },
-            { key: 'games', label: 'Earn XP in a game', done: (player.gameXP?.length ?? 0) > 0 },
-            { key: 'event', label: 'Check in to an event', done: (player.gameXP ?? []).some(g => g.game_events > 0), onPress: () => router.push('/(tabs)/events' as never) },
-            { key: 'shop', label: 'Visit the Prize Wall', done: false, storeKey: 'pp_done_shop', onPress: goPrize },
+            { key: 'profile', label: 'Set up your profile', description: 'Pick an avatar and a status', done: !!(player.avatarConfig?.photo_url || player.status), storeKey: 'pp_done_profile', onPress: () => { SecureStore.setItemAsync('pp_done_profile', '1').catch(() => {}); router.push('/(tabs)/profile' as never); } },
+            { key: 'spin', label: 'Do your first daily spin', description: 'Free XP every day', done: hasSpunToday },
+            { key: 'games', label: 'Pick your favorite games', description: 'Home shows the games you play', done: favSet.length > 0, storeKey: 'pp_done_games', onPress: () => { SecureStore.setItemAsync('pp_done_games', '1').catch(() => {}); router.push('/(tabs)/profile' as never); } },
+            { key: 'shop', label: 'Visit the Prize Wall', description: 'See what you can win', done: false, storeKey: 'pp_done_shop', onPress: goPrize },
+            { key: 'event', label: 'Check in to an event', description: 'Earn XP by showing up', done: (player.gameXP ?? []).some(g => g.game_events > 0), onPress: () => router.push('/(tabs)/events' as never) },
           ]}
         />
 
@@ -399,43 +432,30 @@ export default function DashboardScreen() {
               <AppText variant="caption" tone="tertiary">total earned</AppText>
             </View>
             <View style={{ flex: 1 }}>
-              <AppText variant="eyebrow" tone="tertiary">Prize points</AppText>
-              <AppText variant="numeral" tone={isPaidTier ? 'accent' : 'primary'}>{player.gems.toLocaleString()}</AppText>
+              <AppText variant="eyebrow" tone="tertiary">{pointsLabel}</AppText>
+              <AppText variant="numeral" tone={isPaidTier ? 'accent' : 'primary'}>{spendable.toLocaleString()}</AppText>
               <AppText variant="caption" tone="tertiary">spendable</AppText>
             </View>
           </View>
           <Button label={isPaidTier ? 'Spend at Prize Wall' : 'View Prize Wall'} variant="secondary" onPress={goPrize} style={{ marginTop: 14 }} />
-          {!isPaidTier && (
+          {passStatus && !isPaidTier && (
             <View style={{ marginTop: 12 }}>
               <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.bgElevated, overflow: 'hidden' }}>
-                <View style={{ height: 6, width: `${Math.round(Math.min(1, player.xp / FREE_TIER_GATE) * 100)}%` as `${number}%`, backgroundColor: colors.accent }} />
+                <View style={{ height: 6, width: `${Math.round(Math.min(1, passStatus.prizePoints / FREE_TIER_GATE) * 100)}%` as `${number}%`, backgroundColor: colors.accent }} />
               </View>
               <AppText variant="caption" tone="secondary" style={{ marginTop: 6 }}>
-                {player.xp >= FREE_TIER_GATE ? '🎉 Bronze trial unlocked — claim it on the Prize Wall' : `${player.xp} / ${FREE_TIER_GATE} XP to unlock the Prize Wall trial`}
+                {passStatus.prizePoints >= FREE_TIER_GATE ? '🎉 Prize Wall trial unlocked — claim it on the Prize Wall' : `${passStatus.prizePoints.toLocaleString()} / ${FREE_TIER_GATE} pts to unlock the Prize Wall`}
               </AppText>
             </View>
           )}
+          {passStatus && isPaidTier && (
+            <AppText variant="caption" tone="secondary" style={{ marginTop: 12 }}>{PASS_MULTIPLIER[tier] ?? '1x'} XP on every event · {tier.toUpperCase()} Pass</AppText>
+          )}
         </Card>
 
-        {/* Banners */}
-        {banners.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-            {banners.map(b => {
-              const textColor = b.textColor || '#ffffff';
-              const inner = (
-                <View style={{ padding: 16, flex: 1, justifyContent: 'flex-end' }}>
-                  {!!b.badge && <AppText variant="eyebrow" style={{ color: textColor, opacity: 0.8 }}>{b.badge}</AppText>}
-                  <AppText variant="title" numberOfLines={2} style={{ color: textColor }}>{b.icon} {b.title}</AppText>
-                  {!!b.subtitle && <AppText variant="caption" numberOfLines={2} style={{ color: textColor, opacity: 0.8 }}>{b.subtitle}</AppText>}
-                </View>
-              );
-              const box = { width: 280, height: 130, borderRadius: 24, overflow: 'hidden' as const, backgroundColor: b.colorFrom || colors.bgSurface };
-              return b.backgroundImage
-                ? <ImageBackground key={b.id} source={{ uri: b.backgroundImage }} style={box} imageStyle={{ resizeMode: b.bgSize === 'contain' ? 'contain' : 'cover', opacity: 0.75 }}>{inner}</ImageBackground>
-                : <View key={b.id} style={box}>{inner}</View>;
-            })}
-          </ScrollView>
-        )}
+        <HomeBannerCarousel banners={banners} />
+
+        <HomeSpecialEvents events={specialEvents} />
 
         {/* Upcoming events */}
         <View>
@@ -462,51 +482,89 @@ export default function DashboardScreen() {
         </View>
 
         {/* Game stats */}
-        {(gameStats.length > 0 || (player.gameXP ?? []).length > 0) && (
+        {visibleGames.length > 0 ? (
           <View>
-            <AppText variant="title" style={{ marginBottom: 12 }}>My games</AppText>
+            <AppText variant="title" style={{ marginBottom: 12 }}>Your games</AppText>
             <View style={{ gap: 8 }}>
-              {(player.gameXP ?? []).slice().sort((a, b) => b.game_xp - a.game_xp).map(g => (
-                <Card key={g.game_id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 }}>
-                  <AppText variant="title">{GAME_ICONS[g.game_id] ?? gameStats.find(x => x.gameId === g.game_id)?.icon ?? '🎮'}</AppText>
-                  <View style={{ flex: 1 }}>
-                    <AppText variant="body" style={{ fontWeight: '700' }}>{g.game_id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</AppText>
-                    <AppText variant="caption" tone="secondary">{g.rank}</AppText>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <AppText variant="numeral" tone="accent" style={{ fontSize: 18 }}>{g.game_xp.toLocaleString()}</AppText>
-                    <AppText variant="caption" tone="tertiary">{g.xpName}</AppText>
-                  </View>
-                  {g.earnedMonthlyBonus && <AppText variant="body">🏆</AppText>}
-                </Card>
-              ))}
+              {visibleGames.map(g => {
+                const isGeneral = g.game_id === 'general';
+                const lvl = Math.floor(g.game_xp / 50) + 1;
+                const toNext = 50 - (g.game_xp % 50);
+                const goal = g.monthlyThreshold || (g.game_id === 'one_piece' ? 5 : 3);
+                const visits = Math.min(g.monthlyAttendance || 0, goal);
+                const open = expandedGame === g.game_id;
+                return (
+                  <Card key={g.game_id} onPress={() => setExpandedGame(open ? null : g.game_id)} style={{ padding: 12, borderColor: open ? colors.accent : colors.border }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <AppText variant="title">{GAME_ICONS[g.game_id] ?? gameStats.find(x => x.gameId === g.game_id)?.icon ?? '🎮'}</AppText>
+                      <View style={{ flex: 1 }}>
+                        <AppText variant="body" style={{ fontWeight: '700' }}>{isGeneral ? 'Guild Points' : g.game_id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} · Lv {lvl}</AppText>
+                        <AppText variant="caption" tone="secondary">{g.rank}</AppText>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <AppText variant="numeral" tone="accent" style={{ fontSize: 18 }}>{g.game_xp.toLocaleString()}</AppText>
+                        <AppText variant="caption" tone="tertiary">{g.xpName || 'XP'}</AppText>
+                      </View>
+                    </View>
+                    <View style={{ height: 5, borderRadius: 3, backgroundColor: colors.bgElevated, overflow: 'hidden', marginTop: 10 }}>
+                      <View style={{ height: 5, width: `${((g.game_xp % 50) / 50) * 100}%` as `${number}%`, backgroundColor: colors.accent }} />
+                    </View>
+                    <AppText variant="caption" tone="tertiary" style={{ marginTop: 4 }}>{toNext} to Lv {lvl + 1}</AppText>
+                    {!isGeneral && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                        {Array.from({ length: goal }).map((_, i) => (
+                          <View key={i} style={{ width: 8, height: 8, borderRadius: 4, borderWidth: 1, borderColor: colors.accent, backgroundColor: g.earnedMonthlyBonus || i < visits ? colors.accent : 'transparent' }} />
+                        ))}
+                        <AppText variant="caption" tone="secondary" style={{ flex: 1 }}>{g.earnedMonthlyBonus ? '✓ ' : ''}{g.achievementName || (g.game_id === 'one_piece' ? "Pirate's Life" : 'The Regular')}</AppText>
+                      </View>
+                    )}
+                    {open && (
+                      <AppText variant="caption" tone="secondary" style={{ marginTop: 8 }}>
+                        {g.game_events} events · {g.game_wins} wins{!isGeneral ? ` · ${visits}/${goal} visits this month` : ''}
+                      </AppText>
+                    )}
+                  </Card>
+                );
+              })}
             </View>
+          </View>
+        ) : (
+          <View>
+            <AppText variant="title" style={{ marginBottom: 12 }}>Your games</AppText>
+            <AppText variant="body" tone="secondary">No game XP yet. Attend events to start earning!</AppText>
           </View>
         )}
 
         {/* Recent activity */}
-        {(player.recentActivity ?? []).length > 0 && (
-          <View>
-            <AppText variant="title" style={{ marginBottom: 12 }}>Recent activity</AppText>
+        <View>
+          <AppText variant="title" style={{ marginBottom: 12 }}>Activity</AppText>
+          {(player.recentActivity ?? []).length === 0 ? (
+            <AppText variant="body" tone="secondary">No activity yet. Find players in Community.</AppText>
+          ) : (
             <Card style={{ paddingVertical: 4 }}>
-              {(player.recentActivity ?? []).slice(0, 5).map((a, i) => {
+              {(player.recentActivity ?? []).map((a, i) => {
                 const xp = a.final_xp || a.base_xp || 0;
                 return (
                   <View key={a.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderColor: colors.border }}>
                     <AppText variant="body">{GAME_ICONS[a.game_id ?? ''] ?? '🎮'}</AppText>
                     <View style={{ flex: 1 }}>
                       <AppText variant="body" numberOfLines={1}>{a.description || a.source}</AppText>
-                      <AppText variant="caption" tone="tertiary">{new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</AppText>
+                      <AppText variant="caption" tone="tertiary">{new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{a.store_short_id ? ` @ ${a.store_short_id}` : ''}</AppText>
                     </View>
-                    {xp > 0 && <AppText variant="caption" tone="accent" style={{ fontWeight: '800' }}>+{xp}</AppText>}
+                    {xp !== 0 && <AppText variant="caption" style={{ fontWeight: '800', color: xp > 0 ? colors.accent : '#ef4444' }}>{xp > 0 ? '+' : ''}{xp}</AppText>}
+                    {xp > 0 && (
+                      <Pressable hitSlop={8} onPress={() => setShareLedgerId(a.id)} accessibilityLabel="Share with a friend">
+                        <Feather name="share-2" size={16} color={colors.textTertiary} />
+                      </Pressable>
+                    )}
                   </View>
                 );
               })}
             </Card>
-          </View>
-        )}
+          )}
+        </View>
 
-        {store && <PrizeWallPreview storeId={store.id} onPress={goPrize} />}
+        {store && <PrizeWallPreview storeId={store.id} spendable={spendable} onPress={goPrize} />}
 
         {/* Store updates */}
         <View>
@@ -516,14 +574,14 @@ export default function DashboardScreen() {
           ) : (
             <Card style={{ paddingVertical: 4 }}>
               {storeUpdates.map((u, i) => (
-                <View key={i} style={{ flexDirection: 'row', gap: 10, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderColor: colors.border }}>
+                <Pressable key={i} disabled={!u.link} onPress={() => u.link && openAppLink(router, u.link)} style={{ flexDirection: 'row', gap: 10, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderColor: colors.border }}>
                   <AppText variant="body">{u.icon}</AppText>
                   <View style={{ flex: 1 }}>
                     <AppText variant="eyebrow" tone="tertiary">{u.label}</AppText>
                     <AppText variant="body" numberOfLines={2}>{u.headline}</AppText>
                     {u.subtext ? <AppText variant="caption" tone="secondary" numberOfLines={1}>{u.subtext}</AppText> : null}
                   </View>
-                </View>
+                </Pressable>
               ))}
             </Card>
           )}
@@ -554,6 +612,7 @@ export default function DashboardScreen() {
           <View>
             <AppText variant="title" style={{ marginBottom: 12 }}>Card of the day</AppText>
             <Card>
+              {card.imageUrl ? <Image source={{ uri: card.imageUrl }} style={{ width: '100%', height: 200, marginBottom: 10 }} resizeMode="contain" /> : null}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <AppText variant="eyebrow" tone="tertiary">{card.gameDisplay}</AppText>
                 {!!card.rarity && <AppText variant="eyebrow" tone="accent">{card.rarity}</AppText>}
@@ -568,8 +627,18 @@ export default function DashboardScreen() {
                       {card.priceChange7d >= 0 ? '▲' : '▼'} {Math.abs(card.priceChange7d).toFixed(1)}% (7d)
                     </AppText>
                   )}
+                  {card.priceChange30d != null && (
+                    <AppText variant="caption" style={{ color: card.priceChange30d >= 0 ? '#22c55e' : '#ef4444' }}>
+                      {card.priceChange30d >= 0 ? '▲' : '▼'} {Math.abs(card.priceChange30d).toFixed(1)}% (30d)
+                    </AppText>
+                  )}
                 </View>
               )}
+              {card.tcgplayerUrl ? (
+                <Pressable onPress={() => Linking.openURL(card.tcgplayerUrl!).catch(() => {})} style={{ marginTop: 8 }}>
+                  <AppText variant="caption" tone="accent" style={{ fontWeight: '700' }}>View on TCGplayer →</AppText>
+                </Pressable>
+              ) : null}
             </Card>
           </View>
         )}
@@ -583,43 +652,25 @@ export default function DashboardScreen() {
         )}
       </View>
 
-      <Modal visible={showStoreSwitcher} transparent animationType="slide" onRequestClose={() => setShowStoreSwitcher(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }} onPress={() => setShowStoreSwitcher(false)}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: colors.bgSurface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 40 }}>
-            <AppText variant="title">Switch store</AppText>
-            <AppText variant="caption" tone="secondary" style={{ marginBottom: 12 }}>Choose your browsing context</AppText>
-            {stores.map(st => {
-              const isSelected = (selectedStore?.id ?? player.homeStore?.id) === st.id;
-              return (
-                <Pressable
-                  key={st.id}
-                  onPress={() => {
-                    manualStoreRef.current = st;
-                    setSelectedStore(st);
-                    setBanners([]); setStoreUpdates([]); setUpcomingEvents([]);
-                    setShowStoreSwitcher(false);
-                    setRefreshing(true);
-                    void loadPlayer();
-                  }}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, marginBottom: 6, borderRadius: 14, borderWidth: 1, borderColor: isSelected ? colors.accent : colors.border, backgroundColor: colors.bgElevated }}
-                >
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: st.color ?? colors.textTertiary }} />
-                  <View style={{ flex: 1 }}>
-                    <AppText variant="body" style={{ fontWeight: '700' }}>{st.name}</AppText>
-                    {st.city ? <AppText variant="caption" tone="secondary">{st.city}</AppText> : null}
-                  </View>
-                  {isSelected && <Feather name="check" size={16} color={colors.accent} />}
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <HomeStorePicker
+        visible={showStoreSwitcher || (!homeStore && stores.length > 0)}
+        stores={stores}
+        currentId={store?.id ?? null}
+        homeId={homeStore?.id ?? null}
+        required={!homeStore}
+        onClose={() => setShowStoreSwitcher(false)}
+        onPick={st => {
+          if (!homeStore) setPlayer(p => (p ? { ...p, homeStore: st } : p));
+          setSelectedId(st.id);
+          setShowStoreSwitcher(false);
+        }}
+      />
+      <ShareWinSheet ledgerId={shareLedgerId} onClose={() => setShareLedgerId(null)} />
     </ScrollView>
   );
 }
 
-function PrizeWallPreview({ storeId, onPress }: { storeId: string; onPress: () => void }) {
+function PrizeWallPreview({ storeId, spendable, onPress }: { storeId: string; spendable: number; onPress: () => void }) {
   const api = useApi();
   const { colors } = useTheme();
   const [items, setItems] = useState<PrizePreviewItem[]>([]);
@@ -644,7 +695,9 @@ function PrizeWallPreview({ storeId, onPress }: { storeId: string; onPress: () =
               {item.image_url ? <Image source={{ uri: item.image_url }} style={{ width: '100%', height: 90 }} resizeMode="contain" /> : <Feather name="gift" size={22} color={colors.textTertiary} />}
             </View>
             <AppText variant="caption" numberOfLines={2} style={{ marginTop: 8, fontWeight: '700', color: colors.textPrimary }}>{item.name}</AppText>
-            <AppText variant="caption" tone="accent">{item.xp_cost.toLocaleString()} pts</AppText>
+            <AppText variant="caption" tone="accent">
+              {spendable >= item.xp_cost ? `Redeem · ${item.xp_cost.toLocaleString()}` : `${(item.xp_cost - spendable).toLocaleString()} to go`}
+            </AppText>
           </Pressable>
         ))}
       </View>

@@ -14,6 +14,7 @@ export function CardOfDayVote() {
   const [data, setData] = useState<Voting | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [expanded, setExpanded] = useState(false);
 
   const load = () => api.get<Voting>('/api/cotd/vote').then(setData).catch(() => setData(null));
   useEffect(() => { void load(); }, []);
@@ -36,9 +37,9 @@ export function CardOfDayVote() {
   return (
     <View>
       <AppText variant="title" style={{ marginBottom: 4 }}>Vote for tomorrow's card</AppText>
-      <AppText variant="caption" tone="secondary" style={{ marginBottom: 12 }}>{data.totalVotes} votes so far</AppText>
+      <AppText variant="caption" tone="secondary" style={{ marginBottom: 12 }}>{data.totalVotes} votes so far · +10 XP if your pick wins</AppText>
       <View style={{ gap: 8 }}>
-        {data.pool.map(c => {
+        {(expanded || data.hasVoted ? data.pool : data.pool.slice(0, 3)).map(c => {
           const mine = data.playerVote?.cardId === c.id;
           return (
             <Pressable key={c.id} onPress={() => vote(c.id)} disabled={busy || mine}>
@@ -58,6 +59,11 @@ export function CardOfDayVote() {
           );
         })}
       </View>
+      {!data.hasVoted && data.pool.length > 3 && (
+        <Pressable onPress={() => setExpanded(e => !e)} style={{ marginTop: 8, alignItems: 'center' }}>
+          <AppText variant="caption" tone="accent" style={{ fontWeight: '700' }}>{expanded ? 'Show fewer' : `Show all ${data.pool.length}`}</AppText>
+        </Pressable>
+      )}
       {error ? <AppText variant="caption" style={{ color: '#ef4444', marginTop: 6 }}>{error}</AppText> : null}
     </View>
   );

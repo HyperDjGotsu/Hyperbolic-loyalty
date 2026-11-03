@@ -7,7 +7,7 @@ import { AppText, Card } from '@/components/kit';
 
 const DISMISSED = 'pp_started_dismissed';
 
-type Item = { key: string; label: string; done: boolean; storeKey?: string; onPress?: () => void };
+type Item = { key: string; label: string; description?: string; done: boolean; storeKey?: string; onPress?: () => void };
 
 // New-player checklist. Hides itself once dismissed or everything is done.
 export function GettingStarted({ items }: { items: Item[] }) {
@@ -39,10 +39,16 @@ export function GettingStarted({ items }: { items: Item[] }) {
           <Feather name="x" size={18} color={colors.textTertiary} />
         </Pressable>
       </View>
+      <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.bgElevated, overflow: 'hidden', marginBottom: 6 }}>
+        <View style={{ height: 6, width: `${Math.round((doneCount / rows.length) * 100)}%` as `${number}%`, backgroundColor: colors.accent }} />
+      </View>
       {rows.map(r => (
         <Pressable key={r.key} onPress={r.onPress} disabled={!r.onPress || r.done} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 }}>
           <Feather name={r.done ? 'check-circle' : 'circle'} size={20} color={r.done ? colors.accent : colors.textTertiary} />
-          <AppText variant="body" tone={r.done ? 'tertiary' : 'primary'} style={r.done ? { textDecorationLine: 'line-through' } : undefined}>{r.label}</AppText>
+          <View style={{ flex: 1 }}>
+            <AppText variant="body" tone={r.done ? 'tertiary' : 'primary'} style={r.done ? { textDecorationLine: 'line-through' } : undefined}>{r.label}</AppText>
+            {r.description && !r.done ? <AppText variant="caption" tone="secondary">{r.description}</AppText> : null}
+          </View>
         </Pressable>
       ))}
     </Card>
