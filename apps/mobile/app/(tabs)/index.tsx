@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Alert, Image, Linking, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Image, Linking, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { useApi } from '@/lib/api';
@@ -9,7 +9,8 @@ import { getLevel, getXpProgress, getXpToNext } from '@/lib/theme';
 import { useTheme } from '@/lib/theme-context';
 import { AppText, Button, Card, Skeleton } from '@/components/kit';
 import { EventCover } from '@/components/EventCover';
-import { CardOfDayVote } from '@/components/CardOfDayVote';
+import { CardOfTheDay } from '@/components/CardOfDayVote';
+import { LevelRing } from '@/components/LevelRing';
 import { GettingStarted } from '@/components/GettingStarted';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 import { HomeTour } from '@/components/HomeTour';
@@ -170,6 +171,7 @@ export default function DashboardScreen() {
   const [hasSpunToday, setHasSpunToday] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinResult, setSpinResult] = useState<string | null>(null);
+  const [spinNote, setSpinNote] = useState<string | null>(null);
   const [showStoreSwitcher, setShowStoreSwitcher] = useState(false);
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedId, setSelectedId] = useSelectedStoreId();
@@ -255,6 +257,7 @@ export default function DashboardScreen() {
   async function handleSpin() {
     if (hasSpunToday || isSpinning) return;
     setIsSpinning(true);
+    setSpinNote(null);
     try {
       const data = await api.post<{ success: boolean; prize: { xp: number; label: string } }>(
         '/api/xp/daily-spin',
@@ -271,7 +274,7 @@ export default function DashboardScreen() {
       if (isAlreadySpun) {
         setHasSpunToday(true);
       } else {
-        Alert.alert('Spin failed', 'Could not complete your daily spin. Please try again.');
+        setSpinNote('Could not complete your daily spin. Please try again.');
       }
     } finally {
       setIsSpinning(false);
@@ -352,34 +355,25 @@ export default function DashboardScreen() {
       <HomeTour />
       {/* Hero */}
       <EventCover src={backdropUpload} gameId={topGame} storeId={store?.id} color={store?.color ?? '#475569'} style={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 20, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <Pressable onPress={() => router.push('/(tabs)/notifications' as never)} accessibilityLabel="Alerts" style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: colors.accent, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            {player.avatarConfig?.photo_url
-              ? <Image source={{ uri: player.avatarConfig.photo_url }} style={{ width: 72, height: 72 }} />
-              : <AppText variant="display" style={{ color: '#fff', fontSize: 30 }}>{player.avatarConfig?.base ?? initial}</AppText>}
-          </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
+          <LevelRing pct={Math.round(xpProgress * 100)} size={112} stroke={9} color={colors.accent}>
+            <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.7)', fontWeight: '700', letterSpacing: 1.2 }}>LEVEL</AppText>
+            <AppText variant="display" style={{ color: '#fff', fontSize: 40, lineHeight: 44 }}>{level}</AppText>
+          </LevelRing>
           <View style={{ flex: 1 }}>
-            <AppText variant="display" numberOfLines={1} style={{ color: '#fff', fontSize: 26, lineHeight: 30 }}>{player.displayName}</AppText>
-            {player.status ? <AppText variant="caption" numberOfLines={1} style={{ color: 'rgba(255,255,255,0.85)' }}>{player.status}</AppText> : null}
-            <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>{player.player_id}</AppText>
-            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-              <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: colors.accent }}>
-                <AppText variant="caption" style={{ color: colors.accentFg, fontWeight: '800' }}>LEVEL {level}</AppText>
-              </View>
-              <View style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.5)', borderWidth: 1, borderColor: tierStyle.border }}>
-                <AppText variant="caption" style={{ color: tierStyle.text, fontWeight: '800' }}>{tier.toUpperCase()}</AppText>
-              </View>
+            <AppText variant="title" numberOfLines={1} style={{ color: '#fff' }}>{player.displayName || 'Player'}</AppText>
+            {player.status ? <AppText variant="caption" numberOfLines={1} style={{ color: 'rgba(255,255,255,0.8)' }}>{player.status}</AppText> : null}
+            <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>{Math.round(xpProgress * 100)} of 100 XP to Level {level + 1}</AppText>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 8 }}>
+              <AppText variant="display" style={{ color: colors.accent, fontSize: 28, lineHeight: 32 }}>{spendable.toLocaleString()}</AppText>
+              <AppText variant="caption" numberOfLines={1} style={{ color: 'rgba(255,255,255,0.7)', fontWeight: '600', flexShrink: 1 }}>{pointsLabel}</AppText>
             </View>
           </View>
-        </View>
-        <View style={{ marginTop: 18 }}>
-          <View style={{ height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' }}>
-            <View style={{ height: 10, width: `${Math.round(xpProgress * 100)}%` as `${number}%`, backgroundColor: colors.accent }} />
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-            <AppText variant="caption" style={{ color: '#fff' }}>{player.xp.toLocaleString()} XP</AppText>
-            <AppText variant="caption" style={{ color: 'rgba(255,255,255,0.8)' }}>{xpToNext} to level {level + 1}</AppText>
-          </View>
+          <Pressable onPress={() => router.push('/(tabs)/notifications' as never)} accessibilityLabel="Alerts" style={{ position: 'absolute', top: 0, right: 0, width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: colors.accent, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {player.avatarConfig?.photo_url
+              ? <Image source={{ uri: player.avatarConfig.photo_url }} style={{ width: 40, height: 40 }} />
+              : <AppText variant="title" style={{ color: '#fff' }}>{player.avatarConfig?.base ?? initial}</AppText>}
+          </Pressable>
         </View>
         {store ? (
           <Pressable onPress={() => setShowStoreSwitcher(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 }}>
@@ -411,7 +405,9 @@ export default function DashboardScreen() {
             </AppText>
           </View>
           <Feather name={hasSpunToday ? 'check-circle' : 'zap'} size={26} color={hasSpunToday || isSpinning ? colors.textTertiary : colors.accentFg} />
+          {!hasSpunToday && !isSpinning && <View style={{ position: 'absolute', top: 10, right: 10, width: 9, height: 9, borderRadius: 5, backgroundColor: '#ef4444' }} />}
         </Pressable>
+        {spinNote && !hasSpunToday ? <AppText variant="caption" tone="accent" style={{ textAlign: 'center', marginTop: -12 }}>{spinNote}</AppText> : null}
 
         <GettingStarted
           items={[
@@ -608,41 +604,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Card of the day */}
-        {card && (
-          <View>
-            <AppText variant="title" style={{ marginBottom: 12 }}>Card of the day</AppText>
-            <Card>
-              {card.imageUrl ? <Image source={{ uri: card.imageUrl }} style={{ width: '100%', height: 200, marginBottom: 10 }} resizeMode="contain" /> : null}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <AppText variant="eyebrow" tone="tertiary">{card.gameDisplay}</AppText>
-                {!!card.rarity && <AppText variant="eyebrow" tone="accent">{card.rarity}</AppText>}
-              </View>
-              <AppText variant="title" style={{ marginTop: 4 }}>{card.name}</AppText>
-              {!!card.set && <AppText variant="caption" tone="secondary">{card.set}</AppText>}
-              {card.price != null && (
-                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 8 }}>
-                  <AppText variant="numeral">${card.price.toFixed(2)}</AppText>
-                  {card.priceChange7d != null && (
-                    <AppText variant="caption" style={{ color: card.priceChange7d >= 0 ? '#22c55e' : '#ef4444' }}>
-                      {card.priceChange7d >= 0 ? '▲' : '▼'} {Math.abs(card.priceChange7d).toFixed(1)}% (7d)
-                    </AppText>
-                  )}
-                  {card.priceChange30d != null && (
-                    <AppText variant="caption" style={{ color: card.priceChange30d >= 0 ? '#22c55e' : '#ef4444' }}>
-                      {card.priceChange30d >= 0 ? '▲' : '▼'} {Math.abs(card.priceChange30d).toFixed(1)}% (30d)
-                    </AppText>
-                  )}
-                </View>
-              )}
-              {card.tcgplayerUrl ? (
-                <Pressable onPress={() => Linking.openURL(card.tcgplayerUrl!).catch(() => {})} style={{ marginTop: 8 }}>
-                  <AppText variant="caption" tone="accent" style={{ fontWeight: '700' }}>View on TCGplayer →</AppText>
-                </Pressable>
-              ) : null}
-            </Card>
-          </View>
-        )}
-        <CardOfDayVote />
+        <CardOfTheDay />
 
         {Object.keys(feedErrors).length > 0 && (
           <View style={{ alignItems: 'center', gap: 8 }}>
