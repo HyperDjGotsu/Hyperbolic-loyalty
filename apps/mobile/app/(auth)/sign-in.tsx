@@ -1,18 +1,10 @@
 import { useSignIn } from '@clerk/clerk-expo';
-import LegalLinks from '@/components/LegalLinks';
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Linking,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable } from 'react-native';
+import LegalLinks from '@/components/LegalLinks';
+import { AppText, Button } from '@/components/kit';
+import { AuthShell, Divider, Field, FormError, SsoButtons, clerkError } from '@/components/AuthKit';
 
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -26,140 +18,31 @@ export default function SignInScreen() {
     setLoading(true);
     setError('');
     try {
-      const result = await signIn.create({ identifier: email, password });
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId });
-      } else {
-        setError('Additional verification required. Please use the web app.');
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Sign in failed';
-      setError(msg);
+      const result = await signIn.create({ identifier: email.trim(), password });
+      if (result.status === 'complete') await setActive({ session: result.createdSessionId });
+      else setError('Additional verification required. Please use the web app.');
+    } catch (e) {
+      setError(clerkError(e, 'Sign in failed'));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.inner}>
-        <Text style={styles.logo}>PLAYER PASS</Text>
-        <Text style={styles.logoSub}>— LEVEL UP YOUR COMMUNITY —</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#7a7060"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#7a7060"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <Pressable
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSignIn}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#111009" />
-          ) : (
-            <Text style={styles.buttonText}>Sign In</Text>
-          )}
-        </Pressable>
-
-        <Pressable onPress={() => Linking.openURL('https://playerpass.gg/sign-in')}>
-          <Text style={styles.link}>Forgot password?</Text>
-        </Pressable>
-
-        <Link href="/(auth)/sign-up" style={[styles.link, styles.linkSecondary]}>
-          New player? Create account
-        </Link>
-
-        <LegalLinks prefix="By signing in you agree to our" />
-      </View>
-    </KeyboardAvoidingView>
+    <AuthShell title="Welcome back" subtitle="Level up your community">
+      <SsoButtons onError={setError} />
+      <Divider />
+      <Field placeholder="Email" autoCapitalize="none" autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} />
+      <Field placeholder="Password" secureTextEntry autoComplete="password" value={password} onChangeText={setPassword} />
+      <FormError message={error} />
+      <Button label="Sign in" onPress={handleSignIn} loading={loading} disabled={!email || !password} />
+      <Link href={"/(auth)/forgot-password" as never} asChild>
+        <Pressable><AppText variant="caption" tone="secondary" style={{ textAlign: 'center', marginTop: 20, fontSize: 14 }}>Forgot password?</AppText></Pressable>
+      </Link>
+      <Link href="/(auth)/sign-up" asChild>
+        <Pressable><AppText variant="caption" tone="accent" style={{ textAlign: 'center', marginTop: 14, fontSize: 14, fontWeight: '700' }}>New player? Create account</AppText></Pressable>
+      </Link>
+      <LegalLinks prefix="By signing in you agree to our" />
+    </AuthShell>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#111009',
-  },
-  inner: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-  },
-  logo: {
-    fontFamily: 'Georgia',
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#f2efe8',
-    textAlign: 'center',
-  },
-  logoSub: {
-    fontSize: 11,
-    letterSpacing: 4,
-    color: '#f97316',
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 40,
-    marginTop: 6,
-  },
-  input: {
-    backgroundColor: '#1e1c14',
-    borderWidth: 1,
-    borderColor: 'rgba(242,239,232,0.08)',
-    borderRadius: 10,
-    color: '#f2efe8',
-    fontSize: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-  },
-  error: {
-    color: '#ef4444',
-    fontSize: 14,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: '#c4b5fd',
-    borderRadius: 10,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#111009',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  link: {
-    color: '#c4b5fd',
-    textAlign: 'center',
-    marginTop: 24,
-    fontSize: 14,
-  },
-  linkSecondary: {
-    marginTop: 16,
-  },
-});

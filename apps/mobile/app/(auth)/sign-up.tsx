@@ -1,17 +1,10 @@
 import { useSignUp } from '@clerk/clerk-expo';
-import LegalLinks from '@/components/LegalLinks';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable } from 'react-native';
+import LegalLinks from '@/components/LegalLinks';
+import { AppText, Button } from '@/components/kit';
+import { AuthShell, Divider, Field, FormError, SsoButtons, clerkError } from '@/components/AuthKit';
 
 export default function SignUpScreen() {
   const { signUp, setActive, isLoaded } = useSignUp();
@@ -19,7 +12,7 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
@@ -29,11 +22,11 @@ export default function SignUpScreen() {
     setLoading(true);
     setError('');
     try {
-      await signUp.create({ emailAddress: email, password });
+      await signUp.create({ emailAddress: email.trim(), password });
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingVerification(true);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Sign up failed');
+      setPending(true);
+    } catch (e) {
+      setError(clerkError(e, 'Sign up failed'));
     } finally {
       setLoading(false);
     }
@@ -46,8 +39,8 @@ export default function SignUpScreen() {
     try {
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       setResent(true);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Could not resend code');
+    } catch (e) {
+      setError(clerkError(e, 'Could not resend code'));
     }
   }
 
@@ -61,115 +54,38 @@ export default function SignUpScreen() {
         await setActive({ session: result.createdSessionId });
         router.replace('/(tabs)');
       }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Verification failed');
+    } catch (e) {
+      setError(clerkError(e, 'Verification failed'));
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.inner}>
-        <Text style={styles.logo}>PLAYER PASS</Text>
-        <Text style={styles.logoSub}>— LEVEL UP YOUR COMMUNITY —</Text>
-        <Text style={styles.subtitle}>
-          {pendingVerification ? 'Check your email' : 'Create Account'}
-        </Text>
+  if (pending) {
+    return (
+      <AuthShell title="Check your email" subtitle={`Enter the 6-digit code sent to ${email}`}>
+        <Field placeholder="000000" keyboardType="number-pad" maxLength={6} value={code} onChangeText={setCode} style={{ textAlign: 'center', letterSpacing: 8, fontSize: 24 }} />
+        <FormError message={error} />
+        <Button label="Verify" onPress={handleVerify} loading={loading} disabled={code.length < 6} />
+        <Pressable onPress={handleResend} disabled={loading}>
+          <AppText variant="caption" tone="accent" style={{ textAlign: 'center', marginTop: 20, fontSize: 14 }}>{resent ? 'Code sent. Check your email' : 'Resend code'}</AppText>
+        </Pressable>
+      </AuthShell>
+    );
+  }
 
-        {!pendingVerification ? (
-          <>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#7a7060"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#7a7060"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            <Pressable
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleSignUp}
-              disabled={loading}
-            >
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create Account</Text>}
-            </Pressable>
-            <Link href="/(auth)/sign-in" style={styles.link}>
-              Already have an account? Sign in
-            </Link>
-            <LegalLinks prefix="By creating an account you agree to our" />
-          </>
-        ) : (
-          <>
-            <Text style={styles.hint}>Enter the 6-digit code sent to {email}</Text>
-            <TextInput
-              style={[styles.input, styles.codeInput]}
-              placeholder="000000"
-              placeholderTextColor="#7a7060"
-              keyboardType="number-pad"
-              maxLength={6}
-              value={code}
-              onChangeText={setCode}
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            <Pressable
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleVerify}
-              disabled={loading}
-            >
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify</Text>}
-            </Pressable>
-            <Pressable onPress={handleResend} disabled={loading}>
-              <Text style={styles.link}>{resent ? 'Code sent — check your email' : 'Resend code'}</Text>
-            </Pressable>
-          </>
-        )}
-      </View>
-    </KeyboardAvoidingView>
+  return (
+    <AuthShell title="Create account" subtitle="Earn XP at every event">
+      <SsoButtons onError={setError} />
+      <Divider />
+      <Field placeholder="Email" autoCapitalize="none" autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} />
+      <Field placeholder="Password" secureTextEntry autoComplete="new-password" value={password} onChangeText={setPassword} />
+      <FormError message={error} />
+      <Button label="Create account" onPress={handleSignUp} loading={loading} disabled={!email || !password} />
+      <Link href="/(auth)/sign-in" asChild>
+        <Pressable><AppText variant="caption" tone="accent" style={{ textAlign: 'center', marginTop: 20, fontSize: 14, fontWeight: '700' }}>Already have an account? Sign in</AppText></Pressable>
+      </Link>
+      <LegalLinks prefix="By creating an account you agree to our" />
+    </AuthShell>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#111009' },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
-  logo: { fontFamily: 'Georgia', fontSize: 28, fontWeight: '900', color: '#f2efe8', textAlign: 'center' },
-  logoSub: { fontSize: 11, letterSpacing: 4, color: '#f97316', fontWeight: '700', textAlign: 'center', marginBottom: 8, marginTop: 6 },
-  subtitle: { fontSize: 14, color: '#7a7060', textAlign: 'center', marginBottom: 40 },
-  hint: { color: '#a89f90', fontSize: 14, textAlign: 'center', marginBottom: 24 },
-  input: {
-    backgroundColor: '#1e1c14',
-    borderWidth: 1,
-    borderColor: 'rgba(242,239,232,0.08)',
-    borderRadius: 10,
-    color: '#f2efe8',
-    fontSize: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-  },
-  codeInput: { textAlign: 'center', letterSpacing: 8, fontSize: 24 },
-  error: { color: '#ef4444', fontSize: 14, marginBottom: 12, textAlign: 'center' },
-  button: {
-    backgroundColor: '#c4b5fd',
-    borderRadius: 10,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#111009', fontSize: 16, fontWeight: '700' },
-  link: { color: '#c4b5fd', textAlign: 'center', marginTop: 24, fontSize: 14 },
-});
