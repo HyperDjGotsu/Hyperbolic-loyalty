@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApi } from '@/lib/api';
 import { useTheme } from '@/lib/theme-context';
+import { useSelectedStoreId } from '@/lib/selected-store';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { AppText, Button, Skeleton } from '@/components/kit';
 import { EventCover } from '@/components/EventCover';
@@ -80,6 +81,7 @@ export default function EventsScreen() {
   const [scope, setScope] = useState<'store' | 'network'>('store');
   const [game, setGame] = useState('all');
   const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
+  const [selectedStoreId] = useSelectedStoreId();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [special, setSpecial] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,7 @@ export default function EventsScreen() {
     const mine = ++seq.current;
     if (!quiet) setError('');
     try {
-      let storeId = homeStoreId;
+      let storeId = selectedStoreId ?? homeStoreId;
       if (scope === 'store' && !storeId) {
         const me = await api.get<{ homeStore?: { id: string } | null }>('/api/player/by-clerk');
         storeId = me.homeStore?.id ?? null;
@@ -111,15 +113,15 @@ export default function EventsScreen() {
       if (mine !== seq.current) return;
       setEvents(all.events ?? []);
       setSpecial(sp.events ?? []);
-    } catch {
+    } catch (e) {
       if (mine !== seq.current) return;
-      if (!quiet) { setEvents([]); setSpecial([]); setError('Could not load events.'); }
+      if (!quiet) { setEvents([]); setSpecial([]); setError(e instanceof Error && e.message === 'no store' ? 'Pick a home store in Profile to see its events, or try Network.' : 'Could not load events.'); }
     } finally {
       if (mine === seq.current) { setLoading(false); setRefreshing(false); }
     }
-  }, [api, scope, homeStoreId]);
+  }, [api, scope, selectedStoreId, homeStoreId]);
 
-  useEffect(() => { setLoading(true); void load(); }, [scope]);
+  useEffect(() => { setLoading(true); void load(); }, [scope, selectedStoreId]);
 
   // Quiet refresh so "Starting soon" cards move to "Live now" on their own
   const loadRef = useRef(load);
@@ -256,7 +258,7 @@ export default function EventsScreen() {
           </View>
         ) : (
           <>
-            {special.length > 0 && game === 'all' && (
+            {special.length > 0 && (
               <View>
                 <AppText variant="title" style={{ marginBottom: 12 }}>Special events</AppText>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>

@@ -47,3 +47,26 @@ export async function runCheckin(
     return { kind: 'error', message: 'Network error. Check your connection and try again.' };
   }
 }
+
+export type ActiveEventInfo = {
+  id: string;
+  name: string;
+  attendanceXp: number;
+  attendanceCount: number;
+  game: { name: string; icon: string; color: string } | null;
+};
+
+// The live event a player is about to check in to (same data the web check-in page previews).
+// Returns null when the event is not live, ended, cancelled or unknown.
+export async function fetchActiveEvent(
+  get: <T>(path: string) => Promise<T>,
+  eventId: string
+): Promise<ActiveEventInfo | null> {
+  const data = await get<{ event: ActiveEventInfo | null }>(`/api/events/active?event_id=${encodeURIComponent(eventId)}`);
+  return data.event && data.event.id === eventId ? data.event : null;
+}
+
+// Event ids are plain ids; reject anything else before it reaches a path or a query string.
+export function isSafeEventId(id: unknown): id is string {
+  return typeof id === 'string' && /^[A-Za-z0-9-]{1,64}$/.test(id);
+}

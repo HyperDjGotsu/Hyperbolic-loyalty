@@ -9,45 +9,26 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useApi } from '@/lib/api';
-import { eventIdFromQr, runCheckin } from '@/lib/checkin';
+import { eventIdFromQr } from '@/lib/checkin';
+import { CheckinStateView } from '@/components/CheckinStateView';
 
 export default function QRCheckinScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const api = useApi();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string; xp?: number; prizePoints?: number; warn?: boolean } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const scanLock = useRef(false);
 
-  async function handleBarcode({ data }: { data: string }) {
+  // A good scan hands off to the preview screen, so every check-in is confirmed with a tap before it is submitted
+  function handleBarcode({ data }: { data: string }) {
     if (scanLock.current || scanned) return;
     scanLock.current = true;
     setScanned(true);
-    setProcessing(true);
-
-    try {
-      const eventId = eventIdFromQr(data);
-      if (!eventId) {
-        setResult({ success: false, message: "That doesn't look like a Player Pass QR code." });
-        return;
-      }
-      if (eventId !== id) {
-        setResult({ success: false, message: 'This QR code is for a different event.' });
-        return;
-      }
-
-      const out = await runCheckin(api.post, id, { method: 'qr' });
-      if (out.kind === 'success') setResult({ success: true, message: 'Checked in!', xp: out.xp, prizePoints: out.prizePoints });
-      else if (out.kind === 'already') setResult({ success: true, warn: true, message: "You've already checked in to this event." });
-      else if (out.kind === 'renewal') setResult({ success: false, message: 'Your Player Pass has expired. See a staff member at the check-in kiosk to renew or finish checking in.' });
-      else setResult({ success: false, message: out.message });
-    } finally {
-      setProcessing(false);
-      scanLock.current = false;
-    }
+    const eventId = eventIdFromQr(data);
+    if (!eventId) { setError("That doesn't look like a Player Pass QR code."); return; }
+    if (eventId !== id) { setError('This QR code is for a different event.'); return; }
+    router.replace(`/checkin?event_id=${eventId}` as never);
   }
 
   if (!permission) {
@@ -74,30 +55,13 @@ export default function QRCheckinScreen() {
     );
   }
 
-  if (result) {
+  if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.resultIcon}>{result.warn ? '⏰' : result.success ? '✅' : '❌'}</Text>
-        <Text style={[styles.resultText, result.success ? styles.successText : styles.errorText]}>
-          {result.message}
-        </Text>
-        {result.xp ? (
-          <Text style={styles.xpText}>
-            +{result.xp} XP{result.prizePoints ? ` · +${result.prizePoints} Prize Points` : ''} earned
-          </Text>
-        ) : null}
-        <Pressable style={styles.btn} onPress={() => router.back()}>
-          <Text style={styles.btnText}>← Back to Event</Text>
-        </Pressable>
-        {!result.success && (
-          <Pressable
-            style={styles.retryBtn}
-            onPress={() => { setScanned(false); setResult(null); }}
-          >
-            <Text style={styles.retryText}>Try Again</Text>
-          </Pressable>
-        )}
-      </View>
+      <CheckinStateView
+        view={{ kind: 'error', message: error }}
+        onDone={() => router.back()}
+        onRetry={() => { scanLock.current = false; setScanned(false); setError(null); }}
+      />
     );
   }
 
@@ -110,11 +74,7 @@ export default function QRCheckinScreen() {
       />
       <View style={styles.overlay}>
         <View style={styles.frame} />
-        {processing ? (
-          <ActivityIndicator color="#a78bfa" size="large" style={{ marginTop: 32 }} />
-        ) : (
-          <Text style={styles.scanHint}>Point at the event QR code</Text>
-        )}
+        <Text style={styles.scanHint}>Point at the event QR code</Text>
         <Pressable style={styles.cancelBtn} onPress={() => router.back()}>
           <Text style={styles.cancelText}>Cancel</Text>
         </Pressable>

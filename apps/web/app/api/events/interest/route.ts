@@ -79,3 +79,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+// GET - Is the signed-in player interested in this event? (?eventId=<id>)
+export async function GET(request: Request) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const eventId = new URL(request.url).searchParams.get('eventId') ?? '';
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(eventId)) {
+      return NextResponse.json({ error: 'Event ID required' }, { status: 400 });
+    }
+
+    const { data: player } = await supabaseAdmin
+      .from('players')
+      .select('id')
+      .eq('clerk_user_id', userId)
+      .single();
+    if (!player) {
+      return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
+    const { data: existing } = await supabaseAdmin
+      .from('event_interest')
+      .select('id')
+      .eq('player_id', player.id)
+      .eq('event_id', eventId)
+      .maybeSingle();
+
+    return NextResponse.json({ interested: !!existing }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) {
+    console.error('Interest state error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

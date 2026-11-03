@@ -19,7 +19,7 @@ type Notification = {
   data?: { event_id?: string; image_url?: string; kind?: string } | null;
 };
 
-type FeatherIconName = 'calendar' | 'zap' | 'radio' | 'award' | 'bell' | 'star' | 'gift' | 'trending-up' | 'clock' | 'check-circle';
+type FeatherIconName = 'calendar' | 'zap' | 'radio' | 'award' | 'bell' | 'star' | 'gift' | 'trending-up' | 'clock' | 'check-circle' | 'user-plus';
 
 function typeIcon(type: string): FeatherIconName {
   switch (type) {
@@ -40,6 +40,8 @@ function typeIcon(type: string): FeatherIconName {
       return 'award';
     case 'referral':
       return 'gift';
+    case 'friend_request':
+      return 'user-plus';
     case 'leaderboard':
     case 'weekly_summary':
       return 'trending-up';
@@ -105,9 +107,11 @@ export default function AlertsScreen() {
       api.post('/api/notifications', { notificationIds: [n.id] }).then(refreshBadge).catch(() => {});
     }
     const d = n.data ?? {};
-    if (['event_share', 'event_announced', 'event_reminder', 'event_recap'].includes(n.type)) {
-      if (d.event_id) router.push({ pathname: '/(tabs)/events', params: { event: d.event_id } } as never);
-      else router.push('/(tabs)/events' as never);
+    // Same destination as a push tap: one event goes to its event page, anything else to the Events tab
+    if (d.event_id && /^[a-zA-Z0-9-]{1,64}$/.test(d.event_id)) {
+      router.push(`/event/${d.event_id}` as never);
+    } else if (n.type.startsWith('event') || d.kind === 'morning') {
+      router.push('/(tabs)/events' as never);
     } else if (n.type === 'friend_request' || n.type === 'leaderboard' || n.type === 'weekly_summary') {
       router.push('/(tabs)/community' as never);
     } else if (n.type === 'store' || n.type === 'spin_ready') {
