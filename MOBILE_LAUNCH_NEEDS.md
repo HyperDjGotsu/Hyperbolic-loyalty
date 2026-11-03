@@ -27,11 +27,10 @@ Branch: `redesign-home`. The native app work is NOT on `main` yet.
 - [ ] Notification icon: white-on-transparent PNG for Android (optional, nicer than the current app icon).
 
 ## Known gaps vs the website (not blockers)
-- Friend-shares inbox / FriendsFab, daily-spin red dot, full tap-to-expand game cards, podium layout on Ranks
-- Linking Google/Discord from Profile (list is read-only, points to website); light/dark toggle (app uses the six-tone picker)
-- Home hero uses an XP bar, not the ring; tour is cards without highlights
-- Deep link through sign-in for kiosk QR; staff invite link in onboarding
-- Replay-tour links in Profile only take effect next time Home opens
+- Podium/avatars and game tiles are not pixel-matched to web art; tour is cards without highlights
+- Replay page tips only resets flags (shows next visit)
+- Google/Discord linking from Profile needs `playerpass://` allowed as a redirect in Clerk; untested
+- Link opened while signed in but unlinked is not saved; staff invite link in onboarding not built
 
 ## Decisions pending
 - [ ] Add a staff page in HQ for viewing player reports? (Email only for now.)
