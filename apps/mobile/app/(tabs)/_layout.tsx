@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
+import { FriendsFabMobile } from '@/components/FriendsFabMobile';
 import { AlertsProvider, useAlertsContext } from '@/lib/alerts-context';
 
 const TAB_BAR_STYLE = {
@@ -82,7 +83,10 @@ function TabsNav() {
 export default function TabsLayout() {
   return (
     <AlertsProvider>
-      <TabsNav />
+      <View style={{ flex: 1 }}>
+        <TabsNav />
+        <FriendsFabMobile />
+      </View>
     </AlertsProvider>
   );
 }
