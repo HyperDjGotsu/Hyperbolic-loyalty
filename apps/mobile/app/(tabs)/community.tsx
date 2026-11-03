@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ActivityIndicator, Alert, Image, Linking, Modal, Pressable, RefreshControl, ScrollView, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Pressable, RefreshControl, ScrollView, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 import { useTheme } from '@/lib/theme-context';
@@ -312,11 +312,22 @@ export default function CommunityScreen() {
     ]);
   }
 
+  async function sendReport(m: Member, reason: string) {
+    try {
+      await api.post('/api/community/report', { targetPlayerId: m.odid, reason });
+      Alert.alert('Report sent', 'Thanks. Our team will review it.');
+    } catch {
+      Alert.alert('Error', 'Could not send the report. Try again.');
+    }
+  }
+
   function reportPlayer(m: Member) {
-    const subject = encodeURIComponent(`Report player: ${m.name}`);
-    const body = encodeURIComponent(`Player: ${m.name} (${m.odid})\nReason:\n`);
     setActionFor(null);
-    void Linking.openURL(`mailto:darrell@hyperbolictcg.com?subject=${subject}&body=${body}`);
+    Alert.alert(`Report ${m.name}`, 'What is the problem?', [
+      { text: 'Harassment or abuse', onPress: () => void sendReport(m, 'harassment') },
+      { text: 'Inappropriate name or photo', onPress: () => void sendReport(m, 'inappropriate_profile') },
+      { text: 'Something else', onPress: () => void sendReport(m, 'other') },
+    ], { cancelable: true });
   }
 
   const shown = entries.filter(e => !blocked.has(e.odid));
