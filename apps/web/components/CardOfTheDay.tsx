@@ -620,7 +620,7 @@ export function CardOfTheDayCompact({ large = false }: { large?: boolean } = {})
         rel="noopener noreferrer"
         className="flex h-full min-h-0 flex-col items-center gap-2 rounded-xl border border-border-token bg-elevated p-3 text-center transition-colors hover:border-border-strong"
       >
-        <div className="flex min-h-0 w-full flex-1 justify-center"><div className="aspect-[5/7] h-full max-w-full overflow-hidden rounded-lg bg-elevated shadow-lg">
+        <div className="flex w-full shrink-0 justify-center"><div className="aspect-[5/7] h-[clamp(110px,18vh,240px)] overflow-hidden rounded-lg bg-elevated shadow-lg">
           {imageUrl ? (
             <img src={imageUrl} alt={card.name} className="h-full w-full object-cover" onError={handleImageError} />
           ) : (
