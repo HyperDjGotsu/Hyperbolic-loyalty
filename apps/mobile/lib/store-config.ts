@@ -12,7 +12,7 @@ export function useStoreConfig(): StoreConfig {
     if (cache) return;
     fetch(`${API_BASE}/api/store-config`)
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d) { cache = { ...DEFAULTS, ...d }; setCfg(cache); } })
+      .then(d => { if (d) { const next = { ...DEFAULTS, ...d }; cache = next; setCfg(next); } })
       .catch(() => {});
   }, []);
   return cfg;
