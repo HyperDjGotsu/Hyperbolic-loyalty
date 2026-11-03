@@ -10,7 +10,8 @@ async function resolve(request: Request) {
   const { userId } = await auth();
   if (!userId) return { error: NextResponse.json({ error: 'Not authenticated' }, { status: 401 }) };
   const { targetPlayerId } = await request.json().catch(() => ({}));
-  if (!targetPlayerId) return { error: NextResponse.json({ error: 'Target player required' }, { status: 400 }) };
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (typeof targetPlayerId !== 'string' || !UUID.test(targetPlayerId)) return { error: NextResponse.json({ error: 'Target player required' }, { status: 400 }) };
   const { data: me } = await supabaseAdmin.from('players').select('id').eq('clerk_user_id', userId).single();
   if (!me) return { error: NextResponse.json({ error: 'Player not found' }, { status: 404 }) };
   if (me.id === targetPlayerId) return { error: NextResponse.json({ error: "You can't block yourself" }, { status: 400 }) };
@@ -21,8 +22,13 @@ export async function POST(request: Request) {
   try {
     const r = await resolve(request);
     if (r.error) return r.error;
-    const pair = `and(requester_id.eq.${r.me},addressee_id.eq.${r.target}),and(requester_id.eq.${r.target},addressee_id.eq.${r.me})`;
-    await supabaseAdmin.from('friendships').delete().or(pair);
+    // Clear friendship/pending rows in each direction; an existing block by the other player is kept
+    for (const [a, b] of [[r.me!, r.target!], [r.target!, r.me!]]) {
+      await supabaseAdmin.from('friendships').delete()
+        .eq('requester_id', a).eq('addressee_id', b).in('status', ['accepted', 'pending']);
+    }
+    await supabaseAdmin.from('friendships').delete()
+      .eq('requester_id', r.me!).eq('addressee_id', r.target!).eq('status', 'blocked');
     const { error } = await supabaseAdmin
       .from('friendships')
       .insert({ requester_id: r.me!, addressee_id: r.target!, status: 'blocked' });
