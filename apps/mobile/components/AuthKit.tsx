@@ -95,7 +95,7 @@ export function SsoButtons({ onError }: { onError: (message: string) => void }) 
   return (
     <View style={{ gap: 10 }}>
       <Button label="Continue with Google" variant="secondary" loading={busy === 'oauth_google'} disabled={busy !== null} onPress={() => run('oauth_google')} />
-      <Button label="Continue with Apple" variant="secondary" loading={busy === 'oauth_apple'} disabled={busy !== null} onPress={() => run('oauth_apple')} />
+      {Platform.OS === 'ios' && <Button label="Continue with Apple" variant="secondary" loading={busy === 'oauth_apple'} disabled={busy !== null} onPress={() => run('oauth_apple')} />}
     </View>
   );
 }

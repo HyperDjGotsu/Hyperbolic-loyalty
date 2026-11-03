@@ -170,20 +170,21 @@ export async function POST(request: Request) {
     }
 
     // Check if friendship already exists (in either direction)
-    const { data: existingFriendship } = await supabaseAdmin
+    // A list, not .single(): both players may have blocked each other, which leaves two rows
+    const { data: existingRows } = await supabaseAdmin
       .from('friendships')
       .select('id, status')
-      .or(`and(requester_id.eq.${currentPlayer.id},addressee_id.eq.${targetPlayer.id}),and(requester_id.eq.${targetPlayer.id},addressee_id.eq.${currentPlayer.id})`)
-      .single();
+      .or(`and(requester_id.eq.${currentPlayer.id},addressee_id.eq.${targetPlayer.id}),and(requester_id.eq.${targetPlayer.id},addressee_id.eq.${currentPlayer.id})`);
+    const existing = existingRows ?? [];
 
-    if (existingFriendship) {
-      if (existingFriendship.status === 'accepted') {
-        return NextResponse.json({ error: 'Already friends' }, { status: 400 });
-      } else if (existingFriendship.status === 'pending') {
-        return NextResponse.json({ error: 'Friend request already pending' }, { status: 400 });
-      } else if (existingFriendship.status === 'blocked') {
-        return NextResponse.json({ error: 'Cannot send friend request' }, { status: 403 });
-      }
+    if (existing.some(f => f.status === 'blocked')) {
+      return NextResponse.json({ error: 'Cannot send friend request' }, { status: 403 });
+    }
+    if (existing.some(f => f.status === 'accepted')) {
+      return NextResponse.json({ error: 'Already friends' }, { status: 400 });
+    }
+    if (existing.some(f => f.status === 'pending')) {
+      return NextResponse.json({ error: 'Friend request already pending' }, { status: 400 });
     }
 
     // Create friend request

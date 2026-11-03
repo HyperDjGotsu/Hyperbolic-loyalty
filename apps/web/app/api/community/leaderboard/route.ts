@@ -147,13 +147,24 @@ export async function GET(request: NextRequest) {
       return v === 'public' || (v === 'friends' && friendIds.has(p.id));
     };
 
+    // Leave out anyone the viewer has blocked, or who has blocked the viewer
+    const blockedIds = new Set<string>();
+    if (viewerId) {
+      const { data: bs } = await supabaseAdmin
+        .from('friendships')
+        .select('requester_id, addressee_id')
+        .eq('status', 'blocked')
+        .or(`requester_id.eq.${viewerId},addressee_id.eq.${viewerId}`);
+      for (const b of bs ?? []) blockedIds.add(b.requester_id === viewerId ? b.addressee_id : b.requester_id);
+    }
+
     const playerMap: Record<string, (typeof players)[0]> = {};
     for (const p of players ?? []) playerMap[p.id] = p;
 
     const leaderboard = rankedPlayerIds
       .map((playerId, index) => {
         const player = playerMap[playerId];
-        if (!player) return null;
+        if (!player || blockedIds.has(playerId)) return null;
         const isAnonymous = player.privacy_show_as_anonymous === true;
         return {
           rank: index + 1,
