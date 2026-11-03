@@ -70,7 +70,12 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    // Disabled for launch: a player ID alone is not proof of ownership. Needs a one-time claim code to come back.
     if (action === 'link_existing') {
+      return NextResponse.json({ error: 'Linking an existing player ID is not available. Create a new profile.' }, { status: 403 });
+    }
+
+    if (false as boolean) {
       // Link to an existing player by player ID
       if (!playerId) {
         return NextResponse.json({ error: 'Player ID required' }, { status: 400 });
