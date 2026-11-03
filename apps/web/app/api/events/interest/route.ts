@@ -36,7 +36,8 @@ export async function POST(request: Request) {
       .select('id')
       .eq('player_id', player.id)
       .eq('event_id', eventId)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (existing) {
       // Remove interest
@@ -63,7 +64,8 @@ export async function POST(request: Request) {
           event_id: eventId,
         });
 
-      if (error) {
+      // A concurrent double tap already added it: treat as success
+      if (error && error.code !== '23505') {
         console.error('Error adding interest:', error);
         return NextResponse.json({ error: 'Failed to add interest' }, { status: 500 });
       }
@@ -102,12 +104,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: stateErr } = await supabaseAdmin
       .from('event_interest')
       .select('id')
       .eq('player_id', player.id)
       .eq('event_id', eventId)
+      .limit(1)
       .maybeSingle();
+    if (stateErr) {
+      console.error('Interest state query error:', stateErr);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 
     return NextResponse.json({ interested: !!existing }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {

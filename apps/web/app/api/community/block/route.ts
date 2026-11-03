@@ -24,11 +24,13 @@ export async function POST(request: Request) {
     if (r.error) return r.error;
     // Clear friendship/pending rows in each direction; an existing block by the other player is kept
     for (const [a, b] of [[r.me!, r.target!], [r.target!, r.me!]]) {
-      await supabaseAdmin.from('friendships').delete()
+      const { error: delErr } = await supabaseAdmin.from('friendships').delete()
         .eq('requester_id', a).eq('addressee_id', b).in('status', ['accepted', 'pending']);
+      if (delErr) { console.error('Block cleanup error:', delErr); return NextResponse.json({ error: 'Failed to block' }, { status: 500 }); }
     }
-    await supabaseAdmin.from('friendships').delete()
+    const { error: reErr } = await supabaseAdmin.from('friendships').delete()
       .eq('requester_id', r.me!).eq('addressee_id', r.target!).eq('status', 'blocked');
+    if (reErr) { console.error('Block cleanup error:', reErr); return NextResponse.json({ error: 'Failed to block' }, { status: 500 }); }
     const { error } = await supabaseAdmin
       .from('friendships')
       .insert({ requester_id: r.me!, addressee_id: r.target!, status: 'blocked' });

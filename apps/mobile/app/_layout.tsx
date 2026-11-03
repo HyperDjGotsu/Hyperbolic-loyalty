@@ -71,6 +71,8 @@ function AuthGuard() {
         router.replace((pending.startsWith('/onboarding') ? pending : '/onboarding') as never);
         return;
       }
+      // Lookup failed: keep the parked link and try again next time rather than dropping it
+      if (linked === null) { if (seg === '(auth)') router.replace('/(tabs)'); return; }
       await clearPendingLink();
       router.replace('/(tabs)');
       if (!pending.startsWith('/onboarding')) router.push(pending as never);

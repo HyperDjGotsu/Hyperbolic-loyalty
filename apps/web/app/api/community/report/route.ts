@@ -29,6 +29,12 @@ export async function POST(request: Request) {
     const { data: target } = await supabaseAdmin.from('players').select('id, display_name').eq('id', targetPlayerId).single();
     if (!target) return NextResponse.json({ error: 'Player not found' }, { status: 404 });
 
+    // Same reporter and target within a day: already on file, don't pile on
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: dupe } = await supabaseAdmin.from('player_reports').select('id')
+      .eq('reporter_id', me.id).eq('reported_id', target.id).gte('created_at', since).limit(1);
+    if (dupe?.length) return NextResponse.json({ success: true });
+
     const { error } = await supabaseAdmin
       .from('player_reports')
       .insert({ reporter_id: me.id, reported_id: target.id, reason: why, details: note });
