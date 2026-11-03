@@ -28,6 +28,8 @@ import { AppText } from '@/components/kit';
 import { EventCreditCard } from '@/components/EventCreditCard';
 import { BackdropSheet } from '@/components/BackdropSheet';
 import { StatusSheet } from '@/components/StatusSheet';
+import { useStoreConfig } from '@/lib/store-config';
+import { MembershipDetails, RecentActivity, ReferralExtras, ReplayLinks, SignInMethods, StatsStrip, membershipStatusLabel, type ActivityEntry, type ReferralRow } from '@/components/ProfileSections';
 
 type Player = {
   linked: boolean;
@@ -42,6 +44,11 @@ type Player = {
   avatarConfig: AvatarConfig;
   homeStore: { id: string; name: string; city: string | null } | null;
   heroBackdrop?: string | null;
+  isTrial?: boolean;
+  gameXP?: unknown[];
+  eventsAttended?: number;
+  eventsThisMonth?: number;
+  recentActivity?: { id: string; description?: string | null; source?: string | null; final_xp?: number | null; base_xp?: number | null; created_at: string }[];
 };
 
 type AvatarConfig = {
@@ -85,6 +92,7 @@ type ReferralStats = {
     attendedFirstEvent: number;
     totalXpEarned: number;
   };
+  referrals?: ReferralRow[];
 };
 
 const DEFAULT_PREFS: NotifPrefs = {
@@ -95,12 +103,12 @@ const DEFAULT_PREFS: NotifPrefs = {
   store: true,
 };
 
-const PREF_LABELS: { key: keyof NotifPrefs; label: string; icon: string }[] = [
-  { key: 'events', label: 'Events', icon: '📅' },
-  { key: 'daily_rewards', label: 'Daily Rewards', icon: '🎁' },
-  { key: 'leaderboard', label: 'Leaderboard', icon: '🏆' },
-  { key: 'social', label: 'Social', icon: '💬' },
-  { key: 'store', label: 'Store Broadcasts', icon: '📢' },
+const PREF_LABELS: { key: keyof NotifPrefs; label: string; icon: string; desc: string }[] = [
+  { key: 'events', label: 'Events', icon: '📅', desc: 'New events announced, reminders 2h before, post-event recap' },
+  { key: 'daily_rewards', label: 'Daily & Rewards', icon: '🎁', desc: 'Daily spin ready, XP earned, achievements unlocked' },
+  { key: 'leaderboard', label: 'Leaderboard', icon: '🏆', desc: 'Rank changes, Emperor dethroned, Bounty Hunter Night alerts' },
+  { key: 'social', label: 'Social', icon: '💬', desc: 'Friend requests, referral bonuses when friends attend events' },
+  { key: 'store', label: 'Store', icon: '📢', desc: 'New Prize Wall items, pass expiring soon' },
 ];
 
 const GAMES = SELECTABLE_GAMES.map(g => [g.id, g.name, g.icon] as const);
@@ -152,6 +160,8 @@ export default function ProfileScreen() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [referral, setReferral] = useState<ReferralStats | null>(null);
+  const [referralError, setReferralError] = useState(false);
+  const storeCfg = useStoreConfig();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
@@ -189,9 +199,10 @@ export default function ProfileScreen() {
         api.get<{ privacy: Privacy }>('/api/player/privacy').then(d => setPrivacy({ ...DEFAULT_PRIVACY, ...d.privacy })),
       ]).catch(() => {});
       api.get<{ status: string | null }>('/api/player/status').then(d => setStatusText(d.status ?? null)).catch(() => {});
+      setReferralError(false);
       api.get<ReferralStats>('/api/referral/stats')
         .then(data => setReferral(data))
-        .catch(() => {});
+        .catch(() => setReferralError(true));
     } catch {
       setError(true);
     } finally {
@@ -454,6 +465,7 @@ export default function ProfileScreen() {
   const isFree = passTierKey(player?.passTier) === 'free';
   const isGrace = !isFree && player?.passStatus === 'grace_period';
   const isActive = !isFree && player?.passStatus === 'active';
+  const badge = membershipStatusLabel(player?.passTier ?? null, player?.passStatus ?? null, isFree);
   const avatarEmoji = avatarAsset('base', player?.avatarConfig?.base)?.emoji ?? player?.avatarConfig?.base ?? '🙂';
   const avatarBg = avatarAsset('background', player?.avatarConfig?.background)?.color ?? player?.avatarConfig?.background ?? '#29241d';
   const avatarFrameStyle = avatarAsset('frame', player?.avatarConfig?.frame)?.style ?? player?.avatarConfig?.frame ?? 'none';
@@ -471,6 +483,7 @@ export default function ProfileScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>Failed to load profile</Text>
+        <Pressable style={styles.shareBtn} onPress={() => { setLoading(true); void load(); }}><Text style={styles.shareBtnText}>Retry</Text></Pressable>
       </View>
     );
   }
@@ -493,12 +506,12 @@ export default function ProfileScreen() {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Text style={[styles.statVal, styles.xpVal]}>{player.xp.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>Guild Points</Text>
+            <Text style={styles.statLabel}>Total XP</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
             <Text style={[styles.statVal, styles.pointsVal]}>{player.gems}</Text>
-            <Text style={styles.statLabel}>Prize Points</Text>
+            <Text style={styles.statLabel}>{storeCfg.currency_name}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
@@ -510,13 +523,22 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      <StatsStrip
+        level={Math.floor((player.xp || 0) / 100) + 1}
+        gamesPlayed={Array.isArray(player.gameXP) ? player.gameXP.length : 0}
+        eventsAttended={player.eventsAttended ?? 0}
+        eventsThisMonth={player.eventsThisMonth ?? 0}
+        totalXp={player.xp || 0}
+      />
+
       <Text style={styles.sectionTitle}>Membership</Text>
       <View style={[styles.card, styles.cardLeft, styles.membershipRow]}>
         <View style={styles.flex}><Text style={styles.membershipTier}>{passTierLabelText}</Text>
-          {isFree && <Text style={styles.helper}>Ask staff in-store to upgrade your membership</Text>}
+          {isFree && <Text style={styles.helper}>Ask staff in-store to upgrade your membership and unlock the Prize Wall.</Text>}
+          <MembershipDetails passTier={player.passTier} passStatus={player.passStatus} passExpiresAt={player.passExpiresAt} isTrial={!!player.isTrial} currencyName={storeCfg.currency_name} />
         </View>
-        <View style={[styles.statusBadge, isActive ? styles.statusActive : isGrace ? styles.statusGrace : styles.statusFree]}>
-          <Text style={styles.statusText}>{isActive ? 'Active' : isGrace ? 'Grace Period' : 'Free'}</Text>
+        <View style={[styles.statusBadge, badge.kind === 'active' ? styles.statusActive : badge.kind === 'grace' ? styles.statusGrace : styles.statusFree]}>
+          <Text style={styles.statusText}>{badge.label}</Text>
         </View>
       </View>
 
@@ -561,7 +583,23 @@ export default function ProfileScreen() {
         })}</View> : <Pressable onPress={openFavorites}><Text style={styles.helper}>No favorites yet</Text><Text style={styles.addLink}>+ Add favorites</Text></Pressable>}
       </View>
 
+      <RecentActivity items={(player.recentActivity ?? []).slice(0, 5).map((a): ActivityEntry => ({
+        id: a.id,
+        text: a.description || (a.source ? String(a.source).replace(/_/g, ' ') : 'XP earned'),
+        xp: a.final_xp ?? a.base_xp ?? 0,
+        date: new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      }))} />
+
       {/* Referral */}
+      {!referral && referralError && (
+        <>
+          <Text style={styles.sectionTitle}>Refer a Friend</Text>
+          <View style={[styles.card, styles.cardLeft]}>
+            <Text style={styles.helper}>Unable to load referral info</Text>
+            <Pressable onPress={() => { setReferralError(false); api.get<ReferralStats>('/api/referral/stats').then(setReferral).catch(() => setReferralError(true)); }}><Text style={styles.addLink}>Retry</Text></Pressable>
+          </View>
+        </>
+      )}
       {referral && (
         <>
           <Text style={styles.sectionTitle}>Refer a Friend</Text>
@@ -589,9 +627,7 @@ export default function ProfileScreen() {
                 <Text style={styles.refStatLabel}>XP Earned</Text>
               </View>
             </View>
-            <Text style={styles.referralHint}>
-              You earn +50 XP + 10 Points when a referral attends their first event
-            </Text>
+            <ReferralExtras shareUrl={referral.shareUrl} referrals={referral.referrals ?? []} />
           </View>
         </>
       )}
@@ -599,10 +635,11 @@ export default function ProfileScreen() {
       {/* Notification preferences */}
       <Text style={styles.sectionTitle}>Notifications {saving ? '(saving…)' : ''}</Text>
       <View style={[styles.card, styles.cardLeft]}>
-        {PREF_LABELS.map(({ key, label, icon }) => (
+        <Text style={styles.helper}>Choose what you want to hear about. You can change these any time.</Text>
+        {PREF_LABELS.map(({ key, label, icon, desc }) => (
           <View key={key} style={styles.prefRow}>
             <Text style={styles.prefIcon}>{icon}</Text>
-            <Text style={styles.prefLabel}>{label}</Text>
+            <View style={styles.flex}><Text style={styles.prefLabel}>{label}</Text><Text style={styles.helper}>{desc}</Text></View>
             <Switch
               value={!!prefs[key]}
               onValueChange={v => { if (!saving) void togglePref(key, v); }}
@@ -618,6 +655,10 @@ export default function ProfileScreen() {
       <Pressable style={[styles.card, styles.settingsRow]} onPress={openPrivacy}>
         <Text style={styles.prefIcon}>🔒</Text><View style={styles.flex}><Text style={styles.settingsTitle}>Privacy Settings</Text><Text style={styles.helper}>Visibility, leaderboard and discovery</Text></View><Text style={styles.chevron}>›</Text>
       </Pressable>
+
+      <SignInMethods />
+
+      <ReplayLinks />
 
       <LegalLinks />
 
@@ -656,7 +697,7 @@ export default function ProfileScreen() {
 
       <Modal visible={privacyOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setPrivacyOpen(false)}>
         <View style={[styles.modal, { paddingTop: insets.top }]}><View style={styles.modalHeader}><Pressable onPress={() => setPrivacyOpen(false)}><Text style={styles.modalAction}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Privacy</Text><Pressable disabled={modalSaving} onPress={savePrivacy}><Text style={styles.modalAction}>{modalSaving ? 'Saving…' : 'Save'}</Text></Pressable></View><ScrollView contentContainerStyle={styles.modalContent}>
-          <Text style={styles.modalSection}>Profile Visibility</Text>{([['public','🌐','Public','Anyone can see your profile'],['friends','👥','Friends Only','Only friends can see your profile'],['private','🔒','Private','Only you can see your profile']] as const).map(item => <Pressable key={item[0]} style={styles.privacyRow} onPress={() => setPrivacyDraft(p => ({ ...p, profile_visibility: item[0] }))}><Text style={styles.prefIcon}>{item[1]}</Text><View style={styles.flex}><Text style={styles.settingsTitle}>{item[2]}</Text><Text style={styles.helper}>{item[3]}</Text></View><Text style={styles.radio}>{privacyDraft.profile_visibility === item[0] ? '●' : '○'}</Text></Pressable>)}
+          <View style={styles.safetyBox}><Text style={styles.settingsTitle}>Your Safety Matters</Text><Text style={styles.helper}>Control who can see your profile, find you in search, and contact you.</Text></View><Text style={styles.modalSection}>Profile Visibility</Text>{([['public','🌐','Public','Anyone can see your profile'],['friends','👥','Friends Only','Only friends can see your profile'],['private','🔒','Private','Only you can see your profile']] as const).map(item => <Pressable key={item[0]} style={styles.privacyRow} onPress={() => setPrivacyDraft(p => ({ ...p, profile_visibility: item[0] }))}><Text style={styles.prefIcon}>{item[1]}</Text><View style={styles.flex}><Text style={styles.settingsTitle}>{item[2]}</Text><Text style={styles.helper}>{item[3]}</Text></View><Text style={styles.radio}>{privacyDraft.profile_visibility === item[0] ? '●' : '○'}</Text></Pressable>)}
           <Text style={styles.modalSection}>Leaderboard</Text><ToggleRow icon="🎭" title="Show as Anonymous" subtitle="Hide your name on leaderboard" value={privacyDraft.show_as_anonymous} onChange={v => setPrivacyDraft(p => ({ ...p, show_as_anonymous: v }))} />
           <Text style={styles.modalSection}>Discovery</Text><ToggleRow icon="🚫" title="Hide from Search" value={privacyDraft.hide_from_search} onChange={v => setPrivacyDraft(p => ({ ...p, hide_from_search: v }))} /><ToggleRow icon="👥" title="Allow Friend Requests" value={privacyDraft.allow_friend_requests} onChange={v => setPrivacyDraft(p => ({ ...p, allow_friend_requests: v }))} />
         </ScrollView></View>
@@ -859,7 +900,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   referralHint: { color: c.textTertiary, fontSize: 12, fontStyle: 'italic' },
   prefRow: { flexDirection: 'row', alignItems: 'center', width: '100%', paddingVertical: 10 },
   prefIcon: { fontSize: 18, marginRight: 10 },
-  prefLabel: { flex: 1, color: c.textSecondary, fontSize: 15 },
+  prefLabel: { color: c.textSecondary, fontSize: 15 },
   signOutBtn: {
     backgroundColor: 'rgba(239,68,68,0.1)',
     borderRadius: 12,
@@ -871,7 +912,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
     borderColor: 'rgba(239,68,68,0.3)',
   },
   signOutText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
-  errorText: { color: '#ef4444', fontSize: 15 },
+  errorText: { color: '#ef4444', fontSize: 15, marginBottom: 14 },
   dangerZone: {
     marginHorizontal: 16,
     marginTop: 32,
@@ -921,6 +962,7 @@ const makeStyles = (c: Palette) => StyleSheet.create({
   modalContent: { padding: 16, paddingBottom: 40 },
   modalSection: { color: c.textSecondary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 20, marginBottom: 8 },
   privacyRow: { flexDirection: 'row', alignItems: 'center', minHeight: 64, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: c.border },
+  safetyBox: { marginTop: 4, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgSurface },
   radio: { color: c.accent, fontSize: 22 },
   avatarPreview: { width: 112, height: 112, borderRadius: 56, alignSelf: 'center', marginVertical: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: c.accent },
   previewEmoji: { fontSize: 54 },

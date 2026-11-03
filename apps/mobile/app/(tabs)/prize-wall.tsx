@@ -8,6 +8,8 @@ import { PageIntro } from '@/components/PageIntro';
 import { FREE_TIER_GATE } from '@/lib/pass-tiers';
 import { AppText, Button, Skeleton } from '@/components/kit';
 import { PassesSheet } from '@/components/PassesSheet';
+import { useSelectedStoreId } from '@/lib/selected-store';
+import { useStoreConfig } from '@/lib/store-config';
 
 const TRADE_EMPORIUM_ID = '3766247c-d900-4b15-bc4a-f0b8f5e4fa2d';
 
@@ -29,7 +31,11 @@ export default function PrizeWallScreen() {
 
   const [passStatus, setPassStatus] = useState<PassStatus | null>(null);
   const [passError, setPassError] = useState('');
-  const [storeId, setStoreId] = useState<string | null | undefined>(undefined);
+  const [selectedStoreId] = useSelectedStoreId();
+  const { currency_name: cur } = useStoreConfig();
+  const [homeId, setHomeId] = useState<string | null | undefined>(undefined);
+  // Browsed store wins; otherwise the home store (same rule as the website)
+  const storeId: string | null | undefined = selectedStoreId ?? homeId;
   const [items, setItems] = useState<PrizeItem[]>([]);
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -49,10 +55,10 @@ export default function PrizeWallScreen() {
     try {
       const data = await apiRef.current.get<PassStatus>('/api/player/pass-status');
       setPassStatus(data);
-      setStoreId(data.homeStoreId ?? null);
+      setHomeId(data.homeStoreId ?? null);
     } catch (e) {
       setPassError(errorMessage(e, 'Unable to load your balance'));
-      setStoreId(null);
+      setHomeId(null);
     }
   }, []);
 
@@ -89,7 +95,7 @@ export default function PrizeWallScreen() {
       if (e instanceof ApiError && e.status === 400) {
         let need = '';
         try { const b = JSON.parse(e.message.slice(e.message.indexOf(': ') + 2)); if (b.required != null) need = ` Need ${Number(b.required).toLocaleString()} pts.`; } catch { /* ignore */ }
-        setRedeemError(`Not enough Prize Points.${need}`);
+        setRedeemError(`Not enough ${cur}.${need}`);
       } else if (e instanceof ApiError && e.status === 403) {
         setRedeemError(`Prize Wall requires a paid pass. Earn ${FREE_TIER_GATE} Guild Points for a free trial.`);
       } else if (e instanceof ApiError) {
@@ -151,7 +157,7 @@ export default function PrizeWallScreen() {
       <PageIntro page="prize-wall" />
       <View style={{ paddingTop: insets.top + 12 }}>
         <AppText variant="display">Prize Wall</AppText>
-        <AppText variant="caption" tone="secondary">Spend your Points on real prizes. Points never expire.</AppText>
+        <AppText variant="caption" tone="secondary">Spend your {cur} on real prizes. They never expire.</AppText>
       </View>
 
       {passError ? (
@@ -165,7 +171,7 @@ export default function PrizeWallScreen() {
         <View style={[card(colors), { borderRadius: 30, padding: 20, backgroundColor: colors.bgElevated }]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <View>
-              <AppText variant="eyebrow" tone="secondary">Prize points</AppText>
+              <AppText variant="eyebrow" tone="secondary">{cur}</AppText>
               <AppText variant="display" style={{ color: colors.xp, fontSize: 44, lineHeight: 48, fontVariant: ['tabular-nums'] }}>{passStatus.prizePoints.toLocaleString()}</AppText>
               <AppText variant="caption" tone="tertiary" style={{ marginTop: 6 }}>Lifetime XP {passStatus.lifetimeXp.toLocaleString()}</AppText>
             </View>
@@ -187,7 +193,7 @@ export default function PrizeWallScreen() {
           {trialReady && (
             <View style={{ marginTop: 16, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)', backgroundColor: 'rgba(245,158,11,0.1)' }}>
               <AppText variant="body" style={{ color: '#fbbf24', fontWeight: '700' }}>You've unlocked a 30-day Bronze Trial!</AppText>
-              <AppText variant="caption" tone="secondary" style={{ marginVertical: 6 }}>Claim your trial to start earning Prize Points and access exclusive perks.</AppText>
+              <AppText variant="caption" tone="secondary" style={{ marginVertical: 6 }}>Claim your trial to start earning {cur} and access exclusive perks.</AppText>
               {claimError ? <AppText variant="caption" style={{ color: colors.danger, marginBottom: 6 }}>{claimError}</AppText> : null}
               <Button label="Claim Bronze Trial — Free for 30 Days" onPress={() => void claimTrial()} loading={claiming} style={{ backgroundColor: '#f59e0b', borderColor: '#f59e0b', paddingVertical: 10 }} />
             </View>
@@ -240,7 +246,7 @@ export default function PrizeWallScreen() {
         <Modal transparent animationType="fade" onRequestClose={() => { setSelectedItem(null); setRedeemError(null); }}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 24 }}>
             <View style={{ backgroundColor: colors.bgSurface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: colors.border }}>
-              <AppText variant="title">Redeem {selectedItem.name} for {selectedItem.xp_cost.toLocaleString()} Prize Points?</AppText>
+              <AppText variant="title">Redeem {selectedItem.name} for {selectedItem.xp_cost.toLocaleString()} {cur}?</AppText>
               <AppText variant="body" tone="secondary" style={{ marginTop: 10 }}>You'll have {(passStatus.prizePoints - selectedItem.xp_cost).toLocaleString()} pts left</AppText>
               <AppText variant="caption" tone="tertiary" style={{ marginTop: 6 }}>Collect in person — show your claim code to staff at the store.</AppText>
               {redeemError ? <AppText variant="caption" style={{ color: colors.danger, marginTop: 10 }}>{redeemError}</AppText> : null}
@@ -261,7 +267,7 @@ export default function PrizeWallScreen() {
               <AppText variant="display" style={{ color: '#fff', fontSize: 44, letterSpacing: 6, fontFamily: 'monospace', textAlign: 'center' }}>{claimDetails.claimCode}</AppText>
             </View>
             <AppText variant="body" style={{ color: '#d1d5db', textAlign: 'center', marginTop: 24 }}>Show this code to staff at the counter to claim your prize</AppText>
-            <AppText variant="title" style={{ color: '#f87171', marginTop: 14 }}>−{claimDetails.pointsDeducted.toLocaleString()} Prize Points</AppText>
+            <AppText variant="title" style={{ color: '#f87171', marginTop: 14 }}>−{claimDetails.pointsDeducted.toLocaleString()} {cur}</AppText>
             <AppText variant="caption" style={{ color: '#9ca3af', marginTop: 6 }}>Valid for 30 days</AppText>
             <Button label="Done" onPress={closeClaim} style={{ marginTop: 32, backgroundColor: '#fff', borderColor: '#fff', paddingHorizontal: 56 }} />
           </View>
