@@ -8,6 +8,7 @@ const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const ID = /^[A-Za-z0-9-]{1,64}$/;
 const REF = /^[A-Za-z0-9-]{1,20}$/;
 const SLUG = /^[A-Za-z0-9_-]{1,64}$/;
+const STAFF = /^[A-Za-z0-9_-]{1,128}$/;
 
 type Param = string | string[] | undefined;
 const first = (v: Param) => (Array.isArray(v) ? v[0] : v);
@@ -27,6 +28,8 @@ export function buildPendingPath(pathname: string, params: Record<string, Param>
     const store = first(params.store);
     if (ref && REF.test(ref)) q.push(`ref=${ref}`);
     if (store && SLUG.test(store)) q.push(`store=${store}`);
+    const staff = first(params.staff);
+    if (staff && STAFF.test(staff)) q.push(`staff=${staff}`);
     return q.length ? `/onboarding?${q.join('&')}` : '/onboarding';
   }
   return null;

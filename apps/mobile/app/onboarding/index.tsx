@@ -34,9 +34,10 @@ export default function OnboardingScreen() {
   const api = useApi();
   const router = useRouter();
   const { user } = useUser();
-  const params = useLocalSearchParams<{ ref?: string | string[]; store?: string | string[] }>();
+  const params = useLocalSearchParams<{ ref?: string | string[]; store?: string | string[]; staff?: string | string[] }>();
   const refParam = (Array.isArray(params.ref) ? params.ref[0] : params.ref) ?? '';
   const storeParam = (Array.isArray(params.store) ? params.store[0] : params.store) ?? '';
+  const staffParam = (Array.isArray(params.staff) ? params.staff[0] : params.staff) ?? '';
   const [checkingLink, setCheckingLink] = useState(true);
 
   const [mode, setMode] = useState<Mode>('create');
@@ -186,6 +187,7 @@ export default function OnboardingScreen() {
         phone: phone.trim() || null,
         primaryGame: primaryGame || null,
         referralCode: referralCode.trim().toUpperCase() || null,
+        staffInviteCode: staffParam.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 128) || null,
         homeStoreId,
         birthdate,
       });

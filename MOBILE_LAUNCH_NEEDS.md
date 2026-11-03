@@ -18,7 +18,7 @@ Branch: `redesign-home`. The native app work is NOT on `main` yet.
 - [ ] **Apple**: create the app in App Store Connect (bundle `gg.playerpass.app`), then give Claude the ASC App ID and Team ID for `eas.json` `submit.production`.
 - [ ] **Google Play**: create the app, make a service account JSON key for EAS submit (keep it out of git).
 - [ ] **Deep links**: set `APPLE_TEAM_ID` (Vercel) and `ANDROID_CERT_SHA256` (Play Console → App signing → SHA-256) so `playerpass.gg/event/<id>` opens the app. Routes already exist at `/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json`.
-- [ ] **Store listing**: short + full description, support URL, screenshots (Claude can make these once the app runs), age rating answers, data-safety / privacy-label answers (Claude can draft).
+- [ ] **Store listing**: drafted in `STORE_LISTING_DRAFT.md`, review it. Still needed:  support URL, screenshots (Claude can make these once the app runs), age rating answers, data-safety / privacy-label answers (Claude can draft).
 - [ ] **Apple review demo account**: create a test player login and give Claude the email/password to put in the review notes.
 - [ ] **Lawyer review** of Privacy Policy and Terms (before public launch).
 
@@ -30,7 +30,7 @@ Branch: `redesign-home`. The native app work is NOT on `main` yet.
 - Podium/avatars and game tiles are not pixel-matched to web art; tour is cards without highlights
 - Replay page tips only resets flags (shows next visit)
 - Google/Discord linking from Profile needs `playerpass://` allowed as a redirect in Clerk; untested
-- Link opened while signed in but unlinked is not saved; staff invite link in onboarding not built
+- (Fixed) staff invite links (`?staff=`) and links opened while signed in but unlinked are now handled; untested on device
 
 ## Decisions pending
 - [ ] Add a staff page in HQ for viewing player reports? (Email only for now.)

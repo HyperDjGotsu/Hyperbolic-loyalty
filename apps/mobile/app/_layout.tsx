@@ -78,6 +78,22 @@ function AuthGuard() {
       .finally(() => { resolving.current = false; });
   }, [isLoaded, isSignedIn, segments]);
 
+  // Signed in but not linked to a player yet, and a deep link (event, kiosk QR) opened: park it and finish onboarding first
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    const seg = segments[0];
+    if (seg !== 'event' && seg !== 'checkin') return;
+    const target = buildPendingPath(pathname, params as Record<string, string | string[] | undefined>);
+    if (!target) return;
+    let cancelled = false;
+    api.get<{ linked?: boolean }>('/api/player/by-clerk').then(async r => {
+      if (cancelled || r.linked !== false) return;
+      await savePendingLink(target);
+      router.replace('/onboarding' as never);
+    }).catch(() => { /* leave the screen as is */ });
+    return () => { cancelled = true; };
+  }, [isLoaded, isSignedIn, segments]);
+
   useEffect(() => {
     if (!isSignedIn) {
       responseListener.current?.remove();
