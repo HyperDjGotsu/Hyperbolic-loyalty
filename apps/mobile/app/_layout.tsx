@@ -1,11 +1,13 @@
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Slot, useGlobalSearchParams, usePathname, useRouter, useSegments } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
 import { Platform } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { tokenCache } from '@/lib/auth';
+import { useApi } from '@/lib/api';
+import { buildPendingPath, clearPendingLink, peekPendingLink, savePendingLink } from '@/lib/pending-link';
 import { registerForPushNotifications } from '@/lib/push';
 import { API_BASE } from '@/lib/config';
 import { useAppFonts } from '@/lib/fonts';
@@ -32,16 +34,48 @@ function AuthGuard() {
   const router = useRouter();
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const api = useApi();
+  const resolving = useRef(false);
+
   useEffect(() => {
     if (!isLoaded) return;
     SplashScreen.hideAsync();
 
     const inAuthGroup = segments[0] === '(auth)';
     if (!isSignedIn && !inAuthGroup) {
-      router.replace('/(auth)/sign-in');
-    } else if (isSignedIn && inAuthGroup) {
-      router.replace('/(tabs)');
+      // Park a kiosk QR / event / referral link so it survives sign-in and onboarding
+      const target = buildPendingPath(pathname, params as Record<string, string | string[] | undefined>);
+      const go = () => router.replace('/(auth)/sign-in');
+      if (target) void savePendingLink(target).then(go); else go();
     }
+  }, [isLoaded, isSignedIn, segments]);
+
+  // Signed in: replay a parked link (after linking, if the player still has to onboard), else leave the auth screens
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || resolving.current) return;
+    const seg = segments[0];
+    if (seg !== '(auth)' && seg !== '(tabs)') return;
+    resolving.current = true;
+    (async () => {
+      const pending = await peekPendingLink();
+      if (!pending) {
+        if (seg === '(auth)') router.replace('/(tabs)');
+        return;
+      }
+      let linked: boolean | null = null;
+      try { linked = !!(await api.get<{ linked?: boolean }>('/api/player/by-clerk')).linked; } catch { linked = null; }
+      if (linked === false) {
+        // Unlinked: onboarding first (pending stays parked until linking finishes)
+        router.replace((pending.startsWith('/onboarding') ? pending : '/onboarding') as never);
+        return;
+      }
+      await clearPendingLink();
+      router.replace('/(tabs)');
+      if (!pending.startsWith('/onboarding')) router.push(pending as never);
+    })().catch(() => { if (seg === '(auth)') router.replace('/(tabs)'); })
+      .finally(() => { resolving.current = false; });
   }, [isLoaded, isSignedIn, segments]);
 
   useEffect(() => {
