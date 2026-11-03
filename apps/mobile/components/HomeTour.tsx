@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
-import { HOME_TOUR_KEY, WELCOME_KEY, getFlag, onWelcomeClosed, setFlag } from '@/lib/first-run';
+import { HOME_TOUR_KEY, WELCOME_KEY, getFlag, onReplay, onWelcomeClosed, setFlag } from '@/lib/first-run';
 import { AppText, Button } from '@/components/kit';
 
 const STOPS = [
@@ -34,7 +34,8 @@ export function HomeTour() {
       if (await getFlag(WELCOME_KEY)) void begin();
     })();
     const off = onWelcomeClosed(() => { void begin(); });
-    return () => { alive = false; off(); };
+    const offReplay = onReplay('tour', () => { if (alive) { setI(0); setActive(true); } });
+    return () => { alive = false; off(); offReplay(); };
   }, []);
 
   async function finish() {

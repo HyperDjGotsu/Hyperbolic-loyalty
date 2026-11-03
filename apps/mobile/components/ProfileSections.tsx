@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Alert, Pressable, Share, View } from 'react-native';
 import { useUser } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
 import { useTheme } from '@/lib/theme-context';
 import { AppText } from '@/components/kit';
-import { HOME_TOUR_KEY, PAGE_INTRO_KEY_PREFIX, WELCOME_KEY } from '@/lib/first-run';
+import { useRouter } from 'expo-router';
+import { HOME_TOUR_KEY, PAGE_INTRO_KEY_PREFIX, requestReplay } from '@/lib/first-run';
 
 // Pieces of the Profile tab that mirror the website's mobile profile page.
 
@@ -139,25 +142,98 @@ export function ReferralExtras({ shareUrl, referrals }: { shareUrl: string; refe
   );
 }
 
-const PROVIDER_NAMES: Record<string, string> = { google: 'Google', discord: 'Discord', apple: 'Apple', facebook: 'Facebook', github: 'GitHub' };
+type Provider = { id: 'google' | 'discord'; strategy: 'oauth_google' | 'oauth_discord'; label: string };
+const PROVIDERS: Provider[] = [
+  { id: 'google', strategy: 'oauth_google', label: 'Google' },
+  { id: 'discord', strategy: 'oauth_discord', label: 'Discord' },
+];
 
-// Read-only list of the sign-in methods on the Clerk account (linking happens on the website).
+function clerkError(e: unknown, fallback: string): string {
+  const err = (e as { errors?: Array<{ longMessage?: string; message?: string }> } | null)?.errors?.[0];
+  return err?.longMessage || err?.message || fallback;
+}
+
+// "Sign-in methods": link Google or Discord for one-tap login, same as the website. Same account either way.
 export function SignInMethods() {
   const { user } = useUser();
   const { colors, card } = useCard();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState('');
   if (!user) return null;
   const accounts = user.externalAccounts ?? [];
   const email = user.primaryEmailAddress?.emailAddress;
+  const accountFor = (p: Provider) => accounts.find(a => String(a.provider) === p.id || String(a.provider) === p.strategy);
+  const signInMethods = accounts.length + (user.passwordEnabled ? 1 : 0);
+
+  async function connect(p: Provider) {
+    if (!user || busy) return;
+    setBusy(p.id);
+    setError('');
+    try {
+      const redirectUrl = Linking.createURL('/profile');
+      const res = await user.createExternalAccount({ strategy: p.strategy, redirectUrl });
+      const url = res.verification?.externalVerificationRedirectURL;
+      if (!url) { setError(`Could not start the ${p.label} connection. Try again.`); return; }
+      await WebBrowser.openAuthSessionAsync(url.toString(), redirectUrl);
+      await user.reload();
+      const linked = (user.externalAccounts ?? []).some(a => String(a.provider) === p.id || String(a.provider) === p.strategy);
+      if (!linked) setError(`${p.label} was not connected. Try again.`);
+    } catch (e) {
+      setError(clerkError(e, `Could not connect ${p.label}. Try again.`));
+    } finally { setBusy(null); }
+  }
+
+  function confirmDisconnect(p: Provider) {
+    Alert.alert(`Disconnect ${p.label}?`, 'You will no longer be able to sign in with it.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Disconnect', style: 'destructive', onPress: () => void disconnect(p) },
+    ]);
+  }
+
+  async function disconnect(p: Provider) {
+    const acct = accountFor(p);
+    if (!user || !acct || busy) return;
+    setBusy(p.id);
+    setError('');
+    try {
+      await acct.destroy();
+      await user.reload();
+    } catch (e) {
+      setError(clerkError(e, `Could not disconnect ${p.label}. Try again.`));
+    } finally { setBusy(null); }
+  }
+
+  const other = accounts.filter(a => !PROVIDERS.some(p => String(a.provider) === p.id || String(a.provider) === p.strategy));
   return (
     <>
       <SectionTitle>Sign-in methods</SectionTitle>
       <View style={card}>
-        <AppText variant="caption" tone="tertiary" style={{ marginBottom: 6 }}>Ways you can log in to this account.</AppText>
+        <AppText variant="caption" tone="tertiary" style={{ marginBottom: 6 }}>Connect Google or Discord to sign in with one tap. It is the same account either way.</AppText>
         {email ? <Row label="Email" detail={email} /> : null}
-        {accounts.map(a => (
-          <Row key={a.id} label={PROVIDER_NAMES[String(a.provider)] ?? String(a.provider)} detail={a.emailAddress || a.username || 'Connected'} />
-        ))}
-        <AppText variant="caption" tone="tertiary" style={{ marginTop: 8, color: colors.textTertiary }}>To link Google or Discord, open Profile on the website.</AppText>
+        {PROVIDERS.map(p => {
+          const acct = accountFor(p);
+          const lastOne = !!acct && signInMethods <= 1;
+          const working = busy === p.id;
+          return (
+            <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
+              <View style={{ flex: 1 }}>
+                <AppText variant="body" style={{ fontWeight: '600' }}>{p.label}</AppText>
+                <AppText variant="caption" tone="tertiary" numberOfLines={1}>{acct ? (acct.username || acct.emailAddress || 'Connected') : 'Not connected'}</AppText>
+              </View>
+              {acct ? (
+                <Pressable disabled={busy !== null || lastOne} onPress={() => confirmDisconnect(p)} hitSlop={8} style={{ opacity: busy !== null || lastOne ? 0.4 : 1 }}>
+                  <AppText variant="caption" tone="secondary" style={{ fontWeight: '700' }}>{working ? '...' : lastOne ? 'Only sign-in' : 'Disconnect'}</AppText>
+                </Pressable>
+              ) : (
+                <Pressable disabled={busy !== null} onPress={() => void connect(p)} style={{ opacity: busy !== null ? 0.5 : 1, backgroundColor: colors.accent, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 }}>
+                  <AppText variant="caption" style={{ color: colors.accentFg, fontWeight: '800' }}>{working ? '...' : 'Connect'}</AppText>
+                </Pressable>
+              )}
+            </View>
+          );
+        })}
+        {other.map(a => <Row key={a.id} label={String(a.provider)} detail={a.emailAddress || a.username || 'Connected'} />)}
+        {error ? <AppText variant="caption" style={{ marginTop: 8, color: colors.danger }}>{error}</AppText> : null}
       </View>
     </>
   );
@@ -178,9 +254,12 @@ async function clear(keys: string[]) {
 }
 
 export function ReplayLinks() {
+  const router = useRouter();
+  const goHome = () => { try { router.navigate('/(tabs)'); } catch { /* stay put */ } };
   const items = [
-    { label: 'Replay welcome tour', run: async () => { await clear([WELCOME_KEY]); await SecureStore.setItemAsync(HOME_TOUR_KEY, 'true').catch(() => {}); Alert.alert('Welcome tour reset', 'It will play the next time you open the app.'); } },
-    { label: 'Replay Home walkthrough', run: async () => { await clear([HOME_TOUR_KEY]); Alert.alert('Walkthrough reset', 'It will play the next time you open the app.'); } },
+    // Welcome slides first; the Home walkthrough follows them on its own.
+    { label: 'Replay welcome tour', run: async () => { await clear([HOME_TOUR_KEY]); goHome(); requestReplay('welcome'); } },
+    { label: 'Replay Home walkthrough', run: async () => { await clear([HOME_TOUR_KEY]); goHome(); requestReplay('tour'); } },
     { label: 'Replay page tips', run: async () => { await clear(['events', 'community', 'prize-wall', 'profile'].map(k => PAGE_INTRO_KEY_PREFIX + k)); Alert.alert('Page tips reset', 'Tips will show again when you open each tab.'); } },
   ];
   return (

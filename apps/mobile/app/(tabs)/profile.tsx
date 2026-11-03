@@ -152,7 +152,7 @@ export default function ProfileScreen() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const api = useApi();
   const insets = useSafeAreaInsets();
-  const { colors, tone, setTone } = useTheme();
+  const { colors, tone, setTone, pref, setPref } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [statusText, setStatusText] = useState<string | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
@@ -556,7 +556,16 @@ export default function ProfileScreen() {
           <View style={styles.flex}><Text style={styles.settingsTitle}>Backdrop</Text><Text style={styles.helper}>Art behind your profile and Home card</Text></View>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
-        <Text style={[styles.helper, { marginTop: 12, marginBottom: 8 }]}>Theme</Text>
+        <Text style={[styles.helper, { marginTop: 12, marginBottom: 8 }]}>Mode</Text>
+        <View style={{ flexDirection: 'row', borderRadius: 12, padding: 3, backgroundColor: colors.bgElevated, marginBottom: 12 }}>
+          {([{ id: 'system', label: 'System' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }] as const).map(m => (
+            <Pressable key={m.id} onPress={() => setPref(m.id)} accessibilityRole="button" accessibilityState={{ selected: pref === m.id }}
+              style={{ flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center', backgroundColor: pref === m.id ? colors.accent : 'transparent' }}>
+              <Text style={{ color: pref === m.id ? colors.accentFg : colors.textSecondary, fontSize: 13, fontWeight: '700' }}>{m.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={[styles.helper, { marginBottom: 8 }]}>Theme</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {(Object.keys(TONES) as ToneKey[]).map(k => {
             const t = TONES[k];

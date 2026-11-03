@@ -20,3 +20,23 @@ export function onWelcomeClosed(fn: () => void): () => void {
   return () => { listeners.delete(fn); };
 }
 export function emitWelcomeClosed() { listeners.forEach(fn => fn()); }
+
+// Replay requests from Profile. Home's WelcomeOverlay / HomeTour subscribe; if Home has not mounted yet the
+// request waits and is delivered as soon as something subscribes.
+export type ReplayKind = 'welcome' | 'tour';
+const replayListeners = new Map<ReplayKind, Set<() => void>>();
+const pendingReplay = new Set<ReplayKind>();
+
+export function requestReplay(kind: ReplayKind) {
+  const subs = replayListeners.get(kind);
+  if (subs && subs.size > 0) subs.forEach(fn => fn());
+  else pendingReplay.add(kind);
+}
+
+export function onReplay(kind: ReplayKind, fn: () => void): () => void {
+  let subs = replayListeners.get(kind);
+  if (!subs) { subs = new Set(); replayListeners.set(kind, subs); }
+  subs.add(fn);
+  if (pendingReplay.delete(kind)) fn();
+  return () => { subs!.delete(fn); };
+}

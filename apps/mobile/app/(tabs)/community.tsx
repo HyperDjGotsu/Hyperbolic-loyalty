@@ -444,7 +444,31 @@ export default function CommunityScreen() {
                     {memberRow({ ...toMember(mine), odid: mine.odid })}
                   </View>
                 )}
-                {shown.map(e => memberRow(toMember(e)))}
+                {shown.length >= 3 && (
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingBottom: 8 }}>
+                    {[shown[1], shown[0], shown[2]].map(e => {
+                      const anon = !!e.hidden;
+                      const first = shown[0].odid === e.odid;
+                      const medal = first ? '#f4c542' : shown[1].odid === e.odid ? '#d4d4d8' : '#c97c3a';
+                      const place = shown.indexOf(e) + 1;
+                      return (
+                        <Pressable
+                          key={e.odid}
+                          onPress={() => { if (e.odid !== meId && !anon) setActionFor(toMember(e)); }}
+                          style={{ flex: 1, alignItems: 'center', borderRadius: 26, borderWidth: 1, borderColor: colors.border, backgroundColor: first ? colors.bgElevated : colors.bgSurface, paddingHorizontal: 6, paddingTop: first ? 28 : 20, paddingBottom: first ? 20 : 16 }}
+                        >
+                          <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: medal, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                            <AppText variant="caption" style={{ color: place === 3 ? '#fff' : '#000', fontWeight: '800', fontSize: 14 }}>{place}</AppText>
+                          </View>
+                          <AvatarBubble avatar={anon ? { type: 'emoji', base: '❓', photoUrl: null, background: colors.bgElevated, frame: 'none', badge: null } : e.avatar} size={first ? 56 : 44} />
+                          <AppText variant="body" numberOfLines={1} style={{ fontWeight: '700', fontSize: 14, marginTop: 8, alignSelf: 'stretch', textAlign: 'center' }}>{anon ? 'Anonymous' : e.name}</AppText>
+                          <AppText variant="caption" style={{ color: colors.xp, fontWeight: '600', fontVariant: ['tabular-nums'] }}>{e.totalXp.toLocaleString()}</AppText>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
+                {(shown.length >= 3 ? shown.slice(3) : shown).map(e => memberRow(toMember(e)))}
               </>
             )}
           </ScrollView>

@@ -3,7 +3,7 @@ import { Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApi } from '@/lib/api';
 import { useTheme } from '@/lib/theme-context';
-import { WELCOME_KEY, emitWelcomeClosed, getFlag, setFlag } from '@/lib/first-run';
+import { WELCOME_KEY, emitWelcomeClosed, getFlag, onReplay, setFlag } from '@/lib/first-run';
 import { AppText, Button } from '@/components/kit';
 
 type StoreConfig = { store_name: string; shop_title: string; currency_name: string };
@@ -30,14 +30,18 @@ export function WelcomeOverlay() {
 
   useEffect(() => {
     let alive = true;
-    (async () => {
-      if (await getFlag(WELCOME_KEY)) return;
+    const show = () => {
       api.get<Partial<StoreConfig>>('/api/store-config')
         .then(d => { if (alive && d) setCfg({ ...DEFAULTS, ...d }); })
         .catch(() => {});
-      if (alive) setVisible(true);
+      if (alive) { setSlide(0); setVisible(true); }
+    };
+    (async () => {
+      if (await getFlag(WELCOME_KEY)) return;
+      show();
     })();
-    return () => { alive = false; };
+    const off = onReplay('welcome', show);
+    return () => { alive = false; off(); };
   }, []);
 
   async function dismiss() {
