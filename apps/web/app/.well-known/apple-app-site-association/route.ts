@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const team = process.env.APPLE_TEAM_ID;
   const details = team
-    ? [{ appID: `${team}.gg.playerpass.app`, paths: ['/event/*'] }]
+    ? [{ appID: `${team}.gg.playerpass.app`, paths: ['/event/*', '/checkin', '/checkin/*', '/onboarding'] }]
     : [];
   return NextResponse.json({ applinks: { apps: [], details } });
 }

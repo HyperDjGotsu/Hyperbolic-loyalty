@@ -26,6 +26,13 @@ Branch: `redesign-home`. The native app work is NOT on `main` yet.
 - [ ] Run on your phone: Claude will make a preview build once the EAS env vars are in (`eas build --profile preview`). Test: sign in, Events interest/share, Alerts tap, Prize Wall, Profile themes, report/block.
 - [ ] Notification icon: white-on-transparent PNG for Android (optional, nicer than the current app icon).
 
+## Known gaps vs the website (not blockers)
+- Friend-shares inbox / FriendsFab, daily-spin red dot, full tap-to-expand game cards, podium layout on Ranks
+- Linking Google/Discord from Profile (list is read-only, points to website); light/dark toggle (app uses the six-tone picker)
+- Home hero uses an XP bar, not the ring; tour is cards without highlights
+- Deep link through sign-in for kiosk QR; staff invite link in onboarding
+- Replay-tour links in Profile only take effect next time Home opens
+
 ## Decisions pending
 - [ ] Add a staff page in HQ for viewing player reports? (Email only for now.)
 - [ ] Merge native app work to `main` when you say so.

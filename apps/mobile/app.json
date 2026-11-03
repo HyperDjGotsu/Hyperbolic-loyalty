@@ -105,6 +105,16 @@
               "scheme": "https",
               "host": "playerpass.gg",
               "pathPrefix": "/event"
+            },
+            {
+              "scheme": "https",
+              "host": "playerpass.gg",
+              "pathPrefix": "/checkin"
+            },
+            {
+              "scheme": "https",
+              "host": "playerpass.gg",
+              "pathPrefix": "/onboarding"
             }
           ],
           "category": [
