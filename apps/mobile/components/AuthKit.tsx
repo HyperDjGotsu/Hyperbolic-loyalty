@@ -80,11 +80,19 @@ export function SsoButtons({ onError }: { onError: (message: string) => void }) 
     setBusy(strategy);
     onError('');
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
         strategy,
         redirectUrl: AuthSession.makeRedirectUri({ scheme: 'playerpass', path: 'sso-callback' }),
       });
       if (createdSessionId && setActive) await setActive({ session: createdSessionId });
+      else if (signUp && signUp.status === 'missing_requirements') {
+        const missing = (signUp.missingFields ?? []).join(', ');
+        onError(`Your account needs one more detail${missing ? ` (${missing})` : ''}. Sign up with email instead, or try again.`);
+      } else if (signIn && ((signIn.status as string) === 'needs_second_factor' || (signIn.status as string) === 'needs_client_trust')) {
+        onError('This account needs extra verification. Sign in with your email and password to continue.');
+      } else {
+        onError('Sign in did not finish. Please try again.');
+      }
     } catch (e) {
       onError(clerkError(e, 'Sign in was cancelled or failed. Try again.'));
     } finally {
@@ -98,4 +106,29 @@ export function SsoButtons({ onError }: { onError: (message: string) => void }) 
       {Platform.OS === 'ios' && <Button label="Continue with Apple" variant="secondary" loading={busy === 'oauth_apple'} disabled={busy !== null} onPress={() => run('oauth_apple')} />}
     </View>
   );
+}
+
+// ---- Second factor (email_code / phone_code / totp) shared by sign-in ----
+export type SecondFactorStrategy = 'email_code' | 'phone_code' | 'totp';
+type FactorSignIn = {
+  supportedSecondFactors?: Array<{ strategy: string; emailAddressId?: string; phoneNumberId?: string }> | null;
+  prepareSecondFactor: (p: Record<string, string>) => Promise<unknown>;
+};
+
+// Picks the best supported second factor and sends a code when the strategy needs one.
+export async function beginSecondFactor(signIn: FactorSignIn): Promise<SecondFactorStrategy | null> {
+  const factors = signIn.supportedSecondFactors ?? [];
+  const pick = (s: string) => factors.find(f => f.strategy === s);
+  const email = pick('email_code');
+  if (email) { await signIn.prepareSecondFactor({ strategy: 'email_code', ...(email.emailAddressId ? { emailAddressId: email.emailAddressId } : {}) }); return 'email_code'; }
+  const phone = pick('phone_code');
+  if (phone) { await signIn.prepareSecondFactor({ strategy: 'phone_code', ...(phone.phoneNumberId ? { phoneNumberId: phone.phoneNumberId } : {}) }); return 'phone_code'; }
+  if (pick('totp')) return 'totp';
+  return null;
+}
+
+export function secondFactorHint(s: SecondFactorStrategy): string {
+  if (s === 'email_code') return 'Enter the code we emailed you';
+  if (s === 'phone_code') return 'Enter the code we texted you';
+  return 'Enter the code from your authenticator app';
 }

@@ -3,7 +3,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { AppText, Button } from '@/components/kit';
-import { AuthShell, Field, FormError, clerkError } from '@/components/AuthKit';
+import { AuthShell, Field, FormError, beginSecondFactor, clerkError, secondFactorHint, type SecondFactorStrategy } from '@/components/AuthKit';
 
 export default function ForgotPasswordScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -13,6 +13,8 @@ export default function ForgotPasswordScreen() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [factor, setFactor] = useState<SecondFactorStrategy | null>(null);
+  const [code2, setCode2] = useState('');
 
   async function sendCode() {
     if (!isLoaded) return;
@@ -35,12 +37,41 @@ export default function ForgotPasswordScreen() {
     try {
       const result = await signIn.attemptFirstFactor({ strategy: 'reset_password_email_code', code, password });
       if (result.status === 'complete') await setActive({ session: result.createdSessionId });
-      else setError('Additional verification required. Please use the web app.');
+      else if (result.status === 'needs_second_factor') {
+        const strategy = await beginSecondFactor(signIn as never);
+        if (strategy) setFactor(strategy);
+        else setError('This account needs a verification method the app does not support yet. Contact support.');
+      } else setError('Could not finish resetting your password. Please try again.');
     } catch (e) {
       setError(clerkError(e, 'Could not reset your password'));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function verifySecondFactor() {
+    if (!isLoaded || !factor) return;
+    setLoading(true);
+    setError('');
+    try {
+      const result = await signIn.attemptSecondFactor({ strategy: factor, code: code2.trim() });
+      if (result.status === 'complete') await setActive({ session: result.createdSessionId });
+      else setError('Verification could not be completed. Please try again.');
+    } catch (e) {
+      setError(clerkError(e, 'That code did not work'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (factor) {
+    return (
+      <AuthShell title="Verify it's you" subtitle={secondFactorHint(factor)}>
+        <Field placeholder="Code" keyboardType="number-pad" autoComplete="one-time-code" maxLength={8} value={code2} onChangeText={setCode2} />
+        <FormError message={error} />
+        <Button label="Verify" onPress={verifySecondFactor} loading={loading} disabled={code2.trim().length < 6} />
+      </AuthShell>
+    );
   }
 
   return (

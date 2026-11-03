@@ -8,6 +8,7 @@ import { PageIntro } from '@/components/PageIntro';
 import { AppText, Button, Skeleton } from '@/components/kit';
 import { useAlertsContext } from '@/lib/alerts-context';
 import { SELECTABLE_GAMES } from '@/lib/games';
+import { useSelectedStoreId } from '@/lib/selected-store';
 
 type Avatar = {
   type: 'emoji' | 'photo';
@@ -26,6 +27,7 @@ type LeaderboardEntry = {
   totalXp: number;
   level: number;
   hidden: boolean;
+  status?: string | null;
   avatar: Avatar;
 };
 
@@ -80,7 +82,7 @@ function AvatarBubble({ avatar, size = 40 }: { avatar: Avatar; size?: number }) 
   return <View style={box}><AppText style={{ fontSize: size * 0.5 }}>{avatar.base}</AppText></View>;
 }
 
-type Member = { odid: string; name: string; avatar: Avatar; level?: number | null; totalXp?: number | null; rank?: number; isFriend?: boolean };
+type Member = { odid: string; name: string; avatar: Avatar; level?: number | null; totalXp?: number | null; rank?: number; isFriend?: boolean; status?: string | null; hidden?: boolean };
 
 export default function CommunityScreen() {
   const api = useApi();
@@ -108,7 +110,16 @@ export default function CommunityScreen() {
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
   const [requestsSent, setRequestsSent] = useState<Set<string>>(new Set());
   const [sendingRequest, setSendingRequest] = useState(false);
-  const homeStoreId = useRef<string | null>(null);
+  const [homeStoreId, setHomeStoreId] = useState<string | null>(null);
+  const [homeLoaded, setHomeLoaded] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
+  const [selectedStoreId] = useSelectedStoreId();
+  const [storeNames, setStoreNames] = useState<Record<string, string>>({});
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [draftFavorites, setDraftFavorites] = useState<string[]>([]);
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [savingFavorites, setSavingFavorites] = useState(false);
+  const storeId = selectedStoreId ?? homeStoreId;
   const friendsLoaded = useRef(false);
   const friendsLoadInFlight = useRef(false);
   const inFlightPrefs = useRef(new Set<string>());
@@ -116,7 +127,7 @@ export default function CommunityScreen() {
   useEffect(() => {
     if (!searchOpen) return;
     const query = searchQuery.trim();
-    if (!query) { setSearchResults([]); setSearching(false); return; }
+    if (query.length < 2) { setSearchResults([]); setSearching(false); return; }
     setSearching(true);
     let cancelled = false;
     const timer = setTimeout(() => {
@@ -139,58 +150,67 @@ export default function CommunityScreen() {
     api.get<{ id?: string }>('/api/player/by-clerk').then(d => setMeId(d.id ?? null)).catch(() => {});
   }, []);
 
-  // Load the player's homeStoreId once so we know what to pass to the store leaderboard
+  // Home store (fallback when no store is selected), store names and favorite games.
   useEffect(() => {
     api.get<{ homeStoreId: string | null }>('/api/player/pass-status')
-      .then(d => {
-        homeStoreId.current = d.homeStoreId ?? null;
-        // Default to network if no home store
-        if (!d.homeStoreId) setScope('network');
-        loadLeaderboard('overall', d.homeStoreId ?? null, scope);
-      })
-      .catch(() => {
-        setScope('network');
-        loadLeaderboard('overall', null, 'network');
-      });
+      .then(d => setHomeStoreId(d.homeStoreId ?? null))
+      .catch(() => {})
+      .finally(() => setHomeLoaded(true));
+    api.get<{ stores: Array<{ id: string; name: string }> }>('/api/stores')
+      .then(d => setStoreNames(Object.fromEntries((d.stores ?? []).map(st => [st.id, st.name]))))
+      .catch(() => {});
+    api.get<{ favorites: string[] }>('/api/player/favorite-games')
+      .then(d => setFavorites(d.favorites ?? []))
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadLeaderboard(
-    g: string = game,
-    storeId: string | null = homeStoreId.current,
-    s: 'store' | 'network' = scope,
-  ) {
+  // No store to scope to means the network board.
+  useEffect(() => { if (homeLoaded && !storeId) setScope('network'); }, [homeLoaded, storeId]);
+
+  useEffect(() => {
+    if (!homeLoaded) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const gameParam = game !== 'overall' ? `&game=${encodeURIComponent(game)}` : '';
+        const storeParam = scope === 'store' && storeId ? `&store_id=${encodeURIComponent(storeId)}` : '';
+        const data = await api.get<{ leaderboard: LeaderboardEntry[]; me?: LeaderboardEntry | null }>(
+          `/api/community/leaderboard?limit=50${gameParam}${storeParam}`
+        );
+        if (cancelled) return;
+        setEntries(data.leaderboard ?? []);
+        setMeEntry(data.me ?? null);
+      } catch {
+        if (!cancelled) setEntries([]);
+      } finally {
+        if (!cancelled) { setLoading(false); setRefreshing(false); }
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeLoaded, game, scope, storeId, reloadTick]);
+
+  function handleScope(s: 'store' | 'network') { setScope(s); setLoading(true); }
+  function handleGame(g: string) { setGame(g); setLoading(true); }
+  function onRefresh() { setRefreshing(true); setReloadTick(t => t + 1); }
+
+  function openFavorites() { setDraftFavorites(favorites); setFavoritesOpen(true); }
+  function toggleFavorite(id: string) {
+    setDraftFavorites(current => {
+      if (current.includes(id)) return current.filter(v => v !== id);
+      return current.length < 8 ? [...current, id] : current;
+    });
+  }
+  async function saveFavorites() {
+    setSavingFavorites(true);
     try {
-      const gameParam = g !== 'overall' ? `&game=${g}` : '';
-      const storeParam = s === 'store' && storeId ? `&store_id=${storeId}` : '';
-      const data = await api.get<{ leaderboard: LeaderboardEntry[]; me?: LeaderboardEntry | null }>(
-        `/api/community/leaderboard?limit=50${gameParam}${storeParam}`
-      );
-      setEntries(data.leaderboard ?? []);
-      setMeEntry(data.me ?? null);
-    } catch {
-      setEntries([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }
-
-  function handleScope(s: 'store' | 'network') {
-    setScope(s);
-    setLoading(true);
-    loadLeaderboard(game, homeStoreId.current, s);
-  }
-
-  function handleGame(g: string) {
-    setGame(g);
-    setLoading(true);
-    loadLeaderboard(g, homeStoreId.current, scope);
-  }
-
-  function onRefresh() {
-    setRefreshing(true);
-    loadLeaderboard(game, homeStoreId.current, scope);
+      const data = await api.post<{ favorites: string[] }>('/api/player/favorite-games', { favorites: draftFavorites });
+      const next = data.favorites ?? draftFavorites;
+      setFavorites(next);
+      if (game !== 'overall' && !next.includes(game)) { setGame('overall'); setLoading(true); }
+      setFavoritesOpen(false);
+    } catch { Alert.alert('Could not save', 'Please try again.'); } finally { setSavingFavorites(false); }
   }
 
   async function loadFriends(showLoading = true) {
@@ -331,13 +351,14 @@ export default function CommunityScreen() {
     ], { cancelable: true });
   }
 
+  const chipGames = favorites.length ? GAMES.filter(g => g.id === 'overall' || favorites.includes(g.id)) : GAMES;
   const shown = entries.filter(e => !blocked.has(e.odid));
   const mine = meEntry ?? shown.find(e => e.odid === meId) ?? null;
 
   const memberRow = (m: Member, right?: React.ReactNode) => (
     <Pressable
       key={m.odid}
-      onPress={() => m.odid !== meId && setActionFor(m)}
+      onPress={() => { if (m.odid !== meId && !m.hidden) setActionFor(m); }}
       style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, borderWidth: 1, borderColor: m.odid === meId ? colors.accent : colors.border, backgroundColor: colors.bgSurface }}
     >
       {m.rank != null && <AppText variant="numeral" style={{ width: 44, fontSize: 16, color: rankColor(m.rank, colors.textTertiary) }}>#{m.rank}</AppText>}
@@ -346,11 +367,16 @@ export default function CommunityScreen() {
         <AppText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>{m.name}{m.odid === meId ? ' (you)' : ''}</AppText>
         {m.level != null && <AppText variant="caption" tone="secondary">Lv.{m.level}</AppText>}
       </View>
+      {m.rank != null && m.rank <= 5 && (
+        <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: colors.bgElevated }}>
+          <AppText variant="caption" style={{ fontSize: 10, fontWeight: '800', color: '#ef4444' }}>WANTED</AppText>
+        </View>
+      )}
       {right ?? (m.totalXp != null ? <AppText variant="numeral" style={{ fontSize: 16 }}>{m.totalXp.toLocaleString()}</AppText> : null)}
     </Pressable>
   );
 
-  const toMember = (e: LeaderboardEntry): Member => ({ odid: e.odid, name: e.hidden ? 'Anonymous' : e.name, avatar: e.avatar, level: e.level, totalXp: e.totalXp, rank: e.rank });
+  const toMember = (e: LeaderboardEntry): Member => ({ odid: e.odid, name: e.hidden ? 'Anonymous' : e.name, avatar: e.avatar, level: e.level, totalXp: e.totalXp, rank: e.rank, status: e.status ?? null, hidden: e.hidden });
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bgBase }}>
@@ -378,20 +404,23 @@ export default function CommunityScreen() {
         <>
           <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 12 }}>
             {(['store', 'network'] as const).map(sc => {
-              const off = sc === 'store' && !homeStoreId.current;
+              const off = sc === 'store' && !storeId;
               return (
                 <Pressable key={sc} disabled={off} onPress={() => handleScope(sc)} style={{ flex: 1, paddingVertical: 9, borderRadius: 12, alignItems: 'center', opacity: off ? 0.4 : 1, backgroundColor: scope === sc ? colors.accent : colors.bgElevated }}>
-                  <AppText variant="caption" style={{ fontWeight: '700', fontSize: 14, color: scope === sc ? colors.accentFg : colors.textSecondary }}>{sc === 'store' ? 'My Store' : 'Network'}</AppText>
+                  <AppText variant="caption" style={{ fontWeight: '700', fontSize: 14, color: scope === sc ? colors.accentFg : colors.textSecondary }}>{sc === 'store' ? (storeId && storeNames[storeId]) || 'My Store' : 'Network'}</AppText>
                 </Pressable>
               );
             })}
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}>
-            {GAMES.map(g => (
+            {chipGames.map(g => (
               <Pressable key={g.id} onPress={() => handleGame(g.id)} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: game === g.id ? colors.accent : colors.bgElevated }}>
                 <AppText variant="caption" style={{ fontSize: 14, color: game === g.id ? colors.accentFg : colors.textSecondary }}>{g.icon} {g.label}</AppText>
               </Pressable>
             ))}
+            <Pressable onPress={openFavorites} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.border }}>
+              <AppText variant="caption" style={{ fontSize: 14, color: colors.accent }}>{favorites.length ? 'Edit' : '+ Favorites'}</AppText>
+            </Pressable>
           </ScrollView>
           <ScrollView
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, gap: 8 }}
@@ -448,7 +477,7 @@ export default function CommunityScreen() {
               {friends.length > 0 ? (
                 <View style={{ gap: 8 }}>
                   <AppText variant="eyebrow" tone="tertiary">Friends ({friends.length})</AppText>
-                  {friends.map(f => memberRow({ odid: f.odid, name: f.name, avatar: f.avatar, level: f.level, totalXp: f.totalXp, isFriend: true }))}
+                  {friends.map(f => memberRow({ odid: f.odid, name: f.name, avatar: f.avatar, level: f.level, totalXp: f.totalXp, isFriend: true, status: f.status }))}
                 </View>
               ) : friendRequests.length === 0 ? (
                 <View style={{ alignItems: 'center', paddingVertical: 48, gap: 6 }}>
@@ -474,6 +503,7 @@ export default function CommunityScreen() {
                 {actionFor.level != null && <AppText variant="caption" tone="secondary">Lv.{actionFor.level}{actionFor.totalXp != null ? ` · ${actionFor.totalXp.toLocaleString()} XP` : ''}</AppText>}
               </View>
             </View>
+            {actionFor.status ? <AppText variant="body" tone="secondary" style={{ marginBottom: 4 }}>{actionFor.status}</AppText> : null}
             {friends.some(f => f.odid === actionFor.odid) ? (
               <Button label="Remove friend" variant="secondary" onPress={() => { void unfriend(actionFor.odid); setActionFor(null); }} />
             ) : requestsSent.has(actionFor.odid) ? (
@@ -487,6 +517,27 @@ export default function CommunityScreen() {
         )}
       </Modal>
 
+      <Modal visible={favoritesOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setFavoritesOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: colors.bgBase, paddingTop: insets.top }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+            <Pressable onPress={() => setFavoritesOpen(false)}><AppText variant="body" tone="accent" style={{ fontWeight: '700' }}>Cancel</AppText></Pressable>
+            <AppText variant="title">Favorite Games</AppText>
+            <Pressable disabled={savingFavorites} onPress={saveFavorites}><AppText variant="body" tone="accent" style={{ fontWeight: '700' }}>{savingFavorites ? 'Saving…' : 'Save'}</AppText></Pressable>
+          </View>
+          <ScrollView contentContainerStyle={{ padding: 16, gap: 8, flexDirection: 'row', flexWrap: 'wrap' }}>
+            {SELECTABLE_GAMES.map(g => {
+              const on = draftFavorites.includes(g.id);
+              return (
+                <Pressable key={g.id} onPress={() => toggleFavorite(g.id)} style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, backgroundColor: on ? colors.accent : colors.bgElevated }}>
+                  <AppText variant="caption" style={{ fontSize: 14, color: on ? colors.accentFg : colors.textSecondary }}>{g.icon} {g.name}</AppText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+          <AppText variant="caption" tone="tertiary" style={{ textAlign: 'center', paddingBottom: insets.bottom + 12 }}>Pick up to 8 games</AppText>
+        </View>
+      </Modal>
+
       <Modal visible={searchOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={closeSearch}>
         <View style={{ flex: 1, backgroundColor: colors.bgBase, paddingTop: insets.top }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
@@ -497,9 +548,15 @@ export default function CommunityScreen() {
             />
             <Pressable onPress={closeSearch}><AppText variant="body" tone="accent" style={{ fontWeight: '700' }}>Cancel</AppText></Pressable>
           </View>
-          {searching ? (
+          {searchQuery.trim().length < 2 ? (
+            <View style={{ alignItems: 'center', marginTop: 40, gap: 6, paddingHorizontal: 24 }}>
+              <Feather name="search" size={28} color={colors.textTertiary} />
+              <AppText variant="title">Find players</AppText>
+              <AppText variant="body" tone="secondary" style={{ textAlign: 'center' }}>Search by name or player ID (at least 2 characters)</AppText>
+            </View>
+          ) : searching ? (
             <ActivityIndicator style={{ marginTop: 32 }} color={colors.accent} />
-          ) : searchQuery.trim() && searchResults.length === 0 ? (
+          ) : searchResults.length === 0 ? (
             <AppText variant="body" tone="secondary" style={{ textAlign: 'center', marginTop: 32 }}>No players found</AppText>
           ) : (
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>

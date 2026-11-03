@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useUser } from '@clerk/clerk-expo';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,7 +20,7 @@ import LegalLinks from '@/components/LegalLinks';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type Store = { id: string; name: string; city: string; is_flagship: boolean };
+type Store = { id: string; slug?: string; name: string; city: string; is_flagship: boolean };
 type Mode = 'choice' | 'link' | 'create';
 type Step = 'age' | 'profile' | 'store';
 
@@ -32,6 +33,11 @@ const GAMES = SELECTABLE_GAMES;
 export default function OnboardingScreen() {
   const api = useApi();
   const router = useRouter();
+  const { user } = useUser();
+  const params = useLocalSearchParams<{ ref?: string | string[]; store?: string | string[] }>();
+  const refParam = (Array.isArray(params.ref) ? params.ref[0] : params.ref) ?? '';
+  const storeParam = (Array.isArray(params.store) ? params.store[0] : params.store) ?? '';
+  const [checkingLink, setCheckingLink] = useState(true);
 
   const [mode, setMode] = useState<Mode>('create');
   const [step, setStep] = useState<Step>('age');
@@ -81,6 +87,36 @@ export default function OnboardingScreen() {
 
   // Load stores on mount
   useEffect(() => { loadStores(); }, []);
+
+  // Linked players skip onboarding (matches the website's redirect to the dashboard).
+  useEffect(() => {
+    let cancelled = false;
+    api.get<{ linked?: boolean }>('/api/player/by-clerk')
+      .then(d => { if (!cancelled && d.linked) router.replace('/(tabs)' as never); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setCheckingLink(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Prefill display name from the Clerk profile once, if the player has not typed anything.
+  useEffect(() => {
+    if (!user) return;
+    const name = user.firstName || user.username || '';
+    if (name) setDisplayName(cur => cur || name.slice(0, 30));
+  }, [user?.id]);
+
+  // ?ref= deep link (https://.../onboarding?ref=CODE or playerpass://onboarding?ref=CODE)
+  useEffect(() => {
+    const code = refParam.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+    if (code) setReferralCode(cur => cur || code);
+  }, [refParam]);
+
+  // ?store=<slug> preselects the home store
+  useEffect(() => {
+    if (!storeParam || stores.length === 0) return;
+    const match = stores.find(st => st.slug === storeParam);
+    if (match) setHomeStoreId(cur => cur || match.id);
+  }, [storeParam, stores]);
 
   // Referral code validation with debounce
   useEffect(() => {
@@ -165,6 +201,10 @@ export default function OnboardingScreen() {
   function reset() { setError(''); setStep('profile'); router.back(); }
 
   // ─── Render ────────────────────────────────────────────────────────────────
+
+  if (checkingLink) {
+    return <View style={[styles.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={C.accent} /></View>;
+  }
 
   return (
     <KeyboardAvoidingView
