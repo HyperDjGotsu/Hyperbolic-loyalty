@@ -31,4 +31,4 @@ Branch: `redesign-home`. The native app work is NOT on `main` yet.
 - [ ] Merge native app work to `main` when you say so.
 
 ## Done by Claude (for reference)
-Phase 0 blockers (age gate, QR check-in, tiers, legal links, push routing) · Phase 1 design system · Events, Alerts, Prize Wall, Home, Profile, Community rebuilt · Google/Apple/password-reset auth screens · player reports + block (server enforced) · universal-link config · welcome/tour (in progress).
+Phase 0 blockers (age gate, QR check-in, tiers, legal links, push routing) · Phase 1 design system · Events, Alerts, Prize Wall, Home, Profile, Community rebuilt · Google/Apple/password-reset auth screens · player reports + block (server enforced) · universal-link config · welcome overlay, home tour, page intros.

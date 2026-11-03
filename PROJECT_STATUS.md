@@ -376,3 +376,13 @@ Branches `redesign-home` and `desktop-polish` are identical (head `a77eb6c`). Pr
 **Still to test on production after merge (needs two accounts):** wrap-up end to end, friend shares, Dj2/real-account signup flow, kiosk with two live events.
 
 **Deferred:** kiosk server-side lock / kiosk-only account; per-placement point bonuses; guides for remaining HQ tabs; Event Credit HQ redemptions screen; missing cover art (user has the files); calculator ignores Diamond credit; lawyer review of privacy wording.
+
+
+## Nov 2 (evening): Native app brought up to date (branch redesign-home, NOT on main)
+- Phase 0: age gate/birthdate, QR check-in parsing + result states, tier labels, 100 XP/level, legal links, push tap routing.
+- Phase 1: design tokens (six tones), Fraunces + Plus Jakarta Sans, ThemeProvider, kit (AppText/Card/Button/Skeleton).
+- Phase 2-3: Events, Alerts, Prize Wall, Home, Profile (tone picker, status, backdrop, Event Credit), Community rebuilt; Google + Apple sign-in and in-app password reset; welcome overlay, home tour, page intros.
+- Safety: player_reports table + /api/community/report (emails REPORTS_EMAIL once set), block API (UUID-validated), blocks enforced in friend requests and leaderboard.
+- Universal links: app.json associatedDomains/intentFilters + /.well-known routes (need APPLE_TEAM_ID, ANDROID_CERT_SHA256).
+- Open items for Darrell: see MOBILE_LAUNCH_NEEDS.md.
+- Not run on device/emulator yet; only tsc + Android bundle export verified.
