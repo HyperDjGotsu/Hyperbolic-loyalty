@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { API_BASE } from '@/lib/config';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import * as ImagePicker from 'expo-image-picker';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +22,12 @@ import {
 import LegalLinks from '@/components/LegalLinks';
 import { PASS_NAMES, passTierKey, passTierLabel } from '@/lib/pass-tiers';
 import { useApi } from '@/lib/api';
+import { useTheme } from '@/lib/theme-context';
+import { TONES, type Palette, type ToneKey } from '@/lib/tokens';
+import { AppText } from '@/components/kit';
+import { EventCreditCard } from '@/components/EventCreditCard';
+import { BackdropSheet } from '@/components/BackdropSheet';
+import { StatusSheet } from '@/components/StatusSheet';
 
 type Player = {
   linked: boolean;
@@ -35,6 +41,7 @@ type Player = {
   passExpiresAt: string | null;
   avatarConfig: AvatarConfig;
   homeStore: { id: string; name: string; city: string | null } | null;
+  heroBackdrop?: string | null;
 };
 
 type AvatarConfig = {
@@ -137,6 +144,11 @@ export default function ProfileScreen() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const api = useApi();
   const insets = useSafeAreaInsets();
+  const { colors, tone, setTone } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const [statusText, setStatusText] = useState<string | null>(null);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [backdropOpen, setBackdropOpen] = useState(false);
   const [player, setPlayer] = useState<Player | null>(null);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [referral, setReferral] = useState<ReferralStats | null>(null);
@@ -176,6 +188,7 @@ export default function ProfileScreen() {
         }),
         api.get<{ privacy: Privacy }>('/api/player/privacy').then(d => setPrivacy({ ...DEFAULT_PRIVACY, ...d.privacy })),
       ]).catch(() => {});
+      api.get<{ status: string | null }>('/api/player/status').then(d => setStatusText(d.status ?? null)).catch(() => {});
       api.get<ReferralStats>('/api/referral/stats')
         .then(data => setReferral(data))
         .catch(() => {});
@@ -449,7 +462,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#c4b5fd" size="large" />
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
@@ -507,6 +520,39 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {passTierKey(player.passTier) === 'diamond' && isActive && <EventCreditCard />}
+
+      <Text style={styles.sectionTitle}>Appearance</Text>
+      <View style={[styles.card, styles.cardLeft]}>
+        <Pressable style={styles.prefRow} onPress={() => setStatusOpen(true)}>
+          <Text style={styles.prefIcon}>💬</Text>
+          <View style={styles.flex}><Text style={styles.settingsTitle}>Status</Text><Text style={styles.helper}>{statusText ?? 'Set a status'}</Text></View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+        <Pressable style={styles.prefRow} onPress={() => setBackdropOpen(true)}>
+          <Text style={styles.prefIcon}>🖼️</Text>
+          <View style={styles.flex}><Text style={styles.settingsTitle}>Backdrop</Text><Text style={styles.helper}>Art behind your profile and Home card</Text></View>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
+        <Text style={[styles.helper, { marginTop: 12, marginBottom: 8 }]}>Theme</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {(Object.keys(TONES) as ToneKey[]).map(k => {
+            const t = TONES[k];
+            const on = tone === k;
+            return (
+              <Pressable key={k} onPress={() => setTone(k)} accessibilityLabel={`${t.label} theme`}
+                style={{ width: '31%', borderRadius: 14, borderWidth: 2, borderColor: on ? colors.accent : colors.border, backgroundColor: t.palette.bgBase, padding: 10, alignItems: 'center', gap: 6 }}>
+                <View style={{ flexDirection: 'row', gap: 4 }}>
+                  <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: t.palette.bgSurface, borderWidth: 1, borderColor: t.palette.border }} />
+                  <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: t.palette.accent }} />
+                </View>
+                <Text style={{ color: t.palette.textPrimary, fontSize: 12, fontWeight: '700' }}>{t.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
       <View style={styles.sectionHeader}><Text style={styles.sectionHeaderTitle}>Favorite Games</Text>
         <Pressable onPress={openFavorites}><Text style={styles.editLink}>Edit</Text></Pressable></View>
       <View style={[styles.card, styles.cardLeft, styles.favoriteCard]}>
@@ -560,7 +606,7 @@ export default function ProfileScreen() {
             <Switch
               value={!!prefs[key]}
               onValueChange={v => { if (!saving) void togglePref(key, v); }}
-              trackColor={{ false: 'rgba(242,239,232,0.08)', true: '#c4b5fd' }}
+              trackColor={{ false: colors.bgElevated, true: colors.accent }}
               thumbColor="#fff"
               disabled={saving}
             />
@@ -599,6 +645,9 @@ export default function ProfileScreen() {
       </View>
 
       <View style={{ height: 40 }} />
+
+      {statusOpen && <StatusSheet current={statusText} onClose={() => setStatusOpen(false)} onSaved={v => { setStatusText(v); setStatusOpen(false); }} />}
+      {backdropOpen && <BackdropSheet current={player.heroBackdrop ?? null} storeId={player.homeStore?.id ?? null} onClose={() => setBackdropOpen(false)} onSaved={v => { setPlayer(p => p ? { ...p, heroBackdrop: v } : p); setBackdropOpen(false); }} />}
 
       <Modal visible={favoritesOpen} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setFavoritesOpen(false)}>
         <View style={[styles.modal, { paddingTop: insets.top }]}><View style={styles.modalHeader}><Pressable onPress={() => setFavoritesOpen(false)}><Text style={styles.modalAction}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Favorite Games</Text><Pressable disabled={modalSaving} onPress={saveFavorites}><Text style={styles.modalAction}>{modalSaving ? 'Saving…' : 'Save'}</Text></Pressable></View>
@@ -709,20 +758,22 @@ export default function ProfileScreen() {
 }
 
 function ToggleRow({ icon, title, subtitle, value, onChange }: { icon: string; title: string; subtitle?: string; value: boolean; onChange: (value: boolean) => void }) {
-  return <View style={styles.privacyRow}><Text style={styles.prefIcon}>{icon}</Text><View style={styles.flex}><Text style={styles.settingsTitle}>{title}</Text>{subtitle && <Text style={styles.helper}>{subtitle}</Text>}</View><Switch value={value} onValueChange={onChange} trackColor={{ false: 'rgba(242,239,232,0.08)', true: '#c4b5fd' }} thumbColor="#fff" /></View>;
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  return <View style={styles.privacyRow}><Text style={styles.prefIcon}>{icon}</Text><View style={styles.flex}><Text style={styles.settingsTitle}>{title}</Text>{subtitle && <Text style={styles.helper}>{subtitle}</Text>}</View><Switch value={value} onValueChange={onChange} trackColor={{ false: colors.bgElevated, true: colors.accent }} thumbColor="#fff" /></View>;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#111009' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111009' },
+const makeStyles = (c: Palette) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.bgBase },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.bgBase },
   card: {
-    backgroundColor: '#1a1810',
+    backgroundColor: c.bgSurface,
     borderRadius: 16,
     padding: 20,
     marginHorizontal: 16,
     marginTop: 16,
     borderWidth: 1,
-    borderColor: 'rgba(242,239,232,0.08)',
+    borderColor: c.border,
     alignItems: 'center',
   },
   cardLeft: { alignItems: 'flex-start' },
@@ -730,28 +781,28 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(196,181,253,0.15)',
+    backgroundColor: `rgba(${parseInt(c.accent.slice(1,3),16)},${parseInt(c.accent.slice(3,5),16)},${parseInt(c.accent.slice(5,7),16)},0.15)`,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: '#c4b5fd',
+    borderColor: c.accent,
   },
-  avatarText: { fontSize: 32, color: '#c4b5fd', fontWeight: '800' },
+  avatarText: { fontSize: 32, color: c.accent, fontWeight: '800' },
   editAvatarBtn: { marginTop: 7, paddingHorizontal: 10, paddingVertical: 5 },
-  editLink: { color: '#c4b5fd', fontSize: 13, fontWeight: '700' },
-  name: { fontSize: 22, fontWeight: '800', color: '#f2efe8' },
-  playerId: { color: '#7a7060', fontSize: 12, marginTop: 2 },
-  store: { color: '#a89f90', fontSize: 13, marginTop: 6 },
+  editLink: { color: c.accent, fontSize: 13, fontWeight: '700' },
+  name: { fontSize: 22, fontWeight: '800', color: c.textPrimary },
+  playerId: { color: c.textTertiary, fontSize: 12, marginTop: 2 },
+  store: { color: c.textSecondary, fontSize: 13, marginTop: 6 },
   statsRow: { flexDirection: 'row', marginTop: 20, gap: 0, alignSelf: 'stretch' },
   stat: { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, backgroundColor: 'rgba(242,239,232,0.08)' },
-  statVal: { fontSize: 18, fontWeight: '800', color: '#f2efe8' },
+  statDivider: { width: 1, backgroundColor: c.border },
+  statVal: { fontSize: 18, fontWeight: '800', color: c.textPrimary },
   xpVal: { color: '#f4c542' },
-  pointsVal: { color: '#c4b5fd' },
-  statLabel: { color: '#7a7060', fontSize: 12, marginTop: 2 },
+  pointsVal: { color: c.accent },
+  statLabel: { color: c.textTertiary, fontSize: 12, marginTop: 2 },
   sectionTitle: {
-    color: '#f2efe8',
+    color: c.textPrimary,
     fontSize: 16,
     fontWeight: '700',
     marginHorizontal: 16,
@@ -759,24 +810,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 16, marginTop: 24, marginBottom: 4 },
-  sectionHeaderTitle: { color: '#f2efe8', fontSize: 16, fontWeight: '700' },
+  sectionHeaderTitle: { color: c.textPrimary, fontSize: 16, fontWeight: '700' },
   flex: { flex: 1 },
   membershipRow: { flexDirection: 'row', alignItems: 'center' },
-  membershipTier: { color: '#f2efe8', fontSize: 16, fontWeight: '700' },
-  helper: { color: '#7a7060', fontSize: 12, marginTop: 3 },
+  membershipTier: { color: c.textPrimary, fontSize: 16, fontWeight: '700' },
+  helper: { color: c.textTertiary, fontSize: 12, marginTop: 3 },
   statusBadge: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5 },
   statusActive: { backgroundColor: 'rgba(34,197,94,0.18)' },
   statusGrace: { backgroundColor: 'rgba(234,179,8,0.18)' },
   statusFree: { backgroundColor: 'rgba(148,163,184,0.18)' },
-  statusText: { color: '#f2efe8', fontSize: 11, fontWeight: '700' },
+  statusText: { color: c.textPrimary, fontSize: 11, fontWeight: '700' },
   favoriteCard: { minHeight: 70, justifyContent: 'center' },
   gamePills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  gamePill: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: 'rgba(196,181,253,0.10)', borderWidth: 1, borderColor: 'rgba(196,181,253,0.25)' },
-  gamePillText: { color: '#c4b5fd', fontSize: 12, fontWeight: '600' },
-  addLink: { color: '#c4b5fd', fontSize: 13, fontWeight: '700', marginTop: 7 },
+  gamePill: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: `rgba(${parseInt(c.accent.slice(1,3),16)},${parseInt(c.accent.slice(3,5),16)},${parseInt(c.accent.slice(5,7),16)},0.10)`, borderWidth: 1, borderColor: `rgba(${parseInt(c.accent.slice(1,3),16)},${parseInt(c.accent.slice(3,5),16)},${parseInt(c.accent.slice(5,7),16)},0.25)` },
+  gamePillText: { color: c.accent, fontSize: 12, fontWeight: '600' },
+  addLink: { color: c.accent, fontSize: 13, fontWeight: '700', marginTop: 7 },
   settingsRow: { flexDirection: 'row', alignItems: 'center' },
-  settingsTitle: { color: '#f2efe8', fontSize: 14, fontWeight: '600' },
-  chevron: { color: '#7a7060', fontSize: 28 },
+  settingsTitle: { color: c.textPrimary, fontSize: 14, fontWeight: '600' },
+  chevron: { color: c.textTertiary, fontSize: 28 },
   referralRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -785,30 +836,30 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   referralCode: {},
-  referralCodeLabel: { color: '#7a7060', fontSize: 11, marginBottom: 2 },
+  referralCodeLabel: { color: c.textTertiary, fontSize: 11, marginBottom: 2 },
   referralCodeText: { color: '#f4c542', fontSize: 18, fontWeight: '800', letterSpacing: 1 },
   shareBtn: {
-    backgroundColor: 'rgba(196,181,253,0.12)',
+    backgroundColor: `rgba(${parseInt(c.accent.slice(1,3),16)},${parseInt(c.accent.slice(3,5),16)},${parseInt(c.accent.slice(5,7),16)},0.12)`,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'rgba(196,181,253,0.25)',
+    borderColor: `rgba(${parseInt(c.accent.slice(1,3),16)},${parseInt(c.accent.slice(3,5),16)},${parseInt(c.accent.slice(5,7),16)},0.25)`,
   },
-  shareBtnText: { color: '#c4b5fd', fontWeight: '700', fontSize: 13 },
+  shareBtnText: { color: c.accent, fontWeight: '700', fontSize: 13 },
   referralStats: {
     flexDirection: 'row',
     gap: 24,
     marginBottom: 12,
   },
   refStat: { alignItems: 'center' },
-  refStatVal: { fontSize: 20, fontWeight: '800', color: '#f2efe8' },
+  refStatVal: { fontSize: 20, fontWeight: '800', color: c.textPrimary },
   xpColor: { color: '#f4c542' },
-  refStatLabel: { color: '#7a7060', fontSize: 11, marginTop: 2 },
-  referralHint: { color: '#7a7060', fontSize: 12, fontStyle: 'italic' },
+  refStatLabel: { color: c.textTertiary, fontSize: 11, marginTop: 2 },
+  referralHint: { color: c.textTertiary, fontSize: 12, fontStyle: 'italic' },
   prefRow: { flexDirection: 'row', alignItems: 'center', width: '100%', paddingVertical: 10 },
   prefIcon: { fontSize: 18, marginRight: 10 },
-  prefLabel: { flex: 1, color: '#a89f90', fontSize: 15 },
+  prefLabel: { flex: 1, color: c.textSecondary, fontSize: 15 },
   signOutBtn: {
     backgroundColor: 'rgba(239,68,68,0.1)',
     borderRadius: 12,
@@ -829,7 +880,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(239,68,68,0.2)',
   },
   dangerZoneTitle: {
-    color: '#7a7060',
+    color: c.textTertiary,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
@@ -851,41 +902,41 @@ const styles = StyleSheet.create({
   },
   deleteText: { color: '#ef4444', fontWeight: '600', fontSize: 14 },
   dangerZoneHint: {
-    color: '#7a7060',
+    color: c.textTertiary,
     fontSize: 11,
     marginTop: 8,
     textAlign: 'center',
   },
-  modal: { flex: 1, backgroundColor: '#111009' },
-  modalHeader: { height: 58, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(242,239,232,0.08)' },
-  modalTitle: { color: '#f2efe8', fontSize: 17, fontWeight: '800' },
-  modalAction: { color: '#c4b5fd', fontSize: 14, fontWeight: '700', minWidth: 52 },
-  selectionCount: { color: '#7a7060', fontSize: 12, textAlign: 'center', marginTop: 14 },
+  modal: { flex: 1, backgroundColor: c.bgBase },
+  modalHeader: { height: 58, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: c.border },
+  modalTitle: { color: c.textPrimary, fontSize: 17, fontWeight: '800' },
+  modalAction: { color: c.accent, fontSize: 14, fontWeight: '700', minWidth: 52 },
+  selectionCount: { color: c.textTertiary, fontSize: 12, textAlign: 'center', marginTop: 14 },
   optionGrid: { padding: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingBottom: 40 },
-  gameOption: { width: '47%', minHeight: 70, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(242,239,232,0.08)', backgroundColor: '#1a1810', flexDirection: 'row', alignItems: 'center', padding: 12, gap: 9 },
-  avatarOption: { width: '30%', minHeight: 100, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(242,239,232,0.08)', backgroundColor: '#1a1810', alignItems: 'center', justifyContent: 'center', padding: 8 },
-  optionSelected: { borderColor: '#c4b5fd', backgroundColor: 'rgba(196,181,253,0.12)' },
+  gameOption: { width: '47%', minHeight: 70, borderRadius: 12, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgSurface, flexDirection: 'row', alignItems: 'center', padding: 12, gap: 9 },
+  avatarOption: { width: '30%', minHeight: 100, borderRadius: 12, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgSurface, alignItems: 'center', justifyContent: 'center', padding: 8 },
+  optionSelected: { borderColor: c.accent, backgroundColor: `rgba(${parseInt(c.accent.slice(1,3),16)},${parseInt(c.accent.slice(3,5),16)},${parseInt(c.accent.slice(5,7),16)},0.12)` },
   optionEmoji: { fontSize: 25 },
-  optionName: { color: '#f2efe8', fontSize: 12, fontWeight: '600', textAlign: 'center' },
+  optionName: { color: c.textPrimary, fontSize: 12, fontWeight: '600', textAlign: 'center' },
   modalContent: { padding: 16, paddingBottom: 40 },
-  modalSection: { color: '#a89f90', fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 20, marginBottom: 8 },
-  privacyRow: { flexDirection: 'row', alignItems: 'center', minHeight: 64, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(242,239,232,0.08)' },
-  radio: { color: '#c4b5fd', fontSize: 22 },
-  avatarPreview: { width: 112, height: 112, borderRadius: 56, alignSelf: 'center', marginVertical: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#c4b5fd' },
+  modalSection: { color: c.textSecondary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 20, marginBottom: 8 },
+  privacyRow: { flexDirection: 'row', alignItems: 'center', minHeight: 64, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: c.border },
+  radio: { color: c.accent, fontSize: 22 },
+  avatarPreview: { width: 112, height: 112, borderRadius: 56, alignSelf: 'center', marginVertical: 26, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: c.accent },
   previewEmoji: { fontSize: 54 },
   previewBadge: { position: 'absolute', right: -3, bottom: 4, fontSize: 25 },
-  avatarTabs: { flexDirection: 'row', marginHorizontal: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(242,239,232,0.08)' },
+  avatarTabs: { flexDirection: 'row', marginHorizontal: 16, borderBottomWidth: 1, borderBottomColor: c.border },
   avatarTab: { flex: 1, alignItems: 'center', paddingVertical: 12 },
-  avatarTabActive: { borderBottomWidth: 2, borderBottomColor: '#c4b5fd' },
-  avatarTabText: { color: '#7a7060', fontSize: 13, fontWeight: '700' },
+  avatarTabActive: { borderBottomWidth: 2, borderBottomColor: c.accent },
+  avatarTabText: { color: c.textTertiary, fontSize: 13, fontWeight: '700' },
   assetSwatch: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   avatarEditorContent: { padding: 16, paddingBottom: 40 },
   emptyAvatarTab: { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
-  emptyAvatarText: { color: '#a89f90', fontSize: 15, textAlign: 'center' },
+  emptyAvatarText: { color: c.textSecondary, fontSize: 15, textAlign: 'center' },
   emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
-  emojiOption: { width: '22%', aspectRatio: 1, maxHeight: 72, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#1a1810', alignItems: 'center', justifyContent: 'center' },
+  emojiOption: { width: '22%', aspectRatio: 1, maxHeight: 72, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: c.bgSurface, alignItems: 'center', justifyContent: 'center' },
   emojiOptionText: { fontSize: 32 },
-  selectionCheck: { position: 'absolute', top: 3, right: 6, color: '#c4b5fd', fontSize: 15, fontWeight: '900' },
+  selectionCheck: { position: 'absolute', top: 3, right: 6, color: c.accent, fontSize: 15, fontWeight: '900' },
   colorPreviewStrip: { height: 48, borderRadius: 12, marginBottom: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   colorPreviewText: { color: '#fff', fontSize: 12, fontWeight: '800', textShadowColor: '#000', textShadowRadius: 3 },
   colorGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
@@ -903,15 +954,15 @@ const styles = StyleSheet.create({
   photoPreviewWrap: { alignItems: 'center', gap: 10 },
   photoPreviewCircle: { width: 112, height: 112, borderRadius: 56 },
   photoPreviewLabel: { color: '#22c55e', fontSize: 13, fontWeight: '700' },
-  photoHint: { color: '#a89f90', fontSize: 14, textAlign: 'center' },
+  photoHint: { color: c.textSecondary, fontSize: 14, textAlign: 'center' },
   photoBtn: {
-    backgroundColor: '#c4b5fd',
+    backgroundColor: c.accent,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 28,
     alignItems: 'center',
   },
-  photoBtnText: { color: '#111009', fontSize: 15, fontWeight: '700' },
+  photoBtnText: { color: c.accentFg, fontSize: 15, fontWeight: '700' },
   photoRemoveBtn: {
     borderRadius: 12,
     paddingVertical: 12,
