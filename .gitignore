@@ -111,3 +111,6 @@ apps/mobile/android/
 # iOS
 ios/
 apps/mobile/ios/
+
+# Clerk keyless-mode dev keys (auto-generated; contain a secret key)
+.clerk/
