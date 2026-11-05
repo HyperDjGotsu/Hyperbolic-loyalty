@@ -84,7 +84,8 @@ export default function HomeTour() {
     const el = find(active.key);
     if (!el) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    el.style.scrollMarginTop = '88px';
+    el.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
     measure();
     let frame = 0;
     const loop = () => { measure(); frame = requestAnimationFrame(loop); };
@@ -101,6 +102,15 @@ export default function HomeTour() {
     };
   }, [active, measure]);
 
+  // Stop the page from scrolling under the card while the tour is open
+  const running = stops.length > 0;
+  useEffect(() => {
+    if (!running) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [running]);
+
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
@@ -116,9 +126,6 @@ export default function HomeTour() {
 
   const pad = 6;
   const last = i === stops.length - 1;
-  // Card sits on the opposite half of the screen from the highlighted section
-  const sectionMid = rect.top + rect.height / 2;
-  const cardAtTop = sectionMid > window.innerHeight / 2;
 
   return (
     <div className="fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-label="Home walkthrough">
@@ -136,7 +143,7 @@ export default function HomeTour() {
         }}
       />
       <div
-        className={`fixed left-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl border border-border-token bg-surface p-4 shadow-2xl ${cardAtTop ? 'top-4 lg:top-20' : 'bottom-24 lg:bottom-6'}`}
+        className={`fixed left-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl border border-border-token bg-surface p-4 shadow-2xl bottom-24 lg:bottom-6`}
         aria-live="polite"
       >
         <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-widest text-tertiary">

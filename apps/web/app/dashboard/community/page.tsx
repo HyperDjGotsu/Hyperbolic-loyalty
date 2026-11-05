@@ -5,7 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { Avatar, GlowButton } from '@/components/ui';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { Loader } from '@/components/Loader';
-import { Trophy, Search, SearchX, Users, Shield, MessageCircle, Lock, Settings } from 'lucide-react';
+import { Trophy, Search, SearchX, Users, Shield, Lock, Settings } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { PageTitle, SubText } from '@/components/PageTitle';
 
@@ -1387,9 +1387,6 @@ export default function CommunityPage() {
                   </div>
                 </GlowButton>
               )}
-              <button className="px-4 py-3 bg-elevated text-primary rounded-xl border border-border-token" aria-label="Message">
-                <MessageCircle size={20} />
-              </button>
             </div>
           </div>
         </div>

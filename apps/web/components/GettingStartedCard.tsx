@@ -31,8 +31,8 @@ const ITEMS: ChecklistItem[] = [
   },
   {
     key: 'games',
-    label: 'Set your favorite games',
-    description: 'Personalize your experience',
+    label: 'Add more games to your favorites',
+    description: 'Pick every game you play',
     href: '/dashboard/profile',
     storageKey: 'hxp_done_games',
   },
