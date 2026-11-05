@@ -16,16 +16,10 @@ export async function GET(request: Request) {
     const status = searchParams.get('status') || 'upcoming'; // upcoming, past, all
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Get current player if logged in
-    let currentPlayerId: string | null = null;
-    if (userId) {
-      const { data: player } = await supabaseAdmin
-        .from('players')
-        .select('id')
-        .eq('clerk_user_id', userId)
-        .single();
-      currentPlayerId = player?.id || null;
-    }
+    // Current player lookup (if logged in). Fired together with the events query below.
+    const playerLookup = userId
+      ? supabaseAdmin.from('players').select('id').eq('clerk_user_id', userId).single()
+      : Promise.resolve(null);
 
     // Build query
     let query = supabaseAdmin
@@ -84,7 +78,10 @@ export async function GET(request: Request) {
       query = query.eq('store_id', storeId);
     }
 
-    const { data: events, error } = await query;
+    // Events and the current player don't depend on each other, so run them in parallel
+    const [eventsResult, playerResult] = await Promise.all([query, playerLookup]);
+    const { data: events, error } = eventsResult;
+    const currentPlayerId: string | null = playerResult?.data?.id || null;
 
     if (error) {
       console.error('Error fetching events:', error);
@@ -103,59 +100,57 @@ export async function GET(request: Request) {
       }
     });
 
-    const gameMap: Record<string, any> = {};
-    if (gameIds.length > 0) {
-      const { data: games } = await supabaseAdmin
-        .from('games')
-        .select('id, name, icon, color')
-        .in('id', gameIds);
-      
-      games?.forEach(g => { gameMap[g.id] = g; });
-    }
-
-    // Get all interest data with player info
     const eventIds = events.map(e => e.id);
-    
-    const { data: allInterests } = await supabaseAdmin
-      .from('event_interest')
-      .select(`
-        event_id,
-        player_id,
-        players (
-          id,
-          display_name,
-          avatar_config
-        )
-      `)
-      .in('event_id', eventIds);
 
-    // Check-in counts per event (social proof on the events page)
+    // Games, interest, check-in counts and friendships only need the event/player ids we
+    // already have, so fetch all four at once instead of one after another.
+    const [gamesResult, interestsResult, attendanceResult, friendshipsResult] = await Promise.all([
+      gameIds.length > 0
+        ? supabaseAdmin.from('games').select('id, name, icon, color').in('id', gameIds)
+        : Promise.resolve(null),
+      // All interest data with player info
+      supabaseAdmin
+        .from('event_interest')
+        .select(`
+          event_id,
+          player_id,
+          players (
+            id,
+            display_name,
+            avatar_config
+          )
+        `)
+        .in('event_id', eventIds),
+      // Check-in counts per event (social proof on the events page)
+      supabaseAdmin.from('event_attendances').select('event_id').in('event_id', eventIds),
+      // User's friends (accepted friendships only)
+      currentPlayerId
+        ? supabaseAdmin
+            .from('friendships')
+            .select('requester_id, addressee_id')
+            .eq('status', 'accepted')
+            .or(`requester_id.eq.${currentPlayerId},addressee_id.eq.${currentPlayerId}`)
+        : Promise.resolve(null),
+    ]);
+
+    const gameMap: Record<string, any> = {};
+    gamesResult?.data?.forEach(g => { gameMap[g.id] = g; });
+
+    const allInterests = interestsResult.data;
+
     const checkedInByEvent: Record<string, number> = {};
-    const { data: attendanceRows } = await supabaseAdmin
-      .from('event_attendances')
-      .select('event_id')
-      .in('event_id', eventIds);
-    (attendanceRows ?? []).forEach(r => {
+    (attendanceResult.data ?? []).forEach(r => {
       if (r.event_id) checkedInByEvent[r.event_id] = (checkedInByEvent[r.event_id] || 0) + 1;
     });
 
-    // Get user's friends (accepted friendships only)
-    let friendIds: Set<string> = new Set();
-    if (currentPlayerId) {
-      const { data: friendships } = await supabaseAdmin
-        .from('friendships')
-        .select('requester_id, addressee_id')
-        .eq('status', 'accepted')
-        .or(`requester_id.eq.${currentPlayerId},addressee_id.eq.${currentPlayerId}`);
-      
-      friendships?.forEach(f => {
-        if (f.requester_id === currentPlayerId) {
-          friendIds.add(f.addressee_id);
-        } else {
-          friendIds.add(f.requester_id);
-        }
-      });
-    }
+    const friendIds: Set<string> = new Set();
+    friendshipsResult?.data?.forEach(f => {
+      if (f.requester_id === currentPlayerId) {
+        friendIds.add(f.addressee_id);
+      } else {
+        friendIds.add(f.requester_id);
+      }
+    });
 
     // Build interest data per event
     const interestData: Record<string, {
