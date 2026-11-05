@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { Loader } from '@/components/Loader';
+import GameIcon from '@/components/GameIcon';
 
 const GAME_OPTIONS = SELECTABLE_GAMES;
 
@@ -486,7 +487,7 @@ function OnboardingContent() {
                         : 'bg-input border-border-strong text-secondary hover:border-border-strong'
                     }`}
                   >
-                    <div className="text-xl mb-1">{game.icon}</div>
+                    <div className="text-xl mb-1"><GameIcon id={game.id} size={32} /></div>
                     <div className="text-xs truncate">{game.name}</div>
                   </button>
                 ))}

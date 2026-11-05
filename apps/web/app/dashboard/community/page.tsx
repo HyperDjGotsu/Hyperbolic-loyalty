@@ -8,6 +8,7 @@ import { Loader } from '@/components/Loader';
 import { Trophy, Search, SearchX, Users, Shield, Lock, Settings } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { PageTitle, SubText } from '@/components/PageTitle';
+import GameIcon from '@/components/GameIcon';
 
 // Types
 interface PlayerAvatar {
@@ -984,7 +985,7 @@ export default function CommunityPage() {
                       : 'bg-elevated text-secondary hover:bg-elevated'
                   }`}
                 >
-                  <span>{game.icon}</span>
+                  <GameIcon id={game.id} size={18} />
                   <span className="text-sm font-medium">{game.name}</span>
                 </button>
               ))}
@@ -1002,7 +1003,7 @@ export default function CommunityPage() {
               <div className="bg-elevated rounded-xl p-3 border border-border-token">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon}</span>
+                    <span className="text-2xl"><GameIcon id={leaderboardGame} size={32} fallback={ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.icon} /></span>
                     <div>
                       <div className="font-bold text-primary">{ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.name}</div>
                       <div className="text-xs text-secondary">Ranked by {ALL_LEADERBOARD_GAMES.find(g => g.id === leaderboardGame)?.currency}</div>
@@ -1443,7 +1444,7 @@ export default function CommunityPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{game.icon}</span>
+                      <span className="text-2xl"><GameIcon id={game.id} size={32} fallback={game.icon} /></span>
                       <div className="text-left">
                         <div className="text-primary font-medium">{game.name}</div>
                         <div className="text-secondary text-xs">{game.currency}</div>

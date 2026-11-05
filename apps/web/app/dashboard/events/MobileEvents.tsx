@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { CoverImage } from '@/components/CoverImage';
 import { RefreshCw, CalendarDays, CalendarX, Star, Gift, Trophy, Sparkles, Share, AlertCircle, Users, type LucideIcon } from 'lucide-react';
 import { PageTitle, SubText } from '@/components/PageTitle';
+import GameIcon from '@/components/GameIcon';
 
 interface GameInfo {
   id: string;
@@ -806,7 +807,7 @@ function EventsPageContent() {
                   : 'bg-elevated text-secondary hover:bg-elevated'
               }`}
             >
-              <span>{game.icon}</span>
+              <GameIcon id={game.id} size={18} fallback={game.icon} />
               <span>{game.name}</span>
             </button>
           ))}

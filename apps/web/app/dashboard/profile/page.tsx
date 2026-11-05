@@ -13,6 +13,7 @@ import { SELECTABLE_GAMES } from '@/lib/games';
 import { EventCreditCard } from '@/components/EventCreditCard';
 import { PASS_MEDALS } from '@/lib/pass-tiers';
 import { BrandMark } from '@/components/BrandMark';
+import GameIcon from '@/components/GameIcon';
 
 interface ShopItem {
   id: string;
@@ -1207,7 +1208,7 @@ export default function ProfilePage() {
                     key={gameId}
                     className="flex items-center gap-2 px-3 py-2 bg-elevated/50 rounded-lg border border-border-token/50"
                   >
-                    <span>{game.icon}</span>
+                    <GameIcon id={game.id} size={20} />
                     <span className="text-primary text-sm">{game.name}</span>
                   </div>
                 );
@@ -1725,7 +1726,7 @@ export default function ProfilePage() {
                       onClick={() => toggleFavorite(gameId)}
                       className="flex items-center gap-1 px-2 py-1 bg-accent/10 text-accent rounded-lg text-sm border border-accent/30"
                     >
-                      <span>{game.icon}</span>
+                      <GameIcon id={game.id} size={18} />
                       <span>{game.name}</span>
                       <span className="ml-1">×</span>
                     </button>
@@ -1757,7 +1758,7 @@ export default function ProfilePage() {
                           : 'bg-elevated/50 border-border-token text-primary hover:border-border-token'
                     }`}
                   >
-                    <span className="text-2xl">{game.icon}</span>
+                    <GameIcon id={game.id} size={32} />
                     <span className="font-medium">{game.name}</span>
                     {isSelected && (
                       <span className="ml-auto text-accent">✓</span>

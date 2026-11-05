@@ -198,6 +198,11 @@ body {
   .pp-sheet-out { animation-name: pp-fade-out; animation-duration: 150ms; }
 }
 
+/* Single-colour game icons ship as white art (dark theme) and black art (light theme); show the right one */
+.gi-on-light { display: none; }
+[data-theme="light"] .gi-on-light { display: inline-block; }
+[data-theme="light"] .gi-on-dark { display: none; }
+
 /* The Player Pass mark has white letterforms: turn them dark on light themes (hue stays green and blue) */
 [data-theme="light"] .pp-mark-adaptive { filter: invert(1) hue-rotate(180deg); }
 
