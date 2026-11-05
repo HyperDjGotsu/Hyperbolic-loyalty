@@ -107,6 +107,13 @@ export function useDashboardData(): DashboardData {
 
       if (user) {
         try {
+          // Returning users have a saved store; validate it against /api/stores at the same time
+          // as the player lookup instead of waiting for the player lookup to finish first.
+          const hasSavedStore = (() => {
+            try { return !!(localStorage.getItem('ggc_selected_store_id') && localStorage.getItem('ggc_selected_store_name')); } catch { return false; }
+          })();
+          const storesPrefetch = hasSavedStore ? fetch('/api/stores').catch(() => null) : null;
+
           const response = await fetch('/api/player/by-clerk');
           if (response.status === 401) {
             if (!cancelled) router.replace('/onboarding');
@@ -131,8 +138,8 @@ export function useDashboardData(): DashboardData {
 
             if (savedStoreId && savedStoreName) {
               try {
-                const storesRes = await fetch('/api/stores');
-                if (storesRes.ok) {
+                const storesRes = await (storesPrefetch ?? fetch('/api/stores'));
+                if (storesRes && storesRes.ok) {
                   const storesData = await storesRes.json();
                   const activeStores: DashboardStore[] = storesData.stores || [];
                   const matched = activeStores.find((s) => s.id === savedStoreId);
