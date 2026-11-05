@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { createNotification } from '@/lib/notifications';
+import { createNotificationsBulk } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,25 +26,24 @@ export async function GET(request: Request) {
 
     if (!players?.length) return NextResponse.json({ sent: 0 });
 
-    let sent = 0;
-    for (const player of players) {
-      const tierLabel =
-        player.pass_tier === 'access' ? 'Bronze Pass' :
-        player.pass_tier === 'player' ? 'Silver Pass' :
-        player.pass_tier === 'all_access' ? 'Gold Pass' :
-        player.pass_tier === 'diamond' ? 'Diamond Pass' :
-        'Pass';
-
-      await createNotification(
-        player.id,
-        'pass_expiring',
-        `⏳ Your ${tierLabel} expires in 7 days`,
-        `Visit the store to renew and keep your benefits.`,
-        { pass_tier: player.pass_tier, expires_at: player.pass_expires_at },
-        'store'
-      );
-      sent++;
-    }
+    const sent = await createNotificationsBulk(
+      players.map((player) => {
+        const tierLabel =
+          player.pass_tier === 'access' ? 'Bronze Pass' :
+          player.pass_tier === 'player' ? 'Silver Pass' :
+          player.pass_tier === 'all_access' ? 'Gold Pass' :
+          player.pass_tier === 'diamond' ? 'Diamond Pass' :
+          'Pass';
+        return {
+          playerId: player.id,
+          type: 'pass_expiring',
+          title: `⏳ Your ${tierLabel} expires in 7 days`,
+          message: `Visit the store to renew and keep your benefits.`,
+          data: { pass_tier: player.pass_tier, expires_at: player.pass_expires_at },
+          category: 'store' as const,
+        };
+      })
+    );
 
     return NextResponse.json({ sent });
   } catch (err) {

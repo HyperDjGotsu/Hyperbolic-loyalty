@@ -144,3 +144,58 @@ export async function notifyAllPlayers(
     return 0;
   }
 }
+
+export interface BulkNotification {
+  playerId: string;
+  type: string;
+  title: string;
+  message: string;
+  data: Record<string, string | null> | null;
+  category: NotificationCategory;
+  storeId?: string;
+}
+
+// Create many in-app notifications with a constant number of queries instead of
+// two queries per player: preferences are loaded 200 players at a time, opted-out
+// players are dropped, and the rest are inserted 100 rows at a time.
+// Returns the number of notifications actually created.
+export async function createNotificationsBulk(items: BulkNotification[]): Promise<number> {
+  if (!items.length) return 0;
+  try {
+    const playerIds = Array.from(new Set(items.map((i) => i.playerId)));
+    const prefsById = new Map<string, NotificationPrefs>();
+    for (let i = 0; i < playerIds.length; i += 200) {
+      const { data: players } = await supabaseAdmin
+        .from('players')
+        .select('id, notification_preferences')
+        .in('id', playerIds.slice(i, i + 200));
+      for (const p of players ?? []) {
+        prefsById.set(p.id, { ...DEFAULT_PREFS, ...((p.notification_preferences ?? {}) as Partial<NotificationPrefs>) });
+      }
+    }
+
+    // A player we could not load gets the same default createNotification used (all categories on)
+    const rows = items
+      .filter((i) => (prefsById.get(i.playerId) ?? DEFAULT_PREFS)[i.category])
+      .map((i) => ({
+        player_id: i.playerId,
+        type: i.type,
+        title: i.title,
+        message: i.message,
+        data: i.data,
+        is_read: false,
+        store_id: i.storeId ?? null,
+      }));
+
+    let created = 0;
+    for (let i = 0; i < rows.length; i += 100) {
+      const { error } = await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100));
+      if (error) console.error('createNotificationsBulk insert error:', error);
+      else created += Math.min(100, rows.length - i);
+    }
+    return created;
+  } catch (err) {
+    console.error('createNotificationsBulk error:', err);
+    return 0;
+  }
+}

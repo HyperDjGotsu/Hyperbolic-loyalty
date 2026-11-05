@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { createNotification } from '@/lib/notifications';
+import { createNotificationsBulk } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,24 +67,23 @@ export async function GET(request: Request) {
       });
     }
 
-    let sent = 0;
-    for (const playerId of playerIds) {
-      const weeklyXp = xpMap[playerId];
-      const storeId = homeStore[playerId];
-      // A rank only means something when at least two players at the store earned XP
-      const rank = storeId && countMap[playerId] > 1 ? rankMap[playerId] : null;
-      const name = storeId ? storeName[storeId] : null;
-
-      await createNotification(
-        playerId,
-        'weekly_summary',
-        `📊 Your week in review`,
-        `You earned +${weeklyXp} XP this week.${rank ? ` You are now ranked #${rank} at ${name ?? 'your store'}.` : ''}`,
-        { weekly_xp: String(weeklyXp), store_rank: rank ? String(rank) : null },
-        'daily_rewards'
-      );
-      sent++;
-    }
+    const sent = await createNotificationsBulk(
+      playerIds.map((playerId) => {
+        const weeklyXp = xpMap[playerId];
+        const storeId = homeStore[playerId];
+        // A rank only means something when at least two players at the store earned XP
+        const rank = storeId && countMap[playerId] > 1 ? rankMap[playerId] : null;
+        const name = storeId ? storeName[storeId] : null;
+        return {
+          playerId,
+          type: 'weekly_summary',
+          title: `📊 Your week in review`,
+          message: `You earned +${weeklyXp} XP this week.${rank ? ` You are now ranked #${rank} at ${name ?? 'your store'}.` : ''}`,
+          data: { weekly_xp: String(weeklyXp), store_rank: rank ? String(rank) : null },
+          category: 'daily_rewards' as const,
+        };
+      })
+    );
 
     return NextResponse.json({ sent });
   } catch (err) {

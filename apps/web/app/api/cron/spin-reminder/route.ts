@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { createNotification } from '@/lib/notifications';
+import { createNotificationsBulk } from '@/lib/notifications';
 import { sendExpoPushToPlayers } from '@/lib/expo-push';
 
 export const dynamic = 'force-dynamic';
@@ -41,18 +41,16 @@ export async function GET(request: Request) {
     });
 
     // Create in-app notifications for each eligible player
-    let sent = 0;
-    for (const player of eligible) {
-      await createNotification(
-        player.id,
-        'spin_ready',
-        '🎰 Daily spin is waiting!',
-        "Don't miss your free spin today — prizes reset at midnight.",
-        null,
-        'daily_rewards'
-      );
-      sent++;
-    }
+    const sent = await createNotificationsBulk(
+      eligible.map((player) => ({
+        playerId: player.id,
+        type: 'spin_ready',
+        title: '🎰 Daily spin is waiting!',
+        message: "Don't miss your free spin today — prizes reset at midnight.",
+        data: null,
+        category: 'daily_rewards' as const,
+      }))
+    );
 
     // Dispatch Expo push once for the full eligible set — no per-player preference
     // re-query because eligibility was already determined above.
