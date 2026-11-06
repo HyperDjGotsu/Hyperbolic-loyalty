@@ -801,7 +801,7 @@ function EventsPageContent() {
             <button
               key={game.id}
               onClick={() => setSelectedGame(game.id)}
-              className={`flex items-center gap-1.5 pl-4 pr-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+              className={`flex flex-none items-center gap-1.5 pl-4 pr-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 selectedGame === game.id
                   ? 'bg-accent text-accent-fg'
                   : 'bg-elevated text-secondary hover:bg-elevated'
