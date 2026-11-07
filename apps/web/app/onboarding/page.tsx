@@ -40,6 +40,7 @@ function OnboardingContent() {
   const [referralCode, setReferralCode] = useState('');
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [referralChecking, setReferralChecking] = useState(false);
+  const [movedJoinCode, setMovedJoinCode] = useState(false); // a store join code was typed into the referral box and moved
   const [staffInviteCode, setStaffInviteCode] = useState('');
   const [stores, setStores] = useState<Store[]>([]);
   const [homeStoreId, setHomeStoreId] = useState('');
@@ -137,6 +138,14 @@ function OnboardingContent() {
     try {
       const response = await fetch(`/api/referral/validate?code=${encodeURIComponent(code)}`);
       const data = await response.json();
+      // A store join code typed into the referral box: move it to the store step instead of calling it invalid
+      if (!data.valid && /^[A-HJ-NP-Z2-9]{6}$/.test(code)) {
+        setJoinCode(prev => prev || code);
+        setReferralCode('');
+        setReferralValid(null);
+        setMovedJoinCode(true);
+        return;
+      }
       setReferralValid(data.valid);
     } catch (err) {
       setReferralValid(false);
@@ -420,7 +429,7 @@ function OnboardingContent() {
                 <input
                   type="text"
                   value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  onChange={(e) => { setMovedJoinCode(false); setReferralCode(e.target.value.toUpperCase()); }}
                   placeholder="REF-XXXXXXXX"
                   className={`w-full bg-input border rounded-xl py-3 px-4 pr-10 text-primary placeholder-tertiary focus:outline-none font-mono tracking-wider ${
                     referralValid === true
@@ -448,8 +457,11 @@ function OnboardingContent() {
               {referralValid === false && referralCode && (
                 <p className="text-danger text-xs mt-1">Invalid referral code</p>
               )}
-              {!referralCode && (
-                <p className="text-tertiary text-xs mt-1">Got a friend's code? Enter it for bonus XP!</p>
+              {movedJoinCode && (
+                <p className="text-accent text-xs mt-1">That is a store join code, so we moved it to the store step. Pick your store next.</p>
+              )}
+              {!referralCode && !movedJoinCode && (
+                <p className="text-tertiary text-xs mt-1">A friend&apos;s code, for bonus XP. A store join code goes on the next step.</p>
               )}
             </div>
 
