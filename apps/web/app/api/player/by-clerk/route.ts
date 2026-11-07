@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getTitlesForPlayers } from '@/lib/titles-server';
 import { getStaffContext } from '@/lib/auth-helpers';
 import { pacificMonthKey } from '@/lib/event-credit';
 
@@ -371,6 +372,7 @@ export async function GET() {
       primaryGameId: player.primary_game_id,
       isStaff: !!(await getStaffContext()),
       isFoundingMember: player.is_founding_member,
+      memberTitles: (await getTitlesForPlayers([player.id]))[player.id] ?? [],
       createdAt: player.created_at,
       homeStoreId: player.home_store_id,
       homeStoreVerified: !!player.home_store_verified_at,

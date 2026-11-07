@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
+import { TitleChips } from '@/components/TitleChips';
 
 interface ActiveEvent {
   id: string;
@@ -22,6 +23,7 @@ interface ActiveEvent {
 interface Feedback {
   type: 'success' | 'error' | 'already';
   playerName: string;
+  memberTitles?: string[];
   xpAwarded?: number;
   message: string;
 }
@@ -173,7 +175,7 @@ export default function KioskPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        showFeedback({ type: 'success', playerName: data.playerName, xpAwarded: data.xpAwarded, message: 'Welcome!' });
+        showFeedback({ type: 'success', playerName: data.playerName, memberTitles: data.memberTitles, xpAwarded: data.xpAwarded, message: 'Welcome!' });
         fetchActiveEvent();
       } else if (data.alreadyCheckedIn) {
         showFeedback({ type: 'already', playerName: data.playerName || playerId, message: 'Already checked in!' });
@@ -416,6 +418,7 @@ export default function KioskPage() {
             }`}>
               {feedback.playerName || 'Player'}
             </div>
+            {feedback.type === 'success' && <TitleChips titles={feedback.memberTitles} className="mb-2" />}
             {feedback.type === 'success' && feedback.xpAwarded && (
               <div className="text-6xl font-black text-accent my-4">+{feedback.xpAwarded} XP</div>
             )}

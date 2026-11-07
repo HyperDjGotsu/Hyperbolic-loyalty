@@ -1,5 +1,6 @@
 'use client';
 
+import { TitleChips } from '@/components/TitleChips';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Avatar, GlowButton } from '@/components/ui';
@@ -24,6 +25,7 @@ interface LeaderboardEntry {
   rank: number;
   id: string;
   name: string;
+  memberTitles?: string[];
   level?: number;
   totalXp?: number;
   xp?: number;
@@ -37,6 +39,7 @@ interface SearchResult {
   id: string;
   odid: string;
   name: string;
+  memberTitles?: string[];
   title: string;
   level: number | null;
   totalXp: number | null;
@@ -51,6 +54,7 @@ interface Friend {
   id: string;
   odid: string;
   name: string;
+  memberTitles?: string[];
   title: string;
   level: number;
   totalXp: number;
@@ -1045,7 +1049,7 @@ export default function CommunityPage() {
                             avatar={anon ? { type: 'emoji', base: '❓', photoUrl: null, background: 'var(--bg-elevated)', frame: 'none', badge: null } : entry.avatar}
                             size={first ? 'lg' : 'md'}
                           />
-                          <div className="mt-2 w-full truncate text-sm font-bold text-primary">{anon ? 'Anonymous' : entry.name}</div>
+                          <div className="mt-2 flex w-full items-center justify-center gap-1 text-sm font-bold text-primary"><span className="truncate">{anon ? 'Anonymous' : entry.name}</span>{!anon && <TitleChips titles={entry.memberTitles} iconOnly />}</div>
                           <div className="text-xs font-semibold text-xp tabular-nums">{(entry.totalXp ?? entry.xp ?? 0).toLocaleString()}</div>
                         </div>
                       );
@@ -1215,6 +1219,7 @@ export default function CommunityPage() {
                           <span className="text-primary text-sm flex-1 truncate">
                             {entry.hidden ? 'Anonymous' : entry.name}
                           </span>
+                          {!entry.hidden && <TitleChips titles={entry.memberTitles} iconOnly />}
                           <span className="text-red-400 text-xs">{(entry.totalXp || entry.xp || 0).toLocaleString()}</span>
                         </div>
                       ))}
@@ -1324,6 +1329,7 @@ export default function CommunityPage() {
                 <h1 className="text-2xl font-bold text-primary mt-4">
                   {'hidden' in selectedMember && selectedMember.hidden ? 'Anonymous' : selectedMember.name}
                 </h1>
+                {!('hidden' in selectedMember && selectedMember.hidden) && <TitleChips titles={selectedMember.memberTitles} className="mt-2" />}
                 {'status' in selectedMember && selectedMember.status && (
                   <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-elevated/50 text-sm text-primary">
                     {selectedMember.status}

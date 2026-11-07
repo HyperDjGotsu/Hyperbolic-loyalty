@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyHomeStore } from '@/lib/store-join';
 import { isValidCheckinToken } from '@/lib/checkin-token';
+import { getTitlesForPlayers } from '@/lib/titles-server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
@@ -349,9 +350,12 @@ export async function POST(
       'events'
     ).catch(() => {});
 
+    const memberTitles = (await getTitlesForPlayers([playerId]))[playerId] ?? [];
+
     return NextResponse.json({
       success: true,
       playerName,
+      memberTitles,
       eventName: event.name,
       lifetimeXpAwarded: lifetimeXp,
       xp_awarded: lifetimeXp,   // mobile compat alias

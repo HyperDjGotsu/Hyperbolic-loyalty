@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getUnverifiedPlayerIds } from '@/lib/player-visibility';
+import { getTitlesForPlayers } from '@/lib/titles-server';
 import { auth } from '@clerk/nextjs/server';
 
 export const dynamic = 'force-dynamic';
@@ -164,6 +165,8 @@ export async function GET(request: NextRequest) {
     const playerMap: Record<string, (typeof players)[0]> = {};
     for (const p of players ?? []) playerMap[p.id] = p;
 
+    const titlesByPlayer = await getTitlesForPlayers(rankedPlayerIds);
+
     const leaderboard = rankedPlayerIds
       .map((playerId, index) => {
         const player = playerMap[playerId];
@@ -177,6 +180,7 @@ export async function GET(request: NextRequest) {
           totalXp: xpByPlayer[playerId] || 0,
           level: Math.floor((xpByPlayer[playerId] || 0) / 100) + 1,
           hidden: isAnonymous,
+          memberTitles: isAnonymous ? [] : (titlesByPlayer[playerId] ?? []),
           avatar: isAnonymous ? ANONYMOUS_AVATAR : buildAvatar(player),
           status: !isAnonymous && canSeeStatus(player) ? (player.status_text || null) : null,
         };

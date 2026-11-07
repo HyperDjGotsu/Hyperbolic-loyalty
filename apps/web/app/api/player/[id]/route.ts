@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getTitlesForPlayers } from '@/lib/titles-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,8 @@ export async function GET(
     if (!player.home_store_verified_at && player.clerk_user_id !== userId) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
+
+    const memberTitles = (await getTitlesForPlayers([player.id]))[player.id] ?? [];
 
     const { data: xpData } = await supabaseAdmin
       .from('xp_ledger')
@@ -89,6 +92,7 @@ export async function GET(
         badge: player.avatar_badge,
       },
       passTier: player.pass_tier,
+      memberTitles,
       xp: totalXP,
       gameXP: gameXP || [],
       recentActivity: activity || [],

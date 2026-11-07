@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getTitlesForPlayers } from '@/lib/titles-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +71,8 @@ export async function GET() {
       xpMap[entry.player_id] += xp;
     });
 
+    const titlesByPlayer = await getTitlesForPlayers(friendIds);
+
     // Build friends list
     const friendsList = friends?.map((friend: any) => {
       const totalXp = xpMap[friend.id] || 0;
@@ -84,6 +87,7 @@ export async function GET() {
         odid: friend.id, // internal id for operations
         name: friend.display_name || 'Unknown',
         title: `Level ${level}`,
+        memberTitles: titlesByPlayer[friend.id] ?? [],
         level,
         totalXp,
         avatar: {

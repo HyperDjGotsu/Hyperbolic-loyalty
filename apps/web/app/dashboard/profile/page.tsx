@@ -6,6 +6,7 @@ import { ProfileSkeleton } from '@/components/Skeleton';
 import { useUser, useClerk } from '@clerk/nextjs';
 import StatusEditor, { StatusBadge } from '@/components/StatusEditor';
 import { parseBackdrop } from '@/lib/games';
+import { TitleChips } from '@/components/TitleChips';
 import { Loader } from '@/components/Loader';
 import { Pencil } from 'lucide-react';
 import { HeroBackdrop, CoverImage, pickBackdropGame } from '@/components/CoverImage';
@@ -69,6 +70,7 @@ interface PlayerData {
   id: string;
   odid: string;
   displayName: string;
+  memberTitles?: string[];
   totalXp: number;
   level: number;
   gems: number;
@@ -268,6 +270,7 @@ export default function ProfilePage() {
             id: data.player_id,
             odid: data.id,
             displayName: data.displayName,
+            memberTitles: Array.isArray(data.memberTitles) ? data.memberTitles : [],
             totalXp: data.xp || 0,
             level: Math.floor((data.xp || 0) / 100) + 1,
             gems: invData.gems || 0,
@@ -1047,6 +1050,7 @@ export default function ProfilePage() {
         <div className="relative flex flex-col items-center">
           <AvatarPreview config={playerData.avatarConfig} size="xl" />
           <h1 className="font-display text-white text-[32px] leading-tight font-extrabold tracking-tight mt-4 text-center">{playerData.displayName}</h1>
+          <TitleChips titles={playerData.memberTitles} className="mt-2" />
           <div className="text-white/70 font-mono text-sm">{playerData.id}</div>
 
           <div className="mt-5 grid w-full grid-cols-3 gap-2 text-center">

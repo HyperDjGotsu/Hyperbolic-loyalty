@@ -1,6 +1,7 @@
 import 'server-only';
 import { randomInt } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { maybeAwardFounding } from '@/lib/titles-server';
 
 // Store join codes keep strangers from claiming a store they have never visited.
 // Codes live in store_join_codes (service role only). A player is "verified" for their home store
@@ -80,5 +81,6 @@ export async function verifyHomeStore(playerId: string, storeId: string): Promis
     console.error('verifyHomeStore error:', error);
     return false;
   }
+  await maybeAwardFounding(playerId); // while the automatic window is open; never throws
   return true;
 }

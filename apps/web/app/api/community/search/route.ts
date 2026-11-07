@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getTitlesForPlayers } from '@/lib/titles-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,8 @@ export async function GET(request: Request) {
       xpMap[entry.player_id] += xp;
     });
 
+    const titlesByPlayer = await getTitlesForPlayers(playerIds);
+
     // Check existing friendships
     const { data: friendships } = await supabaseAdmin
       .from('friendships')
@@ -90,6 +93,7 @@ export async function GET(request: Request) {
         odid: player.id, // UUID for API calls
         name: player.display_name || 'Unknown',
         title: isPrivate ? '???' : `Level ${level}`,
+        memberTitles: isPrivate ? [] : (titlesByPlayer[player.id] ?? []),
         level: isPrivate ? null : level,
         totalXp: isPrivate ? null : totalXp,
         avatar: (() => {

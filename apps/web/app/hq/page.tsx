@@ -2,6 +2,7 @@
 
 import StoreJoinCard from '@/components/hq/StoreJoinCard';
 import AbuseAlertsCard from '@/components/hq/AbuseAlertsCard';
+import TitlesCard from '@/components/hq/TitlesCard';
 import StaffGuide from '@/components/StaffGuide';
 import EventCreditLog from '@/components/EventCreditLog';
 import StaffPinSetup from '@/components/StaffPinSetup';
@@ -5994,6 +5995,7 @@ export default function HQPage() {
             </div>
 
             {staffContext?.isNetworkAdmin && <div className="lg:col-span-2"><AbuseAlertsCard /></div>}
+            {staffContext?.isNetworkAdmin && <div className="lg:col-span-2"><TitlesCard /></div>}
 
             {/* Network Calendar URL — network admins only */}
             {staffContext?.isNetworkAdmin && (

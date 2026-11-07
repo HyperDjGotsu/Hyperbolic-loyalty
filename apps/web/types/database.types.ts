@@ -1610,6 +1610,35 @@ export type Database = {
           },
         ]
       }
+      player_titles: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          player_id: string
+          title_key: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          player_id: string
+          title_key: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          player_id?: string
+          title_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_titles_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           allow_friend_requests: boolean | null
@@ -2442,6 +2471,7 @@ export type Database = {
       }
       store_config: {
         Row: {
+          title_settings: Json | null
           abuse_alert_settings: Json | null
           created_at: string | null
           currency_icon: string
@@ -2457,6 +2487,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          title_settings?: Json | null
           abuse_alert_settings?: Json | null
           created_at?: string | null
           currency_icon?: string
@@ -2472,6 +2503,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          title_settings?: Json | null
           abuse_alert_settings?: Json | null
           created_at?: string | null
           currency_icon?: string
