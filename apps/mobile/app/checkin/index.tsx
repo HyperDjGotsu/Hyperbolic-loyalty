@@ -4,18 +4,19 @@ import { View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useApi } from '@/lib/api';
 import { useTheme } from '@/lib/theme-context';
-import { fetchActiveEvent, isSafeEventId, runCheckin, type ActiveEventInfo } from '@/lib/checkin';
+import { fetchActiveEvent, isSafeEventId, isSafeToken, runCheckin, type ActiveEventInfo } from '@/lib/checkin';
 import { AppText, Button, Skeleton } from '@/components/kit';
 import { CheckinStateView, type CheckinView } from '@/components/CheckinStateView';
 
 // Landing for the kiosk QR (https://playerpass.gg/checkin?event_id=<id>) and for the in-app Check In button.
 // Shows who and what you are checking in to, then submits only when the player taps Check In.
 export default function CheckinPreviewScreen() {
-  const { event_id } = useLocalSearchParams<{ event_id?: string }>();
+  const { event_id, t } = useLocalSearchParams<{ event_id?: string; t?: string }>();
   const router = useRouter();
   const api = useApi();
   const { colors } = useTheme();
   const eventId = isSafeEventId(event_id) ? event_id : null;
+  const token = isSafeToken(t) ? t : null;
 
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<ActiveEventInfo | null>(null);
@@ -44,7 +45,7 @@ export default function CheckinPreviewScreen() {
     if (!eventId || submitting) return;
     setSubmitting(true);
     try {
-      const out = await runCheckin(api.post, eventId);
+      const out = await runCheckin(api.post, eventId, { token });
       if (out.kind === 'success') setView({ kind: 'success', xp: out.xp, prizePoints: out.prizePoints });
       else if (out.kind === 'already') setView({ kind: 'already' });
       else if (out.kind === 'renewal') setView({ kind: 'renewal' });

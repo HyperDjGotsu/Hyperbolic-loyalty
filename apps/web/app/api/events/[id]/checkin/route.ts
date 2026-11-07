@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyHomeStore } from '@/lib/store-join';
+import { isValidCheckinToken } from '@/lib/checkin-token';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
@@ -114,6 +115,7 @@ export async function POST(
       rounds_won?: number;
       store_id?: string;
       skip_renewal_opportunity?: boolean;
+      token?: string;
     };
 
     // Only staff (kiosk path, player_id in body) may record round wins; a player's own phone check-in is attendance only
@@ -200,6 +202,14 @@ export async function POST(
       playerRawExpiresAt = player.pass_expires_at;
       playerHasBeenPaidMember = player.has_been_paid_member ?? false;
     } else {
+      // Player's own phone path: must carry the rotating token shown in the kiosk QR,
+      // so a check-in needs someone who has actually seen the kiosk screen in the last few minutes.
+      if (!isValidCheckinToken(eventId, body.token)) {
+        return NextResponse.json(
+          { error: 'That check-in code expired. Scan the QR code on the kiosk screen again, or ask staff to check you in.', code: 'checkin_token_invalid' },
+          { status: 403 }
+        );
+      }
       // Player's own phone path
       playerId = authedPlayer.id;
       playerName = authedPlayer.display_name || 'Player';

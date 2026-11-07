@@ -230,8 +230,7 @@ export default function EventDetailScreen() {
       <View style={[styles.actions, { backgroundColor: colors.bgBase, borderColor: colors.border, paddingBottom: insets.bottom + 12 }]}>
         {isLive ? (
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button label="Check In" onPress={() => router.push(`/checkin?event_id=${event.id}` as never)} style={{ flex: 2 }} />
-            <Button label="Scan QR" variant="secondary" onPress={() => router.push(`/checkin/${event.id}` as never)} style={{ flex: 1 }} />
+            <Button label="Scan QR to Check In" onPress={() => router.push(`/checkin/${event.id}` as never)} style={{ flex: 1 }} />
           </View>
         ) : (
           <AppText variant="caption" tone="secondary" style={{ textAlign: 'center' }}>

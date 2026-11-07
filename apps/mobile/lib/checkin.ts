@@ -11,6 +11,16 @@ export function eventIdFromQr(data: string): string | null {
   return /^[A-Za-z0-9-]{1,64}$/.test(text) ? text : null;
 }
 
+// The rotating check-in token the kiosk QR carries (&t=...). Null when the code has none (old or copied link).
+export function tokenFromQr(data: string): string | null {
+  const m = data.match(/[?&]t=([A-Za-z0-9_-]{22})(?:[&#]|$)/);
+  return m ? m[1] : null;
+}
+
+export function isSafeToken(t: unknown): t is string {
+  return typeof t === 'string' && /^[A-Za-z0-9_-]{22}$/.test(t);
+}
+
 export type CheckinOutcome =
   | { kind: 'success'; xp: number; prizePoints: number }
   | { kind: 'already' }

@@ -6,6 +6,7 @@ const KEY = 'pp_pending_link';
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const ID = /^[A-Za-z0-9-]{1,64}$/;
+const TOKEN = /^[A-Za-z0-9_-]{22}$/;
 const REF = /^[A-Za-z0-9-]{1,20}$/;
 const SLUG = /^[A-Za-z0-9_-]{1,64}$/;
 const STAFF = /^[A-Za-z0-9_-]{1,128}$/;
@@ -18,7 +19,9 @@ export function buildPendingPath(pathname: string, params: Record<string, Param>
   const clean = pathname.replace(/\/+$/, '') || '/';
   if (clean === '/checkin') {
     const id = first(params.event_id);
-    return id && ID.test(id) ? `/checkin?event_id=${id}` : null;
+    if (!id || !ID.test(id)) return null;
+    const t = first(params.t);
+    return t && TOKEN.test(t) ? `/checkin?event_id=${id}&t=${t}` : `/checkin?event_id=${id}`;
   }
   const ev = /^\/event\/([A-Za-z0-9-]{1,64})$/.exec(clean);
   if (ev) return `/event/${ev[1]}`;

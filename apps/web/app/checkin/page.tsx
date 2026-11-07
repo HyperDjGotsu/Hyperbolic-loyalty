@@ -15,12 +15,13 @@ interface EventInfo {
   game: { name: string; icon: string; color: string } | null;
 }
 
-type State = 'loading' | 'ready' | 'checking' | 'success' | 'already' | 'error' | 'no-event' | 'no-auth' | 'renewal-opportunity';
+type State = 'loading' | 'ready' | 'checking' | 'success' | 'already' | 'error' | 'expired' | 'no-event' | 'no-auth' | 'renewal-opportunity';
 
 function CheckInContent() {
   const searchParams = useSearchParams();
   const { user, isLoaded } = useUser();
   const eventId = searchParams.get('event_id');
+  const token = searchParams.get('t');
 
   const [state, setState] = useState<State>('loading');
   const [event, setEvent] = useState<EventInfo | null>(null);
@@ -54,7 +55,7 @@ function CheckInContent() {
       const res = await fetch(`/api/events/${eventId}/checkin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ token }),
       });
       const data = await res.json();
 
@@ -66,6 +67,8 @@ function CheckInContent() {
         setState('already');
       } else if (data.renewalOpportunity) {
         setState('renewal-opportunity');
+      } else if (data.code === 'checkin_token_invalid') {
+        setState('expired');
       } else {
         setErrorMsg(data.error || 'Check-in failed');
         setState('error');
@@ -152,6 +155,20 @@ function CheckInContent() {
       <p className="text-secondary">You've already earned XP for this event</p>
       <Link href="/dashboard" className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
         View Dashboard →
+      </Link>
+    </div>
+  );
+
+  if (state === 'expired') return (
+    <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
+      <div className="text-6xl">📷</div>
+      <h1 className="text-2xl font-bold text-primary">Scan the kiosk again</h1>
+      <p className="text-secondary max-w-sm">
+        This check-in code has expired. The QR code on the kiosk screen changes every couple of minutes.
+        Scan it again, or ask a staff member to check you in.
+      </p>
+      <Link href="/dashboard" className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
+        Back to Dashboard
       </Link>
     </div>
   );

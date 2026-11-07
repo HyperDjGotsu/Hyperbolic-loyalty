@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { eventIdFromQr } from '@/lib/checkin';
+import { eventIdFromQr, tokenFromQr } from '@/lib/checkin';
 import { CheckinStateView } from '@/components/CheckinStateView';
 
 export default function QRCheckinScreen() {
@@ -28,7 +28,9 @@ export default function QRCheckinScreen() {
     const eventId = eventIdFromQr(data);
     if (!eventId) { setError("That doesn't look like a Player Pass QR code."); return; }
     if (eventId !== id) { setError('This QR code is for a different event.'); return; }
-    router.replace(`/checkin?event_id=${eventId}` as never);
+    const token = tokenFromQr(data);
+    if (!token) { setError('This QR code is out of date. Scan the code on the kiosk screen.'); return; }
+    router.replace(`/checkin?event_id=${eventId}&t=${token}` as never);
   }
 
   if (!permission) {

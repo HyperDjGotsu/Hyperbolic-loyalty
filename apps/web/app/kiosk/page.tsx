@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import QRCode from 'qrcode';
 
 interface ActiveEvent {
   id: string;
@@ -71,12 +72,61 @@ export default function KioskPage() {
   const [origin, setOrigin] = useState('');
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const processingRef = useRef(false);
+  // Rotating check-in QR: the token comes from the server and changes every couple of minutes.
+  const [qr, setQr] = useState<{ dataUrl: string; validUntil: number } | null>(null);
+  const [qrFailed, setQrFailed] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
     setOrigin(window.location.origin);
     const sp = new URLSearchParams(window.location.search);
     scopeRef.current = { storeId: sp.get('store_id'), eventId: sp.get('event_id') };
   }, []);
+
+  // Keep the screen awake while the kiosk is open (best effort; power settings still matter).
+  useEffect(() => {
+    let lock: { release: () => Promise<void> } | null = null;
+    const acquire = async () => {
+      try {
+        const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } };
+        if (nav.wakeLock && document.visibilityState === 'visible') lock = await nav.wakeLock.request('screen');
+      } catch { /* not supported or refused */ }
+    };
+    void acquire();
+    document.addEventListener('visibilitychange', acquire);
+    return () => { document.removeEventListener('visibilitychange', acquire); void lock?.release().catch(() => {}); };
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 5000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Fetch the current check-in token and draw the QR here (no third-party QR service). Refreshes on its own.
+  const activeEventId = activeEvent?.id ?? null;
+  useEffect(() => {
+    setQr(null);
+    setQrFailed(false);
+    if (!activeEventId || !origin) return;
+    let stopped = false;
+    const refresh = async () => {
+      try {
+        const res = await fetch(`/api/events/${activeEventId}/checkin-token`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('token');
+        const data = await res.json() as { token: string; blockMs: number };
+        const dataUrl = await QRCode.toDataURL(`${origin}/checkin?event_id=${activeEventId}&t=${data.token}`, {
+          width: 440, margin: 2, color: { dark: '#c4b5fd', light: '#111009' },
+        });
+        // A token stays valid for at least two full blocks after it was issued
+        if (!stopped) { setQr({ dataUrl, validUntil: Date.now() + data.blockMs * 2 }); setQrFailed(false); }
+      } catch {
+        if (!stopped) setQrFailed(true);
+      }
+    };
+    void refresh();
+    const timer = setInterval(refresh, 20000);
+    return () => { stopped = true; clearInterval(timer); };
+  }, [activeEventId, origin]);
 
   const fetchActiveEvent = useCallback(async () => {
     try {
@@ -280,10 +330,8 @@ export default function KioskPage() {
   }, [checkInByPlayerId]);
 
   const gameColor = activeEvent?.game?.color || '#3b82f6';
-  const checkinUrl = activeEvent ? `${origin}/checkin?event_id=${activeEvent.id}` : '';
-  const qrUrl = checkinUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(checkinUrl)}&bgcolor=111009&color=c4b5fd&margin=3`
-    : '';
+  const qrLive = !!qr && nowTick < qr.validUntil;
+  const qrPaused = !qrLive && (qrFailed || (!!qr && !qrLive));
 
   return (
     <div className="min-h-screen bg-base text-primary select-none md:overflow-hidden">
@@ -426,12 +474,24 @@ export default function KioskPage() {
             {/* Left: QR code */}
             <div className="flex flex-col items-center gap-4 md:w-64 flex-shrink-0">
               <div className="bg-surface rounded-2xl p-3 border border-border">
-                {qrUrl && (
+                {qrLive && qr ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={qrUrl} alt="Check-in QR code" width={220} height={220} className="rounded-xl" />
+                  <img src={qr.dataUrl} alt="Check-in QR code" width={220} height={220} className="rounded-xl" />
+                ) : (
+                  <div className="w-[220px] h-[220px] rounded-xl bg-base flex items-center justify-center text-center text-tertiary text-sm p-4">
+                    {qrPaused ? 'Check-in by QR is paused' : 'Loading…'}
+                  </div>
                 )}
               </div>
-              <p className="text-secondary text-center text-base">Scan with your phone</p>
+              {qrPaused ? (
+                <p className="text-warning text-center text-sm max-w-[220px]">
+                  Can&apos;t reach the server. Ask staff to check you in. Staff: press F5 if this stays for more than a few minutes.
+                </p>
+              ) : qrFailed ? (
+                <p className="text-warning text-center text-sm">Reconnecting…</p>
+              ) : (
+                <p className="text-secondary text-center text-base">Scan with your phone</p>
+              )}
             </div>
 
             {/* Center: Tap prompt */}
