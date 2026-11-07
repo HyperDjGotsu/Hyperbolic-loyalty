@@ -9,7 +9,7 @@ const DEFAULTS = {
   store_name: 'Player Pass',
   shop_title: 'Prize Wall',
   shop_description: 'avatar cosmetics',
-  player_id_prefix: 'HYP',
+  player_id_prefix: 'GGC',
   shop_categories: [
     { id: 'base', name: 'Base', icon: '😎', enabled: true },
     { id: 'background', name: 'Background', icon: '🎨', enabled: true },

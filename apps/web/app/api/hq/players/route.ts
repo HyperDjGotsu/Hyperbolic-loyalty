@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
   if (q.length < 2) return NextResponse.json({ players: [] });
 
-  const isId = q.toUpperCase().startsWith('HYP') || q.includes('-');
+  const isId = q.includes('-');
   const query = supabaseAdmin
     .from('players')
     .select('id, player_id, display_name')
