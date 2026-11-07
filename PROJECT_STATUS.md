@@ -1,8 +1,18 @@
 # Hyperbolic Loyalty System - Project Status
 
-**Last Updated:** November 5, 2026  
+**Last Updated:** November 6, 2026  
 **Project Owner:** DjGotsu  
 **Store:** Games of Martinez (Hyperbolic Games)
+
+---
+
+## 🆕 Nov 6, 2026 update — redesign-home MERGED TO `main` (head `8237738`)
+
+**Live on `main`:** all of `redesign-home` (41+ commits: mobile parity, native app, launch hardening, blocking/reports), plus Maia's game icons (`public/game-icons/`, `components/GameIcon.tsx`; shown in favorites, onboarding, leaderboards, mobile Events filter pills; themed light/dark art for Warhammer and Bolt Action; emoji fallback for games with no art), the Events pill overflow fix (`flex-none`), and `.clerk/` in `.gitignore`. Main was merged into the branch first with no conflicts; typecheck and 84 tests pass. A local `next build` can't run without `.env`, so the Vercel build was the real check.
+
+**Speed branches are all on main now** (`batch-cron-notifications`, `home-load-speed` landed as cherry-picks; `speed-events-apis`, `gitignore-clerk-keyless` fully merged). The Nov 5 "pushed, NOT merged" list below is out of date. The leftover remote branches can be deleted.
+
+**Still open:** Digimon and UVS icons have opaque white backgrounds (ask Maia for transparent versions); no art for Blood Bowl or board games; desktop Events filter still shows emoji; older dashboard pages still emoji; wide logos (Star Wars, Vanguard) read small at pill size; optimistic UI; signed-in timing of Home/check-in; rotate the Vercel bypass token; reconcile loyalty numbers (pack 120 vs 350 XP, Gold $25 vs $10/15/20/30, $10 credit 450 vs 350).
 
 ---
 
