@@ -88,6 +88,12 @@ describe('titles', () => {
     expect(xpRows()).toHaveLength(0);
   });
 
+  it('a title with no XP bonus (Administrator) pays nothing', async () => {
+    state.upsertRows = [{ title_key: 'administrator' }];
+    expect(await grantTitle('p1', 'administrator', 'admin1')).toBe(true);
+    expect(xpRows()).toHaveLength(0);
+  });
+
   it('rejects unknown titles', async () => {
     await expect(grantTitle('p1', 'overlord', null)).rejects.toThrow('Unknown title');
   });

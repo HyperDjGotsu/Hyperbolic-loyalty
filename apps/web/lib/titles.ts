@@ -4,6 +4,7 @@
 export const TITLES = {
   founding_member: { label: 'Founding Member', color: '#e2b43c', xp: 100, blurb: 'One of the first players to join PlayerPass' },
   beta_tester: { label: 'Beta Tester', color: '#7fb0ff', xp: 100, blurb: 'Helped test PlayerPass before launch' },
+  administrator: { label: 'Administrator', color: '#3ddc6a', xp: 0, blurb: 'Runs PlayerPass' },
 } as const;
 
 export type TitleKey = keyof typeof TITLES;

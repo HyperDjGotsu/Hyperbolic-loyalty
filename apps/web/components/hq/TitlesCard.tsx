@@ -43,7 +43,7 @@ export default function TitlesCard() {
         ok: true,
         text: action === 'revoke'
           ? `Removed ${label} from ${d.playerName}.`
-          : d.granted ? `${d.playerName} is now a ${label} and got the XP bonus.` : `${d.playerName} already has ${label}.`,
+          : d.granted ? `${d.playerName} now has the ${label} title.` : `${d.playerName} already has ${label}.`,
       });
       setPlayerId('');
       await load();
@@ -113,7 +113,7 @@ export default function TitlesCard() {
           className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-sm text-primary font-mono focus:outline-none focus:ring-1 focus:ring-accent"
         />
         <select value={titleKey} onChange={e => setTitleKey(e.target.value)} className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-sm text-primary">
-          {titles.map(t => <option key={t.key} value={t.key}>{t.label} (+{t.xp} XP)</option>)}
+          {titles.map(t => <option key={t.key} value={t.key}>{t.label}{t.xp > 0 ? ` (+${t.xp} XP)` : ''}</option>)}
         </select>
         <div className="flex gap-2">
           <button onClick={() => act('grant')} disabled={busy || playerId.trim().length < 5} className="flex-1 px-4 py-2 bg-accent text-accent-fg rounded-lg text-sm font-semibold disabled:opacity-50">Give title</button>

@@ -1,9 +1,9 @@
 'use client';
 
-import { FlaskConical, Star } from 'lucide-react';
+import { FlaskConical, ShieldCheck, Star } from 'lucide-react';
 import { TITLES, sortTitles, type TitleKey } from '@/lib/titles';
 
-const ICONS: Record<TitleKey, typeof Star> = { founding_member: Star, beta_tester: FlaskConical };
+const ICONS: Record<TitleKey, typeof Star> = { founding_member: Star, beta_tester: FlaskConical, administrator: ShieldCheck };
 
 // A player's titles (Founding Member, Beta Tester...). Full chips on profiles and the kiosk, icon only on leaderboard rows.
 export function TitleChips({

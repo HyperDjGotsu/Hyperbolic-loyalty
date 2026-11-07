@@ -98,24 +98,26 @@ export async function grantTitle(
     await supabaseAdmin.from('players').update({ is_founding_member: true }).eq('id', playerId);
   }
 
-  const { data: player } = await supabaseAdmin.from('players').select('home_store_id').eq('id', playerId).maybeSingle();
-  const { error: xpErr } = await supabaseAdmin.from('xp_ledger').insert({
-    player_id: playerId,
-    game_id: 'general',
-    base_xp: def.xp,
-    final_xp: def.xp,
-    multiplier: 1,
-    description: `${def.label} title bonus`,
-    source: 'achievement',
-    store_id: player?.home_store_id ?? null,
-  });
-  if (xpErr) console.error('title XP insert failed:', xpErr);
+  if (def.xp > 0) {
+    const { data: player } = await supabaseAdmin.from('players').select('home_store_id').eq('id', playerId).maybeSingle();
+    const { error: xpErr } = await supabaseAdmin.from('xp_ledger').insert({
+      player_id: playerId,
+      game_id: 'general',
+      base_xp: def.xp,
+      final_xp: def.xp,
+      multiplier: 1,
+      description: `${def.label} title bonus`,
+      source: 'achievement',
+      store_id: player?.home_store_id ?? null,
+    });
+    if (xpErr) console.error('title XP insert failed:', xpErr);
+  }
 
   createNotification(
     playerId,
     'title',
     `New title: ${def.label}`,
-    `${def.blurb}. +${def.xp} XP.`,
+    def.xp > 0 ? `${def.blurb}. +${def.xp} XP.` : `${def.blurb}.`,
     { title_key: titleKey },
     'store'
   ).catch(() => {});
