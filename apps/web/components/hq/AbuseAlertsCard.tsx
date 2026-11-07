@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-interface Settings { referralsPer24h: number; signupsPerHour: number; verifiedPerStorePer24h: number; xpPerPlayerPer24h: number }
+interface Settings { referralsPer24h: number; signupsPerHour: number; verifiedPerStorePer24h: number; xpPerPlayerPer24h: number; unverifiedDays: number }
 interface Alert { rule: keyof Settings; title: string; detail: string; count: number; threshold: number }
 
 const FIELDS: { key: keyof Settings; label: string; hint: string }[] = [
   { key: 'referralsPer24h', label: 'Referral sign-ups per referrer, 24 hours', hint: 'Alert when one player is credited with this many sign-ups.' },
   { key: 'signupsPerHour', label: 'New accounts per hour (whole network)', hint: 'Alert on a sudden burst of sign-ups.' },
   { key: 'verifiedPerStorePer24h', label: 'Players verified per store, 24 hours', hint: 'A leaked join code shows up here. Change the store code if it is not expected.' },
+  { key: 'unverifiedDays', label: 'Days a player can stay unverified', hint: 'Alert when a player has not joined with a store code or been checked in by staff after this many days.' },
   { key: 'xpPerPlayerPer24h', label: 'XP earned by one player, 24 hours', hint: 'Alert when one player earns more than this in a day.' },
 ];
 

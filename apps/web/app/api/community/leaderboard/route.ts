@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getUnverifiedPlayerIds } from '@/lib/player-visibility';
 import { auth } from '@clerk/nextjs/server';
 
 export const dynamic = 'force-dynamic';
@@ -79,7 +80,9 @@ export async function GET(request: NextRequest) {
     // Aggregate per player — skip anonymized rows (player_id = null) so
     // deleted players don't form a phantom "null" group in the results.
     const xpByPlayer: Record<string, number> = {};
-    for (const entry of (xpData ?? []).filter(e => e.player_id !== null)) {
+    // Players not yet verified for a store stay off the board
+    const hidden = await getUnverifiedPlayerIds();
+    for (const entry of (xpData ?? []).filter(e => e.player_id !== null && !hidden.has(e.player_id))) {
       xpByPlayer[entry.player_id!] = (xpByPlayer[entry.player_id!] || 0) + (entry.final_xp || 0);
     }
 

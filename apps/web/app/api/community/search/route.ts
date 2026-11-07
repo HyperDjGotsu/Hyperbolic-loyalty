@@ -35,6 +35,7 @@ export async function GET(request: Request) {
       .from('players')
       .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config, privacy_profile_visibility, privacy_hide_from_search, privacy_allow_friend_requests')
       .or(`display_name.ilike.%${safeQuery}%,player_id.ilike.%${safeQuery}%`)
+      .not('home_store_verified_at', 'is', null)
       .neq('id', currentPlayer?.id || '')
       .limit(20);
 

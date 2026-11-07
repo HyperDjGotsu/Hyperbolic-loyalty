@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getUnverifiedPlayerIds } from '@/lib/player-visibility';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,10 +74,11 @@ export async function GET() {
       .select('player_id, final_xp')
       .eq('game_id', 'one_piece');
 
-    // Aggregate XP by player
+    // Aggregate XP by player (players not yet verified for a store stay off the standings)
+    const hidden = await getUnverifiedPlayerIds();
     const playerXp: Record<string, number> = {};
     xpData?.forEach(entry => {
-      if (entry.player_id) {
+      if (entry.player_id && !hidden.has(entry.player_id)) {
         playerXp[entry.player_id] = (playerXp[entry.player_id] || 0) + (entry.final_xp || 0);
       }
     });
@@ -137,7 +139,7 @@ export async function GET() {
     // Aggregate monthly XP
     const monthlyPlayerXp: Record<string, number> = {};
     monthlyXpData?.forEach(entry => {
-      if (entry.player_id) {
+      if (entry.player_id && !hidden.has(entry.player_id)) {
         monthlyPlayerXp[entry.player_id] = (monthlyPlayerXp[entry.player_id] || 0) + (entry.final_xp || 0);
       }
     });

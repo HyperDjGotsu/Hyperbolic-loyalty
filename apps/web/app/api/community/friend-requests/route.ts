@@ -48,7 +48,8 @@ export async function GET() {
     const { data: requesters, error: requestersError } = await supabaseAdmin
       .from('players')
       .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config')
-      .in('id', requesterIds);
+      .in('id', requesterIds)
+      .not('home_store_verified_at', 'is', null);
 
     if (requestersError) {
       console.error('Error fetching requester details:', requestersError);
@@ -57,7 +58,8 @@ export async function GET() {
 
     // Build requests list with time ago
     const now = new Date();
-    const requestsList = requests.map(request => {
+    // Requests from players not yet verified for a store stay hidden
+    const requestsList = requests.filter(r => requesters?.some((x: any) => x.id === r.requester_id)).map(request => {
       const requester = requesters?.find((r: any) => r.id === request.requester_id);
       const createdAt = new Date(request.created_at || Date.now());
       const diffMs = now.getTime() - createdAt.getTime();
@@ -140,7 +142,7 @@ export async function POST(request: Request) {
     let targetPlayer;
     const { data: targetByHypId } = await supabaseAdmin
       .from('players')
-      .select('id, privacy_allow_friend_requests')
+      .select('id, privacy_allow_friend_requests, home_store_verified_at')
       .eq('player_id', targetPlayerId.toUpperCase())
       .single();
 
@@ -149,13 +151,14 @@ export async function POST(request: Request) {
     } else {
       const { data: targetByUuid } = await supabaseAdmin
         .from('players')
-        .select('id, privacy_allow_friend_requests')
+        .select('id, privacy_allow_friend_requests, home_store_verified_at')
         .eq('id', targetPlayerId)
         .single();
       targetPlayer = targetByUuid;
     }
 
-    if (!targetPlayer) {
+    // Players not yet verified for a store are not visible to others
+    if (!targetPlayer || !targetPlayer.home_store_verified_at) {
       return NextResponse.json({ error: 'Target player not found' }, { status: 404 });
     }
 

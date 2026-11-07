@@ -22,11 +22,16 @@ export async function GET(
   try {
     const { data: player, error: playerError } = await supabaseAdmin
       .from('players')
-      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config, pass_tier, created_at')
+      .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_config, pass_tier, created_at, home_store_verified_at, clerk_user_id')
       .eq('player_id', playerId)
       .single();
 
     if (playerError || !player) {
+      return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
+    // Players not yet verified for a store are only visible to themselves
+    if (!player.home_store_verified_at && player.clerk_user_id !== userId) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
     }
 

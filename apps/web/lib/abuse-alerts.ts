@@ -8,6 +8,7 @@ export interface AbuseSettings {
   signupsPerHour: number; // new accounts network-wide in one hour
   verifiedPerStorePer24h: number; // players newly verified for one store in 24 hours (a leaked join code shows up here)
   xpPerPlayerPer24h: number; // lifetime XP one player earned in 24 hours
+  unverifiedDays: number; // days a player may stay unverified before they show up as an alert
 }
 
 export const DEFAULT_ABUSE_SETTINGS: AbuseSettings = {
@@ -15,6 +16,7 @@ export const DEFAULT_ABUSE_SETTINGS: AbuseSettings = {
   signupsPerHour: 30,
   verifiedPerStorePer24h: 30,
   xpPerPlayerPer24h: 1500,
+  unverifiedDays: 7,
 };
 
 export function normalizeAbuseSettings(raw: unknown): AbuseSettings {
@@ -61,11 +63,13 @@ export async function runAbuseChecks(s: AbuseSettings): Promise<AbuseAlert[]> {
   const hour = new Date(now - 3600_000).toISOString();
   const alerts: AbuseAlert[] = [];
 
-  const [referred, signups, verified, xp] = await Promise.all([
+  const staleCutoff = new Date(now - s.unverifiedDays * 24 * 3600_000).toISOString();
+  const [referred, signups, verified, xp, stale] = await Promise.all([
     supabaseAdmin.from('players').select('referred_by').not('referred_by', 'is', null).gte('created_at', day).limit(ROW_CAP),
     supabaseAdmin.from('players').select('id', { count: 'exact', head: true }).gte('created_at', hour),
     supabaseAdmin.from('players').select('home_store_id').not('home_store_verified_at', 'is', null).gte('home_store_verified_at', day).limit(ROW_CAP),
     supabaseAdmin.from('xp_ledger').select('player_id, final_xp').gte('created_at', day).limit(ROW_CAP),
+    supabaseAdmin.from('players').select('display_name, player_id', { count: 'exact' }).is('home_store_verified_at', null).lte('created_at', staleCutoff).order('created_at', { ascending: true }).limit(5),
   ]);
 
   const refHits = countOver((referred.data ?? []).map(r => r.referred_by as string), s.referralsPer24h);
@@ -89,6 +93,18 @@ export async function runAbuseChecks(s: AbuseSettings): Promise<AbuseAlert[]> {
   if ((signups.count ?? 0) >= s.signupsPerHour) alerts.push({ rule: 'signupsPerHour', title: 'Burst of new accounts', detail: `${signups.count} accounts were created in the last hour.`, count: signups.count ?? 0, threshold: s.signupsPerHour });
   for (const h of verHits) alerts.push({ rule: 'verifiedPerStorePer24h', title: 'Many players verified for one store', detail: `${h.count} players were verified for ${storeName(h.key)} in 24 hours. If that is not expected, change the store's join code.`, count: h.count, threshold: s.verifiedPerStorePer24h });
   for (const h of xpHits) alerts.push({ rule: 'xpPerPlayerPer24h', title: 'Unusually high XP', detail: `${who(h.key)} earned ${h.count} XP in 24 hours.`, count: h.count, threshold: s.xpPerPlayerPer24h });
+
+  const staleCount = stale.count ?? 0;
+  if (staleCount > 0) {
+    const names = (stale.data ?? []).map(p => `${p.display_name ?? 'Unknown'}${p.player_id ? ` (${p.player_id})` : ''}`).join(', ');
+    alerts.push({
+      rule: 'unverifiedDays',
+      title: 'Players still unverified',
+      detail: `${staleCount} ${staleCount === 1 ? 'player has' : 'players have'} been unverified for more than ${s.unverifiedDays} days, oldest first: ${names}${staleCount > 5 ? ', and more' : ''}. A staff check-in or the store's join code verifies them.`,
+      count: staleCount,
+      threshold: s.unverifiedDays,
+    });
+  }
 
   return alerts;
 }

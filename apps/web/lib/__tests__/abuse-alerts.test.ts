@@ -21,5 +21,7 @@ describe('abuse alert helpers', () => {
     expect(n.signupsPerHour).toBe(1);
     expect(n.xpPerPlayerPer24h).toBe(DEFAULT_ABUSE_SETTINGS.xpPerPlayerPer24h);
     expect(n.verifiedPerStorePer24h).toBe(100000);
+    expect(n.unverifiedDays).toBe(7);
+    expect(normalizeAbuseSettings({ unverifiedDays: 3 }).unverifiedDays).toBe(3);
   });
 });

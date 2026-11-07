@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getUnverifiedPlayerIds } from '@/lib/player-visibility';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,9 +45,13 @@ export async function GET() {
       return NextResponse.json({ activity: [] });
     }
 
-    const friendIds = friendships.map(f =>
-      f.requester_id === me.id ? f.addressee_id : f.requester_id
-    );
+    const hiddenIds = await getUnverifiedPlayerIds();
+    const friendIds = friendships
+      .map(f => (f.requester_id === me.id ? f.addressee_id : f.requester_id))
+      .filter(id => !hiddenIds.has(id));
+    if (friendIds.length === 0) {
+      return NextResponse.json({ activity: [] });
+    }
 
     const activity: FriendActivity[] = [];
     const cutoff = new Date();

@@ -49,7 +49,8 @@ export async function GET() {
     const { data: friends, error: friendsError } = await supabaseAdmin
       .from('players')
       .select('id, player_id, display_name, avatar_base, avatar_background, avatar_frame, avatar_badge, avatar_photo_url, avatar_config, privacy_profile_visibility, status_text')
-      .in('id', friendIds) as { data: any[]; error: any };
+      .in('id', friendIds)
+      .not('home_store_verified_at', 'is', null) as { data: any[]; error: any };
 
     if (friendsError) {
       console.error('Error fetching friend details:', friendsError);
