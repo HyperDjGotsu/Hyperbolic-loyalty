@@ -50,7 +50,7 @@ export default function TermsPage() {
           </p>
         </Section>
 
-        <Section title="Player Passes">
+        <Section title="Passes">
           <p>
             Passes (Bronze, Silver, Gold, Diamond) change how fast you earn and unlock perks while
             they are active. Passes are sold and billed by participating stores. The price, length,
