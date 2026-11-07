@@ -7,7 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useTheme } from '@/lib/theme-context';
 import { AppText } from '@/components/kit';
 import { useRouter } from 'expo-router';
-import { HOME_TOUR_KEY, PAGE_INTRO_KEY_PREFIX, requestReplay } from '@/lib/first-run';
+import { HOME_TOUR_KEY, requestReplay } from '@/lib/first-run';
 
 // Pieces of the Profile tab that mirror the website's mobile profile page.
 
@@ -260,7 +260,6 @@ export function ReplayLinks() {
     // Welcome slides first; the Home walkthrough follows them on its own.
     { label: 'Replay welcome tour', run: async () => { await clear([HOME_TOUR_KEY]); goHome(); requestReplay('welcome'); } },
     { label: 'Replay Home walkthrough', run: async () => { await clear([HOME_TOUR_KEY]); goHome(); requestReplay('tour'); } },
-    { label: 'Replay page tips', run: async () => { await clear(['events', 'community', 'prize-wall', 'profile'].map(k => PAGE_INTRO_KEY_PREFIX + k)); Alert.alert('Page tips reset', 'Tips will show again when you open each tab.'); } },
   ];
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, marginHorizontal: 16, marginTop: 20 }}>

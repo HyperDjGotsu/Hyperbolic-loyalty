@@ -3,7 +3,7 @@ import { Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApi } from '@/lib/api';
 import { useTheme } from '@/lib/theme-context';
-import { WELCOME_KEY, emitWelcomeClosed, getFlag, onReplay, setFlag } from '@/lib/first-run';
+import { HOME_TOUR_KEY, WELCOME_KEY, emitWelcomeClosed, getFlag, onReplay, setFlag } from '@/lib/first-run';
 import { AppText, Button } from '@/components/kit';
 
 type StoreConfig = { store_name: string; shop_title: string; currency_name: string };
@@ -26,23 +26,32 @@ export function WelcomeOverlay() {
   const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   const [slide, setSlide] = useState(0);
+  // First run asks whether they want the tour at all; a replay from Profile goes straight to the slides
+  const [phase, setPhase] = useState<'ask' | 'slides'>('slides');
   const [cfg, setCfg] = useState<StoreConfig>(DEFAULTS);
 
   useEffect(() => {
     let alive = true;
-    const show = () => {
+    const show = (first = false) => {
       api.get<Partial<StoreConfig>>('/api/store-config')
         .then(d => { if (alive && d) setCfg({ ...DEFAULTS, ...d }); })
         .catch(() => {});
-      if (alive) { setSlide(0); setVisible(true); }
+      if (alive) { setSlide(0); setPhase(first ? 'ask' : 'slides'); setVisible(true); }
     };
     (async () => {
       if (await getFlag(WELCOME_KEY)) return;
-      show();
+      show(true);
     })();
-    const off = onReplay('welcome', show);
+    const off = onReplay('welcome', () => show(false));
     return () => { alive = false; off(); };
   }, []);
+
+  // "No thanks": no slides and no Home walkthrough, now or later (Profile can still replay them)
+  async function declineTour() {
+    setVisible(false);
+    await setFlag(WELCOME_KEY);
+    await setFlag(HOME_TOUR_KEY);
+  }
 
   async function dismiss() {
     setVisible(false);
@@ -51,6 +60,24 @@ export function WelcomeOverlay() {
   }
 
   if (!visible) return null;
+  if (phase === 'ask') {
+    return (
+      <Modal animationType="fade" onRequestClose={declineTour}>
+        <View style={{ flex: 1, backgroundColor: colors.bgBase, paddingTop: insets.top, paddingBottom: insets.bottom + 16 }}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+            <AppText variant="title" style={{ textAlign: 'center', fontSize: 26, lineHeight: 32, marginBottom: 12 }}>Welcome to {cfg.store_name}</AppText>
+            <AppText variant="body" tone="secondary" style={{ textAlign: 'center', fontSize: 16, lineHeight: 24 }}>
+              Want a quick tour of the app? It takes about a minute, and you can replay it any time from your profile.
+            </AppText>
+          </View>
+          <View style={{ paddingHorizontal: 24, gap: 12 }}>
+            <Button label="Show me around" onPress={() => setPhase('slides')} style={{ alignSelf: 'stretch' }} />
+            <Button label="No thanks" variant="ghost" onPress={() => void declineTour()} style={{ alignSelf: 'stretch' }} />
+          </View>
+        </View>
+      </Modal>
+    );
+  }
   const slides = buildSlides(cfg);
   const cur = slides[slide];
   const last = slide === slides.length - 1;

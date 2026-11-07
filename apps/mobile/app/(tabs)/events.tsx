@@ -10,7 +10,6 @@ import { useSelectedStoreId } from '@/lib/selected-store';
 import { SELECTABLE_GAMES } from '@/lib/games';
 import { AppText, Button, Skeleton } from '@/components/kit';
 import { EventCover } from '@/components/EventCover';
-import { PageIntro } from '@/components/PageIntro';
 import { ShareEventSheet } from '@/components/ShareEventSheet';
 
 type Game = { id: string; name: string; icon: string; color: string };
@@ -221,7 +220,6 @@ export default function EventsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgBase }]}>
-      <PageIntro page="events" />
       <View style={{ paddingTop: insets.top + 12, paddingHorizontal: 16 }}>
         <AppText variant="display">Events</AppText>
         <AppText variant="caption" tone="secondary">Games, tournaments & meetups</AppText>

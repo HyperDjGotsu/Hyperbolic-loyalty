@@ -4,7 +4,6 @@ import { Image, Modal, Pressable, RefreshControl, ScrollView, View } from 'react
 import { Feather } from '@expo/vector-icons';
 import { ApiError, errorMessage, useApi } from '@/lib/api';
 import { useTheme } from '@/lib/theme-context';
-import { PageIntro } from '@/components/PageIntro';
 import { FREE_TIER_GATE } from '@/lib/pass-tiers';
 import { AppText, Button, Skeleton } from '@/components/kit';
 import { PassesSheet } from '@/components/PassesSheet';
@@ -154,7 +153,6 @@ export default function PrizeWallScreen() {
       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, gap: 20 }}
       refreshControl={<RefreshControl refreshing={refreshing} tintColor={colors.accent} onRefresh={() => { setRefreshing(true); void loadPassStatus(); if (storeId) void loadCatalog(storeId); else setRefreshing(false); }} />}
     >
-      <PageIntro page="prize-wall" />
       <View style={{ paddingTop: insets.top + 12 }}>
         <AppText variant="display">Prize Wall</AppText>
         <AppText variant="caption" tone="secondary">Spend your {cur} on real prizes. They never expire.</AppText>

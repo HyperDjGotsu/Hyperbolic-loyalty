@@ -3,7 +3,6 @@ import * as SecureStore from 'expo-secure-store';
 // Same flags the website keeps in localStorage, kept in SecureStore on the phone.
 export const WELCOME_KEY = 'hxp_welcome_seen';
 export const HOME_TOUR_KEY = 'pp_home_tour_seen';
-export const PAGE_INTRO_KEY_PREFIX = 'pp_page_intro_';
 
 export async function getFlag(key: string): Promise<boolean> {
   try { return !!(await SecureStore.getItemAsync(key)); } catch { return true; } // unreadable: don't nag

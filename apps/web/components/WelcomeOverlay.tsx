@@ -143,11 +143,14 @@ function SlideArt({ slide, currency }: { slide: number; currency: string }) {
 export function WelcomeOverlay() {
   const [visible, setVisible] = useState(false);
   const [slide, setSlide] = useState(0);
+  // First run asks whether they want the tour at all. Replaying from Profile goes straight to the slides.
+  const [phase, setPhase] = useState<'ask' | 'slides'>('slides');
   const [config, setConfig] = useState<StoreConfig>(DEFAULT_CONFIG);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (localStorage.getItem(STORAGE_KEY)) return;
+    try { if (!localStorage.getItem('pp_home_tour_seen')) setPhase('ask'); } catch { /* show the slides */ }
 
     // Fetch store config for dynamic slide content
     fetch(`/api/store-config?t=${Date.now()}`)
@@ -165,6 +168,12 @@ export function WelcomeOverlay() {
     window.dispatchEvent(new Event('pp:welcome-closed'));
   };
 
+  // "No thanks": no slides and no Home walkthrough, now or later (Profile can still replay them)
+  const declineTour = () => {
+    try { localStorage.setItem(STORAGE_KEY, 'true'); localStorage.setItem('pp_home_tour_seen', 'true'); } catch { /* may ask again next visit */ }
+    setVisible(false);
+  };
+
   const next = () => {
     if (slide < SLIDES.length - 1) {
       setSlide(slide + 1);
@@ -176,6 +185,30 @@ export function WelcomeOverlay() {
   const SLIDES = buildSlides(config);
 
   if (!visible) return null;
+
+  if (phase === 'ask') {
+    return (
+      <div className="fixed inset-0 z-[100] bg-base md:flex md:items-center md:justify-center md:bg-black/70 md:backdrop-blur-sm">
+        <div className="flex h-full flex-col md:h-[560px] md:max-h-[90vh] md:w-[480px] md:overflow-hidden md:rounded-[28px] md:border md:border-border-token md:bg-base md:shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+          <div className="pp-slide flex flex-1 flex-col items-center justify-center px-8 text-center">
+            <img src="/brand/pp-lockup.png" alt="PlayerPass" className="mx-auto mb-8 h-44 w-auto" />
+            <h2 className="mb-4 text-2xl font-bold leading-snug text-primary">Welcome to {config.store_name}</h2>
+            <p className="max-w-sm text-base leading-relaxed text-secondary">
+              Want a quick tour of the app? It takes about a minute, and you can replay it any time from your profile.
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-3 p-8">
+            <button type="button" onClick={() => setPhase('slides')} className="pp-press w-full max-w-sm rounded-xl bg-accent py-4 text-base font-bold text-white hover:opacity-90">
+              Show me around
+            </button>
+            <button type="button" onClick={declineTour} className="w-full max-w-sm rounded-xl py-3 text-base font-semibold text-secondary hover:text-primary">
+              No thanks
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const current = SLIDES[slide];
 
