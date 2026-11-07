@@ -516,7 +516,7 @@ function OnboardingContent() {
                     }`}
                   >
                     <div className="text-xl mb-1"><GameIcon id={game.id} size={32} /></div>
-                    <div className="text-xs truncate">{game.name}</div>
+                    <div className="text-xs leading-tight break-words">{game.name}</div>
                   </button>
                 ))}
               </div>
