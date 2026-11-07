@@ -102,16 +102,3 @@ export const EVENT_GAME_FILTERS: Array<{ id: string; name: string; icon: string 
   ...SELECTABLE_GAMES.map(g => ({ id: g.id, name: FILTER_SHORT_NAMES[g.id] ?? g.name, icon: g.icon })),
   { id: 'board_games', name: 'Board Games', icon: '🎲' },
 ];
-
-/** Cleans a list of picked games: known games only (aliases resolved), no duplicates, in the order picked, at most `max`. */
-export function canonicalFavoriteGames(picked: unknown, max = 8): string[] {
-  if (!Array.isArray(picked)) return [];
-  const out: string[] = [];
-  for (const g of picked) {
-    if (typeof g !== 'string') continue;
-    const id = resolveGameId(g);
-    if (SELECTABLE_GAME_IDS.includes(id) && !out.includes(id)) out.push(id);
-    if (out.length >= max) break;
-  }
-  return out;
-}

@@ -36,7 +36,7 @@ function OnboardingContent() {
   const [displayName, setDisplayName] = useState('');
   const [discordUsername, setDiscordUsername] = useState('');
   const [phone, setPhone] = useState('');
-  const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
+  const [primaryGame, setPrimaryGame] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [referralChecking, setReferralChecking] = useState(false);
@@ -247,7 +247,7 @@ function OnboardingContent() {
           displayName: displayName.trim(),
           discordUsername: discordUsername.trim() || null,
           phone: phone.trim() || null,
-          favoriteGames,
+          primaryGame: primaryGame || null,
           referralCode: referralCode.trim().toUpperCase() || null,
           staffInviteCode: staffInviteCode || null,
           homeStoreId,
@@ -501,35 +501,24 @@ function OnboardingContent() {
               <p className="text-tertiary text-xs mt-1">For event reminders (we won't spam you)</p>
             </div>
 
-            {/* Favorite games: pick every game you play (the first one you tap is your main game) */}
+            {/* Primary Game */}
             <div className="mb-6">
-              <label className="block text-secondary text-sm mb-1">
-                Favorite games
-                <span className="text-tertiary ml-2">(optional, up to 8)</span>
-              </label>
-              <p className="text-tertiary text-xs mb-2">Pick every game you play. You can change these any time on your profile. {favoriteGames.length}/8 picked.</p>
+              <label className="block text-secondary text-sm mb-2">Primary Game (optional)</label>
               <div className="grid grid-cols-3 gap-2">
-                {GAME_OPTIONS.map((game) => {
-                  const picked = favoriteGames.includes(game.id);
-                  const full = !picked && favoriteGames.length >= 8;
-                  return (
-                    <button
-                      key={game.id}
-                      type="button"
-                      disabled={full}
-                      aria-pressed={picked}
-                      onClick={() => setFavoriteGames(prev => prev.includes(game.id) ? prev.filter(g => g !== game.id) : prev.length >= 8 ? prev : [...prev, game.id])}
-                      className={`p-3 rounded-xl border text-center transition-all ${
-                        picked
-                          ? 'bg-accent/10 border-accent text-accent'
-                          : 'bg-input border-border-strong text-secondary hover:border-border-strong'
-                      } ${full ? 'opacity-40' : ''}`}
-                    >
-                      <div className="text-xl mb-1"><GameIcon id={game.id} size={32} /></div>
-                      <div className="text-xs truncate">{game.name}</div>
-                    </button>
-                  );
-                })}
+                {GAME_OPTIONS.map((game) => (
+                  <button
+                    key={game.id}
+                    onClick={() => setPrimaryGame(primaryGame === game.id ? '' : game.id)}
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      primaryGame === game.id
+                        ? 'bg-accent/10 border-accent text-accent'
+                        : 'bg-input border-border-strong text-secondary hover:border-border-strong'
+                    }`}
+                  >
+                    <div className="text-xl mb-1"><GameIcon id={game.id} size={32} /></div>
+                    <div className="text-xs truncate">{game.name}</div>
+                  </button>
+                ))}
               </div>
             </div>
 

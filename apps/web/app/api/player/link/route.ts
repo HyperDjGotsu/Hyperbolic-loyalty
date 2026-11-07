@@ -3,7 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { enforceRateLimitPermissive, enforceRateLimitStrict, getClientIp } from '@/lib/rate-limit';
 import { findStoreByJoinCode, normalizeJoinCode } from '@/lib/store-join';
-import { canonicalFavoriteGames } from '@/lib/games';
+import { SELECTABLE_GAME_IDS, resolveGameId } from '@/lib/games';
 
 const MIN_AGE = 13;
 const AGE_BLOCK_COOKIE = 'pp_age_blocked';
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, playerId, displayName, discordUsername, phone, primaryGame, favoriteGames, referralCode, staffInviteCode, homeStoreId: pickedStoreId, birthdate, joinCode } = body;
+    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId: pickedStoreId, birthdate, joinCode } = body;
     let homeStoreId: string | null = pickedStoreId || null;
     let homeStoreVerifiedAt: string | null = null;
     // Note: managedStoreId is intentionally NOT accepted here.
@@ -223,14 +223,16 @@ export async function POST(request: Request) {
       }
 
       // Resolve canonical game ID (handles legacy aliases like sw_unlimited → star_wars_unlimited)
-      // Onboarding sends up to 8 favorite games (the first is the primary); older clients send a single primaryGame.
-      const pickedGames = canonicalFavoriteGames(Array.isArray(favoriteGames) ? favoriteGames : (primaryGame ? [primaryGame] : []));
-      const canonicalPrimaryGame = pickedGames[0] ?? null;
+      const canonicalPrimaryGame = primaryGame
+        ? (SELECTABLE_GAME_IDS.includes(resolveGameId(primaryGame)) ? resolveGameId(primaryGame) : null)
+        : null;
 
       // Initialize favorite_games from the player's onboarding selection.
       // If no game was selected or the ID was unrecognized, start with only
       // 'overall' — never substitute a real game silently.
-      const initialFavorites = ['overall', ...pickedGames];
+      const initialFavorites = canonicalPrimaryGame
+        ? ['overall', canonicalPrimaryGame]
+        : ['overall'];
 
       // Create the player with all fields
       const { data: newPlayer, error: createError } = await supabaseAdmin
