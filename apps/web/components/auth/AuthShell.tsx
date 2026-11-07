@@ -43,6 +43,8 @@ export function clerkAppearance(opts: { headerCentered?: boolean; compactHeader?
       borderRadius: '16px',
       fontFamily: 'Plus Jakarta Sans, sans-serif',
     },
+    // The page already shows the Player Pass mark above the card; hide Clerk's own copy of it here
+    layout: { logoPlacement: 'none' },
     elements: {
       rootBox: '!w-full',
       cardBox: '!w-full !shadow-none !border-0 !bg-transparent',
