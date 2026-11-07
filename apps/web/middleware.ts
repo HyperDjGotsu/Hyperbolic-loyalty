@@ -1,11 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { PITCH_COOKIE, accessKey, hasPitchAccess } from '@/lib/pitch-access';
 
 // Routes that require authentication
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/onboarding(.*)',
 ]);
+
+// Store pitch pages sit behind a shared password (PITCH_PASSWORD env var; locked for everyone while it is unset); '/pitch-access' is the unlock page and stays open
+const isPitchRoute = createRouteMatcher(['/pitch', '/pitch/(.*)', '/demo', '/demo/(.*)']);
 
 // Routes that are always public
 const isPublicRoute = createRouteMatcher([
@@ -36,6 +40,15 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     await auth.protect();
+  }
+
+  if (isPitchRoute(req)) {
+    const ok = await hasPitchAccess(accessKey(), req.cookies.get(PITCH_COOKIE)?.value);
+    if (!ok) {
+      const url = new URL('/pitch-access', req.url);
+      url.searchParams.set('next', req.nextUrl.pathname + req.nextUrl.search);
+      return NextResponse.redirect(url);
+    }
   }
 
   if (req.nextUrl.pathname === '/') {
