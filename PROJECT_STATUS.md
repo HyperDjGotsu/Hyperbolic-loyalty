@@ -1,8 +1,24 @@
 # Hyperbolic Loyalty System - Project Status
 
-**Last Updated:** November 6, 2026  
+**Last Updated:** November 7, 2026  
 **Project Owner:** DjGotsu  
 **Store:** Games of Martinez (Hyperbolic Games)
+
+---
+
+## 🆕 Nov 7, 2026 update — store join codes, kiosk token, misuse alerts MERGED TO `main` (head `4bd0869`), live on playerpass.gg
+
+**Store join codes + verified home store.** Each store has a rotatable 6-character join code (`store_join_codes`, service role only). HQ → Settings has a card with the QR, code, Copy link, Print sign and New code (managers). Public `/join/<slug>?c=<code>` page; onboarding has an optional code field; changing home store needs the code. `players.home_store_verified_at` (NULL = unverified): set by join code or by a *staff* check-in (a player's own check-in can't prove presence). Unverified players can't claim the trial or redeem prizes (403 `store_unverified`) and are hidden from leaderboards, One Piece standings, bounty list, search, friends, friend requests, friend activity and public profiles (`lib/player-visibility.ts`, fails closed). HQ, kiosk and circuit results still list them. All 17 existing players were grandfathered as verified.
+
+**Players table lockdown.** `anon`/`authenticated` write access and the open RLS policies on `players` were removed (migration `20261106230100`). The app only uses the service role.
+
+**Rotating kiosk token.** Self check-in needs the token in the kiosk QR (`lib/checkin-token.ts`, HMAC of event id + 2-minute block, valid about 4-6 minutes; secret `CHECKIN_TOKEN_SECRET`, falls back to the Supabase service key). Staff check-ins (NFC/by name) skip it. The kiosk fetches `/api/events/[id]/checkin-token` (staff only), draws the QR locally (no third-party QR site), shows "Reconnecting…" then a paused message if offline, and requests a screen wake lock. Mobile: event page button is now "Scan QR to Check In"; the scan carries the token (needs a new mobile build). A kiosk tab opened before the deploy must be reloaded.
+
+**HQ misuse alerts (network admin only).** Settings card with editable limits (`store_config.abuse_alert_settings`, migration `20261107170000`): referral sign-ups per referrer/24h (20), new accounts/hour (30), players verified per store/24h (30), XP per player/24h (1500), days a player may stay unverified (7). Checked live when the card opens; no background job (Vercel plan limits crons).
+
+**Branding and popups.** Brand is "PlayerPass" (one word) in app copy, metadata, emails and the mobile app name; Clerk application name set to PlayerPass; leftover Hyperbolic XP copy removed; the network-wide Player ID Prefix card and HYP defaults removed (sign-up uses each store's own prefix; the original `HYP-NCTE64` account keeps its ID and the kiosk still accepts HYP- cards). First run now asks once "Want a quick tour?" (Show me around / No thanks); per-page tip cards removed; Profile replay links still work. Web and mobile.
+
+**Still open:** Home banner for unverified players (enter code); staff vouching; Emperor crowning doesn't filter unverified players; mobile build with the new check-in flow; Apple Developer (org) and Google Play enrollment; Clerk support email and own sender domain; Digimon/UVS icon backgrounds (ask Maia); revoke Vercel bypass token; daily alert job needs a Vercel plan with more crons.
 
 ---
 
