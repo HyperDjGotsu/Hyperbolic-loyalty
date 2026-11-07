@@ -1615,18 +1615,21 @@ export type Database = {
           granted_at: string
           granted_by: string | null
           player_id: string
+          revoked_at: string | null
           title_key: string
         }
         Insert: {
           granted_at?: string
           granted_by?: string | null
           player_id: string
+          revoked_at?: string | null
           title_key: string
         }
         Update: {
           granted_at?: string
           granted_by?: string | null
           player_id?: string
+          revoked_at?: string | null
           title_key?: string
         }
         Relationships: [
@@ -2831,6 +2834,10 @@ export type Database = {
       }
     }
     Functions: {
+      award_title_capped: {
+        Args: { p_player: string; p_title: string; p_cap: number; p_by?: string | null }
+        Returns: boolean
+      }
       accept_staff_invitation: {
         Args: {
           p_clerk_user_id: string

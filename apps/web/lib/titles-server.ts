@@ -23,7 +23,7 @@ export async function loadTitleSettings(): Promise<TitleSettings> {
   return normalizeTitleSettings(data?.title_settings);
 }
 
-/** Titles held by each of the given players (player row ids), in display order. */
+/** Titles held by each of the given players (player row ids), in display order. Removed titles are left out. */
 export async function getTitlesForPlayers(ids: string[]): Promise<Record<string, TitleKey[]>> {
   const out: Record<string, TitleKey[]> = {};
   const unique = Array.from(new Set(ids.filter(Boolean)));
@@ -31,6 +31,7 @@ export async function getTitlesForPlayers(ids: string[]): Promise<Record<string,
     const { data, error } = await supabaseAdmin
       .from('player_titles')
       .select('player_id, title_key')
+      .is('revoked_at', null)
       .in('player_id', unique.slice(i, i + 400));
     if (error) { console.error('getTitlesForPlayers error:', error); continue; } // titles are decoration; never break a page over them
     const grouped: Record<string, string[]> = {};
@@ -41,19 +42,57 @@ export async function getTitlesForPlayers(ids: string[]): Promise<Record<string,
 }
 
 /**
- * Gives a player a title. The first time only, they also get the title's XP bonus.
- * Returns whether it was newly granted (false = they already held it).
+ * Gives a player a title. Returns whether the player newly holds it (false = they already did).
+ * - The XP bonus is paid only when the title is given for the very first time. Taking a title away and giving it
+ *   back later restores it without paying again.
+ * - `opts.cap` is used by automatic awards: the cap is checked and the row inserted atomically in the database,
+ *   and an automatic award never undoes a removal.
  */
-export async function grantTitle(playerId: string, titleKey: string, grantedByAppUserId: string | null): Promise<boolean> {
+export async function grantTitle(
+  playerId: string,
+  titleKey: string,
+  grantedByAppUserId: string | null,
+  opts: { cap?: number } = {}
+): Promise<boolean> {
   if (!isTitleKey(titleKey)) throw new Error('Unknown title');
   const def = TITLES[titleKey];
 
-  const { data: inserted, error } = await supabaseAdmin
+  const { data: existing } = await supabaseAdmin
     .from('player_titles')
-    .upsert({ player_id: playerId, title_key: titleKey, granted_by: grantedByAppUserId }, { onConflict: 'player_id,title_key', ignoreDuplicates: true })
-    .select('title_key');
-  if (error) throw error;
-  if (!inserted || inserted.length === 0) return false;
+    .select('revoked_at')
+    .eq('player_id', playerId)
+    .eq('title_key', titleKey)
+    .maybeSingle();
+
+  if (existing) {
+    if (!existing.revoked_at) return false;
+    if (opts.cap !== undefined) return false; // automatic awards never undo a removal
+    const { error } = await supabaseAdmin
+      .from('player_titles')
+      .update({ revoked_at: null, granted_by: grantedByAppUserId, granted_at: new Date().toISOString() })
+      .eq('player_id', playerId)
+      .eq('title_key', titleKey);
+    if (error) throw error;
+    if (titleKey === 'founding_member') await supabaseAdmin.from('players').update({ is_founding_member: true }).eq('id', playerId);
+    return true; // restored, no second XP bonus
+  }
+
+  let inserted: boolean;
+  if (opts.cap !== undefined) {
+    const { data, error } = await supabaseAdmin.rpc('award_title_capped', {
+      p_player: playerId, p_title: titleKey, p_cap: opts.cap, p_by: grantedByAppUserId,
+    });
+    if (error) throw error;
+    inserted = data === true;
+  } else {
+    const { data, error } = await supabaseAdmin
+      .from('player_titles')
+      .upsert({ player_id: playerId, title_key: titleKey, granted_by: grantedByAppUserId }, { onConflict: 'player_id,title_key', ignoreDuplicates: true })
+      .select('title_key');
+    if (error) throw error;
+    inserted = !!data && data.length > 0;
+  }
+  if (!inserted) return false;
 
   if (titleKey === 'founding_member') {
     await supabaseAdmin.from('players').update({ is_founding_member: true }).eq('id', playerId);
@@ -84,9 +123,15 @@ export async function grantTitle(playerId: string, titleKey: string, grantedByAp
   return true;
 }
 
+/** Takes a title away. The row stays (marked removed) so it can never be re-awarded automatically or pay XP twice. */
 export async function revokeTitle(playerId: string, titleKey: string): Promise<void> {
   if (!isTitleKey(titleKey)) throw new Error('Unknown title');
-  const { error } = await supabaseAdmin.from('player_titles').delete().eq('player_id', playerId).eq('title_key', titleKey);
+  const { error } = await supabaseAdmin
+    .from('player_titles')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('player_id', playerId)
+    .eq('title_key', titleKey)
+    .is('revoked_at', null);
   if (error) throw error;
   if (titleKey === 'founding_member') {
     await supabaseAdmin.from('players').update({ is_founding_member: false }).eq('id', playerId);
@@ -98,13 +143,8 @@ export async function revokeTitle(playerId: string, titleKey: string): Promise<v
 export async function maybeAwardFounding(playerId: string): Promise<void> {
   try {
     const settings = await loadTitleSettings();
-    if (!settings.autoFounding) return;
-    const { count } = await supabaseAdmin
-      .from('player_titles')
-      .select('player_id', { count: 'exact', head: true })
-      .eq('title_key', 'founding_member');
-    if ((count ?? 0) >= settings.foundingCap) return;
-    await grantTitle(playerId, 'founding_member', null);
+    if (!settings.autoFounding || settings.foundingCap <= 0) return;
+    await grantTitle(playerId, 'founding_member', null, { cap: settings.foundingCap });
   } catch (err) {
     console.error('maybeAwardFounding error:', err);
   }

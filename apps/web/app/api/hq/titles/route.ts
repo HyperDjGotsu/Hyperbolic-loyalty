@@ -20,6 +20,7 @@ export async function GET() {
       supabaseAdmin
         .from('player_titles')
         .select('player_id, title_key, granted_at, players!player_titles_player_id_fkey(display_name, player_id)')
+        .is('revoked_at', null)
         .order('granted_at', { ascending: false })
         .limit(50),
     ]);
@@ -31,7 +32,7 @@ export async function GET() {
     });
     const counts: Record<string, number> = {};
     for (const key of Object.keys(TITLES)) {
-      const { count } = await supabaseAdmin.from('player_titles').select('player_id', { count: 'exact', head: true }).eq('title_key', key);
+      const { count } = await supabaseAdmin.from('player_titles').select('player_id', { count: 'exact', head: true }).eq('title_key', key).is('revoked_at', null);
       counts[key] = count ?? 0;
     }
 
