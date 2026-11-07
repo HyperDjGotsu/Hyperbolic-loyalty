@@ -5,7 +5,7 @@ import { getStaffContext } from '@/lib/auth-helpers';
 export const dynamic = 'force-dynamic';
 
 // Lightweight player search — network-wide for any authorized staff.
-// Player Pass identity is network-wide: a player's home store does not restrict
+// PlayerPass identity is network-wide: a player's home store does not restrict
 // which staff can find and service them (e.g. a visiting player at a different store).
 // Returns only identification fields; sensitive fields are exposed only on the
 // individual player route with appropriate store-scoped authorization.

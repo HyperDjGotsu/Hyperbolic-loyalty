@@ -71,7 +71,7 @@ export default function StoreJoinCard({ storeId }: { storeId: string | null }) {
     w.document.write(`<!doctype html><title>Join ${escapeHtml(info.storeName)}</title>
 <style>body{font-family:system-ui,sans-serif;text-align:center;padding:48px}h1{font-size:40px;margin:0 0 8px}
 p{font-size:20px;margin:6px 0}img{width:420px;height:420px;margin:24px 0}.code{font-size:44px;letter-spacing:10px;font-weight:700}</style>
-<h1>Join ${escapeHtml(info.storeName)}</h1><p>Scan with your phone camera to join on Player Pass</p>
+<h1>Join ${escapeHtml(info.storeName)}</h1><p>Scan with your phone camera to join on PlayerPass</p>
 <img src="${qr}" alt="Join QR code"><p>Or enter this code in the app</p><p class="code">${escapeHtml(info.code)}</p>
 <script>window.onload=function(){window.print()}</script>`);
     w.document.close();

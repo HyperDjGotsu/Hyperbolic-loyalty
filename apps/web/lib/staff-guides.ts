@@ -111,7 +111,7 @@ export const STAFF_GUIDES: Record<string, StaffGuide> = {
       { do: 'Tap to assign them.', why: 'They get access the next time they open HQ.' },
       { do: 'To remove someone, find them under Current Staff and tap Revoke.', why: 'Their access stops straight away.' },
     ],
-    careful: 'Only give Store Manager to people you trust with the whole store. Network Admin is for the Player Pass team only. Never assign it.',
+    careful: 'Only give Store Manager to people you trust with the whole store. Network Admin is for the PlayerPass team only. Never assign it.',
   },
   broadcasts: {
     version: 1,

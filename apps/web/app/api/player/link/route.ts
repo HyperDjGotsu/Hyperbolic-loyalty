@@ -140,14 +140,14 @@ export async function POST(request: Request) {
     } else if (action === 'create_new') {
       // Age gate (13+). The birthdate is checked here and never stored; only the confirmation time is.
       if (request.headers.get('cookie')?.includes(`${AGE_BLOCK_COOKIE}=1`)) {
-        return NextResponse.json({ error: 'You must be 13 or older to use Player Pass.', code: 'underage' }, { status: 403 });
+        return NextResponse.json({ error: 'You must be 13 or older to use PlayerPass.', code: 'underage' }, { status: 403 });
       }
       const age = ageFromBirthdate(birthdate);
       if (age === null) {
         return NextResponse.json({ error: 'Birthdate required', code: 'birthdate_required' }, { status: 400 });
       }
       if (age < MIN_AGE) {
-        const res = NextResponse.json({ error: 'You must be 13 or older to use Player Pass.', code: 'underage' }, { status: 403 });
+        const res = NextResponse.json({ error: 'You must be 13 or older to use PlayerPass.', code: 'underage' }, { status: 403 });
         res.cookies.set(AGE_BLOCK_COOKIE, '1', { httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30, path: '/' });
         return res;
       }

@@ -27,7 +27,7 @@ export function CheckinStateView({ view, onDone, doneLabel = 'Back to Event', on
     : 'Check-in Failed';
   const body = view.kind === 'success' ? "You're in. Have fun!"
     : view.kind === 'already' ? "You're all set. You've already checked in to this event."
-    : view.kind === 'renewal' ? 'Your Player Pass has expired. See a staff member at the check-in kiosk to renew or finish checking in.'
+    : view.kind === 'renewal' ? 'Your PlayerPass has expired. See a staff member at the check-in kiosk to renew or finish checking in.'
     : view.kind === 'noEvent' ? "This event has ended, was cancelled, or hasn't started yet."
     : view.message;
 

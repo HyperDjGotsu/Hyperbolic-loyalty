@@ -3,20 +3,20 @@ import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Player Pass',
+  title: 'PlayerPass',
   description: 'Level up your community. Earn XP, unlock rewards, and compete with the community.',
   keywords: ['TCG', 'loyalty', 'gaming', 'One Piece', 'Pokemon', 'MTG'],
-  authors: [{ name: 'Player Pass' }],
+  authors: [{ name: 'PlayerPass' }],
   openGraph: {
-    title: 'Player Pass',
+    title: 'PlayerPass',
     description: 'Level up your TCG journey',
     type: 'website',
     url: 'https://playerpass.gg',
-    siteName: 'Player Pass',
+    siteName: 'PlayerPass',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Player Pass',
+    title: 'PlayerPass',
     description: 'Level up your TCG journey',
   },
 };

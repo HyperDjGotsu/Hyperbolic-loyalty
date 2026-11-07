@@ -21,7 +21,7 @@ const INTROS: Record<string, { key: string; title: string; text: string }> = {
   '/dashboard/prize-wall': {
     key: 'prize-wall',
     title: 'Prize Wall',
-    text: 'Spend your Prize Points here on rewards from the store. Points come from playing and showing up, and a Player Pass lets you spend them.',
+    text: 'Spend your Prize Points here on rewards from the store. Points come from playing and showing up, and a PlayerPass lets you spend them.',
   },
   '/dashboard/profile': {
     key: 'profile',

@@ -8,7 +8,7 @@ import { AppText, Button } from '@/components/kit';
 const INTROS = {
   events: { title: 'Events', text: "What's happening at your store. Tap the star to say you're interested, and check in when you get there. Earn XP just for showing up." },
   community: { title: 'Community', text: 'Leaderboards and your friends. See who is climbing in each game, find players, and add friends.' },
-  'prize-wall': { title: 'Prize Wall', text: 'Spend your Prize Points here on rewards from the store. Points come from playing and showing up, and a Player Pass lets you spend them.' },
+  'prize-wall': { title: 'Prize Wall', text: 'Spend your Prize Points here on rewards from the store. Points come from playing and showing up, and a PlayerPass lets you spend them.' },
 } as const;
 
 // One short "what is this page" card the first time a player opens a tab.

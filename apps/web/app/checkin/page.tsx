@@ -93,7 +93,7 @@ function CheckInContent() {
       <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="text-6xl">🔐</div>
         <h1 className="text-2xl font-bold text-primary">Sign In to Check In</h1>
-        <p className="text-secondary">You need a Player Pass account to earn XP</p>
+        <p className="text-secondary">You need a PlayerPass account to earn XP</p>
         <Link
           href={`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`}
           className="px-8 py-4 bg-accent text-accent-fg font-bold rounded-2xl text-lg transition-opacity hover:opacity-90"
@@ -189,9 +189,9 @@ function CheckInContent() {
   if (state === 'renewal-opportunity') return (
     <div className="min-h-screen bg-base flex flex-col items-center justify-center gap-6 p-8 text-center">
       <div className="text-6xl">⚠️</div>
-      <h1 className="text-2xl font-bold text-warning">Player Pass Expired</h1>
+      <h1 className="text-2xl font-bold text-warning">PlayerPass Expired</h1>
       <p className="text-secondary max-w-sm">
-        Your Player Pass has expired. Please see a staff member at the check-in kiosk to renew or complete your check-in.
+        Your PlayerPass has expired. Please see a staff member at the check-in kiosk to renew or complete your check-in.
       </p>
       <Link href="/dashboard" className="px-8 py-4 bg-surface hover:bg-elevated text-primary font-bold rounded-2xl transition-colors border border-border-token">
         Back to Dashboard

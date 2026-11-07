@@ -166,7 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <header className="hidden lg:flex sticky top-0 z-30 h-16 items-center justify-between border-b border-white/[0.08] bg-[color-mix(in_srgb,var(--bg-surface)_70%,transparent)] px-8 backdrop-blur-xl">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <img src="/brand/pp-mark.png" alt="" className="pp-mark-adaptive h-8 w-8" />
-          <span className="font-display text-lg font-extrabold tracking-[-0.02em]">Player Pass</span>
+          <span className="font-display text-lg font-extrabold tracking-[-0.02em]">PlayerPass</span>
         </Link>
         <nav className="flex items-center gap-1 rounded-full bg-elevated p-1" aria-label="Main">
           {navItems.filter((i) => i.href !== '/dashboard/notifications').map((item) => {
@@ -189,7 +189,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="group flex items-center gap-2 rounded-full border border-border-token bg-elevated py-1.5 pl-3 pr-3 text-left"
             title="Switch store"
           >
-            <span className="max-w-[180px] truncate text-[13px] font-semibold leading-tight text-secondary">{selectedStoreName ?? 'Player Pass'}</span>
+            <span className="max-w-[180px] truncate text-[13px] font-semibold leading-tight text-secondary">{selectedStoreName ?? 'PlayerPass'}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 text-tertiary transition-colors group-hover:text-secondary"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <ThemeToggle />

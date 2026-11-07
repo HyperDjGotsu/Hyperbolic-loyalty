@@ -582,7 +582,7 @@ export default function DesktopDashboard() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
   const [gameStats, setGameStats] = useState<Record<string, any>>({});
-  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'Player Pass' });
+  const [storeConfig, setStoreConfig] = useState({ currency_name: 'Points', currency_icon: '⭐', store_name: 'PlayerPass' });
 
   // Animation refs
   const containerRef = useRef<HTMLDivElement>(null);

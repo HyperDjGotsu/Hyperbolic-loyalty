@@ -853,7 +853,7 @@ export default function HQPage() {
   const [storeConfig, setStoreConfig] = useState({
     currency_name: 'Points',
     currency_icon: '⭐',
-    store_name: 'Player Pass',
+    store_name: 'PlayerPass',
     player_id_prefix: '',
     network_calendar_url: '',
   });
@@ -3183,7 +3183,7 @@ export default function HQPage() {
                   {/* Pass Status */}
                   <div>
                     <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">
-                      Player Pass
+                      PlayerPass
                     </h3>
                     <div className="bg-elevated rounded-xl p-4 border border-border-token mb-4">
                       <div className="flex items-center justify-between mb-1">
@@ -3235,7 +3235,7 @@ export default function HQPage() {
 
                     {assignPassOpen && (
                       <div className="bg-elevated border border-border-strong rounded-xl p-4 space-y-3">
-                        <p className="text-sm font-medium text-primary">Assign Player Pass Tier</p>
+                        <p className="text-sm font-medium text-primary">Assign PlayerPass Tier</p>
                         <div className="grid grid-cols-3 gap-2">
                           {([
                             { value: 'bronze', label: 'Bronze', color: 'text-amber-600', price: '$10/mo' },
@@ -3332,7 +3332,7 @@ export default function HQPage() {
                       <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
                         <p className="text-sm text-yellow-300 mb-1 font-medium">Remove Subscription</p>
                         <p className="text-xs text-secondary mb-4">
-                          This immediately cancels {playerDetails.player.display_name}&apos;s Player Pass. Their XP and data stay intact. Staff access is managed separately.
+                          This immediately cancels {playerDetails.player.display_name}&apos;s PlayerPass. Their XP and data stay intact. Staff access is managed separately.
                         </p>
                         <div className="flex gap-2">
                           <button
@@ -5651,7 +5651,7 @@ export default function HQPage() {
             <div className="bg-surface rounded-xl p-6 border border-border-token">
               <h2 className="font-semibold text-primary mb-1">Promote Existing Player</h2>
               <p className="text-xs text-tertiary mb-5">
-                Find a Player Pass account and assign a staff role. Use Staff Invitations (in Settings) for people who don&apos;t yet have an account.
+                Find a PlayerPass account and assign a staff role. Use Staff Invitations (in Settings) for people who don&apos;t yet have an account.
               </p>
 
               {/* Search */}

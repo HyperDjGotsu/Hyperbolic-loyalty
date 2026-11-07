@@ -351,7 +351,7 @@ function OnboardingContent() {
         {underage && (
           <div className="card p-6 text-center">
             <h2 className="text-xl font-bold text-primary mb-2">Sorry, you can&apos;t sign up yet</h2>
-            <p className="text-secondary text-sm">Player Pass is for players 13 and older. Ask a parent or guardian to make an account.</p>
+            <p className="text-secondary text-sm">PlayerPass is for players 13 and older. Ask a parent or guardian to make an account.</p>
           </div>
         )}
 

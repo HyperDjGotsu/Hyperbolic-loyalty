@@ -5,7 +5,7 @@ export default function SignInPage() {
   return (
     <AuthShell
       mode="sign-in"
-      extra={<>Running a store? <StoreSideLink className="underline underline-offset-2 hover:text-white/80">See how Player Pass works</StoreSideLink></>}
+      extra={<>Running a store? <StoreSideLink className="underline underline-offset-2 hover:text-white/80">See how PlayerPass works</StoreSideLink></>}
     />
   );
 }

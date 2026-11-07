@@ -4,13 +4,13 @@ import { getGame } from '@/lib/games';
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const ev = await getPublicEventBasics(params.id).catch(() => null);
-  if (!ev) return { title: 'Event | Player Pass' };
+  if (!ev) return { title: 'Event | PlayerPass' };
   const game = ev.gameId ? getGame(ev.gameId)?.name : null;
   const description = [formatEventWhen(ev.scheduledAt), ev.storeName, game, ev.isFree ? 'Free' : null].filter(Boolean).join(' · ');
   return {
-    title: `${ev.name} | Player Pass`,
+    title: `${ev.name} | PlayerPass`,
     description,
-    openGraph: { title: ev.name, description, type: 'website', siteName: 'Player Pass' },
+    openGraph: { title: ev.name, description, type: 'website', siteName: 'PlayerPass' },
     twitter: { card: 'summary_large_image', title: ev.name, description },
   };
 }

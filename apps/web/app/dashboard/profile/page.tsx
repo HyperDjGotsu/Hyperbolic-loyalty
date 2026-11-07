@@ -1553,7 +1553,7 @@ export default function ProfilePage() {
             <div className="p-5">
               {deleteStep === 'confirm1' ? (
                 <p className="text-secondary text-sm">
-                  This will permanently delete your Player Pass account, XP history, and all associated data.
+                  This will permanently delete your PlayerPass account, XP history, and all associated data.
                   This cannot be undone.
                 </p>
               ) : (

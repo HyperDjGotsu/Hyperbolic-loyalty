@@ -20,7 +20,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }}
       >
-        <AppText variant="eyebrow" tone="accent" style={{ textAlign: 'center' }}>Player Pass</AppText>
+        <AppText variant="eyebrow" tone="accent" style={{ textAlign: 'center' }}>PlayerPass</AppText>
         <AppText variant="display" style={{ textAlign: 'center', marginTop: 6 }}>{title}</AppText>
         {subtitle ? <AppText variant="body" tone="secondary" style={{ textAlign: 'center', marginTop: 6, marginBottom: 24 }}>{subtitle}</AppText> : <View style={{ height: 24 }} />}
         {children}

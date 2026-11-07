@@ -109,7 +109,7 @@ export function ReferralExtras({ shareUrl, referrals }: { shareUrl: string; refe
   const { colors } = useCard();
   const [open, setOpen] = useState(false);
   async function share() {
-    try { await Share.share({ message: `Join Player Pass with my referral link and earn bonus XP! ${shareUrl}`, url: shareUrl }); } catch { /* dismissed */ }
+    try { await Share.share({ message: `Join PlayerPass with my referral link and earn bonus XP! ${shareUrl}`, url: shareUrl }); } catch { /* dismissed */ }
   }
   return (
     <View style={{ width: '100%', marginTop: 4 }}>

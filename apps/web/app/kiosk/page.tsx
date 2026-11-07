@@ -369,7 +369,7 @@ export default function KioskPage() {
           <div className="bg-surface rounded-3xl p-10 text-center shadow-2xl border-2 border-amber-500 max-w-md w-full mx-4">
             <div className="text-6xl mb-4">⚠️</div>
             <div className="text-3xl font-bold text-amber-400 mb-1">{renewal.playerName}</div>
-            <div className="text-secondary text-lg mb-1 capitalize">{renewal.expiredTier} Player Pass expired</div>
+            <div className="text-secondary text-lg mb-1 capitalize">{renewal.expiredTier} PlayerPass expired</div>
             {renewal.expiredAt && (
               <div className="text-tertiary text-sm mb-6">
                 {new Date(renewal.expiredAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Player Pass",
+    "name": "PlayerPass",
     "slug": "player-pass",
     "version": "1.1.0",
     "orientation": "portrait",
@@ -11,7 +11,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "gg.playerpass.app",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Player Pass uses your photo library to set your profile avatar.",
+        "NSPhotoLibraryUsageDescription": "PlayerPass uses your photo library to set your profile avatar.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
@@ -145,7 +145,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Player Pass to access your camera to scan QR codes at events.",
+          "cameraPermission": "Allow PlayerPass to access your camera to scan QR codes at events.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }

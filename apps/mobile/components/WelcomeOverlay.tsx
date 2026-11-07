@@ -7,7 +7,7 @@ import { WELCOME_KEY, emitWelcomeClosed, getFlag, onReplay, setFlag } from '@/li
 import { AppText, Button } from '@/components/kit';
 
 type StoreConfig = { store_name: string; shop_title: string; currency_name: string };
-const DEFAULTS: StoreConfig = { store_name: 'Player Pass', shop_title: 'Prize Wall', currency_name: 'Points' };
+const DEFAULTS: StoreConfig = { store_name: 'PlayerPass', shop_title: 'Prize Wall', currency_name: 'Points' };
 
 function buildSlides(c: StoreConfig) {
   return [
@@ -16,7 +16,7 @@ function buildSlides(c: StoreConfig) {
     { title: 'Daily Bonus', body: `Open the app every day for a free bonus. It resets at midnight, so don't leave ${c.currency_name} on the table.` },
     { title: c.shop_title, body: `Everyone earns ${c.currency_name} at events. Spend them on prizes from the store. A pass unlocks spending.` },
     { title: 'Passes', body: 'Bronze, Silver, Gold and Diamond passes let you spend your points and earn them faster. Staff can start one for you in the store.' },
-    { title: 'Your Player Profile', body: 'Your Player Pass profile travels with you across the network. Your progress, Guild Points, and rewards are always there. Staff and check-in kiosks can identify you through your profile QR.', cta: "Let's go" },
+    { title: 'Your Player Profile', body: 'Your PlayerPass profile travels with you across the network. Your progress, Guild Points, and rewards are always there. Staff and check-in kiosks can identify you through your profile QR.', cta: "Let's go" },
   ] as Array<{ title: string; body: string; cta?: string }>;
 }
 

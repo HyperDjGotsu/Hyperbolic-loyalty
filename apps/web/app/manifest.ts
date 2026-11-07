@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Player Pass',
-    short_name: 'Player Pass',
+    name: 'PlayerPass',
+    short_name: 'PlayerPass',
     description: 'Level up your community. Earn XP, unlock rewards, and compete with the community.',
     start_url: '/dashboard',
     display: 'standalone',

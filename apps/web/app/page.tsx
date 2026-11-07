@@ -78,7 +78,7 @@ export default function LandingPage() {
       <header className="relative z-10 flex items-center justify-between border-b border-white/[0.08] bg-[color-mix(in_srgb,var(--bg-surface)_55%,transparent)] px-5 py-3.5 backdrop-blur-xl sm:px-10">
         <Link href="/" className="flex items-center gap-2.5">
           <Image src="/brand/pp-mark.png" alt="" width={30} height={30} priority className="pp-mark-adaptive" />
-          <span className="font-display text-xl font-extrabold tracking-[-0.02em]">Player Pass</span>
+          <span className="font-display text-xl font-extrabold tracking-[-0.02em]">PlayerPass</span>
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-semibold text-secondary md:flex">
           <Link href="/pitch" className="transition-colors hover:text-primary">For stores</Link>

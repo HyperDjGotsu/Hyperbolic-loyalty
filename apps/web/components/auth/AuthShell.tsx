@@ -43,7 +43,7 @@ export function clerkAppearance(opts: { headerCentered?: boolean; compactHeader?
       borderRadius: '16px',
       fontFamily: 'Plus Jakarta Sans, sans-serif',
     },
-    // The page already shows the Player Pass mark above the card; hide Clerk's own copy of it here
+    // The page already shows the PlayerPass mark above the card; hide Clerk's own copy of it here
     layout: { logoPlacement: 'none' },
     elements: {
       rootBox: '!w-full',
@@ -127,7 +127,7 @@ export default function AuthShell({ mode, extra }: { mode: Mode; extra?: ReactNo
 
       <div className="relative z-10 flex min-h-screen flex-col px-5 pb-8 pt-7 lg:flex-row lg:items-center lg:justify-between lg:gap-16 lg:px-16 lg:pb-10 lg:pt-10">
         <header className="pp-pop flex flex-col items-center lg:max-w-2xl lg:flex-1 lg:items-start">
-          <img src="/brand/pp-lockup.png" alt="Player Pass" className="h-[88px] w-auto drop-shadow-[0_6px_20px_rgba(0,0,0,0.5)] lg:h-36" />
+          <img src="/brand/pp-lockup.png" alt="PlayerPass" className="h-[88px] w-auto drop-shadow-[0_6px_20px_rgba(0,0,0,0.5)] lg:h-36" />
           <div className="hidden lg:block">
             <p className="mt-10 text-[15px] font-semibold text-white/70">Your store. Your games. Your rank.</p>
             <h1 className="font-display mt-2.5 text-[52px] font-extrabold leading-[1.06] tracking-[-0.03em]">

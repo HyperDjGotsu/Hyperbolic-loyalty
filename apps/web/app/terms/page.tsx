@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — Player Pass',
-  description: 'The rules for using Player Pass: accounts, points and prizes, passes, conduct, and more.',
+  title: 'Terms of Service — PlayerPass',
+  description: 'The rules for using PlayerPass: accounts, points and prizes, passes, conduct, and more.',
 };
 
 const CONTACT_EMAIL = 'darrell@hyperbolictcg.com';
@@ -25,14 +25,14 @@ export default function TermsPage() {
         <p className="mt-2 text-sm text-[#7a7060]">Last updated {LAST_UPDATED}</p>
 
         <p className="mt-6 text-[#c9c2b4] leading-relaxed">
-          Player Pass is a loyalty app for local game stores, run by Hyperbolic Creative. By creating
+          PlayerPass is a loyalty app for local game stores, run by Hyperbolic Creative. By creating
           an account or using the app you agree to these terms. If you do not agree, please do not use
-          Player Pass. Our{' '}
+          PlayerPass. Our{' '}
           <a className="text-[#c4b5fd] underline" href="/privacy">Privacy Policy</a> explains how we
           handle your information.
         </p>
 
-        <Section title="Who can use Player Pass">
+        <Section title="Who can use PlayerPass">
           <p>
             You must be 13 or older. If you are under 18, you confirm that a parent or guardian is
             okay with you using the app and with any pass purchased for you. You need an account to
@@ -68,7 +68,7 @@ export default function TermsPage() {
         <Section title="Prizes and redemptions">
           <p>
             Prizes on the Prize Wall are offered by individual stores and depend on availability.
-            Prizes and event rewards are handed out by the store, not by Player Pass. Staff can
+            Prizes and event rewards are handed out by the store, not by PlayerPass. Staff can
             decline or reverse a redemption that was made by mistake, through misuse, or against
             store rules.
           </p>
@@ -111,26 +111,26 @@ export default function TermsPage() {
             We or a store may limit, suspend, or end an account that breaks these terms or abuses
             the program. You can delete your account at any time from your Profile screen, as
             described in the Privacy Policy. When an account ends, its XP, points, passes, and unused
-            credits end too, without payment or refund from Player Pass.
+            credits end too, without payment or refund from PlayerPass.
           </p>
         </Section>
 
         <Section title="Changes to the app and these terms">
           <p>
-            Player Pass is still growing. We may add, change, or remove features, ranks, perks, and
+            PlayerPass is still growing. We may add, change, or remove features, ranks, perks, and
             prizes. We may also update these terms. We will update the date above, and for material
-            changes we will tell you in the app. Using Player Pass after a change means you accept it.
+            changes we will tell you in the app. Using PlayerPass after a change means you accept it.
           </p>
         </Section>
 
         <Section title="No warranty and limits on liability">
           <p>
-            Player Pass is provided &ldquo;as is&rdquo; and &ldquo;as available.&rdquo; We do not
+            PlayerPass is provided &ldquo;as is&rdquo; and &ldquo;as available.&rdquo; We do not
             promise that it will always work, be error free, or be available, and we are not
             responsible for events, prizes, or services provided by stores or other third parties. To
             the fullest extent the law allows, Hyperbolic Creative is not liable for indirect or
             consequential losses from using the app, and our total liability for any claim is limited
-            to the amount you paid us directly for Player Pass in the 12 months before the claim,
+            to the amount you paid us directly for PlayerPass in the 12 months before the claim,
             which may be zero. Some places do not allow these limits, so they may not fully apply to you.
           </p>
         </Section>

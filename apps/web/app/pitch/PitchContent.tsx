@@ -924,7 +924,7 @@ function WhyItMattersSection({ cfg }: { cfg: PitchConfig }) {
             </div>
             {/* After */}
             <div className="p-6 sm:p-8" style={{ background: `${color}08` }}>
-              <div className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color }}>With Player Pass</div>
+              <div className="text-xs font-bold uppercase tracking-widest mb-5" style={{ color }}>With PlayerPass</div>
               <div className="space-y-4">
                 {[
                   { icon: '🏷️', text: 'New staff pulls up any player instantly — name, games, XP, how long they\'ve been coming' },

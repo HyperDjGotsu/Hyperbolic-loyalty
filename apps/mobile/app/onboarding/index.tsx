@@ -234,7 +234,7 @@ export default function OnboardingScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sorry, you can't join yet</Text>
             <Text style={styles.sectionBody}>
-              Player Pass is for players 13 and older. Ask a parent or guardian to make an account.
+              PlayerPass is for players 13 and older. Ask a parent or guardian to make an account.
             </Text>
           </View>
         )}

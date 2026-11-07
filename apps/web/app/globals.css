@@ -153,7 +153,7 @@ body {
   }
 }
 
-/* Player Pass loader chevrons (components/Loader.tsx) */
+/* PlayerPass loader chevrons (components/Loader.tsx) */
 @keyframes pp-chevron {
   0%, 100% { opacity: 0.25; transform: translateY(3px); }
   40% { opacity: 1; transform: translateY(0); }
@@ -203,7 +203,7 @@ body {
 [data-theme="light"] .gi-on-light { display: inline-block; }
 [data-theme="light"] .gi-on-dark { display: none; }
 
-/* The Player Pass mark has white letterforms: turn them dark on light themes (hue stays green and blue) */
+/* The PlayerPass mark has white letterforms: turn them dark on light themes (hue stays green and blue) */
 [data-theme="light"] .pp-mark-adaptive { filter: invert(1) hue-rotate(180deg); }
 
 /* Light themes: tinted borders (accent/red/amber…) at 20-30% vanish on pale cards; strengthen them */

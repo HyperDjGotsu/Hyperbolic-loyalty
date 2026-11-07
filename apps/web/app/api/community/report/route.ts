@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     if (to && process.env.RESEND_API_KEY) {
       try {
         await new Resend(process.env.RESEND_API_KEY).emails.send({
-          from: 'Player Pass <noreply@playerpass.gg>',
+          from: 'PlayerPass <noreply@playerpass.gg>',
           to,
           subject: `Player report: ${target.display_name ?? target.id}`,
           text: `Reported player: ${target.display_name ?? ''} (${target.id})\nReported by: ${me.display_name ?? ''} (${me.id})\nReason: ${why}\n\n${note ?? '(no details)'}`,

@@ -1,6 +1,6 @@
 import React from 'react';
 
-// Player Pass loader: the two logo chevrons (green, then blue) pulse upward in sequence.
+// PlayerPass loader: the two logo chevrons (green, then blue) pulse upward in sequence.
 export function Loader({ label, size = 44, className = '' }: { label?: string; size?: number; className?: string }) {
   return (
     <div className={`flex flex-col items-center justify-center gap-3 ${className}`} role="status" aria-label={label || 'Loading'}>

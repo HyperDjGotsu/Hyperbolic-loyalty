@@ -1,4 +1,4 @@
-// Player Pass — Service Worker
+// PlayerPass — Service Worker
 // Handles background push notifications
 
 self.addEventListener('push', (event) => {
@@ -8,13 +8,13 @@ self.addEventListener('push', (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: 'Player Pass', body: event.data.text() };
+    payload = { title: 'PlayerPass', body: event.data.text() };
   }
 
   const { title, body, icon, badge, url, tag } = payload;
 
   event.waitUntil(
-    self.registration.showNotification(title || 'Player Pass', {
+    self.registration.showNotification(title || 'PlayerPass', {
       body: body || '',
       icon: icon || '/icons/icon-192.png',
       badge: badge || '/icons/icon-192.png',

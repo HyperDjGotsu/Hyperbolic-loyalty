@@ -251,7 +251,7 @@ export default function ProfileScreen() {
   async function handleDeleteAccount() {
     Alert.alert(
       'Delete your account?',
-      'This will permanently delete your Player Pass account, XP history, and all associated data. This cannot be undone.',
+      'This will permanently delete your PlayerPass account, XP history, and all associated data. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -318,7 +318,7 @@ export default function ProfileScreen() {
   async function shareReferral() {
     if (!referral) return;
     await Share.share({
-      message: `Join Player Pass with my referral link and earn bonus XP! ${referral.shareUrl}`,
+      message: `Join PlayerPass with my referral link and earn bonus XP! ${referral.shareUrl}`,
       url: referral.shareUrl,
     });
   }

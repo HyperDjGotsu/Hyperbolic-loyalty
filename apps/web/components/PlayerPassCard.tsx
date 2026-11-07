@@ -36,7 +36,7 @@ export function PlayerPassCard({
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 text-white shadow-xl shadow-black/20">
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Player Pass</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">PlayerPass</p>
           <div className="mt-2 flex items-center gap-2">
             <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${config.badge}`}>
               {tier}

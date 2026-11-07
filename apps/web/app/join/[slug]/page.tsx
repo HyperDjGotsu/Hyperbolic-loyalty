@@ -74,8 +74,8 @@ function JoinInner() {
       <div className="min-h-screen flex items-center justify-center bg-base px-4">
         <div className="max-w-sm text-center">
           <h1 className="text-primary text-xl font-bold mb-2">This link did not work</h1>
-          <p className="text-secondary text-sm mb-6">Ask the store for their join QR code, or open Player Pass and enter the code by hand.</p>
-          <button onClick={() => router.push('/')} className="bg-accent text-accent-fg font-bold px-6 py-3 rounded-xl">Open Player Pass</button>
+          <p className="text-secondary text-sm mb-6">Ask the store for their join QR code, or open PlayerPass and enter the code by hand.</p>
+          <button onClick={() => router.push('/')} className="bg-accent text-accent-fg font-bold px-6 py-3 rounded-xl">Open PlayerPass</button>
         </div>
       </div>
     );

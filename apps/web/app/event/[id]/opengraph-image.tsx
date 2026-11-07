@@ -5,7 +5,7 @@ import { getPublicEventBasics, formatEventWhen } from '@/lib/public-event';
 import { gameArtCandidates, getGame } from '@/lib/games';
 
 export const runtime = 'nodejs';
-export const alt = 'Player Pass event';
+export const alt = 'PlayerPass event';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -47,11 +47,11 @@ export default async function Image({ params }: { params: { id: string } }) {
         <div style={{ position: 'absolute', inset: 0, display: 'flex', backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.88), rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.35))' }} />
         <div style={{ position: 'absolute', left: 56, top: 44, display: 'flex', alignItems: 'center' }}>
           {mark && <img src={mark} height={56} style={{ marginRight: 14 }} />}
-          <div style={{ fontSize: 34, fontWeight: 800, color: '#fff' }}>Player Pass</div>
+          <div style={{ fontSize: 34, fontWeight: 800, color: '#fff' }}>PlayerPass</div>
         </div>
         <div style={{ position: 'absolute', left: 56, right: 56, bottom: 48, display: 'flex', flexDirection: 'column' }}>
           {game && <div style={{ fontSize: 32, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>{game}</div>}
-          <div style={{ fontSize: 76, fontWeight: 800, color: '#fff', lineHeight: 1.05, marginTop: 6 }}>{ev?.name ?? 'Player Pass Event'}</div>
+          <div style={{ fontSize: 76, fontWeight: 800, color: '#fff', lineHeight: 1.05, marginTop: 6 }}>{ev?.name ?? 'PlayerPass Event'}</div>
           {ev && (
             <div style={{ fontSize: 34, color: 'rgba(255,255,255,0.9)', fontWeight: 700, marginTop: 16 }}>
               {`${formatEventWhen(ev.scheduledAt)}${ev.storeName ? `  ·  ${ev.storeName}` : ''}`}

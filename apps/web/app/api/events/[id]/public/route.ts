@@ -134,7 +134,7 @@ export async function GET(
       attendanceXp: ATTENDANCE_LIFETIME_XP,
       winXp: WIN_LIFETIME_XP,
       prizing: event.prizing || [],
-      location: (event.stores as unknown as { name: string } | null)?.name ?? 'Player Pass Event',
+      location: (event.stores as unknown as { name: string } | null)?.name ?? 'PlayerPass Event',
       address: (() => {
         const s = event.stores as unknown as { address?: string | null; city?: string | null; state?: string | null } | null;
         if (!s) return '';

@@ -26,7 +26,7 @@ export default function QRCheckinScreen() {
     scanLock.current = true;
     setScanned(true);
     const eventId = eventIdFromQr(data);
-    if (!eventId) { setError("That doesn't look like a Player Pass QR code."); return; }
+    if (!eventId) { setError("That doesn't look like a PlayerPass QR code."); return; }
     if (eventId !== id) { setError('This QR code is for a different event.'); return; }
     const token = tokenFromQr(data);
     if (!token) { setError('This QR code is out of date. Scan the code on the kiosk screen.'); return; }

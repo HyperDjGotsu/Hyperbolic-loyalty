@@ -276,7 +276,7 @@ export default function LoyaltyCalculator() {
 
         <div className="mb-8">
           <a href="/hq" className="mb-4 inline-block text-sm text-secondary hover:text-primary">← HQ</a>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Player Pass · Internal</div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">PlayerPass · Internal</div>
           <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">Prize Wall Economics</h1>
           <p className="mt-2 text-sm text-secondary">Model the revenue generated before a single prize walks out the door.</p>
         </div>

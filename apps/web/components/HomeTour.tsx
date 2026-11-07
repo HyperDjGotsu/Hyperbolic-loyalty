@@ -11,7 +11,7 @@ interface Stop { key: string; title: string; text: string }
 // desktop vs mobile layout) are skipped, so the same list serves both layouts.
 const STOPS: Stop[] = [
   { key: 'hero', title: 'This is you', text: 'Your level fills up as you earn XP. Prize Points are what you spend on the Prize Wall.' },
-  { key: 'pass', title: 'Your Player Pass', text: 'Your pass sets how fast you earn. Tap it any time to compare passes.' },
+  { key: 'pass', title: 'Your PlayerPass', text: 'Your pass sets how fast you earn. Tap it any time to compare passes.' },
   { key: 'events', title: "What's up next at the store", text: 'These are the events happening at the store. You can find more on the Events page, but this is a quick snapshot.' },
   { key: 'games', title: 'Your games', text: 'Track your progress in each game you play. Each game has its own rank, and all your points combine for your store and network rank in that game.' },
   { key: 'cotd', title: 'Card of the Day', text: 'A new card every day. Come back daily to see it and vote.' },

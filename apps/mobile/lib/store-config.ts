@@ -3,7 +3,7 @@ import { API_BASE } from '@/lib/config';
 
 // Store branding from /api/store-config (public). Currency and store names must never be hardcoded.
 export type StoreConfig = { currency_name: string; currency_icon: string; store_name: string };
-const DEFAULTS: StoreConfig = { currency_name: 'Points', currency_icon: '💎', store_name: 'Player Pass' };
+const DEFAULTS: StoreConfig = { currency_name: 'Points', currency_icon: '💎', store_name: 'PlayerPass' };
 let cache: StoreConfig | null = null;
 
 export function useStoreConfig(): StoreConfig {

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Player Pass',
-  description: 'What Player Pass collects, why, who handles it, and how to delete it.',
+  title: 'Privacy Policy — PlayerPass',
+  description: 'What PlayerPass collects, why, who handles it, and how to delete it.',
 };
 
 const CONTACT_EMAIL = 'darrell@hyperbolictcg.com';
@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <p className="mt-2 text-sm text-[#7a7060]">Last updated {LAST_UPDATED}</p>
 
         <p className="mt-6 text-[#c9c2b4] leading-relaxed">
-          Player Pass is a loyalty app for local game stores. You earn XP and Prize Points by
+          PlayerPass is a loyalty app for local game stores. You earn XP and Prize Points by
           attending events, redeem prizes, and connect with other players. This page explains what
           we collect, why, who helps us run the app, and how to delete your data.
         </p>
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="Services that process your data">
-          <p>We use these providers to operate Player Pass:</p>
+          <p>We use these providers to operate PlayerPass:</p>
           <ul className="list-disc space-y-1 pl-6">
             <li>Clerk — sign-in and account authentication</li>
             <li>Supabase — database and file storage (including profile photos)</li>
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
 
         <Section title="Children">
           <p>
-            Player Pass is for players 13 and older. When you sign up we ask for your birthdate once
+            PlayerPass is for players 13 and older. When you sign up we ask for your birthdate once
             to check your age. We do not save or share the birthdate, only that you confirmed you are 13 or
             older. If you are under 13 we do not create your player profile. We do not knowingly
             collect information from children under 13. If you believe a child has created an

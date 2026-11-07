@@ -80,7 +80,7 @@ export default function PublicEventPage() {
       try {
         await navigator.share({
           title: event?.name,
-          text: `Check out this event at ${event?.location ?? 'Player Pass'}: ${event?.name}`,
+          text: `Check out this event at ${event?.location ?? 'PlayerPass'}: ${event?.name}`,
           url: url,
         });
       } catch (err) {
@@ -138,8 +138,8 @@ export default function PublicEventPage() {
       <header className="bg-base/90 backdrop-blur border-b border-border-token sticky top-0 z-50">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <img src="/brand/pp-mark.png" alt="Player Pass" className="pp-mark-adaptive h-8 w-auto flex-none" />
-            <span className="font-display font-extrabold text-primary">Player Pass</span>
+            <img src="/brand/pp-mark.png" alt="PlayerPass" className="pp-mark-adaptive h-8 w-auto flex-none" />
+            <span className="font-display font-extrabold text-primary">PlayerPass</span>
           </Link>
           <Link
             href="/onboarding"
@@ -309,7 +309,7 @@ export default function PublicEventPage() {
 
         {/* CTA Section */}
         <div className="card !rounded-[22px] p-6 text-center mb-4">
-          <h2 className="font-display text-xl font-extrabold text-primary mb-2">Join {event?.location ?? 'Player Pass'}</h2>
+          <h2 className="font-display text-xl font-extrabold text-primary mb-2">Join {event?.location ?? 'PlayerPass'}</h2>
           <p className="text-secondary mb-4">
             Track your XP, compete on leaderboards, and never miss an event!
           </p>
@@ -347,7 +347,7 @@ export default function PublicEventPage() {
             {event.location}{event.address ? ` • ${event.address}` : ''}
           </div>
           <div className="text-tertiary text-xs">
-            Powered by Player Pass
+            Powered by PlayerPass
           </div>
         </div>
       </footer>

@@ -193,7 +193,7 @@ const ShareModal = ({
         await navigator.share({
           title: event.name,
           text: event.isNetworkEvent || !event.storeName
-            ? `Check out this Player Pass event: ${event.name} on ${event.date} @ ${event.time}`
+            ? `Check out this PlayerPass event: ${event.name} on ${event.date} @ ${event.time}`
             : `Check out this event at ${event.storeName}: ${event.name} on ${event.date} @ ${event.time}`,
           url: publicUrl,
         });

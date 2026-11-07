@@ -14,7 +14,7 @@ interface StoreConfig {
 }
 
 const DEFAULT_CONFIG: StoreConfig = {
-  store_name: 'Player Pass',
+  store_name: 'PlayerPass',
   shop_title: 'Prize Wall',
   shop_description: 'avatar cosmetics — backgrounds, frames, badges, and more',
   player_id_prefix: '',
@@ -45,7 +45,7 @@ function buildSlides(cfg: StoreConfig) {
     },
     {
       title: 'Your Player Profile',
-      body: 'Your Player Pass profile travels with you across the network. Your progress, Guild Points, and rewards are always there. Staff and check-in kiosks can identify you through your profile QR — no code to remember.',
+      body: 'Your PlayerPass profile travels with you across the network. Your progress, Guild Points, and rewards are always there. Staff and check-in kiosks can identify you through your profile QR — no code to remember.',
       cta: "Let's go",
     },
   ] as Array<{ title: string; body: string; cta?: string }>;
@@ -196,7 +196,7 @@ export function WelcomeOverlay() {
 
       {/* Slide content */}
       <div key={slide} className="pp-slide flex-1 flex flex-col items-center justify-center px-8 text-center">
-        {slide === 0 && <img src="/brand/pp-lockup.png" alt="Player Pass" className="mx-auto mb-8 h-44 w-auto" />}
+        {slide === 0 && <img src="/brand/pp-lockup.png" alt="PlayerPass" className="mx-auto mb-8 h-44 w-auto" />}
         <SlideArt slide={slide} currency={config.currency_name} />
         <h2 className="text-primary text-2xl font-bold mb-4 leading-snug">{current.title}</h2>
         <p className="text-secondary text-base leading-relaxed max-w-sm">{current.body}</p>

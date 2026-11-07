@@ -30,7 +30,7 @@ export function ShareEventSheet({ event, onClose, onDone }: {
 
   async function shareLink() {
     try {
-      await Share.share({ message: `Check out this Player Pass event: ${event.name} on ${event.date} @ ${event.time}\n${url}`, url });
+      await Share.share({ message: `Check out this PlayerPass event: ${event.name} on ${event.date} @ ${event.time}\n${url}`, url });
     } catch { /* dismissed */ }
   }
 

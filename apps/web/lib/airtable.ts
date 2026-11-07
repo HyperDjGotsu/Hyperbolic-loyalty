@@ -1,4 +1,4 @@
-// Airtable API client for Player Pass system
+// Airtable API client for PlayerPass system
 // Uses existing Netlify functions as backend
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';

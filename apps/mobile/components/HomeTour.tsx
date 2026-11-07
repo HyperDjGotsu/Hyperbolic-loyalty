@@ -7,7 +7,7 @@ import { AppText, Button } from '@/components/kit';
 
 const STOPS = [
   { title: 'This is you', text: 'Your level fills up as you earn XP. Prize Points are what you spend on the Prize Wall.' },
-  { title: 'Your Player Pass', text: 'Your pass sets how fast you earn. Tap it any time to compare passes.' },
+  { title: 'Your PlayerPass', text: 'Your pass sets how fast you earn. Tap it any time to compare passes.' },
   { title: "What's up next at the store", text: 'These are the events happening at the store. You can find more on the Events tab, but this is a quick snapshot.' },
   { title: 'Your games', text: 'Track your progress in each game you play. Each game has its own rank, and all your points combine for your store and network rank in that game.' },
   { title: 'Card of the Day', text: 'A new card every day. Come back daily to see it and vote.' },

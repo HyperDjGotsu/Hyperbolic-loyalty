@@ -57,7 +57,7 @@ export interface DashboardData {
 }
 
 const DEFAULT_STORE_CONFIG: StoreConfig = {
-  store_name: 'Player Pass',
+  store_name: 'PlayerPass',
   currency_name: 'Points',
   currency_icon: '⭐',
 };
