@@ -1,8 +1,24 @@
 # Hyperbolic Loyalty System - Project Status
 
-**Last Updated:** November 7, 2026  
+**Last Updated:** November 7, 2026 (evening)  
 **Project Owner:** DjGotsu  
 **Store:** Games of Martinez (Hyperbolic Games)
+
+---
+
+## 🆕 Nov 7, 2026 (later) — titles, fresh-start wipe, private store pitch, store accounts (`main` head `7326d9c`)
+
+**Player titles (live).** `player_titles` table (service role only; a removed title keeps a `revoked_at` marker) plus `store_config.title_settings` and the locked function `award_title_capped` (atomic cap). Titles: Founding Member and Beta Tester (+100 XP once, first grant only), Administrator (no XP). Founding Member is awarded automatically when a player is verified, until the cap (default 100, editable) and never re-awarded after a removal; network admins give/remove any title from HQ → Settings → Titles by public player ID. Shown as chips on the profile (own profile and the Community profile card), icons on leaderboard rows (not for anonymous players) and a chip in the kiosk check-in greeting. DjGotsu (HYP-NCTE64) holds Administrator. Not on mobile yet (needs the next mobile build).
+
+**Fresh-start wipe (done).** Database wiped to two accounts (DjGotsu = main/network admin, Dj = dev instance) with their data reset; the other 15 players, 3 staff records and all activity are gone; events, stores, join codes and settings kept. Snapshot of the old data is in schema `backup_20261107` (drop after launch). Clerk users are being deleted by hand (live: keep dp2526@yahoo.com; dev: keep the Dj account). Scripts are in `~/playerpass-wipe/` (outside the repo). Paul needs a fresh Pleasant Hill manager invite.
+
+**Store pitch is private.** The landing page and sign-in no longer link to the store pitch (`SHOW_STORE_PITCH` in `lib/site-flags.ts` flips it back), `/pitch` and `/demo` are noindex and sit behind a shared password: set `PITCH_PASSWORD` in Vercel (Production) and redeploy; until it is set both pages are locked for everyone. Unlock page `/pitch-access`, 30-day cookie, rate limited. No password or hash is stored in the repo.
+
+**Branding.** "PlayerPass" is one word everywhere (app copy, metadata, emails, mobile app name, Clerk application name); the global Player ID Prefix setting is gone (each store has its own prefix).
+
+**App Store / Google Play.** Apple Developer (Organization, HYPERBOLIC CREATIVE INC) submitted and in review. Google Play organization account created under darrell@playerpass.gg; identity and organization documents submitted and in review; phone verification and Create app unlock after approval.
+
+**Still open:** set `PITCH_PASSWORD`; finish the Clerk deletions and send Paul his invite; Apple and Google approvals; Home banner for unverified players; staff vouching; mobile build (scan-to-check-in, tour question, titles); Clerk support email and sender domain; Digimon/UVS icon backgrounds; revoke the old Vercel bypass token; drop `backup_20261107` after launch.
 
 ---
 
