@@ -7,14 +7,19 @@ import { getAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
-async function describe(storeId: string, code: string, rotatedAt: string) {
+// Canonical app URL, or (if that env var is missing, as on some preview deploys) the address this request came in on
+function baseUrl(request: Request): string {
+  try { return getAppUrl(); } catch { return new URL(request.url).origin; }
+}
+
+async function describe(request: Request, storeId: string, code: string, rotatedAt: string) {
   const { data: store } = await supabaseAdmin.from('stores').select('name, slug').eq('id', storeId).maybeSingle();
   const slug = store?.slug ?? storeId;
   return {
     code,
     rotatedAt,
     storeName: store?.name ?? '',
-    joinUrl: `${getAppUrl()}/join/${encodeURIComponent(slug)}?c=${code}`,
+    joinUrl: `${baseUrl(request)}/join/${encodeURIComponent(slug)}?c=${code}`,
   };
 }
 
@@ -31,7 +36,7 @@ export async function GET(request: Request) {
 
     const current = await getJoinCode(storeId);
     if (!current) return NextResponse.json({ error: 'Could not load code' }, { status: 500 });
-    return NextResponse.json(await describe(storeId, current.code, current.rotatedAt));
+    return NextResponse.json(await describe(request, storeId, current.code, current.rotatedAt));
   } catch (err) {
     console.error('join-code GET error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
@@ -51,7 +56,7 @@ export async function POST(request: Request) {
 
     const next = await setJoinCode(body.storeId);
     if (!next) return NextResponse.json({ error: 'Could not rotate code' }, { status: 500 });
-    return NextResponse.json(await describe(body.storeId, next.code, next.rotatedAt));
+    return NextResponse.json(await describe(request, body.storeId, next.code, next.rotatedAt));
   } catch (err) {
     console.error('join-code POST error:', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
