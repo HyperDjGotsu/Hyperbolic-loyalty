@@ -1,8 +1,22 @@
 # Hyperbolic Loyalty System - Project Status
 
-**Last Updated:** November 2, 2026  
+**Last Updated:** November 5, 2026  
 **Project Owner:** DjGotsu  
 **Store:** Games of Martinez (Hyperbolic Games)
+
+---
+
+## 🆕 Nov 5, 2026 update — speed pass (API latency)
+
+**Live on `main`:** Vercel functions pinned to `sfo1` (`apps/web/vercel.json` → `"regions": ["sfo1"]`). They were running in `iad1` (Virginia) while Supabase is `us-west-1`, so every query crossed the country. `/api/events` and `/api/events/active` also run their independent queries with `Promise.all`. Measured on production: `/api/events?status=upcoming` 0.65–2.2s → ~0.3s; `/api/events/active` 1.2–1.6s → ~0.3s. Responses verified byte-identical to the old version (signed-out). `.clerk/` added to `.gitignore` (Clerk keyless dev keys contain a secret key; never committed).
+
+**Pushed, NOT merged (branches off main):**
+- `batch-cron-notifications` — `createNotificationsBulk()` in `lib/notifications.ts`; `spin-reminder`, `pass-expiring`, `weekly-summary` stop doing a preference SELECT + single INSERT per player. 6 new unit tests. Scale/cost fix, not user-facing speed. Note `redesign-home` also edits these cron files (fail-closed auth), so expect a small merge conflict.
+- `home-load-speed` — Home validates the saved store (`/api/stores`) in parallel with the player lookup instead of after it. Untested signed-in.
+
+**Checked and deliberately left alone:** compression (brotli already on), static pages (`/`, `/terms` are cache hits), `/api/store-config` (no-store on purpose; stale config has caused bugs), check-in route (steps are dependent and use atomic double-award protection).
+
+**Still open:** measure Home and check-in signed-in (browser network tab); optimistic UI for favorites, friend requests, spin, event credit (handlers not read yet); `public.pass_history` has RLS disabled (Supabase critical advisory, 0 rows today; fix is `ALTER TABLE public.pass_history ENABLE ROW LEVEL SECURITY;`, app uses service role so it should be safe); `redesign-home` (41 commits, 107 files incl. native app, launch hardening, blocking/reports) not on main; rotate the Vercel automation bypass token that was pasted in chat.
 
 ---
 
