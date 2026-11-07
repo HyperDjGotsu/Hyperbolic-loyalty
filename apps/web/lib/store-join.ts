@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 // Store join codes keep strangers from claiming a store they have never visited.
 // Codes live in store_join_codes (service role only). A player is "verified" for their home store
-// once they join with the code, check in at an event there, or staff vouch for them.
+// once they join with the code or staff check them in at an event there.
 
 // No O/0/I/1/L so a code read off a sign is hard to mistype.
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -81,17 +81,4 @@ export async function verifyHomeStore(playerId: string, storeId: string): Promis
     return false;
   }
   return true;
-}
-
-/** True when the player has checked in at an event run by this store. */
-export async function hasAttendedStore(playerId: string, storeId: string): Promise<boolean> {
-  const { data: events } = await supabaseAdmin.from('events').select('id').eq('store_id', storeId).limit(1000);
-  const ids = (events ?? []).map(e => e.id);
-  if (ids.length === 0) return false;
-  const { count } = await supabaseAdmin
-    .from('event_attendances')
-    .select('id', { count: 'exact', head: true })
-    .eq('player_id', playerId)
-    .in('event_id', ids);
-  return (count ?? 0) > 0;
 }

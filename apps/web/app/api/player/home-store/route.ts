@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { enforceRateLimitStrict } from '@/lib/rate-limit';
-import { findStoreByJoinCode, hasAttendedStore, normalizeJoinCode, verifyHomeStore } from '@/lib/store-join';
+import { findStoreByJoinCode, normalizeJoinCode, verifyHomeStore } from '@/lib/store-join';
 
 export const dynamic = 'force-dynamic';
 
 // PATCH — change the authenticated player's home store.
-// Allowed when the player proves they belong to the new store: its join code, or a past check-in there.
-// Picking a store with neither is refused, so nobody can claim a store they have never been to.
+// Allowed only with the new store's join code. Staff check-ins verify a store separately (see the check-in route).
+// Picking a store without proof is refused, so nobody can claim a store they have never been to.
 export async function PATCH(request: Request) {
   try {
     const { userId } = await auth();
@@ -60,13 +60,11 @@ export async function PATCH(request: Request) {
       if (!proven) {
         return NextResponse.json({ error: 'That code did not work. Check it with the store.', code: 'bad_join_code' }, { status: 400 });
       }
-    } else if (await hasAttendedStore(player.id, store.id)) {
-      proven = true;
     }
 
     if (!proven) {
       return NextResponse.json(
-        { error: 'Enter this store\'s join code, or check in at one of its events first.', code: 'join_code_required' },
+        { error: 'Enter this store\'s join code, or ask a staff member to check you in.', code: 'join_code_required' },
         { status: 403 }
       );
     }

@@ -273,9 +273,10 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to record attendance' }, { status: 500 });
     }
 
-    // A real check-in proves the player was at this store: verify their home store if it was unverified.
-    // Never fatal, and never changes a store the player already verified.
-    if (event.store_id) {
+    // A staff check-in (kiosk/NFC, player_id in the body, staff authorized for this store) proves the player was
+    // at the store, so it verifies an unverified home store. A player's own phone check-in does NOT: the kiosk QR
+    // only carries the public event id, so it cannot prove presence. Never fatal; never changes a verified store.
+    if (body.player_id && event.store_id) {
       try {
         const { data: pv } = await supabaseAdmin
           .from('players')

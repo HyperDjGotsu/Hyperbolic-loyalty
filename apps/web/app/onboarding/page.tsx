@@ -580,7 +580,7 @@ function OnboardingContent() {
                 className="w-full bg-input border border-border-strong rounded-xl px-4 py-3 text-primary tracking-widest"
               />
               <p className="text-tertiary text-xs mt-2">
-                With the code, your store is confirmed right away. Without it, your first check-in at the store confirms it, and the free trial and prizes unlock then.
+                With the code, your store is confirmed right away. Without it, a staff member checking you in at the store confirms it, and the free trial and prizes unlock then.
               </p>
             </div>
 
