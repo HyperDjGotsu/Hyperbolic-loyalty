@@ -2442,6 +2442,7 @@ export type Database = {
       }
       store_config: {
         Row: {
+          abuse_alert_settings: Json | null
           created_at: string | null
           currency_icon: string
           currency_name: string
@@ -2456,6 +2457,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          abuse_alert_settings?: Json | null
           created_at?: string | null
           currency_icon?: string
           currency_name?: string
@@ -2470,6 +2472,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          abuse_alert_settings?: Json | null
           created_at?: string | null
           currency_icon?: string
           currency_name?: string
