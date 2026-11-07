@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LaneLink } from '@/components/LaneLink';
 import { DoorsSwitch } from '@/components/DoorsSwitch';
+import { SHOW_STORE_PITCH } from '@/lib/site-flags';
 
 const PLAYER_ART = ['pokemon', 'one_piece', 'riftbound'];
 
@@ -80,10 +81,12 @@ export default function LandingPage() {
           <Image src="/brand/pp-mark.png" alt="" width={30} height={30} priority className="pp-mark-adaptive" />
           <span className="font-display text-xl font-extrabold tracking-[-0.02em]">PlayerPass</span>
         </Link>
-        <nav className="hidden items-center gap-7 text-sm font-semibold text-secondary md:flex">
-          <Link href="/pitch" className="transition-colors hover:text-primary">For stores</Link>
-          <Link href="/demo" className="transition-colors hover:text-primary">Demo</Link>
-        </nav>
+        {SHOW_STORE_PITCH && (
+          <nav className="hidden items-center gap-7 text-sm font-semibold text-secondary md:flex">
+            <Link href="/pitch" className="transition-colors hover:text-primary">For stores</Link>
+            <Link href="/demo" className="transition-colors hover:text-primary">Demo</Link>
+          </nav>
+        )}
         <div className="flex items-center gap-3 text-sm font-semibold">
           <LaneLink lane="player" href="/sign-in" className="text-secondary transition-colors hover:text-primary">Sign in</LaneLink>
           <LaneLink lane="player" href="/sign-up" className="pp-press rounded-xl bg-accent px-4 py-2 text-accent-fg">Get started</LaneLink>
@@ -96,14 +99,20 @@ export default function LandingPage() {
             Your game store,<br />now with a scoreboard.
           </h1>
           <p className="mx-auto mt-4 max-w-[35rem] text-[16px] leading-relaxed text-secondary sm:mt-5 sm:text-lg">
-            Check in to events, earn XP, and spend Prize Points. Pick the door that fits you.
+            Check in to events, earn XP, and spend Prize Points.{SHOW_STORE_PITCH ? ' Pick the door that fits you.' : ''}
           </p>
         </div>
 
-        <DoorsSwitch labels={['For players', 'For stores']}>
-          <PlayerDoor />
-          <StoreDoor />
-        </DoorsSwitch>
+        {SHOW_STORE_PITCH ? (
+          <DoorsSwitch labels={['For players', 'For stores']}>
+            <PlayerDoor />
+            <StoreDoor />
+          </DoorsSwitch>
+        ) : (
+          <div className="mx-auto max-w-[640px]">
+            <PlayerDoor />
+          </div>
+        )}
 
         <p className="mt-6 text-center text-[13px] text-tertiary">
           <Link href="/privacy" className="hover:text-primary">Privacy</Link>
