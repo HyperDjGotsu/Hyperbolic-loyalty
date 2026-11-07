@@ -1,4 +1,4 @@
-// Airtable API client for Hyperbolic XP system
+// Airtable API client for Player Pass system
 // Uses existing Netlify functions as backend
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
