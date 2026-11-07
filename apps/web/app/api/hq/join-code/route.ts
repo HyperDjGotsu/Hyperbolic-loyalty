@@ -7,9 +7,15 @@ import { getAppUrl } from '@/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
-// Canonical app URL, or (if that env var is missing, as on some preview deploys) the address this request came in on
+// Canonical app URL. Only on preview and local builds, where that env var is often missing, fall back to the
+// address this request came in on. Production keeps failing loudly rather than printing a link from an unknown host.
 function baseUrl(request: Request): string {
-  try { return getAppUrl(); } catch { return new URL(request.url).origin; }
+  try {
+    return getAppUrl();
+  } catch (err) {
+    if (process.env.VERCEL_ENV === 'production') throw err;
+    return new URL(request.url).origin;
+  }
 }
 
 async function describe(request: Request, storeId: string, code: string, rotatedAt: string) {
