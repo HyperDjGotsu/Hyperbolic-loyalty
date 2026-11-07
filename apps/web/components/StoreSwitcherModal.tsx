@@ -29,6 +29,10 @@ export function StoreSwitcherModal({
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Required (home store) path: the player must prove they belong to the store with its join code
+  const [pending, setPending] = useState<Store | null>(null);
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetch('/api/stores')
@@ -42,23 +46,36 @@ export function StoreSwitcherModal({
     if (store.id === currentStoreId || saving) return;
 
     if (required) {
-      // Null-home-store onboarding path: persist to DB
-      setSaving(true);
-      try {
-        const res = await fetch('/api/player/home-store', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ store_id: store.id }),
-        });
-        if (res.ok) onSwitch(store);
-      } catch {
-        // stay open on error
-      } finally {
-        setSaving(false);
-      }
+      // Home store needs the store's join code; ask for it before saving
+      setPending(store);
+      setCode('');
+      setError('');
     } else {
       // Normal browsing-context switch — no DB write
       onSwitch(store);
+    }
+  }
+
+  async function submitCode() {
+    if (!pending || saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      const res = await fetch('/api/player/home-store', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ store_id: pending.id, code }),
+      });
+      if (res.ok) {
+        onSwitch(pending);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || 'That code did not work. Check it with the store.');
+    } catch {
+      setError('Connection error. Please try again.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -81,7 +98,40 @@ export function StoreSwitcherModal({
             : "Switch which store's events, leaderboard, and prizes you're viewing. Your home store is not changed."}
         </p>
 
-        {loading ? (
+        {required && pending ? (
+          <div className="space-y-3">
+            <div className="text-white font-medium text-sm">{pending.name}</div>
+            <p className="text-gray-400 text-xs">
+              Enter the join code from the store's QR sign or ask a staff member. You can also scan the QR code with your phone camera.
+            </p>
+            <input
+              value={code}
+              onChange={e => setCode(e.target.value.toUpperCase())}
+              maxLength={12}
+              autoCapitalize="characters"
+              autoComplete="off"
+              placeholder="JOIN CODE"
+              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-3 text-white text-center tracking-widest text-lg"
+            />
+            {error && <p className="text-red-400 text-xs">{error}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setPending(null); setError(''); }}
+                disabled={saving}
+                className="flex-1 py-3 rounded-lg border border-gray-600 text-gray-300 text-sm"
+              >
+                Back
+              </button>
+              <button
+                onClick={submitCode}
+                disabled={saving || code.trim().length < 6}
+                className="flex-1 py-3 rounded-lg bg-accent text-accent-fg text-sm font-semibold disabled:opacity-50"
+              >
+                {saving ? 'Checking…' : 'Join store'}
+              </button>
+            </div>
+          </div>
+        ) : loading ? (
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import StoreJoinCard from '@/components/hq/StoreJoinCard';
 import StaffGuide from '@/components/StaffGuide';
 import EventCreditLog from '@/components/EventCreditLog';
 import StaffPinSetup from '@/components/StaffPinSetup';
@@ -5815,6 +5816,8 @@ export default function HQPage() {
 
         {activeTab === 'settings' && (
           <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+
+            <StoreJoinCard storeId={hqStore.activeStoreId} />
 
             {/* Currency */}
             <div className="bg-surface rounded-xl p-6 border border-border-token">

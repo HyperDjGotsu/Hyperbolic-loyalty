@@ -21,12 +21,20 @@ export async function POST() {
 
     const { data: player, error: fetchError } = await supabaseAdmin
       .from('players')
-      .select('id, pass_tier, pass_expires_at, pass_status, has_claimed_trial')
+      .select('id, pass_tier, pass_expires_at, pass_status, has_claimed_trial, home_store_verified_at')
       .eq('clerk_user_id', userId)
       .maybeSingle();
 
     if (fetchError || !player) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
+    // A trial is for players who belong to a store: they joined with its code or checked in there
+    if (!player.home_store_verified_at) {
+      return NextResponse.json(
+        { error: 'Join your store first: scan the QR code at the store or enter its join code.', code: 'store_unverified' },
+        { status: 403 }
+      );
     }
 
     // Lifetime gate: once claimed, never again (even if the trial expired)

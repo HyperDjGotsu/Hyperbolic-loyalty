@@ -373,6 +373,7 @@ export async function GET() {
       isFoundingMember: player.is_founding_member,
       createdAt: player.created_at,
       homeStoreId: player.home_store_id,
+      homeStoreVerified: !!player.home_store_verified_at,
       homeStore,
       // Include current month info for display
       currentMonth: monthKey,

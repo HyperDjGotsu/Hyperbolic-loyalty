@@ -25,12 +25,19 @@ export async function POST(request: Request) {
 
     const { data: player } = await supabaseAdmin
       .from('players')
-      .select('id, pass_tier, pass_expires_at, pass_status, home_store_id')
+      .select('id, pass_tier, pass_expires_at, pass_status, home_store_id, home_store_verified_at')
       .eq('clerk_user_id', userId)
       .single();
 
     if (!player) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
+    if (!player.home_store_verified_at) {
+      return NextResponse.json(
+        { error: 'Join your store first: scan the QR code at the store or enter its join code.', code: 'store_unverified' },
+        { status: 403 }
+      );
     }
 
     const resolvedStoreId: string | null = storeId || player.home_store_id || null;

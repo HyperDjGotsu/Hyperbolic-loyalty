@@ -1634,6 +1634,7 @@ export type Database = {
           has_been_paid_member: boolean
           has_claimed_trial: boolean
           home_store_id: string | null
+          home_store_verified_at: string | null
           id: string
           is_banned: boolean | null
           is_founding_member: boolean | null
@@ -1702,6 +1703,7 @@ export type Database = {
           has_been_paid_member?: boolean
           has_claimed_trial?: boolean
           home_store_id?: string | null
+          home_store_verified_at?: string | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
@@ -1770,6 +1772,7 @@ export type Database = {
           has_been_paid_member?: boolean
           has_claimed_trial?: boolean
           home_store_id?: string | null
+          home_store_verified_at?: string | null
           id?: string
           is_banned?: boolean | null
           is_founding_member?: boolean | null
@@ -2481,6 +2484,32 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      store_join_codes: {
+        Row: {
+          code: string
+          rotated_at: string
+          store_id: string
+        }
+        Insert: {
+          code: string
+          rotated_at?: string
+          store_id: string
+        }
+        Update: {
+          code?: string
+          rotated_at?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_join_codes_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stores: {
         Row: {

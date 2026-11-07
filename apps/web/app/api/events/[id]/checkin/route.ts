@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyHomeStore } from '@/lib/store-join';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createNotification } from '@/lib/notifications';
@@ -270,6 +271,21 @@ export async function POST(
     if (attendanceError) {
       console.error('Attendance insert error:', attendanceError);
       return NextResponse.json({ error: 'Failed to record attendance' }, { status: 500 });
+    }
+
+    // A real check-in proves the player was at this store: verify their home store if it was unverified.
+    // Never fatal, and never changes a store the player already verified.
+    if (event.store_id) {
+      try {
+        const { data: pv } = await supabaseAdmin
+          .from('players')
+          .select('home_store_verified_at')
+          .eq('id', playerId)
+          .maybeSingle();
+        if (pv && !pv.home_store_verified_at) await verifyHomeStore(playerId, event.store_id);
+      } catch (err) {
+        console.error('Home store verify on check-in failed:', err);
+      }
     }
 
     // Award Lifetime XP (flat, no multiplier ever)

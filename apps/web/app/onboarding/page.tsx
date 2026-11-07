@@ -43,9 +43,23 @@ function OnboardingContent() {
   const [staffInviteCode, setStaffInviteCode] = useState('');
   const [stores, setStores] = useState<Store[]>([]);
   const [homeStoreId, setHomeStoreId] = useState('');
+  const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkingLink, setCheckingLink] = useState(true);
+
+  // A /join/<store> link (QR at the store) leaves the store and code here before sign-up
+  useEffect(() => {
+    if (stores.length === 0) return;
+    try {
+      const raw = localStorage.getItem('pp_join');
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { slug?: string; code?: string };
+      const match = stores.find((st) => st.slug === saved.slug);
+      if (match) setHomeStoreId((cur) => cur || match.id);
+      if (saved.code) setJoinCode((cur) => cur || String(saved.code).toUpperCase());
+    } catch {}
+  }, [stores]);
 
   // Check if user already has a linked player
   useEffect(() => {
@@ -62,7 +76,8 @@ function OnboardingContent() {
 
         if (data.linked) {
           // User already has a linked player, go to dashboard
-          localStorage.setItem('hyperbolic_player_id', data.player_id);
+          try { localStorage.removeItem('pp_join'); } catch {}
+      localStorage.setItem('hyperbolic_player_id', data.player_id);
           localStorage.setItem('hyperbolic_player_uuid', data.id);
           router.push('/dashboard');
           return;
@@ -227,6 +242,7 @@ function OnboardingContent() {
           referralCode: referralCode.trim().toUpperCase() || null,
           staffInviteCode: staffInviteCode || null,
           homeStoreId,
+          joinCode: joinCode.trim() || null,
           birthdate,
         }),
       });
@@ -550,6 +566,22 @@ function OnboardingContent() {
                   )}
                 </button>
               ))}
+            </div>
+
+            <div className="mb-6">
+              <label className="text-secondary text-sm block mb-2">Store join code (optional)</label>
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                maxLength={12}
+                autoCapitalize="characters"
+                autoComplete="off"
+                placeholder="From the QR sign at the store"
+                className="w-full bg-input border border-border-strong rounded-xl px-4 py-3 text-primary tracking-widest"
+              />
+              <p className="text-tertiary text-xs mt-2">
+                With the code, your store is confirmed right away. Without it, your first check-in at the store confirms it, and the free trial and prizes unlock then.
+              </p>
             </div>
 
             {error && (

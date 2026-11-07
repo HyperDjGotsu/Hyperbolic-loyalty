@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { enforceRateLimitPermissive, getClientIp } from '@/lib/rate-limit';
+import { enforceRateLimitPermissive, enforceRateLimitStrict, getClientIp } from '@/lib/rate-limit';
+import { findStoreByJoinCode, normalizeJoinCode } from '@/lib/store-join';
 import { SELECTABLE_GAME_IDS, resolveGameId } from '@/lib/games';
 
 const MIN_AGE = 13;
@@ -51,7 +52,9 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId, birthdate } = body;
+    const { action, playerId, displayName, discordUsername, phone, primaryGame, referralCode, staffInviteCode, homeStoreId: pickedStoreId, birthdate, joinCode } = body;
+    let homeStoreId: string | null = pickedStoreId || null;
+    let homeStoreVerifiedAt: string | null = null;
     // Note: managedStoreId is intentionally NOT accepted here.
     // Staff store assignments are granted through the staff invitation flow
     // (staff_store_roles table), never through account creation.
@@ -154,6 +157,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Display name required' }, { status: 400 });
       }
 
+      // Optional store join code (from the store's QR sign). A valid code sets the home store and marks it verified;
+      // without one the player is created unverified and can verify later (code or first check-in).
+      if (typeof joinCode === 'string' && joinCode.trim()) {
+        const limited = await enforceRateLimitStrict(`join-code-signup:${userId}`, 600, 8);
+        if (limited) return limited;
+        const code = normalizeJoinCode(joinCode);
+        const codeStore = code ? await findStoreByJoinCode(code) : null;
+        if (!codeStore) {
+          return NextResponse.json({ error: 'That join code did not work. Check it with the store.', code: 'bad_join_code' }, { status: 400 });
+        }
+        homeStoreId = codeStore.id;
+        homeStoreVerifiedAt = new Date().toISOString();
+      }
+
       // Get Clerk user info for email and real name
       const user = await currentUser();
       const clerkEmail = user?.emailAddresses?.[0]?.emailAddress || null;
@@ -235,6 +252,7 @@ export async function POST(request: Request) {
           favorite_games: initialFavorites,
           // Store assignment
           home_store_id: homeStoreId || null,
+          home_store_verified_at: homeStoreVerifiedAt,
           // Referral fields
           referred_by: referrerId,
           referral_bonus_paid: false,
