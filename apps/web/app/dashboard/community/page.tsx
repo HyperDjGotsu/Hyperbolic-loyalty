@@ -983,7 +983,7 @@ export default function CommunityPage() {
                 <button
                   key={game.id}
                   onClick={() => handleGameChange(game.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap transition-all ${
+                  className={`flex flex-none items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                     leaderboardGame === game.id
                       ? 'bg-accent text-accent-fg'
                       : 'bg-elevated text-secondary hover:bg-elevated'
@@ -995,7 +995,7 @@ export default function CommunityPage() {
               ))}
               <button
                 onClick={() => setShowFavoritesPicker(true)}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap bg-elevated/50 text-secondary hover:bg-elevated hover:text-primary transition-all border border-dashed border-border-token"
+                className="flex flex-none items-center gap-1 px-4 py-2 rounded-full whitespace-nowrap bg-elevated/50 text-secondary hover:bg-elevated hover:text-primary transition-all border border-dashed border-border-token"
               >
                 <Settings size={14} />
                 <span className="text-sm">Edit</span>
