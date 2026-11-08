@@ -125,6 +125,7 @@ export async function POST(request: Request) {
       playerId: friendId,
       title: 'Event Shared',
       body: `${player.display_name} shared an event with you: ${event.name}`,
+      url: `/dashboard/events?event=${event.id}`, // tapping the push opens the shared event, same as tapping the in-app alert
     })));
 
     return NextResponse.json({ 
