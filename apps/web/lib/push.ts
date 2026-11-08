@@ -19,6 +19,31 @@ interface PushPayload {
   count?: number; // number to show on the app icon (home-screen app) when supported
 }
 
+const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL || 'https://playerpass.gg';
+
+// Builds the push body. It carries two formats at once:
+//  - Apple's "declarative" format (web_push 8030, iOS 18.4+): the phone shows the notification itself and a tap goes
+//    straight to `navigate`, with no service worker needed. This is what makes a tap open the right page on iPhone.
+//  - The plain fields (title, body, url, tag, count) that our service worker reads on other browsers and older iPhones.
+function buildPushBody(p: { title: string; body: string; url?: string; tag?: string; count?: number }): string {
+  const path = p.url && p.url.startsWith('/') ? p.url : '/dashboard';
+  const count = typeof p.count === 'number' ? Math.max(0, Math.floor(p.count)) : undefined;
+  return JSON.stringify({
+    web_push: 8030,
+    notification: {
+      title: p.title,
+      body: p.body,
+      navigate: `${SITE_ORIGIN}${path}`,
+      ...(count !== undefined ? { app_badge: String(count) } : {}),
+    },
+    title: p.title,
+    body: p.body,
+    url: path,
+    tag: p.tag,
+    count,
+  });
+}
+
 // Send a web push to all active subscriptions for a player.
 // Silently removes any subscriptions that have expired or been revoked.
 export async function sendPushToPlayer(playerId: string, payload: PushPayload): Promise<void> {
@@ -38,7 +63,7 @@ export async function sendPushToPlayer(playerId: string, payload: PushPayload): 
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          JSON.stringify(payload)
+          buildPushBody(payload)
         );
       } catch (err: any) {
         // 410 Gone or 404 = subscription expired/unregistered — remove it
@@ -128,7 +153,7 @@ export async function pushToPlayers(items: WebPushItem[]): Promise<void> {
     for (const item of items) {
       const subs = subsByPlayer.get(item.playerId);
       if (!subs) continue;
-      const body = JSON.stringify({
+      const body = buildPushBody({
         title: item.title,
         body: item.body,
         url: item.url ?? '/dashboard/notifications',
