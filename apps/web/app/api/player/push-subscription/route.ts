@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { isAllowedPushEndpoint } from '@/lib/push-endpoint';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
   const { endpoint, keys } = body;
   if (!endpoint || !keys?.p256dh || !keys?.auth) {
     return NextResponse.json({ error: 'Invalid subscription payload' }, { status: 400 });
+  }
+  if (!isAllowedPushEndpoint(endpoint)) {
+    return NextResponse.json({ error: 'Unsupported push service' }, { status: 400 });
   }
 
   const { error } = await supabaseAdmin

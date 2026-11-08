@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { pushToPlayers } from '@/lib/push';
+import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,9 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const limited = await enforceRateLimitStrict(`event-share:${userId}`, 600, 20);
+    if (limited) return limited;
 
     // Get current player
     const { data: player } = await supabaseAdmin
@@ -58,12 +62,30 @@ export async function POST(request: Request) {
       }
     });
 
-    // Filter to only valid friends
-    const actualFriendIds = friendIds.filter(id => validFriendIds.has(id));
+    // Filter to only valid friends, each once, at most 50 per share
+    let actualFriendIds: string[] = Array.from(new Set<string>(friendIds.filter((id): id is string => typeof id === 'string' && validFriendIds.has(id)))).slice(0, 50);
 
     if (actualFriendIds.length === 0) {
       return NextResponse.json({ error: 'No valid friends selected' }, { status: 400 });
     }
+
+    // Leave out friends who turned off Social notifications
+    if (actualFriendIds.length > 0) {
+      const { data: prefRows } = await supabaseAdmin
+        .from('players')
+        .select('id, notification_preferences')
+        .in('id', actualFriendIds);
+      const optedOut = new Set(
+        (prefRows ?? [])
+          .filter((p) => (p.notification_preferences as Record<string, boolean> | null)?.social === false)
+          .map((p) => p.id)
+      );
+      actualFriendIds = actualFriendIds.filter((id) => !optedOut.has(id));
+    }
+    if (actualFriendIds.length === 0) {
+      return NextResponse.json({ success: true, message: 'Event shared successfully', sharedWith: 0 });
+    }
+
 
     // Create notifications for each friend
     const notifications = actualFriendIds.map(friendId => ({

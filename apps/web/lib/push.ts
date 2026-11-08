@@ -1,5 +1,6 @@
 import webpush from 'web-push';
 import { supabaseAdmin } from '@/lib/supabase';
+import { isAllowedPushEndpoint } from '@/lib/push-endpoint';
 
 function initVapid() {
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -33,7 +34,7 @@ export async function sendPushToPlayer(playerId: string, payload: PushPayload): 
   const staleIds: string[] = [];
 
   await Promise.allSettled(
-    subs.map(async (sub) => {
+    subs.filter((s) => isAllowedPushEndpoint(s.endpoint)).map(async (sub) => {
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -99,6 +100,7 @@ export async function pushToPlayers(items: WebPushItem[]): Promise<void> {
         .select('id, player_id, endpoint, p256dh, auth')
         .in('player_id', playerIds.slice(i, i + 200));
       for (const s of subs ?? []) {
+        if (!isAllowedPushEndpoint(s.endpoint)) continue;
         const list = subsByPlayer.get(s.player_id) ?? [];
         list.push({ id: s.id, endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth });
         subsByPlayer.set(s.player_id, list);
