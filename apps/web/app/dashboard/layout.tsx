@@ -160,6 +160,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname === '/dashboard/notifications') setUnreadCount(0);
   }, [pathname]);
 
+  // Keep the number on the Home Screen icon in step with the unread count (where the phone supports it)
+  useEffect(() => {
+    const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+    try {
+      if (unreadCount > 0) nav.setAppBadge?.(unreadCount)?.catch(() => {});
+      else nav.clearAppBadge?.()?.catch(() => {});
+    } catch { /* badges not supported */ }
+  }, [unreadCount]);
+
   return (
     <div className="min-h-screen bg-base text-primary">
       {/* Desktop top bar */}

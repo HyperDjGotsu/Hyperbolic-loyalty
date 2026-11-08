@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { pushToPlayers } from '@/lib/push';
 
 
 export const dynamic = 'force-dynamic';
@@ -97,6 +98,12 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ error: 'Failed to send notifications' }, { status: 500 });
     }
+
+    await pushToPlayers(actualFriendIds.map((friendId: string) => ({
+      playerId: friendId,
+      title: 'Event Shared',
+      body: `${player.display_name} shared an event with you: ${event.name}`,
+    })));
 
     return NextResponse.json({ 
       success: true, 
