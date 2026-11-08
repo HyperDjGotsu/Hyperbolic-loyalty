@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ui';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import ResumeRefresh from '@/components/ResumeRefresh';
+import { SW_URL } from '@/lib/sw-url';
 
 const navItems = [
   {
@@ -159,6 +160,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (pathname === '/dashboard/notifications') setUnreadCount(0);
   }, [pathname]);
+
+  // Keep the notifications worker on the current release (only for devices that allowed notifications)
+  useEffect(() => {
+    try {
+      if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+        navigator.serviceWorker.register(SW_URL).catch(() => {});
+      }
+    } catch { /* not supported */ }
+  }, []);
 
   // Tapping a push: the service worker leaves a note of where to go (iPhone ignores the link itself when it launches
   // a Home Screen app). Read it when the app opens or comes back to the front, and go there once.

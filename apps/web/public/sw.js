@@ -1,6 +1,15 @@
 // PlayerPass — Service Worker
 // Handles background push notifications
 
+const SW_VERSION = new URL(self.location.href).searchParams.get('v') || 'none';
+
+// Answers "which version are you?" so the Profile page can show it
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'pp-version' && event.source) {
+    event.source.postMessage({ type: 'pp-version', v: SW_VERSION });
+  }
+});
+
 // Take over as soon as a new version is installed, so changes to this file apply without a full app restart
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -48,6 +57,10 @@ self.addEventListener('notificationclick', (event) => {
     } catch (e) { /* storage unavailable: the message / openWindow below still try */ }
 
     const clientList = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    try {
+      const cache = await caches.open('pp-nav');
+      await cache.put('/pp-last-tap', new Response(JSON.stringify({ url, at: Date.now(), windows: clientList.length, v: SW_VERSION })));
+    } catch (e) { /* diagnostics only */ }
     for (const client of clientList) {
       if (client.url.includes(self.location.origin) && 'focus' in client) {
         client.postMessage({ type: 'pp-navigate', url });

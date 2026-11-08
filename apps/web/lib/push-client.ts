@@ -1,6 +1,8 @@
 // Browser side of notifications: asks permission (must run from a tap), subscribes this device and saves it.
 // Each Home Screen icon on iPhone counts as its own app with its own permission, so this is safe to call again
 // whenever a device is not yet set up.
+import { SW_URL } from '@/lib/sw-url';
+
 export type PushSetupResult = { ok: true } | { ok: false; reason: 'unsupported' | 'denied' | 'failed' };
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -21,7 +23,7 @@ export async function ensurePushSubscription(): Promise<PushSetupResult> {
       if (result !== 'granted') return { ok: false, reason: 'denied' };
     }
 
-    const reg = await navigator.serviceWorker.register('/sw.js');
+    const reg = await navigator.serviceWorker.register(SW_URL);
     await navigator.serviceWorker.ready;
 
     let sub = await reg.pushManager.getSubscription();

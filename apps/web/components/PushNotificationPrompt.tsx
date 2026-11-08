@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { SW_URL } from '@/lib/sw-url';
 
 const DAY_MS = 24 * 3600_000;
 
@@ -38,7 +39,7 @@ export default function PushNotificationPrompt() {
   const subscribe = async () => {
     setStatus('subscribing');
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
+      const reg = await navigator.serviceWorker.register(SW_URL);
       await navigator.serviceWorker.ready;
 
       const sub = await reg.pushManager.subscribe({
