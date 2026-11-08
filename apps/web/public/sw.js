@@ -43,7 +43,9 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(url);
+          // iPhone Home Screen apps often ignore client.navigate, so also tell the page itself where to go
+          client.postMessage({ type: 'pp-navigate', url });
+          try { client.navigate(url); } catch (e) { /* the message above covers it */ }
           return client.focus();
         }
       }

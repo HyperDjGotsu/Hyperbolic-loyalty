@@ -160,6 +160,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname === '/dashboard/notifications') setUnreadCount(0);
   }, [pathname]);
 
+  // Tapping a push while the app is already open: the service worker sends the destination and we go there
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (e: MessageEvent) => {
+      const d = e.data as { type?: string; url?: string } | null;
+      if (d?.type === 'pp-navigate' && typeof d.url === 'string' && d.url.startsWith('/')) window.location.assign(d.url);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, []);
+
   // Keep the number on the Home Screen icon in step with the unread count (where the phone supports it)
   useEffect(() => {
     const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };

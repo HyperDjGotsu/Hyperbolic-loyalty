@@ -33,7 +33,7 @@ export async function POST() {
   await sendPushToPlayer(player.id, {
     title: 'PlayerPass test',
     body: 'Notifications are working on this device.',
-    url: '/dashboard',
+    url: '/dashboard/notifications',
     tag: 'pp-test',
     count: 1,
   });
