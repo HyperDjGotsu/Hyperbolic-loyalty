@@ -190,7 +190,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     goToPending();
     const onVisible = () => { if (document.visibilityState === 'visible') goToPending(); };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    window.addEventListener('pageshow', onVisible);
+    // iPhone does not always announce that the app came back from a banner tap, so also look every 1.5s while it is on screen
+    const timer = window.setInterval(onVisible, 1500);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+      window.removeEventListener('pageshow', onVisible);
+      window.clearInterval(timer);
+    };
   }, []);
 
   // Tapping a push while the app is already open: the service worker sends the destination and we go there

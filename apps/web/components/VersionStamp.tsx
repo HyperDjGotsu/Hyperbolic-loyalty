@@ -25,15 +25,25 @@ export default function VersionStamp() {
           else setWorker('no worker');
         }).catch(() => setWorker('error'));
       } else setWorker('unsupported');
-      if ('caches' in window) {
+    } catch { /* diagnostics only */ }
+
+    // Re-read the last banner tap every 2 seconds so it shows up without reloading the page
+    const readTap = () => {
+      try {
+        if (!('caches' in window)) return;
         caches.open('pp-nav').then((c) => c.match('/pp-last-tap')).then(async (r) => {
           if (!r) return;
           const t = await r.json();
           setTap(`${new Date(t.at).toLocaleTimeString()} to ${t.url} (${t.windows} window${t.windows === 1 ? '' : 's'}, worker ${t.v})`);
         }).catch(() => {});
-      }
-    } catch { /* diagnostics only */ }
-    return () => { try { navigator.serviceWorker?.removeEventListener('message', onMessage); } catch { /* ignore */ } };
+      } catch { /* diagnostics only */ }
+    };
+    readTap();
+    const timer = window.setInterval(readTap, 2000);
+    return () => {
+      window.clearInterval(timer);
+      try { navigator.serviceWorker?.removeEventListener('message', onMessage); } catch { /* ignore */ }
+    };
   }, []);
 
   return (
