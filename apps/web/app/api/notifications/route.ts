@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     // plus network-wide notifications (store_id IS NULL)
     let query = supabaseAdmin
       .from('notifications')
-      .select('id, title, message, created_at, is_read, type, store_id')
+      .select('id, title, message, created_at, is_read, type, store_id, data')
       .eq('player_id', player.id)
       .order('created_at', { ascending: false })
       .limit(limit);
