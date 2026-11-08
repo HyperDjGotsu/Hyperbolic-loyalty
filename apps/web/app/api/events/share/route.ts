@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { pushToPlayers } from '@/lib/push';
+import { gameArtUrl } from '@/lib/games';
 import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     // Get event details
     const { data: event } = await supabaseAdmin
       .from('events')
-      .select('id, name, scheduled_at, game_id')
+      .select('id, name, scheduled_at, game_id, image_url')
       .eq('id', eventId)
       .single();
 
@@ -97,6 +98,7 @@ export async function POST(request: Request) {
         event_id: event.id,
         event_name: event.name,
         scheduled_at: event.scheduled_at,
+        image_url: event.image_url || gameArtUrl(event.game_id), // the alert shows the event's picture, like other event alerts
         from_player_id: player.id,
         from_player_name: player.display_name,
       },
