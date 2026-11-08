@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
     const game   = searchParams.get('game');
     const period = searchParams.get('period') || 'lifetime';
     const storeId = searchParams.get('store_id');
+    if (storeId && !/^[0-9a-f-]{36}$/i.test(storeId)) {
+      return NextResponse.json({ error: 'Invalid store_id' }, { status: 400 });
+    }
 
     // ── Season bounds ────────────────────────────────────────────────────────
     let seasonStart: string | null = null;
@@ -57,10 +60,12 @@ export async function GET(request: NextRequest) {
     // of where the player's home store is set.
     let xpQuery = supabaseAdmin
       .from('xp_ledger')
-      .select('player_id, final_xp');
+      .select('player_id, final_xp, store_id');
 
     if (storeId) {
-      xpQuery = xpQuery.eq('store_id', storeId);
+      // XP earned at this store, plus XP that is not tied to any store (daily spins, welcome bonus) for the
+      // players whose home store this is. Every point a player earns counts somewhere.
+      xpQuery = xpQuery.or(`store_id.eq.${storeId},store_id.is.null`);
     }
     if (seasonStart) {
       xpQuery = xpQuery.gte('created_at', seasonStart);
@@ -83,7 +88,30 @@ export async function GET(request: NextRequest) {
     const xpByPlayer: Record<string, number> = {};
     // Players not yet verified for a store stay off the board
     const hidden = await getUnverifiedPlayerIds();
-    for (const entry of (xpData ?? []).filter(e => e.player_id !== null && !hidden.has(e.player_id))) {
+
+    // Store board: untagged XP only counts for players whose home store is this store
+    let homeOfStore: Set<string> | null = null;
+    if (storeId) {
+      const untaggedIds = Array.from(new Set((xpData ?? []).filter(e => e.store_id === null && e.player_id !== null).map(e => e.player_id as string)));
+      homeOfStore = new Set<string>();
+      for (let i = 0; i < untaggedIds.length; i += 400) {
+        const { data: homes, error: homesError } = await supabaseAdmin
+          .from('players')
+          .select('id')
+          .eq('home_store_id', storeId)
+          .in('id', untaggedIds.slice(i, i + 400));
+        if (homesError) {
+          console.error('Leaderboard home store error:', homesError);
+          return NextResponse.json({ error: 'Failed to fetch XP data' }, { status: 500 });
+        }
+        for (const h of homes ?? []) homeOfStore.add(h.id);
+      }
+    }
+
+    const counts = (e: { player_id: string | null; store_id: string | null }) =>
+      e.player_id !== null && !hidden.has(e.player_id) && (!homeOfStore || e.store_id !== null || homeOfStore.has(e.player_id));
+
+    for (const entry of (xpData ?? []).filter(counts)) {
       xpByPlayer[entry.player_id!] = (xpByPlayer[entry.player_id!] || 0) + (entry.final_xp || 0);
     }
 
