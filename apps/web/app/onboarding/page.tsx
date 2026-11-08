@@ -296,7 +296,7 @@ function OnboardingContent() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="font-display text-3xl font-black text-accent">
-            PLAYER PASS
+            PLAYERPASS
           </div>
         </div>
 

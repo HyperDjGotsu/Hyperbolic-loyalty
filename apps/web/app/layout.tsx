@@ -4,6 +4,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'PlayerPass',
+  applicationName: 'PlayerPass',
+  appleWebApp: { capable: true, title: 'PlayerPass', statusBarStyle: 'black-translucent' },
   description: 'Level up your community. Earn XP, unlock rewards, and compete with the community.',
   keywords: ['TCG', 'loyalty', 'gaming', 'One Piece', 'Pokemon', 'MTG'],
   authors: [{ name: 'PlayerPass' }],
