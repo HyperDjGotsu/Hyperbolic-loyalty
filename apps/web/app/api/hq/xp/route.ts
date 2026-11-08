@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireStoreManager, requireNetworkAdmin } from '@/lib/auth-helpers';
 import type { Database } from '@/types/database.types';
+import { noStoreFetch } from '@/lib/no-store-fetch';
 import { enforceRateLimitStrict } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +10,8 @@ export const dynamic = 'force-dynamic';
 // Create typed Supabase client
 const supabaseAdmin = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { global: { fetch: noStoreFetch } }
 );
 
 export async function POST(request: Request) {
