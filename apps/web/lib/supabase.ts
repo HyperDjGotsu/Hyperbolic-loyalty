@@ -1,6 +1,7 @@
 import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
+import { noStoreFetch } from '@/lib/no-store-fetch';
 
 // ============================================
 // TYPED SUPABASE CLIENTS
@@ -10,14 +11,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Client-side Supabase (uses anon key, respects RLS)
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, { global: { fetch: noStoreFetch } });
 
 // Server-side Supabase (uses service role, bypasses RLS)
 // Only use in API routes, never expose to client
 export const supabaseAdmin = createClient<Database>(
   supabaseUrl,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
+  { auth: { persistSession: false }, global: { fetch: noStoreFetch } }
 );
 
 // ============================================

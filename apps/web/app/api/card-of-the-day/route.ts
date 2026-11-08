@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { noStoreFetch } from '@/lib/no-store-fetch';
 import https from 'https';
 import dns from 'dns';
 import { lookup } from 'dns/promises';
@@ -13,7 +14,8 @@ dns.setDefaultResultOrder('ipv4first');
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { global: { fetch: noStoreFetch } }
 );
 
 // Game schedule - which game to feature each day (fallback if no staff pick)

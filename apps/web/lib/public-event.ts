@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { noStoreFetch } from '@/lib/no-store-fetch';
 
 export interface PublicEventBasics {
   name: string;
@@ -11,7 +12,7 @@ export interface PublicEventBasics {
 
 // Minimal event fields for share-link previews (title, description, OG image).
 export async function getPublicEventBasics(id: string): Promise<PublicEventBasics | null> {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { global: { fetch: noStoreFetch } });
   const { data } = await supabase
     .from('events')
     .select('name, game_id, store_id, scheduled_at, entry_fee, stores!events_store_id_fkey ( name )')

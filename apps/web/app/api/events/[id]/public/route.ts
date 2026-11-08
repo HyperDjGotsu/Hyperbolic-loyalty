@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { noStoreFetch } from '@/lib/no-store-fetch';
 import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP } from '@/lib/xp-constants';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +44,7 @@ export async function GET(
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
     
     // Create client with service role key
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = createClient(supabaseUrl, serviceRoleKey, { global: { fetch: noStoreFetch } });
 
     // Fetch event details - USE EXPLICIT COLUMNS LIKE /api/events DOES
     const { data: event, error } = await supabase
