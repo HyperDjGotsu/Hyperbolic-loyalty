@@ -316,12 +316,14 @@ function EventsPageContent() {
 
   // Check for event ID in URL params (from notification click)
   const deepLinkTried = useRef<string | null>(null);
+  const [deepLinkNote, setDeepLinkNote] = useState<string | null>(null); // TEMPORARY diagnostic for event links
   useEffect(() => {
     const eventId = searchParams.get('event');
     if (!eventId || loading) return;
     const event = events.find(e => e.id === eventId) ?? specialEvents.find(e => e.id === eventId);
     if (event) {
       setSelectedEvent(event);
+      setDeepLinkNote(null);
       return;
     }
     // Not in the list on screen (another store, a later date, a different game filter): look it up among all upcoming events
@@ -332,8 +334,9 @@ function EventsPageContent() {
       .then(d => {
         const found = (d.events || []).find((e: CalendarEvent) => e.id === eventId);
         if (found) setSelectedEvent(found);
+        else setDeepLinkNote(`Could not find event ${eventId.slice(0, 8)} (screen list ${events.length}, all upcoming ${(d.events || []).length}).`);
       })
-      .catch(() => {});
+      .catch((err) => setDeepLinkNote(`Event lookup failed: ${String(err)}`));
   }, [searchParams, events, specialEvents, loading]);
 
   const loadEvents = async (silent = false) => {
@@ -912,6 +915,9 @@ function EventsPageContent() {
       )}
 
       {/* Modals */}
+      {deepLinkNote && !selectedEvent && (
+        <div className="fixed inset-x-4 bottom-[96px] z-40 rounded-xl bg-surface border border-border-token p-3 text-xs text-secondary">{deepLinkNote}</div>
+      )}
       {selectedEvent && <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
       {shareEvent && <ShareModal event={shareEvent} onClose={() => setShareEvent(null)} onShare={handleShareEvent} />}
     </div>
