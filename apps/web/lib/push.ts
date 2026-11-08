@@ -15,6 +15,7 @@ interface PushPayload {
   url?: string;
   tag?: string;
   icon?: string;
+  count?: number; // number to show on the app icon (home-screen app) when supported
 }
 
 // Send a web push to all active subscriptions for a player.

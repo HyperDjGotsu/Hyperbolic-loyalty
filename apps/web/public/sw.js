@@ -11,7 +11,12 @@ self.addEventListener('push', (event) => {
     payload = { title: 'PlayerPass', body: event.data.text() };
   }
 
-  const { title, body, icon, badge, url, tag } = payload;
+  const { title, body, icon, badge, url, tag, count } = payload;
+
+  // Number on the home-screen icon, where the phone supports it
+  if (typeof count === 'number' && self.navigator && 'setAppBadge' in self.navigator) {
+    self.navigator.setAppBadge(count).catch(() => {});
+  }
 
   event.waitUntil(
     self.registration.showNotification(title || 'PlayerPass', {
@@ -27,6 +32,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  if (self.navigator && 'clearAppBadge' in self.navigator) self.navigator.clearAppBadge().catch(() => {});
   const url = event.notification.data?.url || '/dashboard';
 
   event.waitUntil(

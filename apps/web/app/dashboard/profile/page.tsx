@@ -230,6 +230,8 @@ export default function ProfilePage() {
     store: true,
   });
   const [savingNotif, setSavingNotif] = useState(false);
+  const [testingPush, setTestingPush] = useState(false);
+  const [testPushMsg, setTestPushMsg] = useState('');
 
   // Delete account state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -346,6 +348,20 @@ export default function ProfilePage() {
       console.error('Error loading notification prefs:', err);
     }
   }, []);
+
+  const sendTestPush = async () => {
+    setTestingPush(true);
+    setTestPushMsg('');
+    try {
+      const res = await fetch('/api/player/push-test', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      setTestPushMsg(res.ok ? 'Sent. It should arrive in a few seconds.' : (data.error || 'Could not send the test.'));
+    } catch {
+      setTestPushMsg('Could not send the test.');
+    } finally {
+      setTestingPush(false);
+    }
+  };
 
   const saveNotifPrefs = async () => {
     setSavingNotif(true);
@@ -767,6 +783,18 @@ export default function ProfilePage() {
           value={notifPrefs.store}
           onChange={(v) => setNotifPrefs((p) => ({ ...p, store: v }))}
         />
+
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={sendTestPush}
+            disabled={testingPush}
+            className="w-full py-3 rounded-xl border border-border-strong text-primary font-semibold text-sm disabled:opacity-50 hover:bg-surface transition-colors"
+          >
+            {testingPush ? 'Sending...' : 'Send me a test notification'}
+          </button>
+          {testPushMsg && <p className="text-secondary text-xs mt-2 text-center">{testPushMsg}</p>}
+        </div>
 
         <div className="pt-4 pb-8">
           <button
