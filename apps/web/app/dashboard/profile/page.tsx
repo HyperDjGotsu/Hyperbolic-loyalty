@@ -16,6 +16,7 @@ import { PASS_MEDALS } from '@/lib/pass-tiers';
 import { BrandMark } from '@/components/BrandMark';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import VersionStamp from '@/components/VersionStamp';
+import { ensurePushSubscription } from '@/lib/push-client';
 import GameIcon from '@/components/GameIcon';
 
 interface ShopItem {
@@ -360,6 +361,18 @@ export default function ProfilePage() {
     setTestingPush(true);
     setTestPushMsg('');
     try {
+      // Make sure THIS device is set up first (asks for permission when needed), then send the test
+      const setup = await ensurePushSubscription();
+      if (!setup.ok) {
+        setTestPushMsg(
+          setup.reason === 'denied'
+            ? 'Notifications are off for this app. Turn them on in your phone Settings → Notifications → PlayerPass, then try again.'
+            : setup.reason === 'unsupported'
+              ? 'This browser cannot receive notifications. On iPhone, open PlayerPass from its Home Screen icon.'
+              : 'Could not set up notifications on this device. Try again.'
+        );
+        return;
+      }
       const res = await fetch('/api/player/push-test', { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       setTestPushMsg(res.ok ? 'Sent. It should arrive in a few seconds.' : (data.error || 'Could not send the test.'));

@@ -71,7 +71,7 @@ export default function PushNotificationPrompt() {
         <div className="flex-1 min-w-0">
           <p className="text-primary font-semibold text-sm">Stay in the loop</p>
           <p className="text-secondary text-xs mt-0.5 leading-snug">
-            Get notified when events start, XP is awarded, and leaderboards change.
+            Get a heads-up when a friend shares an event with you.
           </p>
           <div className="flex gap-2 mt-3">
             <button
