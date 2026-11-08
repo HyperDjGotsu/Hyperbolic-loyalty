@@ -324,10 +324,10 @@ function EventsPageContent() {
       setSelectedEvent(event);
       return;
     }
-    // Not in the list on screen (another store, a later date, a different game filter): look it up across the network
+    // Not in the list on screen (another store, a later date, a different game filter): look it up among all upcoming events
     if (deepLinkTried.current === eventId) return;
     deepLinkTried.current = eventId;
-    fetch('/api/events?status=upcoming&limit=300&network=true')
+    fetch('/api/events?status=upcoming&limit=300')
       .then(r => (r.ok ? r.json() : { events: [] }))
       .then(d => {
         const found = (d.events || []).find((e: CalendarEvent) => e.id === eventId);
