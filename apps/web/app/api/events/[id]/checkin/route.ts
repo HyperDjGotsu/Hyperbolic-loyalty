@@ -8,6 +8,7 @@ import { createNotification } from '@/lib/notifications';
 import { logPointTransaction, TIER_MULTIPLIERS, effectivePassTier, isRenewalOpportunity } from '@/lib/points';
 import { ATTENDANCE_LIFETIME_XP, WIN_LIFETIME_XP, ATTENDANCE_PRIZE_POINTS, WIN_PRIZE_POINTS } from '@/lib/xp-constants';
 import { getStaffContext } from '@/lib/auth-helpers';
+import { runAttendanceAward, checkinReviewLine } from '@/lib/attendance-award';
 
 export const dynamic = 'force-dynamic';
 const MAX_ROUNDS = 3;
@@ -269,19 +270,97 @@ export async function POST(
       (ATTENDANCE_PRIZE_POINTS + WIN_PRIZE_POINTS * roundsWon) * multiplier
     );
 
-    // Record attendance
-    const { error: attendanceError } = await supabaseAdmin
-      .from('event_attendances')
-      .insert({
-        event_id: eventId,
-        player_id: playerId,
-        game_id: event.game_id,
-        xp_awarded: lifetimeXp,
-      });
+    // Record attendance and its rewards as one guarded sequence (lib/attendance-award.ts). If the XP or Prize Point
+    // write fails, everything this request wrote is removed and the caller gets an error, so a check-in is never
+    // reported as awarded when it was not, and a retry cannot pay twice.
+    const renewalDeclinedSuffix = renewalOpportunityTriggered && skipApproved
+      ? ' — renewal opportunity declined by staff'
+      : '';
+    const xpDescription = roundsWon > 0
+      ? `Attended ${event.name} — ${roundsWon} round win${roundsWon > 1 ? 's' : ''}${renewalDeclinedSuffix}`
+      : `Attended ${event.name}${renewalDeclinedSuffix}`;
 
-    if (attendanceError) {
-      console.error('Attendance insert error:', attendanceError);
-      return NextResponse.json({ error: 'Failed to record attendance' }, { status: 500 });
+    const award = await runAttendanceAward({
+      insertAttendance: async () => {
+        const { error } = await supabaseAdmin
+          .from('event_attendances')
+          .insert({
+            event_id: eventId,
+            player_id: playerId,
+            game_id: event.game_id,
+            xp_awarded: lifetimeXp,
+          });
+        return { error };
+      },
+      // Award Lifetime XP (flat, no multiplier ever)
+      insertLedger: async () => {
+        const { error } = await supabaseAdmin.from('xp_ledger').insert({
+          player_id: playerId,
+          game_id: event.game_id,
+          base_xp: lifetimeXp,
+          final_xp: lifetimeXp,
+          multiplier: 1,
+          description: xpDescription,
+          source: 'event_attendance',
+          awarded_by: staffId,
+          store_id: storeId || null,
+          event_id: eventId,
+        });
+        return { error };
+      },
+      // Award Prize Points (multiplier applies to event actions)
+      logPoints: storeId
+        ? () => logPointTransaction({
+            playerId,
+            storeId,
+            amount: prizePoints,
+            type: 'earn',
+            source: 'event_checkin',
+            referenceId: eventId,
+            note: roundsWon > 0
+              ? `${event.name} — attendance + ${roundsWon} win${roundsWon > 1 ? 's' : ''} (${playerTier} ${multiplier}x)${renewalDeclinedSuffix}`
+              : `${event.name} — attendance (${playerTier} ${multiplier}x)${renewalDeclinedSuffix}`,
+          })
+        : null,
+      removeAttendance: async () => {
+        const { error } = await supabaseAdmin.from('event_attendances').delete().eq('event_id', eventId).eq('player_id', playerId);
+        return !error;
+      },
+      removeLedger: async () => {
+        const { error } = await supabaseAdmin.from('xp_ledger').delete()
+          .eq('event_id', eventId).eq('player_id', playerId).eq('source', 'event_attendance');
+        return !error;
+      },
+      removePoints: async () => {
+        const { error } = await supabaseAdmin.from('prize_point_transactions').delete()
+          .eq('player_id', playerId).eq('reference_id', eventId).eq('source', 'event_checkin').eq('type', 'earn');
+        return !error;
+      },
+    });
+
+    if (!award.ok) {
+      if (award.reason === 'duplicate') {
+        return NextResponse.json(
+          { error: 'Already checked in', alreadyCheckedIn: true, playerName },
+          { status: 400 }
+        );
+      }
+      if (!award.rolledBack) {
+        // Part of this check-in may still be in the database. Searchable log line with ids only (no names or emails)
+        // so a manager can reconcile it with supabase/checks/checkin-reconciliation.sql. Nothing is retried or removed
+        // automatically: doing so could pay twice.
+        console.error(checkinReviewLine({
+          eventId, playerId, storeId: storeId || null, staffId, reason: award.reason, remaining: award.remaining,
+        }));
+        return NextResponse.json(
+          { error: 'This check-in could not be completed. Please ask a manager to check this player before trying again.', code: 'award_needs_review' },
+          { status: 500 }
+        );
+      }
+      return NextResponse.json(
+        { error: 'Check-in did not go through and nothing was awarded. Please try again.', code: 'award_failed' },
+        { status: 500 }
+      );
     }
 
     // A staff check-in (kiosk/NFC, player_id in the body, staff authorized for this store) proves the player was
@@ -298,42 +377,6 @@ export async function POST(
       } catch (err) {
         console.error('Home store verify on check-in failed:', err);
       }
-    }
-
-    // Award Lifetime XP (flat, no multiplier ever)
-    const renewalDeclinedSuffix = renewalOpportunityTriggered && skipApproved
-      ? ' — renewal opportunity declined by staff'
-      : '';
-    const xpDescription = roundsWon > 0
-      ? `Attended ${event.name} — ${roundsWon} round win${roundsWon > 1 ? 's' : ''}${renewalDeclinedSuffix}`
-      : `Attended ${event.name}${renewalDeclinedSuffix}`;
-
-    await supabaseAdmin.from('xp_ledger').insert({
-      player_id: playerId,
-      game_id: event.game_id,
-      base_xp: lifetimeXp,
-      final_xp: lifetimeXp,
-      multiplier: 1,
-      description: xpDescription,
-      source: 'event_attendance',
-      awarded_by: staffId,
-      store_id: storeId || null,
-      event_id: eventId,
-    });
-
-    // Award Prize Points (multiplier applies to event actions)
-    if (storeId) {
-      await logPointTransaction({
-        playerId,
-        storeId,
-        amount: prizePoints,
-        type: 'earn',
-        source: 'event_checkin',
-        referenceId: eventId,
-        note: roundsWon > 0
-          ? `${event.name} — attendance + ${roundsWon} win${roundsWon > 1 ? 's' : ''} (${playerTier} ${multiplier}x)${renewalDeclinedSuffix}`
-          : `${event.name} — attendance (${playerTier} ${multiplier}x)${renewalDeclinedSuffix}`,
-      });
     }
 
     // Check referral bonus (non-blocking)
