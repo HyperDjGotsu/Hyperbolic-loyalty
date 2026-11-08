@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendExpoPushToPlayers } from '@/lib/expo-push';
-import { pushToPlayers } from '@/lib/push';
 import { gameArtUrl } from '@/lib/games';
 import type { Database } from '@/types/database.types';
 
@@ -57,8 +56,6 @@ async function safePush(playerIds: string[], title: string, body: string, data: 
     // Push failure must not affect the in-app notification count
     console.error('[expo-push] event-reminder dispatch error:', err);
   }
-  // Website (Home Screen app) push. Never throws.
-  await pushToPlayers(playerIds.map((playerId) => ({ playerId, title, body })));
 }
 
 // 11am Pacific: one nudge per player who is interested in an event still to come today.

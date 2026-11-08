@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { pushToPlayers } from '@/lib/push';
 
+// Only these kinds of alert also buzz a phone. Everything else stays in the in-app Alerts list, which people see when
+// they open the app. A friend sharing an event is worth a buzz (people choose their friends); new-event announcements
+// and the like are frequent and would be noise. To make another kind push, add its type here.
+const PUSH_TYPES = new Set<string>(['event_share']);
+
 export type NotificationCategory = 'daily_rewards' | 'events' | 'leaderboard' | 'social' | 'store';
 
 interface NotificationPrefs {
@@ -51,7 +56,7 @@ export async function createNotification(
       is_read: false,
       store_id: storeId ?? null,
     });
-    await pushToPlayers([{ playerId, title, body: message }]);
+    if (PUSH_TYPES.has(type)) await pushToPlayers([{ playerId, title, body: message }]);
   } catch (err) {
     console.error('createNotification error:', err);
   }
@@ -95,7 +100,7 @@ export async function notifyStorePlayers(
     for (let i = 0; i < rows.length; i += 100) {
       await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100));
     }
-    await pushToPlayers(eligible.map((p) => ({ playerId: p.id, title, body: message })));
+    if (PUSH_TYPES.has(type)) await pushToPlayers(eligible.map((p) => ({ playerId: p.id, title, body: message })));
 
     return eligible.length;
   } catch (err) {
@@ -140,7 +145,7 @@ export async function notifyAllPlayers(
     for (let i = 0; i < rows.length; i += 100) {
       await supabaseAdmin.from('notifications').insert(rows.slice(i, i + 100));
     }
-    await pushToPlayers(eligible.map((p) => ({ playerId: p.id, title, body: message })));
+    if (PUSH_TYPES.has(type)) await pushToPlayers(eligible.map((p) => ({ playerId: p.id, title, body: message })));
 
     return eligible.length;
   } catch (err) {
@@ -197,7 +202,7 @@ export async function createNotificationsBulk(items: BulkNotification[]): Promis
       if (error) console.error('createNotificationsBulk insert error:', error);
       else created += Math.min(100, rows.length - i);
     }
-    await pushToPlayers(rows.map((r) => ({ playerId: r.player_id, title: r.title, body: r.message })));
+    await pushToPlayers(rows.filter((r) => PUSH_TYPES.has(r.type)).map((r) => ({ playerId: r.player_id, title: r.title, body: r.message })));
     return created;
   } catch (err) {
     console.error('createNotificationsBulk error:', err);
