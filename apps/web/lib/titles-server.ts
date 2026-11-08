@@ -102,7 +102,7 @@ export async function grantTitle(
     const { data: player } = await supabaseAdmin.from('players').select('home_store_id').eq('id', playerId).maybeSingle();
     const { error: xpErr } = await supabaseAdmin.from('xp_ledger').insert({
       player_id: playerId,
-      game_id: 'general',
+      game_id: null, // not tied to a game (a game id here is rejected by the games foreign key)
       base_xp: def.xp,
       final_xp: def.xp,
       multiplier: 1,
