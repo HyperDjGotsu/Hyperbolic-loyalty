@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { noStoreFetch } from '@/lib/no-store-fetch';
+import { awardCotdVote, cotdXpDescription } from '@/lib/cotd-award';
 import https from 'https';
 import dns from 'dns';
 import { requireAnyStaff, requireNetworkAdmin } from '@/lib/auth-helpers';
@@ -480,6 +481,8 @@ export async function POST(request: Request) {
       }
 
       // Mark winning votes and award XP
+      let awardedCount = 0;
+      let awardFailures = 0;
       const { data: winningVotes, error: votesError } = await supabase
         .from('card_of_the_day_votes')
         .select('id, player_id')
@@ -494,35 +497,59 @@ export async function POST(request: Request) {
           .eq('pool_card_id', winner.id)
           .eq('vote_date', voteDate);
 
-        // Award XP to winners (+10 General XP)
+        // Award XP to winners (+10 Guild Points, no game). The XP row is written first and the vote is only marked
+        // awarded once that row exists; see lib/cotd-award.ts. A failure is counted and reported, never hidden.
+        const xpDescription = cotdXpDescription(winner.card_name, voteDate);
         for (const vote of winningVotes) {
-          // Check if XP already awarded
           const { data: voteCheck } = await supabase
             .from('card_of_the_day_votes')
             .select('xp_awarded')
             .eq('id', vote.id)
             .single();
+          if (voteCheck?.xp_awarded) { awardedCount++; continue; }
 
-          if (voteCheck && !voteCheck.xp_awarded) {
-            // Award XP
-            await supabase
-              .from('xp_ledger')
-              .insert({
-                player_id: vote.player_id,
-                game_id: null, // Guild Points: no game
-                base_xp: 10,
-                multiplier: 1,
-                final_xp: 10,
-                xp_source: 'bonus',
-                description: `COTD Vote Winner: ${winner.card_name}`,
-              });
-
-            // Mark as awarded
-            await supabase
-              .from('card_of_the_day_votes')
-              .update({ xp_awarded: true })
-              .eq('id', vote.id);
-          }
+          const result = await awardCotdVote({
+            findXpRows: async () => {
+              const { data, error } = await supabase
+                .from('xp_ledger')
+                .select('id')
+                .eq('player_id', vote.player_id)
+                .eq('source', 'community_contribution')
+                .eq('description', xpDescription)
+                .order('created_at', { ascending: true })
+                .order('id', { ascending: true });
+              return { ids: (data ?? []).map((r: { id: string }) => r.id), error };
+            },
+            insertXp: async () => {
+              const { data, error } = await supabase
+                .from('xp_ledger')
+                .insert({
+                  player_id: vote.player_id,
+                  game_id: null, // Guild Points: no game
+                  base_xp: 10,
+                  multiplier: 1,
+                  final_xp: 10,
+                  source: 'community_contribution',
+                  description: xpDescription,
+                })
+                .select('id')
+                .single();
+              return { id: data?.id ?? null, error };
+            },
+            removeXp: async (id: string) => {
+              const { error } = await supabase.from('xp_ledger').delete().eq('id', id);
+              return !error;
+            },
+            markAwarded: async () => {
+              const { error } = await supabase
+                .from('card_of_the_day_votes')
+                .update({ xp_awarded: true })
+                .eq('id', vote.id);
+              return { error };
+            },
+          });
+          if (result === 'failed') awardFailures++;
+          else awardedCount++;
         }
 
         // Mark losing votes
@@ -540,7 +567,8 @@ export async function POST(request: Request) {
           votes: winner.votes_count || 0,
           totalVotes,
         },
-        winnersAwarded: winningVotes?.length || 0,
+        winnersAwarded: awardedCount,
+        awardFailures,
       });
     }
 
