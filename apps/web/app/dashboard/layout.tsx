@@ -160,6 +160,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname === '/dashboard/notifications') setUnreadCount(0);
   }, [pathname]);
 
+  // Tapping a push: the service worker leaves a note of where to go (iPhone ignores the link itself when it launches
+  // a Home Screen app). Read it when the app opens or comes back to the front, and go there once.
+  useEffect(() => {
+    const goToPending = async () => {
+      try {
+        if (!('caches' in window)) return;
+        const cache = await caches.open('pp-nav');
+        const res = await cache.match('/pp-pending-nav');
+        if (!res) return;
+        await cache.delete('/pp-pending-nav');
+        const note = (await res.json()) as { url?: string; at?: number };
+        const fresh = typeof note.at === 'number' && Date.now() - note.at < 2 * 60_000;
+        if (fresh && typeof note.url === 'string' && note.url.startsWith('/') && note.url !== window.location.pathname + window.location.search) {
+          window.location.assign(note.url);
+        }
+      } catch { /* nothing pending */ }
+    };
+    goToPending();
+    const onVisible = () => { if (document.visibilityState === 'visible') goToPending(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+
   // Tapping a push while the app is already open: the service worker sends the destination and we go there
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;

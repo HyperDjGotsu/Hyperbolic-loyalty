@@ -39,17 +39,22 @@ self.addEventListener('notificationclick', (event) => {
   if (self.navigator && 'clearAppBadge' in self.navigator) self.navigator.clearAppBadge().catch(() => {});
   const url = event.notification.data?.url || '/dashboard';
 
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          // iPhone Home Screen apps often ignore client.navigate, so also tell the page itself where to go
-          client.postMessage({ type: 'pp-navigate', url });
-          try { client.navigate(url); } catch (e) { /* the message above covers it */ }
-          return client.focus();
-        }
+  event.waitUntil((async () => {
+    // iPhone ignores the link when a tap launches a Home Screen app and just opens its start page. So first leave a
+    // note of where to go; the page reads it as soon as it opens (or comes back to the front) and goes there.
+    try {
+      const cache = await caches.open('pp-nav');
+      await cache.put('/pp-pending-nav', new Response(JSON.stringify({ url, at: Date.now() })));
+    } catch (e) { /* storage unavailable: the message / openWindow below still try */ }
+
+    const clientList = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clientList) {
+      if (client.url.includes(self.location.origin) && 'focus' in client) {
+        client.postMessage({ type: 'pp-navigate', url });
+        try { client.navigate(url); } catch (e) { /* the message above covers it */ }
+        return client.focus();
       }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
+    }
+    if (clients.openWindow) return clients.openWindow(url);
+  })());
 });
