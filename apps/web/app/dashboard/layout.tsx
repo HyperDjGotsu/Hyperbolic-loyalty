@@ -192,13 +192,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onVisible);
     window.addEventListener('pageshow', onVisible);
-    // iPhone does not always announce that the app came back from a banner tap, so also look every 1.5s while it is on screen
-    const timer = window.setInterval(onVisible, 1500);
     return () => {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
       window.removeEventListener('pageshow', onVisible);
-      window.clearInterval(timer);
     };
   }, []);
 
