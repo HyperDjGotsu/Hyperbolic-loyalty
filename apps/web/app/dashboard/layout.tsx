@@ -8,6 +8,7 @@ import { useClerk } from '@clerk/nextjs';
 import { ThemeToggle } from '@/components/ui';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
+import ResumeRefresh from '@/components/ResumeRefresh';
 
 const navItems = [
   {
@@ -237,6 +238,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <FriendsFab />
       <PushNotificationPrompt />
+      <ResumeRefresh />
       {showStoreSwitcher && (
         <StoreSwitcherModal
           currentStoreId={selectedStoreId}
