@@ -581,7 +581,7 @@ function OnboardingContent() {
             </div>
 
             <div className="mb-6">
-              <label className="text-secondary text-sm block mb-2">Store join code (optional)</label>
+              <label className="text-primary text-sm font-semibold block mb-2">Store join code</label>
               <input
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
@@ -591,9 +591,15 @@ function OnboardingContent() {
                 placeholder="From the QR sign at the store"
                 className="w-full bg-input border border-border-strong rounded-xl px-4 py-3 text-primary tracking-widest"
               />
-              <p className="text-tertiary text-xs mt-2">
-                With the code, your store is confirmed right away. Without it, a staff member checking you in at the store confirms it, and the free trial and prizes unlock then.
-              </p>
+              {joinCode.trim() ? (
+                <p className="text-accent text-xs mt-2">
+                  Great. This confirms your store right away, so you show up on the leaderboard and in the community.
+                </p>
+              ) : (
+                <p className="text-warning text-xs mt-2">
+                  Enter the code to confirm your store. Without it, other players will not see you on the leaderboard or in the community until a staff member checks you in at the store, and the free trial and prizes stay locked until then. A friend&apos;s referral code does not confirm your store. Only the store&apos;s join code does.
+                </p>
+              )}
             </div>
 
             {error && (
