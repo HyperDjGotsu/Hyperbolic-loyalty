@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getUnverifiedPlayerIds } from '@/lib/player-visibility';
 import { getTitlesForPlayers } from '@/lib/titles-server';
 import { auth } from '@clerk/nextjs/server';
+import { fetchAllLedgerRows } from '@/lib/ledger-pages';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,26 +59,40 @@ export async function GET(request: NextRequest) {
     // Store seasonal: aggregate xp_ledger by store_id and season dates.
     // The competitive rank is based on XP *earned at that store*, regardless
     // of where the player's home store is set.
-    let xpQuery = supabaseAdmin
-      .from('xp_ledger')
-      .select('player_id, final_xp, store_id');
+    // Read in id-ordered pages so totals cover every ledger row, not just the first 1,000 (lib/ledger-pages.ts).
+    const buildXpPage = (afterId: string | null, size: number) => {
+      let q = supabaseAdmin
+        .from('xp_ledger')
+        .select('id, player_id, final_xp, store_id');
 
-    if (storeId) {
-      // XP earned at this store, plus XP that is not tied to any store (daily spins, welcome bonus) for the
-      // players whose home store this is. Every point a player earns counts somewhere.
-      xpQuery = xpQuery.or(`store_id.eq.${storeId},store_id.is.null`);
-    }
-    if (seasonStart) {
-      xpQuery = xpQuery.gte('created_at', seasonStart);
-    }
-    if (seasonEnd) {
-      xpQuery = xpQuery.lt('created_at', seasonEnd);
-    }
-    if (game && game !== 'overall') {
-      xpQuery = xpQuery.eq('game_id', game);
-    }
+      if (storeId) {
+        // XP earned at this store, plus XP that is not tied to any store (daily spins, welcome bonus) for the
+        // players whose home store this is. Every point a player earns counts somewhere.
+        q = q.or(`store_id.eq.${storeId},store_id.is.null`);
+      }
+      if (seasonStart) {
+        q = q.gte('created_at', seasonStart);
+      }
+      if (seasonEnd) {
+        q = q.lt('created_at', seasonEnd);
+      }
+      if (game && game !== 'overall') {
+        q = q.eq('game_id', game);
+      }
+      q = q.order('id', { ascending: true }).limit(size);
+      if (afterId) q = q.gt('id', afterId);
+      return q;
+    };
 
-    const { data: xpData, error: xpError } = await xpQuery;
+    type XpRow = { id: string; player_id: string | null; final_xp: number; store_id: string | null };
+    let xpData: XpRow[];
+    let xpError: unknown = null;
+    try {
+      xpData = await fetchAllLedgerRows<XpRow>(buildXpPage);
+    } catch (err) {
+      xpData = [];
+      xpError = err;
+    }
     if (xpError) {
       console.error('Leaderboard XP error:', xpError);
       return NextResponse.json({ error: 'Failed to fetch XP data' }, { status: 500 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { fetchAllLedgerRows } from '@/lib/ledger-pages';
 import { enforceRateLimitPermissive } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
@@ -69,10 +70,12 @@ export async function POST() {
     }
 
     // Check if player is in WANTED list (Top 5) - they can't opt in as Hunter
-    const { data: xpData } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('player_id, final_xp')
-      .eq('game_id', 'one_piece');
+    // Paged so the standings cover every ledger row, not just the first 1,000 (lib/ledger-pages.ts)
+    const xpData = await fetchAllLedgerRows<{ id: string; player_id: string | null; final_xp: number | null }>((afterId, size) => {
+      let q = supabaseAdmin.from('xp_ledger').select('id, player_id, final_xp').eq('game_id', 'one_piece').order('id', { ascending: true }).limit(size);
+      if (afterId) q = q.gt('id', afterId);
+      return q;
+    });
 
     const playerXp: Record<string, number> = {};
     xpData?.forEach(entry => {

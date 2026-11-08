@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { fetchAllLedgerRows } from '@/lib/ledger-pages';
+
 import { getUnverifiedPlayerIds } from '@/lib/player-visibility';
 
 export const dynamic = 'force-dynamic';
@@ -69,10 +71,12 @@ export async function GET() {
     const { start: monthStart, end: monthEnd, monthName, year } = getCurrentMonthBoundaries();
 
     // Get One Piece leaderboard (top 10 for WANTED list)
-    const { data: xpData } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('player_id, final_xp')
-      .eq('game_id', 'one_piece');
+    // Paged so the totals cover every ledger row, not just the first 1,000 (lib/ledger-pages.ts)
+    const xpData = await fetchAllLedgerRows<{ id: string; player_id: string | null; final_xp: number | null }>((afterId, size) => {
+      let q = supabaseAdmin.from('xp_ledger').select('id, player_id, final_xp').eq('game_id', 'one_piece').order('id', { ascending: true }).limit(size);
+      if (afterId) q = q.gt('id', afterId);
+      return q;
+    });
 
     // Aggregate XP by player (players not yet verified for a store stay off the standings)
     const hidden = await getUnverifiedPlayerIds();
@@ -129,12 +133,12 @@ export async function GET() {
     });
 
     // Get monthly XP for Emperor calculation
-    const { data: monthlyXpData } = await supabaseAdmin
-      .from('xp_ledger')
-      .select('player_id, final_xp')
-      .eq('game_id', 'one_piece')
-      .gte('created_at', monthStart)
-      .lt('created_at', monthEnd);
+    const monthlyXpData = await fetchAllLedgerRows<{ id: string; player_id: string | null; final_xp: number | null }>((afterId, size) => {
+      let q = supabaseAdmin.from('xp_ledger').select('id, player_id, final_xp').eq('game_id', 'one_piece')
+        .gte('created_at', monthStart).lt('created_at', monthEnd).order('id', { ascending: true }).limit(size);
+      if (afterId) q = q.gt('id', afterId);
+      return q;
+    });
 
     // Aggregate monthly XP
     const monthlyPlayerXp: Record<string, number> = {};
