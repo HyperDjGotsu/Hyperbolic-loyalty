@@ -647,6 +647,11 @@ export default function CommunityPage() {
     }
   };
 
+  // WANTED belongs to the Bounty Hunter program, which is One Piece only: the badge shows for the One Piece top 5,
+  // on every board, and for nobody else. The One Piece standings load with the page so the badge is right everywhere.
+  useEffect(() => { loadOnePieceData(); }, [loadOnePieceData]);
+  const wantedIds = new Set(onePieceLeaderboard.slice(0, 5).map(e => e.id));
+
   // Member Card Component
   const MemberCard = ({ member }: { member: SearchResult | LeaderboardEntry | Friend }) => {
     const isAnonymous = 'hidden' in member && member.hidden;
@@ -676,7 +681,7 @@ export default function CommunityPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-bold text-primary truncate">{displayName}</span>
-            {'rank' in member && member.rank <= 5 && (
+            {memberOdid && wantedIds.has(memberOdid) && (
               <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">WANTED</span>
             )}
           </div>
