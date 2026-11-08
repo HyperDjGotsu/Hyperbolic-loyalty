@@ -17,6 +17,7 @@ interface Props {
   onSwitch: (store: Store) => void;
   onClose: () => void;
   required?: boolean; // true during null-home-store onboarding: backdrop does not dismiss
+  dismissible?: boolean; // with required: also allow closing (used when changing or verifying an existing home store)
 }
 
 export function StoreSwitcherModal({
@@ -25,6 +26,7 @@ export function StoreSwitcherModal({
   onSwitch,
   onClose,
   required = false,
+  dismissible = false,
 }: Props) {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,13 +84,13 @@ export function StoreSwitcherModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
-      onClick={required ? undefined : onClose}
+      onClick={required && !dismissible ? undefined : onClose}
     >
       <div
         className="w-full max-w-lg bg-gray-900 rounded-t-2xl border-t border-gray-700 p-4 pb-8 max-h-[80vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        {!required && <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />}
+        {(!required || dismissible) && <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4" />}
         <h2 className="text-white font-bold text-lg mb-1">
           {required ? 'Choose Your Home Store' : 'Browse a Store'}
         </h2>
@@ -182,6 +184,14 @@ export function StoreSwitcherModal({
                 </button>
               );
             })}
+            {required && dismissible && (
+              <button
+                onClick={onClose}
+                className="w-full mt-2 py-3 rounded-lg border border-gray-600 text-gray-300 text-sm"
+              >
+                Cancel
+              </button>
+            )}
           </div>
         )}
       </div>

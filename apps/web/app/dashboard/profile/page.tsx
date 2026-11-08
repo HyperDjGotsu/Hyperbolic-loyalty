@@ -14,6 +14,7 @@ import { SELECTABLE_GAMES } from '@/lib/games';
 import { EventCreditCard } from '@/components/EventCreditCard';
 import { PASS_MEDALS } from '@/lib/pass-tiers';
 import { BrandMark } from '@/components/BrandMark';
+import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
 import GameIcon from '@/components/GameIcon';
 
 interface ShopItem {
@@ -83,6 +84,8 @@ interface PlayerData {
   isStaff: boolean;
   heroBackdrop: string | null;
   homeStoreId: string | null;
+  homeStoreName: string | null;
+  homeStoreVerified: boolean;
   gamesPlayed: number;
   eventsAttended: number;
   eventsThisMonth: number;
@@ -230,6 +233,7 @@ export default function ProfilePage() {
     store: true,
   });
   const [savingNotif, setSavingNotif] = useState(false);
+  const [showHomeStoreModal, setShowHomeStoreModal] = useState(false);
   const [testingPush, setTestingPush] = useState(false);
   const [testPushMsg, setTestPushMsg] = useState('');
 
@@ -285,6 +289,8 @@ export default function ProfilePage() {
             isStaff: data.isStaff || false,
             heroBackdrop: data.heroBackdrop ?? null,
             homeStoreId: data.homeStoreId ?? null,
+            homeStoreName: data.homeStore?.name ?? null,
+            homeStoreVerified: data.homeStoreVerified === true,
             gamesPlayed: Array.isArray(data.gameXP) ? data.gameXP.length : 0,
             eventsAttended: data.eventsAttended ?? 0,
             eventsThisMonth: data.eventsThisMonth ?? 0,
@@ -1442,6 +1448,24 @@ export default function ProfilePage() {
             </button>
           </div>
 
+          {/* Home store: verify it or change it with the store's join code */}
+          <button
+            type="button"
+            onClick={() => setShowHomeStoreModal(true)}
+            className="w-full bg-surface rounded-[22px] p-4 flex items-center justify-between border border-border-token hover:border-border-strong transition-colors"
+          >
+            <div className="text-left">
+              <div className="text-primary text-sm font-medium">Home store</div>
+              <div className="text-tertiary text-xs">
+                {playerData?.homeStoreName ?? 'Not set'}
+                {playerData?.homeStoreName ? (playerData.homeStoreVerified ? ' · Verified' : ' · Not verified yet') : ''}
+              </div>
+            </div>
+            <span className={`text-sm ${playerData && !playerData.homeStoreVerified ? 'text-accent font-semibold' : 'text-secondary'}`}>
+              {playerData && !playerData.homeStoreVerified ? 'Verify ›' : 'Change ›'}
+            </span>
+          </button>
+
           {/* Notifications */}
           <button
             type="button"
@@ -1569,6 +1593,23 @@ export default function ProfilePage() {
 
       {/* Notifications Modal */}
       {showNotifModal && <NotificationsModal />}
+      {showHomeStoreModal && (
+        <StoreSwitcherModal
+          currentStoreId={null}
+          homeStoreId={playerData?.homeStoreId ?? null}
+          required
+          dismissible
+          onSwitch={(store) => {
+            try {
+              localStorage.setItem('ggc_selected_store_id', store.id);
+              localStorage.setItem('ggc_selected_store_name', store.name);
+            } catch { /* storage blocked */ }
+            setShowHomeStoreModal(false);
+            window.location.reload();
+          }}
+          onClose={() => setShowHomeStoreModal(false)}
+        />
+      )}
 
       {/* Privacy Settings Modal */}
       {showPrivacyModal && <PrivacySettingsModal />}
