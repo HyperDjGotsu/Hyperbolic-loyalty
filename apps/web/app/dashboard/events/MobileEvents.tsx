@@ -315,15 +315,26 @@ function EventsPageContent() {
   const searchParams = useSearchParams();
 
   // Check for event ID in URL params (from notification click)
+  const deepLinkTried = useRef<string | null>(null);
   useEffect(() => {
     const eventId = searchParams.get('event');
-    if (eventId && events.length > 0) {
-      const event = events.find(e => e.id === eventId);
-      if (event) {
-        setSelectedEvent(event);
-      }
+    if (!eventId || loading) return;
+    const event = events.find(e => e.id === eventId) ?? specialEvents.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      return;
     }
-  }, [searchParams, events]);
+    // Not in the list on screen (another store, a later date, a different game filter): look it up across the network
+    if (deepLinkTried.current === eventId) return;
+    deepLinkTried.current = eventId;
+    fetch('/api/events?status=upcoming&limit=300&network=true')
+      .then(r => (r.ok ? r.json() : { events: [] }))
+      .then(d => {
+        const found = (d.events || []).find((e: CalendarEvent) => e.id === eventId);
+        if (found) setSelectedEvent(found);
+      })
+      .catch(() => {});
+  }, [searchParams, events, specialEvents, loading]);
 
   const loadEvents = async (silent = false) => {
     if (!silent) setLoading(true);
