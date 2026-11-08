@@ -31,6 +31,8 @@ const CSP = [
 ].join('; ');
 
 const nextConfig = {
+  // Shown on Profile (VersionStamp) so you can tell which release a page is
+  env: { NEXT_PUBLIC_BUILD_ID: (process.env.VERCEL_GIT_COMMIT_SHA || 'dev').slice(0, 7) },
   serverExternalPackages: ['web-push'],
   experimental: {
     // The share-link preview image reads cover art from /public at request time.

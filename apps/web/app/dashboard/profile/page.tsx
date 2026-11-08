@@ -15,6 +15,7 @@ import { EventCreditCard } from '@/components/EventCreditCard';
 import { PASS_MEDALS } from '@/lib/pass-tiers';
 import { BrandMark } from '@/components/BrandMark';
 import { StoreSwitcherModal } from '@/components/StoreSwitcherModal';
+import VersionStamp from '@/components/VersionStamp';
 import GameIcon from '@/components/GameIcon';
 
 interface ShopItem {
@@ -1562,6 +1563,7 @@ export default function ProfilePage() {
         >
           Sign Out
         </button>
+        <VersionStamp />
       </div>
       {/* Danger Zone */}
       <div className="px-4 lg:px-0 mt-6 mb-6 order-5 lg:order-none">
