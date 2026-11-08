@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { enforceRateLimitPermissive, enforceRateLimitStrict, getClientIp } from '@/lib/rate-limit';
 import { findStoreByJoinCode, normalizeJoinCode } from '@/lib/store-join';
+import { maybeAwardFounding } from '@/lib/titles-server';
 import { SELECTABLE_GAME_IDS, resolveGameId } from '@/lib/games';
 
 const MIN_AGE = 13;
@@ -283,6 +284,10 @@ export async function POST(request: Request) {
         .from('players')
         .update({ referral_code: newReferralCode })
         .eq('id', newPlayer.id);
+
+      // Signing up with a store join code makes the player verified from the start, so the
+      // Founding Member award (which normally fires when someone becomes verified) happens here.
+      if (homeStoreVerifiedAt) await maybeAwardFounding(newPlayer.id); // never throws
 
       // Welcome bonus (+30 LXP) is awarded atomically by the player_welcome_bonus
       // DB trigger — no application-level insert needed here.
