@@ -45,8 +45,8 @@ const ITEMS: ChecklistItem[] = [
   },
   {
     key: 'event',
-    label: 'Check in to an event',
-    description: 'Ask staff or scan the QR code at your next visit',
+    label: 'Check out upcoming events',
+    description: 'See what is coming up at your store',
     href: '/dashboard/events',
     storageKey: 'hxp_done_event',
   },
