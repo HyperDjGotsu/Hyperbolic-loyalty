@@ -1,8 +1,27 @@
 # Hyperbolic Loyalty System - Project Status
 
-**Last Updated:** November 7, 2026 (evening)  
+**Last Updated:** November 8, 2026 (afternoon)  
 **Project Owner:** DjGotsu  
 **Store:** Games of Martinez (Hyperbolic Games)
+
+---
+
+## 🆕 Nov 8, 2026 — first real players, push notifications, stale-data fix (`main` head `2b90c47`)
+
+**Live with real players.** After the fresh-start wipe the staff were told to get back on the app; 11 players exist (all verified, 9 hold Founding Member). Players sign up on the web app (playerpass.gg, saved to the Home Screen on iPhone); the native app is not released.
+
+**Fixed (all live):**
+- **Stale data.** Next 14 cached supabase-js reads across deploys, so the leaderboard kept showing pre-wipe XP. Every server Supabase client now uses `noStoreFetch` (`lib/no-store-fetch.ts`). New clients must do the same.
+- **Guild Points XP is `game_id: NULL`.** Inserting the literal `'general'` failed the `games` foreign key, so referral rewards (never paid before), Card-of-the-Day wins, gameless event results and title XP bonuses were silently failing. All now save with no game.
+- **Founding Member on join-code sign-up.** That path created players already verified and skipped the award; fixed. The seven earliest players and Heather were backfilled by hand (title + 100 XP once each).
+- **Home store.** Profile → Home store row (Verify or Change, needs the store's join code). The Home store pill only changes which store you are *viewing*.
+- **Onboarding.** Store step now says plainly that the join code is what confirms the store (referral codes never do).
+- **Leaderboards.** Store boards count all XP: store-tagged XP plus untagged XP (spins, welcome bonus) for that store's home players. WANTED badge shows only for the One Piece top 5 (Bounty Hunter program), on every board.
+- **Getting Started card** says "Check out upcoming events" (it ticks when the Events page is opened).
+
+**Push notifications (web, Home Screen app).** Only friend-shared events push (`PUSH_TYPES` in `lib/notifications.ts`; add a type to push more). Test button at Profile → Notifications. Pushes use Apple's declarative payload (`web_push: 8030`, iOS 18.4+) so a banner tap opens the right page and sets the icon badge; the plain fields remain for other browsers. Push endpoints are allowlisted to real push hosts; event shares are rate limited, deduped, capped at 50 and respect the Social toggle. Shared-event alerts show the event picture and open that event (the alerts API now returns each alert's `data`). `ResumeRefresh` reloads the Home Screen app after 5+ minutes away; Profile shows `Version <sha> · loaded <time>`. Event detail sheet swipes down to close.
+
+**Not done / open:** `PITCH_PASSWORD` is set and live; Apple and Google approvals pending; Clerk deletions finished by the owner (live keeps dp2526@yahoo.com); Paul's Pleasant Hill invite and staff restores via HQ → Staff Invitations; the leaderboard reads at most 1,000 ledger rows (page it before launch); four early "Event Shared" alerts still show the calendar icon; mobile build needs scan-to-check-in, tour question, titles, onboarding fixes and the Home store row; old iPhones (< iOS 18.4) get the banner but a tap may only open the app; Home banner for unverified players; staff vouching; Clerk support email and sender domain; Digimon/UVS icon backgrounds; revoke the old Vercel bypass token; drop `backup_20261107` after launch.
 
 ---
 
