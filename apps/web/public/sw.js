@@ -1,6 +1,10 @@
 // PlayerPass — Service Worker
 // Handles background push notifications
 
+// Take over as soon as a new version is installed, so changes to this file apply without a full app restart
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
