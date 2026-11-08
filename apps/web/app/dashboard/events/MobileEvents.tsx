@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { Loader } from '@/components/Loader';
 import { EmptyState } from '@/components/EmptyState';
 import { CoverImage } from '@/components/CoverImage';
+import SwipeSheet from '@/components/SwipeSheet';
 import { RefreshCw, CalendarDays, CalendarX, Star, Gift, Trophy, Sparkles, Share, AlertCircle, Users, type LucideIcon } from 'lucide-react';
 import { PageTitle, SubText } from '@/components/PageTitle';
 import GameIcon from '@/components/GameIcon';
@@ -596,8 +597,8 @@ function EventsPageContent() {
 
   const EventDetailModal = ({ event, onClose }: { event: CalendarEvent; onClose: () => void }) => (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative bg-surface rounded-t-[32px] sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
+      <div className="absolute inset-0 touch-none bg-black/80" onClick={onClose} />
+      <SwipeSheet onClose={onClose} className="relative bg-surface rounded-t-[32px] sm:rounded-3xl w-full sm:max-w-md max-h-[90vh] overflow-auto">
         {/* Header */}
         <CoverImage gameId={event.game?.id} storeId={event.storeId} color={event.game?.color || '#3b82f6'} src={event.imageUrl} className="h-[220px]">
           <button
@@ -756,7 +757,7 @@ function EventsPageContent() {
           </div>
           <p className="text-secondary text-xs text-center">Registration handled in-store</p>
         </div>
-      </div>
+      </SwipeSheet>
     </div>
   );
 
