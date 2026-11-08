@@ -509,7 +509,7 @@ export async function POST(request: Request) {
               .from('xp_ledger')
               .insert({
                 player_id: vote.player_id,
-                game_id: 'general',
+                game_id: null, // Guild Points: no game
                 base_xp: 10,
                 multiplier: 1,
                 final_xp: 10,

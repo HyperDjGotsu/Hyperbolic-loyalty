@@ -118,7 +118,7 @@ export async function checkReferralBonus(playerId: string, staffId: string, stor
       .from('xp_ledger')
       .insert({
         player_id: referrer.id,
-        game_id: 'general',
+        game_id: null, // Guild Points: no game
         base_xp: REFERRAL_FIRST_EVENT_BONUS,
         final_xp: REFERRAL_FIRST_EVENT_BONUS,
         multiplier: 1,

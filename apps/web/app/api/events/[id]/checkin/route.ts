@@ -59,7 +59,7 @@ async function awardReferralBonus(
     // If this fails, revert the claim so the referral can fire on the next eligible event.
     const { error: xpError } = await supabaseAdmin.from('xp_ledger').insert({
       player_id: referrer.id,
-      game_id: 'general',
+      game_id: null, // Guild Points: no game (the games table has no 'general' row)
       base_xp: REFERRAL_LIFETIME_XP,
       final_xp: REFERRAL_LIFETIME_XP,
       multiplier: 1,

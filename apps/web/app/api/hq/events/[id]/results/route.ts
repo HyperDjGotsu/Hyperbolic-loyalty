@@ -160,7 +160,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const xp = roundsWon * WIN_LIFETIME_XP + bonusXp;
   const prizePoints = Math.round(roundsWon * WIN_PRIZE_POINTS * multiplier);
 
-  const gameId = event.game_id ?? 'general';
+  const gameId = event.game_id ?? null; // events without a game pay Guild Points (null game)
   const storeId = event.store_id;
   const label = event.name;
 
