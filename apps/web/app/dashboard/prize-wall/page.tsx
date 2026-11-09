@@ -309,9 +309,9 @@ function BalanceBar({
       </div>
       {gateLocked && (
         <div className="mt-4">
-          <div className="flex items-center justify-between text-xs text-secondary mb-1.5">
+          <div className="flex items-start justify-between gap-3 text-xs text-secondary mb-1.5">
             <span>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} Guild Points</span>
-            <span>
+            <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums">
               {passStatus.lifetimeXp.toLocaleString()} / {FREE_TIER_GATE}
             </span>
           </div>
