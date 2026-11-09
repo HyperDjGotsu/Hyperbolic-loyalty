@@ -52,3 +52,83 @@ select (player_id || ' ' || display_name) as player, pass_tier, pass_status, pas
 
 -- W8. Everything written to the ledger in the last 24 hours, by source. Skim for sources you do not expect.
 select source, count(*) as rows, sum(final_xp) as xp from xp_ledger where created_at > now() - interval '24 hours' group by source order by source;
+
+-- ===== Founding Member watch (network-wide pool of 100, any store) =====
+
+-- W9. Slot count. Account deletion removes the title row but only ANONYMISES the ledger (player_id becomes NULL), so a deleted holder's
+--     +100 bonus row survives and is counted here. Lifetime allocations = title rows (active or revoked) + bonus rows of deleted accounts.
+--     It is exact unless a bonus write failed for a holder who was later deleted (then it is a lower bound).
+--     HEALTHY: active_holders <= 100 and lifetime_allocations <= 100.
+select (select count(*) from player_titles where title_key = 'founding_member' and revoked_at is null) as active_holders,
+       (select count(*) from player_titles where title_key = 'founding_member' and revoked_at is not null) as revoked_rows,
+       (select count(*) from xp_ledger where description = 'Founding Member title bonus' and player_id is null) as deleted_holder_bonus_rows,
+       (select count(*) from player_titles where title_key = 'founding_member')
+         + (select count(*) from xp_ledger where description = 'Founding Member title bonus' and player_id is null) as lifetime_allocations,
+       100 - ((select count(*) from player_titles where title_key = 'founding_member')
+         + (select count(*) from xp_ledger where description = 'Founding Member title bonus' and player_id is null)) as slots_remaining_at_most,
+       (to_regclass('public.founding_slots') is not null) as permanent_slot_table_exists;
+
+-- W10. PARTIAL AWARD: title and flag disagree (players.is_founding_member vs an active title). HEALTHY: no rows.
+--      Rows touched in the last 5 minutes are skipped: a grant writes the title first and the flag a moment later.
+select p.player_id, p.display_name, p.is_founding_member as flag,
+       exists (select 1 from player_titles t where t.player_id = p.id and t.title_key = 'founding_member' and t.revoked_at is null) as has_active_title
+  from players p
+ where p.is_founding_member <> exists (select 1 from player_titles t where t.player_id = p.id and t.title_key = 'founding_member' and t.revoked_at is null)
+   and not exists (select 1 from player_titles t where t.player_id = p.id and t.title_key = 'founding_member'
+                    and (t.granted_at > now() - interval '5 minutes' or t.revoked_at > now() - interval '5 minutes'));
+
+-- W11. PARTIAL AWARD: the +100 bonus. Every title row needs exactly one correct bonus row (100 XP, source achievement); a bonus row of a LIVE
+--      account with no title row is wrong; a bonus row with the wrong amount or source is wrong. HEALTHY: no rows. (Bonus rows of DELETED
+--      accounts have player_id NULL by design and are counted in W9, not here.) Titles granted in the last 5 minutes are skipped.
+select 'holder without exactly one correct bonus' as problem, p.player_id, count(x.id) as bonus_rows
+  from player_titles t join players p on p.id = t.player_id
+  left join xp_ledger x on x.player_id = t.player_id and x.description = 'Founding Member title bonus' and x.final_xp = 100 and x.source = 'achievement'
+ where t.title_key = 'founding_member' and t.granted_at < now() - interval '5 minutes'
+ group by p.player_id having count(x.id) <> 1
+union all
+select 'bonus row with wrong amount or source', coalesce(p.player_id, 'DELETED ACCOUNT'), count(*)
+  from xp_ledger x left join players p on p.id = x.player_id
+ where x.description = 'Founding Member title bonus' and (x.final_xp <> 100 or x.source <> 'achievement')
+ group by coalesce(p.player_id, 'DELETED ACCOUNT')
+union all
+select 'bonus for a live account with no title row', p.player_id, count(*)
+  from xp_ledger x join players p on p.id = x.player_id
+ where x.description = 'Founding Member title bonus'
+   and not exists (select 1 from player_titles t where t.player_id = x.player_id and t.title_key = 'founding_member')
+ group by p.player_id;
+
+-- W12. Evidence the 100 limit was bypassed or reopened. HEALTHY: no rows (the nine automatic awards have none of these).
+--      manual grant = granted_by is set; revoked row = that slot may have been reused; settings row = the cap or auto-award was edited in HQ.
+select 'manual grant (granted_by set)' as evidence, p.player_id, t.granted_at::text as detail
+  from player_titles t join players p on p.id = t.player_id where t.title_key = 'founding_member' and t.granted_by is not null
+union all
+select 'revoked holder (their slot may have been reused)', p.player_id, t.revoked_at::text
+  from player_titles t join players p on p.id = t.player_id where t.title_key = 'founding_member' and t.revoked_at is not null
+union all
+select 'more than 100 title rows', null, (select count(*) from player_titles where title_key = 'founding_member')::text
+ where (select count(*) from player_titles where title_key = 'founding_member') > 100
+union all
+select 'HQ title settings changed (cap not 100, or auto-award off)', null, title_settings::text
+  from store_config where id = 1 and title_settings is not null
+   and ((title_settings ->> 'foundingCap') is distinct from '100' or (title_settings ->> 'autoFounding') = 'false');
+
+-- W13. Active holder who does not meet the requirement (a verified home store at any network store). HEALTHY: no rows.
+select p.player_id, p.display_name, (p.home_store_id is null) as no_home_store, (p.home_store_verified_at is null) as not_verified
+  from player_titles t join players p on p.id = t.player_id
+ where t.title_key = 'founding_member' and t.revoked_at is null and (p.home_store_id is null or p.home_store_verified_at is null);
+
+-- W15. PARTIAL AWARD, low severity: an active holder awarded after the one-time backfill has no "New title" notification (the notification is
+--      best effort and never blocks the award). Awards before 2026-11-08 12:00 UTC came from the backfill and sent none. HEALTHY: no rows.
+select p.player_id, p.display_name, t.granted_at::text as granted_at
+  from player_titles t join players p on p.id = t.player_id
+ where t.title_key = 'founding_member' and t.revoked_at is null
+   and t.granted_at >= '2026-11-08 12:00:00+00' and t.granted_at < now() - interval '5 minutes'
+   and not exists (select 1 from notifications n where n.player_id = t.player_id and n.type = 'title' and n.data ->> 'title_key' = 'founding_member');
+
+-- W14. INFORMATIONAL: verified players with no Founding Member title while slots remain. Today: the two accounts verified before the
+--      title system existed. If one of them re-verifies a home store with a join code, the automatic award will give them a slot (+100 XP).
+--      This does NOT prove an award failed: a failed award (nothing written) also shows here, as does any intentionally excluded account.
+select p.player_id, p.display_name, to_char(p.home_store_verified_at at time zone 'America/Los_Angeles', 'Mon DD HH24:MI') as verified_pt
+  from players p
+ where p.home_store_verified_at is not null
+   and not exists (select 1 from player_titles t where t.player_id = p.id and t.title_key = 'founding_member');
