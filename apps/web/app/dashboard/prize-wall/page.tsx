@@ -309,18 +309,21 @@ function BalanceBar({
       </div>
       {gateLocked && (
         <div className="mt-4">
-          <div className="flex items-start justify-between gap-3 text-xs text-secondary mb-1.5">
-            <span>Redeem a 1-month Bronze trial at {FREE_TIER_GATE} Guild Points</span>
-            <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums">
+          <div className="flex items-baseline justify-between gap-3 text-xs">
+            <span className="min-w-0 truncate font-semibold text-secondary">Bronze Trial Progress</span>
+            <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-primary">
               {passStatus.lifetimeXp.toLocaleString()} / {FREE_TIER_GATE}
             </span>
           </div>
-          <div className="h-2 bg-elevated rounded-full overflow-hidden">
+          <div className="mt-1.5 h-2 bg-surface rounded-full overflow-hidden">
             <div
               className="h-full bg-accent rounded-full transition-all"
               style={{ width: `${gateProgress}%` }}
             />
           </div>
+          <p className="mt-1.5 text-[11px] leading-snug text-tertiary">
+            Earn {FREE_TIER_GATE} Guild Points to unlock a 1-month Bronze trial.
+          </p>
         </div>
       )}
       {trialReady && (
