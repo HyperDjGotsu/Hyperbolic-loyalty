@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useUser, useReverification } from '@clerk/nextjs';
 
 type Provider = { id: 'google' | 'discord'; strategy: 'oauth_google' | 'oauth_discord'; label: string };
 const PROVIDERS: Provider[] = [
@@ -16,6 +16,14 @@ export default function ConnectedAccounts() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
 
+  // Clerk treats adding or removing a sign-in method as sensitive: it needs a recently confirmed sign-in. These wrappers
+  // show Clerk's quick "confirm it's you" step when it is needed, then carry on with the same call.
+  const addAccount = useReverification(async (strategy: Provider['strategy']) => {
+    if (!user) throw new Error('Not signed in');
+    return user.createExternalAccount({ strategy, redirectUrl: window.location.href });
+  });
+  const removeAccount = useReverification(async (acct: { destroy: () => Promise<unknown> }) => acct.destroy());
+
   if (!isLoaded || !user) return null;
 
   const accountFor = (p: Provider) => user.externalAccounts.find(a => a.provider === p.id || String(a.provider) === p.strategy);
@@ -26,11 +34,12 @@ export default function ConnectedAccounts() {
     setBusy(p.id);
     setError('');
     try {
-      const res = await user.createExternalAccount({ strategy: p.strategy, redirectUrl: window.location.href });
-      const url = res.verification?.externalVerificationRedirectURL;
+      const res = await addAccount(p.strategy);
+      const url = res?.verification?.externalVerificationRedirectURL;
       if (url) { window.location.href = url.toString(); return; }
       setError(`Could not start the ${p.label} connection. Try again.`);
     } catch (e: any) {
+      if (e?.code === 'reverification_cancelled') return; // they closed the confirm step: not an error
       setError(e?.errors?.[0]?.longMessage || e?.errors?.[0]?.message || `Could not connect ${p.label}. Try again.`);
     } finally { setBusy(null); }
   };
@@ -41,9 +50,10 @@ export default function ConnectedAccounts() {
     setBusy(p.id);
     setError('');
     try {
-      await acct.destroy();
+      await removeAccount(acct);
       await user.reload();
     } catch (e: any) {
+      if (e?.code === 'reverification_cancelled') return;
       setError(e?.errors?.[0]?.longMessage || `Could not disconnect ${p.label}. Try again.`);
     } finally { setBusy(null); }
   };
