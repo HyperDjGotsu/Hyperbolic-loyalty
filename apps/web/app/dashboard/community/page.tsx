@@ -1056,6 +1056,9 @@ export default function CommunityPage() {
                           />
                           <div className="mt-2 flex w-full items-center justify-center gap-1 text-sm font-bold text-primary"><span className="truncate">{anon ? 'Anonymous' : entry.name}</span>{!anon && <TitleChips titles={entry.memberTitles} iconOnly />}</div>
                           <div className="text-xs font-semibold text-xp tabular-nums">{(entry.totalXp ?? entry.xp ?? 0).toLocaleString()}</div>
+                          {!anon && 'odid' in entry && typeof entry.odid === 'string' && wantedIds.has(entry.odid) && (
+                            <span className="mt-1.5 rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-400">WANTED</span>
+                          )}
                         </div>
                       );
                     })}
