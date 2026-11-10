@@ -312,6 +312,57 @@ export type Database = {
           },
         ]
       }
+      checkin_requests: {
+        Row: {
+          attempts: number
+          decided_at: string | null
+          decided_by: string | null
+          event_id: string
+          id: string
+          last_error: string | null
+          player_id: string
+          requested_at: string
+          reopened_count: number
+          resolution: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          event_id: string
+          id?: string
+          last_error?: string | null
+          player_id: string
+          requested_at?: string
+          reopened_count?: number
+          resolution?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          event_id?: string
+          id?: string
+          last_error?: string | null
+          player_id?: string
+          requested_at?: string
+          reopened_count?: number
+          resolution?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       card_of_the_day_history: {
         Row: {
           card_data: Json
@@ -2834,6 +2885,14 @@ export type Database = {
       }
     }
     Functions: {
+      expire_checkin_requests: {
+        Args: { p_event?: string | null }
+        Returns: number
+      }
+      checkin_award_evidence: {
+        Args: { p_event: string; p_player: string }
+        Returns: Json
+      }
       award_title_capped: {
         Args: { p_player: string; p_title: string; p_cap: number; p_by?: string | null }
         Returns: boolean

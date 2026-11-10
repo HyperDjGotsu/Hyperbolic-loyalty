@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 import { TitleChips } from '@/components/TitleChips';
+import { CheckinRequestsPanel } from '@/components/kiosk/CheckinRequestsPanel';
 
 interface ActiveEvent {
   id: string;
@@ -441,6 +442,14 @@ export default function KioskPage() {
         </div>
       ) : (
         <div className="min-h-screen flex flex-col p-4 md:p-8 gap-4 md:gap-6">
+          <CheckinRequestsPanel
+            eventId={activeEvent.id}
+            eventName={activeEvent.name}
+            gameName={activeEvent.game?.name}
+            origin={origin}
+            onCheckInByPlayerId={checkInByPlayerId}
+            onChanged={fetchActiveEvent}
+          />
           {liveEvents.length > 1 && !scopeRef.current.eventId && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-tertiary text-sm uppercase tracking-widest mr-1">Checking in to</span>
