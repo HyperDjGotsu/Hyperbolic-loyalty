@@ -138,6 +138,10 @@ export interface Banner {
   twitchUrl?: string;
   youtubeUrl?: string;
   backgroundImage?: string;  // URL to background image for the banner
+  bgSize?: string;
+  bgPosition?: string;
+  textColor?: string;
+  eventId?: string | null;   // When set, tapping the banner opens this event in the Events tab
 }
 
 // ========== ACTIVITY TYPES ==========

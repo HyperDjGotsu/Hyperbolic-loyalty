@@ -233,6 +233,7 @@ interface Banner {
   bg_position: string;
   text_color: string;
   store_id: string | null;
+  event_id?: string | null;
 }
 
 interface PrizeWallItem {
@@ -782,6 +783,27 @@ export default function HQPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [bannerLoading, setBannerLoading] = useState(false);
+  const [bannerEventOptions, setBannerEventOptions] = useState<{ id: string; label: string }[]>([]);
+  useEffect(() => {
+    if (!editingBanner) return;
+    let cancelled = false;
+    const qs = new URLSearchParams({ status: 'upcoming', limit: '300' });
+    if (editingBanner.store_id) qs.set('store_id', editingBanner.store_id);
+    fetch(`/api/events?${qs.toString()}`)
+      .then(r => (r.ok ? r.json() : { events: [] }))
+      .then(d => {
+        if (cancelled) return;
+        const opts = (d.events || []).map((e: any) => {
+          const when = e.scheduled_at || e.scheduledAt || e.date || '';
+          let label = e.name || e.title || 'Event';
+          if (when) { const dt = new Date(when); if (!isNaN(dt.getTime())) label += ` · ${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' })}`; }
+          return { id: e.id, label };
+        });
+        setBannerEventOptions(opts);
+      })
+      .catch(() => { if (!cancelled) setBannerEventOptions([]); });
+    return () => { cancelled = true; };
+  }, [editingBanner?.id, editingBanner?.store_id, !!editingBanner]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Bounty Hunter state
@@ -3745,6 +3767,7 @@ export default function HQPage() {
                   bg_size: 'cover',
                   bg_position: 'center',
                   text_color: '#ffffff',
+                  event_id: null,
                   store_id: staffContext?.isNetworkAdmin ? null : (hqStore.activeStoreId ?? null),
                 })}
                 className="px-4 py-2 bg-accent rounded-lg font-medium hover:opacity-90"
@@ -4058,6 +4081,25 @@ export default function HQPage() {
                           <p className="text-xs text-tertiary mt-1">Tip: 50% 30% shifts the image up — lower % = higher on screen</p>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Link to an event */}
+                    <div>
+                      <label className="text-secondary text-sm mb-1 block">🔗 Opens event when tapped</label>
+                      <select
+                        value={editingBanner.event_id || ''}
+                        onChange={(e) => setEditingBanner({ ...editingBanner, event_id: e.target.value || null })}
+                        className="w-full bg-elevated border border-border-token rounded-lg px-3 py-2 text-primary focus:outline-none focus:border-accent"
+                      >
+                        <option value="">No link (banner is not tappable)</option>
+                        {editingBanner.event_id && !bannerEventOptions.some(o => o.id === editingBanner.event_id) && (
+                          <option value={editingBanner.event_id}>Currently linked event</option>
+                        )}
+                        {bannerEventOptions.map(o => (
+                          <option key={o.id} value={o.id}>{o.label}</option>
+                        ))}
+                      </select>
+                      <p className="text-secondary text-xs mt-1">Players who tap the banner land on this event in the Events tab. Pick the event after it is on the calendar.</p>
                     </div>
 
                     {/* Stream URLs */}

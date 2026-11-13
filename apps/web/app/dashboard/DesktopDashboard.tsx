@@ -258,6 +258,14 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
         <section className="relative col-span-5 min-h-0 overflow-hidden rounded-[28px] border border-white/10">
           {liveBanner ? (
             <>
+              {(liveBanner as any).eventId && (
+                <button
+                  type="button"
+                  aria-label={`${liveBanner.title}: view event`}
+                  onClick={() => router.push(`/dashboard/events?event=${(liveBanner as any).eventId}`)}
+                  className="absolute inset-0 z-[1] cursor-pointer"
+                />
+              )}
               <div
                 key={`banner-bg-${liveBanner.id}`}
                 className="absolute inset-0"
@@ -277,14 +285,14 @@ export default function DesktopDashboard({ dashboard }: { dashboard: DashboardDa
                   {liveBanner.subtitle && <div className="mt-1.5 text-sm font-medium" style={{ color: (liveBanner as any).textColor || '#ffffff', textShadow: '0 1px 8px rgba(0,0,0,0.7)' }}>{liveBanner.subtitle}</div>}
                 </div>
                 {liveBanner.hasStream && (
-                  <div className="flex shrink-0 gap-2">
+                  <div className="relative z-[2] flex shrink-0 gap-2">
                     {liveBanner.twitchUrl && <a href={liveBanner.twitchUrl} target="_blank" rel="noopener noreferrer" className="pp-press rounded-xl bg-[#9146ff] px-4 py-2 text-sm font-semibold text-white shadow-xl hover:brightness-110">Twitch</a>}
                     {liveBanner.youtubeUrl && <a href={liveBanner.youtubeUrl} target="_blank" rel="noopener noreferrer" className="pp-press rounded-xl bg-[#ff0000] px-4 py-2 text-sm font-semibold text-white shadow-xl hover:brightness-110">YouTube</a>}
                   </div>
                 )}
               </div>
               {banners.length > 1 && (
-                <div className="absolute right-5 top-5 flex gap-1.5">
+                <div className="absolute right-5 top-5 z-[2] flex gap-1.5">
                   {banners.map((_, i) => (<button key={i} type="button" aria-label={`Banner ${i + 1}`} onClick={() => setBannerIndex(i)} className={`h-1.5 rounded-full transition-all ${i === bannerIndex % banners.length ? 'w-4 bg-white' : 'w-1.5 bg-white/40'}`} />))}
                 </div>
               )}

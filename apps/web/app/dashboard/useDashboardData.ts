@@ -350,6 +350,7 @@ export function useDashboardData(): DashboardData {
             bgSize: b.bgSize || 'cover',
             bgPosition: b.bgPosition || 'center',
             textColor: b.textColor || '#ffffff',
+            eventId: b.eventId || null,
           }));
           if (!cancelled) setBanners(transformed);
         }

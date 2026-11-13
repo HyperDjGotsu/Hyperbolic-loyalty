@@ -59,10 +59,13 @@ export async function GET(request: Request) {
 }
 
 // POST - Create new banner
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const cleanEventId = (v: unknown): string | null => (typeof v === 'string' && UUID_RE.test(v) ? v : null);
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position, text_color, store_id } = body;
+    const { title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position, text_color, store_id, event_id } = body;
 
     // store_id present → store-scoped banner; null/absent → network-wide banner
     const staffCtx = store_id
@@ -96,6 +99,7 @@ export async function POST(request: Request) {
         bg_size: bg_size || 'cover',
         bg_position: bg_position || 'center',
         text_color: text_color || '#ffffff',
+        event_id: cleanEventId(event_id),
         store_id: store_id ?? null,
       })
       .select()
@@ -117,7 +121,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position, text_color } = body;
+    const { id, title, subtitle, icon, color_from, color_to, badge, is_active, sort_order, starts_at, ends_at, twitch_url, youtube_url, background_image, bg_size, bg_position, text_color, event_id } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Banner ID is required' }, { status: 400 });
@@ -162,6 +166,7 @@ export async function PUT(request: Request) {
         bg_size: bg_size || 'cover',
         bg_position: bg_position || 'center',
         text_color: text_color || '#ffffff',
+        ...(event_id !== undefined ? { event_id: cleanEventId(event_id) } : {}),
       })
       .eq('id', id)
       .select()

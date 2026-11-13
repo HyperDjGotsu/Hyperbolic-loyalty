@@ -765,6 +765,7 @@ export default function DesktopDashboard() {
             twitchUrl: b.twitchUrl,
             youtubeUrl: b.youtubeUrl,
             backgroundImage: b.backgroundImage || null,
+            eventId: b.eventId || null,
           }));
           setBanners(transformedBanners);
         }
