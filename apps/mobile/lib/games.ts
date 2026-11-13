@@ -29,6 +29,7 @@ export const SELECTABLE_GAMES: GameDefinition[] = [
   { id: 'azuki',               name: 'Azuki',               icon: '⛩️',   currency: 'Azuki Points',   color: '#c084fc' },
   { id: 'blood_bowl',          name: 'Blood Bowl',          icon: '🏈',   currency: 'TD Points',      color: '#b45309' },
   { id: 'bolt_action',         name: 'Bolt Action',         icon: '🎯',   currency: 'Command Points', color: '#475569' },
+  { id: 'palworld',            name: 'Palworld',            icon: '🐾',   currency: 'Pal Points',     color: '#38bdf8' },
 ];
 
 export const SELECTABLE_GAME_IDS: string[] = SELECTABLE_GAMES.map(g => g.id);

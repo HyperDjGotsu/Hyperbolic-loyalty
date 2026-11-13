@@ -21,4 +21,4 @@ A store only gets its own art once it is added to `STORE_ART_FOLDERS` in `lib/ga
 
 ## Ids
 general, one_piece, pokemon, mtg, gundam, star_wars_unlimited, vanguard, lorcana, uvs, digimon,
-yugioh, riftbound, hololive, weiss, sw_legion, union_arena, warhammer, azuki, blood_bowl, bolt_action
+yugioh, riftbound, hololive, weiss, sw_legion, union_arena, warhammer, azuki, blood_bowl, bolt_action, palworld

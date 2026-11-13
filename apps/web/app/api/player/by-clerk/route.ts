@@ -38,6 +38,7 @@ const GAME_CURRENCIES: Record<string, string> = {
   azuki: 'Azuki Points',
   blood_bowl: 'TD Points',
   bolt_action: 'Command Points',
+  palworld: 'Pal Points',
 };
 
 // Pirate's Life / The Regular configuration
@@ -105,6 +106,7 @@ const GAME_RANKS: Record<string, string[]> = {
   azuki: ['Ikuzo!', 'Dawnling', 'Beanz', 'Black Jade Recruit', 'Black Jade Brawler', 'Black Jade Crewleader', 'Black Jade Warlord'],
   blood_bowl: ['Benchwarmer', 'Lineman', 'Blitzer', 'Star Player', 'Team Captain', 'All-Star', 'Blood Bowl Legend'],
   bolt_action: ['Private', 'Corporal', 'Sergeant', 'Lieutenant', 'Captain', 'Major', 'Colonel'],
+  palworld: ['Rank 1', 'Rank 2', 'Rank 3', 'Rank 4', 'Rank 5', 'Rank 6', 'Rank 7'],
 };
 
 function getRankForGame(gameId: string, xp: number): string {

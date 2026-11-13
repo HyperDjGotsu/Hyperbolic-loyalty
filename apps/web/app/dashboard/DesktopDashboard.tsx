@@ -37,6 +37,7 @@ const GAME_CONFIG: Record<string, { icon: string; color: string }> = {
   azuki: { icon: '⛩️', color: '#c084fc' },
   blood_bowl: { icon: '🏈', color: '#b45309' },
   bolt_action: { icon: '🎯', color: '#475569' },
+  palworld: { icon: '🐾', color: '#38bdf8' },
   general: { icon: '🎮', color: '#64748b' },
 };
 

@@ -45,6 +45,7 @@ const GAME_RANK_NAMES: Record<string, string[]> = {
   dbs: ['Saibaman', 'Earthling Warrior', 'Elite Saiyan', 'Super Saiyan', 'Super Saiyan God', 'Super Saiyan Blue', 'Ultra Instinct'],
   dbfw: ['Rookie Fighter', 'Z Fighter', 'Fusion Dancer', 'Potara Pair', 'Gogeta', 'Vegito', 'Fusion Legend'],
   yugioh: ['Amateur Duelist', 'Duelist', 'Battle City Qualifier', 'Regional Champion', 'National Champion', 'World Finalist', 'King of Games'],
+  palworld: ['Rank 1', 'Rank 2', 'Rank 3', 'Rank 4', 'Rank 5', 'Rank 6', 'Rank 7'],
 };
 
 function getRank(gameId: string, xp: number): string {

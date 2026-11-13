@@ -44,7 +44,7 @@ type CalendarEvent = {
 
 const SHORT: Record<string, string> = {
   mtg: 'Magic', star_wars_unlimited: 'Star Wars', sw_legion: 'Legion', union_arena: 'Union Arena',
-  blood_bowl: 'Blood Bowl', bolt_action: 'Bolt Action',
+  blood_bowl: 'Blood Bowl', bolt_action: 'Bolt Action', palworld: 'Palworld',
 };
 const GAME_FILTERS = [
   { id: 'all', name: 'All Games', icon: '🎮' },

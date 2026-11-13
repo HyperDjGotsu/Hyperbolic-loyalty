@@ -26,6 +26,7 @@ const GAME_PATTERNS: { pattern: RegExp; id: string }[] = [
   { pattern: /union\s*arena/i, id: 'union_arena' },
   { pattern: /blood\s*bowl/i, id: 'blood_bowl' },
   { pattern: /bolt\s*action/i, id: 'bolt_action' },
+  { pattern: /palworld/i, id: 'palworld' },
   { pattern: /warhammer|40k|kill\s*team/i, id: 'warhammer' },
   { pattern: /star\s*wars\s*legion|sw\s*legion|legion/i, id: 'sw_legion' },
   { pattern: /flesh.*blood|fab/i, id: 'fab' },
