@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 // Game detection from event titles
 const GAME_PATTERNS: { pattern: RegExp; id: string }[] = [
   { pattern: /one\s*piece/i, id: 'one_piece' },
+  { pattern: /\bop[\s-]?\d{1,2}\b/i, id: 'one_piece' }, // set shorthand: OP18, Op 18, OP-19
   { pattern: /gundam/i, id: 'gundam' },
   { pattern: /pokemon|pokémon/i, id: 'pokemon' },
   { pattern: /magic|mtg|friday\s*night\s*magic|fnm/i, id: 'mtg' },
